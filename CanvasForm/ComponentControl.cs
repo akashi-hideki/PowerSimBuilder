@@ -36,6 +36,8 @@ namespace PowerSimBuilder
         
         public ComponentControl(ComponentDescriptor descriptor)
         {
+            // インスタンス名を生成 (例: "VSI_7f3a2b")
+            InstanceName = $"{descriptor.Type}_{Guid.NewGuid().ToString("N").Substring(0, 6)}";
             Descriptor = descriptor;
             InitializeComponent();
             InitializeParameters();

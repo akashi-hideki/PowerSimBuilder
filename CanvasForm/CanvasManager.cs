@@ -22,6 +22,9 @@ namespace PowerSimBuilder
         public ComponentControl SelectedComponent { get; private set; }
         public Connection SelectedConnection { get; private set; }
         
+        // 変更状態フラグ
+        public bool IsModified { get; private set; }
+        
         // 関連コンポーネント
         public DesignCanvas Canvas { get; }
         public ComponentPalette Palette { get; }
@@ -106,7 +109,7 @@ namespace PowerSimBuilder
             if (startComponent == null || endComponent == null)
                 throw new ArgumentNullException();
             
-            if (string.IsNullOrEmpty(startPort) 
+            if (string.IsNullOrEmpty(startPort)) 
                 throw new ArgumentException("Start port must be specified");
             
             if (string.IsNullOrEmpty(endPort))
@@ -265,12 +268,12 @@ namespace PowerSimBuilder
             }
             
             // 選択状態を復元
-            SelectedComponent = connModel.SelectedComponentIndex >= 0 
-                ? _components[connModel.SelectedComponentIndex] 
+            SelectedComponent = state.SelectedComponentIndex >= 0 
+                ? _components[state.SelectedComponentIndex] 
                 : null;
             
-            SelectedConnection = connModel.SelectedConnectionIndex >= 0 
-                ? _connections[connModel.SelectedConnectionIndex] 
+            SelectedConnection = state.SelectedConnectionIndex >= 0 
+                ? _connections[state.SelectedConnectionIndex] 
                 : null;
             
             // キャンバスを更新
@@ -285,6 +288,7 @@ namespace PowerSimBuilder
             }
             
             // 通知
+            IsModified = true;
             NotifyCanvasModified();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             Canvas.Invalidate();
@@ -324,9 +328,7 @@ namespace PowerSimBuilder
             SaveStateForUndo();
             
             // 既存のコンテンツをクリア
-            _components.Clear();
-            _connections.Clear();
-            Canvas.Clear();
+            Clear();
             
             // コンポーネントを再作成
             foreach (var compModel in model.Components)
@@ -382,9 +384,33 @@ namespace PowerSimBuilder
                 : null;
             
             // 通知
+            IsModified = false;
             NotifyCanvasModified();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             Canvas.Invalidate();
+        }
+        
+        #endregion
+        
+        #region 追加メソッド
+        
+        // すべてのコンポーネントを取得
+        public List<ComponentControl> GetAllComponents()
+        {
+            return new List<ComponentControl>(_components);
+        }
+        
+        // キャンバスをクリア
+        public void Clear()
+        {
+            _components.Clear();
+            _connections.Clear();
+            _undoStack.Clear();
+            _redoStack.Clear();
+            Canvas.Clear();
+            SelectedComponent = null;
+            SelectedConnection = null;
+            IsModified = false;
         }
         
         #endregion
@@ -437,6 +463,7 @@ namespace PowerSimBuilder
         
         private void NotifyCanvasModified()
         {
+            IsModified = true;
             CanvasModified?.Invoke(this, EventArgs.Empty);
         }
         

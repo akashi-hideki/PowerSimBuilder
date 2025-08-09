@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="ArrayOfParts" nillable="true" type="ArrayOfParts" />
+  <xs:complexType name="ArrayOfParts">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Parts" nillable="true" type="Parts" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="Parts">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Name" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="SimName" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="Descript" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Windows.Forms;
+using System.Drawing;
 using Newtonsoft.Json;
 using Python.Runtime;
 
@@ -14,7 +15,12 @@ namespace PowerSimBuilder
         public MainForm()
         {
             InitializeComponent();
-            
+            // イベントハンドラの接続
+            this.saveButton.Click += saveButton_Click;
+            this.undoButton.Click += undoButton_Click;
+            this.redoButton.Click += redoButton_Click;
+            this.deleteButton.Click += deleteButton_Click;
+            this.runButton.Click += runButton_Click;
             // CanvasManager の初期化
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
             
@@ -39,8 +45,7 @@ namespace PowerSimBuilder
         
         private void addButton_Click(object sender, EventArgs e)
         {
-            // 選択されたコンポーネントを追加
-            var selectedDescriptor = paletteListBox.SelectedItem as ComponentDescriptor;
+            var selectedDescriptor = componentPalette1.SelectedComponent;
             if (selectedDescriptor != null)
             {
                 _canvasManager.AddComponent(selectedDescriptor, new Point(100, 100));
@@ -96,7 +101,6 @@ namespace PowerSimBuilder
             // Pythonで実行
             RunPythonSimulation(pythonCode);
         }
-
         private void RunPythonSimulation(string code)
         {
             try

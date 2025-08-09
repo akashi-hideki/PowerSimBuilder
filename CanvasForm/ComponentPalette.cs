@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -7,14 +8,15 @@ namespace PowerSimBuilder
     public partial class ComponentPalette : FlowLayoutPanel
     {
         public List<ComponentDescriptor> AvailableComponents { get; } = new List<ComponentDescriptor>();
+        public ComponentDescriptor SelectedComponent { get; private set; }  // 選択されたコンポーネント
         
         public ComponentPalette()
         {
             InitializeComponent();
-            InitializeAvailableComponents();
+            InitializeComponentPalette();
         }
         
-        private void InitializeAvailableComponents()
+        private void InitializeComponentPalette()
         {
             // 利用可能なコンポーネントを初期化
             AvailableComponents.Add(new ComponentDescriptor
@@ -44,6 +46,31 @@ namespace PowerSimBuilder
             });
             
             // その他のコンポーネント...
+            AvailableComponents.Add(new ComponentDescriptor
+            {
+                Name = "変圧器",
+                Type = "Transformer",
+                Icon = CreateIcon(Color.Green),
+                Category = "変換",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new ParameterDescriptor { Name = "Ratio", Type = "double", DefaultValue = 1.0 },
+                    new ParameterDescriptor { Name = "Impedance", Type = "double", DefaultValue = 0.05 }
+                }
+            });
+            
+            AvailableComponents.Add(new ComponentDescriptor
+            {
+                Name = "太陽光発電",
+                Type = "SolarPanel",
+                Icon = CreateIcon(Color.Yellow),
+                Category = "再生可能",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new ParameterDescriptor { Name = "Capacity", Type = "double", DefaultValue = 1000 },
+                    new ParameterDescriptor { Name = "Efficiency", Type = "double", DefaultValue = 0.18 }
+                }
+            });
             
             // パレットにボタンを追加
             foreach (var component in AvailableComponents)
@@ -57,10 +84,16 @@ namespace PowerSimBuilder
                     Tag = component,
                     Height = 40,
                     Width = 180,
-                    Margin = new Padding(5)
+                    Margin = new Padding(5),
+                    FlatStyle = FlatStyle.Flat,
+                    BackColor = Color.WhiteSmoke
                 };
                 
+                button.FlatAppearance.BorderSize = 1;
+                button.FlatAppearance.BorderColor = Color.LightGray;
+                
                 button.MouseDown += ComponentButton_MouseDown;
+                button.Click += ComponentButton_Click;
                 Controls.Add(button);
             }
         }
@@ -72,6 +105,10 @@ namespace PowerSimBuilder
             {
                 g.FillRectangle(new SolidBrush(color), 0, 0, 32, 32);
                 g.DrawRectangle(Pens.Black, 0, 0, 31, 31);
+                
+                // アイコンに識別マークを追加
+                g.DrawString("C", new Font("Arial", 10, FontStyle.Bold), 
+                             Brushes.White, new PointF(8, 8));
             }
             return bmp;
         }
@@ -86,6 +123,48 @@ namespace PowerSimBuilder
             
             button.DoDragDrop(data, DragDropEffects.Copy);
         }
+        
+        private void ComponentButton_Click(object sender, EventArgs e)
+        {
+            var button = (Button)sender;
+            SelectedComponent = (ComponentDescriptor)button.Tag;
+            
+            // 選択されたボタンを強調表示
+            foreach (Control control in Controls)
+            {
+                if (control is Button btn)
+                {
+                    btn.BackColor = (btn == button) ? Color.LightBlue : Color.WhiteSmoke;
+                }
+            }
+        }
+        /// <summary> 
+        /// Required method for Designer support - do not modify 
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // ComponentPalette
+            // 
+            this.AutoScroll = true;
+            this.BackColor = System.Drawing.Color.White;
+            this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ResumeLayout(false);
+        }
+#if false
+        // デザイナーメソッド
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            this.AutoScroll = true;
+            this.BackColor = Color.White;
+            this.BorderStyle = BorderStyle.FixedSingle;
+            this.ResumeLayout(false);
+        }
+#endif
+        
     }
     
     public class ComponentDescriptor
@@ -95,6 +174,11 @@ namespace PowerSimBuilder
         public Image Icon { get; set; }
         public string Category { get; set; }
         public List<ParameterDescriptor> Parameters { get; set; }
+        
+        public override string ToString()
+        {
+            return $"{Name} ({Type})";
+        }
     }
     
     public class ParameterDescriptor
@@ -102,5 +186,10 @@ namespace PowerSimBuilder
         public string Name { get; set; }
         public string Type { get; set; }
         public object DefaultValue { get; set; }
+        
+        public override string ToString()
+        {
+            return $"{Name}: {DefaultValue} ({Type})";
+        }
     }
 }

@@ -1,6 +1,6 @@
 namespace PowerSimBuilder
 {
-    partial class DesignCanvas
+    partial class ComponentPalette
     {
         /// <summary> 
         /// Required designer variable.
@@ -21,7 +21,7 @@ namespace PowerSimBuilder
         }
 
         #region Component Designer generated code
-
+#if false
         /// <summary> 
         /// Required method for Designer support - do not modify 
         /// the contents of this method with the code editor.
@@ -30,15 +30,14 @@ namespace PowerSimBuilder
         {
             this.SuspendLayout();
             // 
-            // DesignCanvas
+            // ComponentPalette
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "DesignCanvas";
+            this.AutoScroll = true;
+            this.BackColor = System.Drawing.Color.White;
+            this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.ResumeLayout(false);
-
         }
-
-        #endregion
+#endif
+#endregion
     }
 }

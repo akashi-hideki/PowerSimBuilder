@@ -170,7 +170,14 @@ namespace PowerSimBuilder
                 Invalidate();
             }
         }
-        
+        public void Clear()
+        {
+            Components.Clear();
+            Connections.Clear();
+            Controls.Clear();
+            Invalidate();
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -282,18 +289,5 @@ namespace PowerSimBuilder
         public string StartPort { get; set; }
         public ComponentControl EndComponent { get; set; }
         public string EndPort { get; set; }
-    }
-
-    // イベント引数クラス
-    public class ComponentEventArgs : EventArgs
-    {
-        public ComponentControl Component { get; }
-        public ComponentEventArgs(ComponentControl component) => Component = component;
-    }
-
-    public class ConnectionEventArgs : EventArgs
-    {
-        public Connection Connection { get; }
-        public ConnectionEventArgs(Connection connection) => Connection = connection;
     }
 }
