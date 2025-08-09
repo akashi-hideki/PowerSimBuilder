@@ -9,80 +9,12 @@ namespace PowerSimBuilder
     {
         public ComponentDescriptor NewComponent { get; private set; }
         private List<ParameterDescriptor> _parameters = new List<ParameterDescriptor>();
-        private ListBox paramListBox;
-        
-        // フィールドとして宣言
-        private TextBox txtName;
-        private TextBox txtType;
-        private TextBox txtCategory;
-        
+
         public AddComponentForm()
         {
             InitializeComponent();
         }
-        
-        private void InitializeComponent()
-        {
-            this.SuspendLayout();
-            this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(400, 350);
-            this.Text = "コンポーネントの追加";
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            
-            // コントロールの作成
-            var lblName = new Label { Text = "名前:", Location = new Point(20, 20), Size = new Size(80, 20) };
-            txtName = new TextBox { Location = new Point(110, 20), Size = new Size(250, 20) }; // フィールドに代入
-            
-            var lblType = new Label { Text = "タイプ:", Location = new Point(20, 50), Size = new Size(80, 20) };
-            txtType = new TextBox { Location = new Point(110, 50), Size = new Size(250, 20) }; // フィールドに代入
-            
-            var lblCategory = new Label { Text = "カテゴリ:", Location = new Point(20, 80), Size = new Size(80, 20) };
-            txtCategory = new TextBox { Location = new Point(110, 80), Size = new Size(250, 20) }; // フィールドに代入
-            
-            var btnAddParam = new Button { 
-                Text = "パラメータを追加", 
-                Location = new Point(20, 110), 
-                Size = new Size(150, 30) 
-            };
-            
-            paramListBox = new ListBox { 
-                Location = new Point(20, 150), 
-                Size = new Size(340, 120) 
-            };
-            
-            var btnOK = new Button { 
-                Text = "OK", 
-                DialogResult = DialogResult.OK, 
-                Location = new Point(150, 280),
-                Size = new Size(80, 30)
-            };
-            
-            var btnCancel = new Button { 
-                Text = "キャンセル", 
-                DialogResult = DialogResult.Cancel, 
-                Location = new Point(250, 280),
-                Size = new Size(80, 30)
-            };
-            
-            // イベントハンドラ
-            btnAddParam.Click += BtnAddParam_Click;
-            btnOK.Click += BtnOK_Click;
-            
-            // コントロール追加
-            this.Controls.AddRange(new Control[] {
-                lblName, txtName,
-                lblType, txtType,
-                lblCategory, txtCategory,
-                btnAddParam, paramListBox,
-                btnOK, btnCancel
-            });
-            
-            this.ResumeLayout(true);
-        }
-        
+
         private void BtnAddParam_Click(object sender, EventArgs e)
         {
             using (var paramForm = new AddParameterForm())
@@ -106,7 +38,7 @@ namespace PowerSimBuilder
             if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtType.Text))
             {
                 MessageBox.Show("名前とタイプは必須です");
-                this.DialogResult = DialogResult.None;
+                DialogResult = DialogResult.None;
                 return;
             }
             
