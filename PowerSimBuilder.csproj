@@ -39,6 +39,18 @@
     <PackageReference Include="Costura.Fody" Version="6.0.0" />
     <PackageReference Include="ncalc" Version="1.3.8" />
     <PackageReference Include="csvhelper" Version="33.0.1" />
+    <Compile Include="CanvasForm\AddComponentForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CanvasForm\AddComponentForm.Designer.cs">
+      <DependentUpon>AddComponentForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CanvasForm\AddParameterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CanvasForm\AddParameterForm.Designer.cs">
+      <DependentUpon>AddParameterForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CanvasForm\CanvasManager.cs" />
     <Compile Include="CanvasForm\ComponentControl.cs">
       <SubType>UserControl</SubType>

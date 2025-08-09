@@ -1,9 +1,9 @@
-using Python.Runtime;
 using System;
-using System.Drawing;
 using System.IO;
-using System.Text.Json;
 using System.Windows.Forms;
+using System.Drawing;
+using System.Text.Json;
+using Python.Runtime;
 
 namespace PowerSimBuilder
 {
@@ -16,17 +16,24 @@ namespace PowerSimBuilder
         {
             InitializeComponent();
             // イベントハンドラの接続
-            this.saveButton.Click += saveButton_Click;
-            this.undoButton.Click += undoButton_Click;
-            this.redoButton.Click += redoButton_Click;
-            this.deleteButton.Click += deleteButton_Click;
-            this.runButton.Click += runButton_Click;
+            this.addComponentToolStripButton.Click += AddComponentToolStripButton_Click;
+            
             // CanvasManager の初期化
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
             
             // イベントのサブスクライブ
             _canvasManager.CanvasModified += CanvasManager_CanvasModified;
             _canvasManager.SelectionChanged += CanvasManager_SelectionChanged;
+        }
+        private void AddComponentToolStripButton_Click(object sender, EventArgs e)
+        {
+            using (var form = new AddComponentForm())
+            {
+                if (form.ShowDialog() == DialogResult.OK && form.NewComponent != null)
+                {
+                    componentPalette1.AddComponent(form.NewComponent);
+                }
+            }
         }
         
         private void CanvasManager_CanvasModified(object sender, EventArgs e)

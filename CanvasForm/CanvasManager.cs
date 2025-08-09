@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text.Json.Serialization;
 using System.Windows.Forms;
+using System.Text.Json.Serialization;
 
 namespace PowerSimBuilder
 {
@@ -529,7 +529,7 @@ namespace PowerSimBuilder
         public ComponentDescriptor Descriptor { get; set; }
         public Dictionary<string, object> Parameters { get; set; }
 
-        [JsonConverter(typeof(PointJsonConverter))] // この行を追加
+            [JsonConverter(typeof(PointJsonConverter))]
         public Point Location { get; set; }
         public string InstanceName { get; set; }
     }

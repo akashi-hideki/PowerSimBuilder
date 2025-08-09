@@ -34,6 +34,7 @@ namespace PowerSimBuilder
             this.redoButton = new System.Windows.Forms.ToolStripButton();
             this.deleteButton = new System.Windows.Forms.ToolStripButton();
             this.runButton = new System.Windows.Forms.ToolStripButton();
+            this.addComponentToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.designCanvas1 = new PowerSimBuilder.DesignCanvas();
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
@@ -52,7 +53,8 @@ namespace PowerSimBuilder
             this.undoButton,
             this.redoButton,
             this.deleteButton,
-            this.runButton});
+            this.runButton,
+            this.addComponentToolStripButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(884, 25);
@@ -98,6 +100,14 @@ namespace PowerSimBuilder
             this.runButton.Name = "runButton";
             this.runButton.Size = new System.Drawing.Size(33, 22);
             this.runButton.Text = "実行";
+            // 
+            // addComponentToolStripButton
+            // 
+            this.addComponentToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.addComponentToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.addComponentToolStripButton.Name = "addComponentToolStripButton";
+            this.addComponentToolStripButton.Size = new System.Drawing.Size(87, 22);
+            this.addComponentToolStripButton.Text = "コンポーネント追加";
             // 
             // splitContainer1
             // 
@@ -174,5 +184,6 @@ namespace PowerSimBuilder
         private DesignCanvas designCanvas1;
         private System.Windows.Forms.PropertyGrid propertyGrid1;
         private ComponentPalette componentPalette1;
+        private System.Windows.Forms.ToolStripButton addComponentToolStripButton;
     }
 }
