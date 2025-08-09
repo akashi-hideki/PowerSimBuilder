@@ -32,9 +32,6 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>13.0.3</Version>
-    </PackageReference>
     <PackageReference Include="Pythonnet">
       <Version>3.0.5</Version>
     </PackageReference>
@@ -68,6 +65,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CanvasForm\ParameterItem.cs" />
+    <Compile Include="CanvasForm\PointJsonConverter.cs" />
     <Compile Include="CanvasForm\PythonCodeGenerator.cs" />
     <Compile Include="SimRegistForm.cs">
       <SubType>Form</SubType>

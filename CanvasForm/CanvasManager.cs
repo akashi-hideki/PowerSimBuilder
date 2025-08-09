@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Windows.Forms;
 
 namespace PowerSimBuilder
@@ -512,9 +513,9 @@ namespace PowerSimBuilder
         
         #endregion
     }
-    
+
     #region データモデルクラス
-    
+
     public class CanvasModel
     {
         public List<ComponentModel> Components { get; set; } = new List<ComponentModel>();
@@ -522,15 +523,17 @@ namespace PowerSimBuilder
         public int SelectedComponentIndex { get; set; } = -1;
         public int SelectedConnectionIndex { get; set; } = -1;
     }
-    
+
     public class ComponentModel
     {
         public ComponentDescriptor Descriptor { get; set; }
         public Dictionary<string, object> Parameters { get; set; }
+
+        [JsonConverter(typeof(PointJsonConverter))] // この行を追加
         public Point Location { get; set; }
         public string InstanceName { get; set; }
     }
-    
+
     public class ConnectionModel
     {
         public int StartComponentIndex { get; set; }
@@ -538,11 +541,12 @@ namespace PowerSimBuilder
         public int EndComponentIndex { get; set; }
         public string EndPort { get; set; }
     }
-    
+
     #endregion
-    
+
+
     #region イベント引数クラス
-    
+
     public class ComponentEventArgs : EventArgs
     {
         public ComponentControl Component { get; }

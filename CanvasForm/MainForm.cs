@@ -1,9 +1,9 @@
-using System;
-using System.IO;
-using System.Windows.Forms;
-using System.Drawing;
-using Newtonsoft.Json;
 using Python.Runtime;
+using System;
+using System.Drawing;
+using System.IO;
+using System.Text.Json;
+using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
@@ -64,18 +64,32 @@ namespace PowerSimBuilder
                 _canvasManager.RemoveConnection(_canvasManager.SelectedConnection);
             }
         }
-        
         private void saveButton_Click(object sender, EventArgs e)
         {
             var model = _canvasManager.SaveModel();
-            var json = JsonConvert.SerializeObject(model, Formatting.Indented);
-            File.WriteAllText("design.json", json);
+
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new PointJsonConverter() } // コンバーターを追加
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(model, options);
+            File.WriteAllText("system.json", json);
         }
-        
+
         private void loadButton_Click(object sender, EventArgs e)
         {
-            var json = File.ReadAllText("design.json");
-            var model = JsonConvert.DeserializeObject<CanvasModel>(json);
+            var json = File.ReadAllText("system.json");
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new PointJsonConverter() } // コンバーターを追加
+            };
+
+            var model = System.Text.Json.JsonSerializer.Deserialize<CanvasModel>(json, options);
             _canvasManager.LoadModel(model);
         }
         
