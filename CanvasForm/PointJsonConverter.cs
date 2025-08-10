@@ -5,8 +5,17 @@ using System.Text.Json.Serialization;
 
 namespace PowerSimBuilder
 {
+    /// <summary>
+    /// Point構造体のJSONコンバータ
+    /// 注意事項: Point構造体をJSONオブジェクト形式でシリアライズする
+    /// 作成日: 2025-08-10
+    /// </summary>
     public class PointJsonConverter : JsonConverter<Point>
     {
+        /// <summary>
+        /// JSONからPointを読み込む
+        /// 作成日: 2025-08-10
+        /// </summary>
         public override Point Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
@@ -37,6 +46,10 @@ namespace PowerSimBuilder
             throw new JsonException();
         }
 
+        /// <summary>
+        /// PointをJSONに書き込む
+        /// 作成日: 2025-08-10
+        /// </summary>
         public override void Write(Utf8JsonWriter writer, Point value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();

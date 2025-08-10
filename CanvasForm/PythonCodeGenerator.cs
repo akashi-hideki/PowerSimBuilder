@@ -7,6 +7,11 @@ namespace PowerSimBuilder
     {
         private int _componentCounter = 1;
         
+        /// <summary>
+        /// Pythonコードを生成する
+        /// 注意事項: コンポーネントと接続情報からシミュレーションコードを生成
+        /// 作成日: 2025-08-10
+        /// </summary>
         public string GenerateCode(IEnumerable<ComponentControl> components)
         {
             var code = new StringBuilder();
@@ -33,6 +38,11 @@ namespace PowerSimBuilder
             return code.ToString();
         }
         
+        /// <summary>
+        /// コンポーネントコードを生成する
+        /// 注意事項: パラメータ情報を含むインスタンス作成コードを生成
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void GenerateComponentCode(StringBuilder code, ComponentControl component)
         {
             code.Append($"{component.InstanceName} = {component.Descriptor.Type}(");
@@ -58,6 +68,11 @@ namespace PowerSimBuilder
             code.AppendLine(")");
         }
         
+        /// <summary>
+        /// 接続コードを生成する
+        /// 注意事項: コンポーネント間の接続情報をコード化する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void GenerateConnectionsCode(StringBuilder code, IEnumerable<ComponentControl> components)
         {
             foreach (var component in components)
@@ -72,6 +87,11 @@ namespace PowerSimBuilder
             }
         }
         
+        /// <summary>
+        /// 値をフォーマットする
+        /// 注意事項: 文字列型はクォーテーションで囲む
+        /// 作成日: 2025-08-10
+        /// </summary>
         private string FormatValue(object value)
         {
             if (value is string strValue)
