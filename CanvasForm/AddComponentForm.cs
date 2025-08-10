@@ -7,14 +7,27 @@ namespace PowerSimBuilder
 {
     public partial class AddComponentForm : Form
     {
+        /// <summary>
+        /// 新規コンポーネント
+        /// 作成日: 2025-08-10
+        /// </summary>
         public ComponentDescriptor NewComponent { get; private set; }
         private List<ParameterDescriptor> _parameters = new List<ParameterDescriptor>();
         
+        /// <summary>
+        /// コンポーネント追加フォームのコンストラクタ
+        /// 作成日: 2025-08-10
+        /// </summary>
         public AddComponentForm()
         {
             InitializeComponent();
         }
         
+        /// <summary>
+        /// パラメータ追加ボタンクリックイベント
+        /// 注意事項: AddParameterFormを表示してパラメータを追加する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void BtnAddParam_Click(object sender, EventArgs e)
         {
             using (var paramForm = new AddParameterForm())
@@ -33,6 +46,11 @@ namespace PowerSimBuilder
             }
         }
         
+        /// <summary>
+        /// OKボタンクリックイベント
+        /// 注意事項: 入力内容を検証し新規コンポーネントを作成する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void BtnOK_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtType.Text))
@@ -51,6 +69,11 @@ namespace PowerSimBuilder
             };
         }
         
+        /// <summary>
+        /// アイコンを生成する
+        /// 注意事項: タイプ名のハッシュから色を生成する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private Bitmap GenerateIcon(string type)
         {
             // 安全なカラー生成

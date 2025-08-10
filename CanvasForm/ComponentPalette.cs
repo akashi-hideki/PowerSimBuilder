@@ -7,15 +7,33 @@ namespace PowerSimBuilder
 {
     public partial class ComponentPalette : FlowLayoutPanel
     {
+        /// <summary>
+        /// 利用可能なコンポーネントリスト
+        /// 作成日: 2025-08-10
+        /// </summary>
         public List<ComponentDescriptor> AvailableComponents { get; } = new List<ComponentDescriptor>();
+        
+        /// <summary>
+        /// 選択中のコンポーネント
+        /// 作成日: 2025-08-10
+        /// </summary>
         public ComponentDescriptor SelectedComponent { get; private set; }
         
+        /// <summary>
+        /// コンポーネントパレットのコンストラクタ
+        /// 注意事項: 初期コンポーネントを追加する
+        /// 作成日: 2025-08-10
+        /// </summary>
         public ComponentPalette()
         {
             InitializeComponent();
             InitializeComponentPalette();
         }
         
+        /// <summary>
+        /// コンポーネントパレットの初期化
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void InitializeComponent()
         {
             this.SuspendLayout();
@@ -25,12 +43,21 @@ namespace PowerSimBuilder
             this.ResumeLayout(false);
         }
             
+        /// <summary>
+        /// コンポーネントパレットの初期化
+        /// 注意事項: デフォルトコンポーネントを追加する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void InitializeComponentPalette()
         {
             // 初期コンポーネントの追加
             AddDefaultComponents();
         }
         
+        /// <summary>
+        /// デフォルトコンポーネントを追加する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void AddDefaultComponents()
         {
             // デフォルトコンポーネントの追加
@@ -61,6 +88,11 @@ namespace PowerSimBuilder
             });
         }
         
+        /// <summary>
+        /// コンポーネントを追加する
+        /// 注意事項: 重複追加を防止する
+        /// 作成日: 2025-08-10
+        /// </summary>
         public void AddComponent(ComponentDescriptor component)
         {
             if (!AvailableComponents.Contains(component))
@@ -70,6 +102,11 @@ namespace PowerSimBuilder
             }
         }
         
+        /// <summary>
+        /// コンポーネントボタンを作成する
+        /// 注意事項: ドラッグ＆ドロップと選択イベントを設定する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void CreateComponentButton(ComponentDescriptor component)
         {
             var button = new Button
@@ -95,6 +132,10 @@ namespace PowerSimBuilder
             this.Controls.Add(button);
         }
         
+        /// <summary>
+        /// アイコン画像を作成する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private Bitmap CreateIcon(Color color)
         {
             var bmp = new Bitmap(32, 32);
@@ -108,6 +149,11 @@ namespace PowerSimBuilder
             return bmp;
         }
         
+        /// <summary>
+        /// コンポーネントボタンマウスダウンイベント
+        /// 注意事項: ドラッグ操作を開始する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
         {
             var button = (Button)sender;
@@ -119,6 +165,11 @@ namespace PowerSimBuilder
             button.DoDragDrop(data, DragDropEffects.Copy);
         }
         
+        /// <summary>
+        /// コンポーネントボタンクリックイベント
+        /// 注意事項: 選択状態を更新しイベントを発行する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void ComponentButton_Click(object sender, EventArgs e)
         {
             var button = (Button)sender;
@@ -137,15 +188,26 @@ namespace PowerSimBuilder
             }
         }
         
-        // コンポーネント選択イベント
+        /// <summary>
+        /// コンポーネント選択イベント
+        /// 作成日: 2025-08-10
+        /// </summary>
         public event EventHandler ComponentSelected;
         
+        /// <summary>
+        /// コンポーネント選択イベントを発行する
+        /// 作成日: 2025-08-10
+        /// </summary>
         protected virtual void OnComponentSelected(EventArgs e)
         {
             ComponentSelected?.Invoke(this, e);
         }
     }
     
+    /// <summary>
+    /// コンポーネント記述子クラス
+    /// 作成日: 2025-08-10
+    /// </summary>
     public class ComponentDescriptor
     {
         public string Name { get; set; }
@@ -160,6 +222,10 @@ namespace PowerSimBuilder
         }
     }
     
+    /// <summary>
+    /// パラメータ記述子クラス
+    /// 作成日: 2025-08-10
+    /// </summary>
     public class ParameterDescriptor
     {
         public string Name { get; set; }

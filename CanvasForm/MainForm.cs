@@ -12,6 +12,11 @@ namespace PowerSimBuilder
         private readonly CanvasManager _canvasManager;
         private PythonCodeGenerator _codeGenerator = new PythonCodeGenerator();
         
+        /// <summary>
+        /// メインフォームのコンストラクタ
+        /// 注意事項: イベントハンドラの初期設定とCanvasManagerの初期化を行う
+        /// 作成日: 2025-08-10
+        /// </summary>
         public MainForm()
         {
             InitializeComponent();
@@ -42,12 +47,22 @@ namespace PowerSimBuilder
             UpdateDeleteButton();
         }
         
+        /// <summary>
+        /// コンポーネントパレット選択イベントハンドラ
+        /// 注意事項: 追加ボタンの有効/無効を制御する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void ComponentPalette_ComponentSelected(object sender, EventArgs e)
         {
             // 追加ボタンを有効化
             addButton.Enabled = (componentPalette1.SelectedComponent != null);
         }
         
+        /// <summary>
+        /// コンポーネント追加ボタンクリックイベント
+        /// 注意事項: AddComponentFormを表示して新しいコンポーネントを追加する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void AddComponentToolStripButton_Click(object sender, EventArgs e)
         {
             using (var form = new AddComponentForm())
@@ -59,18 +74,33 @@ namespace PowerSimBuilder
             }
         }
         
+        /// <summary>
+        /// キャンバス変更イベントハンドラ
+        /// 注意事項: 保存状態とUndo/Redoボタンを更新する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void CanvasManager_CanvasModified(object sender, EventArgs e)
         {
             UpdateSaveStatus();
             UpdateUndoRedoButtons();
         }
         
+        /// <summary>
+        /// 選択状態変更イベントハンドラ
+        /// 注意事項: プロパティグリッドと削除ボタンを更新する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void CanvasManager_SelectionChanged(object sender, EventArgs e)
         {
             propertyGrid1.SelectedObject = _canvasManager.SelectedComponent?.Parameters;
             UpdateDeleteButton();
         }
         
+        /// <summary>
+        /// コンポーネント追加ボタンクリックイベント
+        /// 注意事項: 選択されたコンポーネントをキャンバス中央に追加する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void addButton_Click(object sender, EventArgs e)
         {
             var selectedDescriptor = componentPalette1.SelectedComponent;
@@ -84,6 +114,11 @@ namespace PowerSimBuilder
             }
         }
         
+        /// <summary>
+        /// 削除ボタンクリックイベント
+        /// 注意事項: 選択中のコンポーネントまたは接続を削除する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void deleteButton_Click(object sender, EventArgs e)
         {
             if (_canvasManager.SelectedComponent != null)
@@ -96,6 +131,11 @@ namespace PowerSimBuilder
             }
         }
         
+        /// <summary>
+        /// 保存ボタンクリックイベント
+        /// 注意事項: 現在のモデルをJSON形式で保存する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void saveButton_Click(object sender, EventArgs e)
         {
             var model = _canvasManager.SaveModel();
@@ -115,6 +155,11 @@ namespace PowerSimBuilder
             UpdateSaveStatus();
         }
 
+        /// <summary>
+        /// 読み込みボタンクリックイベント
+        /// 注意事項: JSONファイルからモデルを読み込む
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void loadButton_Click(object sender, EventArgs e)
         {
             try
@@ -141,16 +186,31 @@ namespace PowerSimBuilder
             }
         }
         
+        /// <summary>
+        /// Undoボタンクリックイベント
+        /// 注意事項: 直前の操作を元に戻す
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void undoButton_Click(object sender, EventArgs e)
         {
             _canvasManager.Undo();
         }
         
+        /// <summary>
+        /// Redoボタンクリックイベント
+        /// 注意事項: 取り消した操作を再実行する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void redoButton_Click(object sender, EventArgs e)
         {
             _canvasManager.Redo();
         }
         
+        /// <summary>
+        /// 実行ボタンクリックイベント
+        /// 注意事項: Pythonコードを生成してシミュレーションを実行する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void runButton_Click(object sender, EventArgs e)
         {
             string pythonCode = _codeGenerator.GenerateCode(_canvasManager.GetAllComponents());
@@ -161,6 +221,11 @@ namespace PowerSimBuilder
             RunPythonSimulation(pythonCode);
         }
         
+        /// <summary>
+        /// Pythonシミュレーションを実行する
+        /// 注意事項: Pythonランタイムを使用してコードを実行する
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void RunPythonSimulation(string code)
         {
             try
@@ -181,17 +246,32 @@ namespace PowerSimBuilder
             }
         }
         
+        /// <summary>
+        /// 保存状態を更新する
+        /// 注意事項: 変更状態に基づいて保存ボタンの有効/無効を切り替える
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void UpdateSaveStatus()
         {
             saveButton.Enabled = _canvasManager.IsModified;
         }
         
+        /// <summary>
+        /// Undo/Redoボタンの状態を更新する
+        /// 注意事項: 操作履歴の状態に基づいてボタンの有効/無効を切り替える
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void UpdateUndoRedoButtons()
         {
             undoButton.Enabled = _canvasManager.CanUndo;
             redoButton.Enabled = _canvasManager.CanRedo;
         }
         
+        /// <summary>
+        /// 削除ボタンの状態を更新する
+        /// 注意事項: 選択状態に基づいて削除ボタンの有効/無効を切り替える
+        /// 作成日: 2025-08-10
+        /// </summary>
         private void UpdateDeleteButton()
         {
             deleteButton.Enabled = 
@@ -199,8 +279,18 @@ namespace PowerSimBuilder
                 _canvasManager.SelectedConnection != null;
         }
         
+        /// <summary>
+        /// Pythonコードプレビュー用フォーム
+        /// 注意事項: 生成されたPythonコードを表示する
+        /// 作成日: 2025-08-10
+        /// </summary>
         public class CodePreviewForm : Form
         {
+            /// <summary>
+            /// コードプレビューフォームのコンストラクタ
+            /// 注意事項: テキストボックスにPythonコードを表示する
+            /// 作成日: 2025-08-10
+            /// </summary>
             public CodePreviewForm(string code)
             {
                 Text = "生成されたPythonコード";
