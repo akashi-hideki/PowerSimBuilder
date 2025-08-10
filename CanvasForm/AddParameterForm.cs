@@ -10,19 +10,19 @@ namespace PowerSimBuilder
         /// 作成日: 2025-08-10
         /// </summary>
         public string ParamName { get; private set; }
-        
+
         /// <summary>
         /// パラメータ型
         /// 作成日: 2025-08-10
         /// </summary>
         public string ParamType { get; private set; }
-        
+
         /// <summary>
         /// デフォルト値
         /// 作成日: 2025-08-10
         /// </summary>
         public object DefaultValue { get; private set; }
-        
+
         /// <summary>
         /// パラメータ追加フォームのコンストラクタ
         /// 作成日: 2025-08-10
@@ -31,7 +31,7 @@ namespace PowerSimBuilder
         {
             InitializeComponent();
         }
-        
+
         /// <summary>
         /// OKボタンクリックイベント
         /// 注意事項: 入力内容を検証しパラメータを設定する
@@ -45,10 +45,10 @@ namespace PowerSimBuilder
                 this.DialogResult = DialogResult.None;
                 return;
             }
-            
+
             ParamName = txtName.Text;
             ParamType = cmbType.SelectedItem.ToString();
-            
+
             try
             {
                 switch (ParamType)

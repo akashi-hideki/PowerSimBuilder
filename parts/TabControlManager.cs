@@ -482,8 +482,8 @@ namespace PowerSimBuilder
             {
                 if (DialogResult.Yes == MessageBox.Show("Delete tab? Confirm?", "Confirmation", MessageBoxButtons.YesNo))
                 {
-                	RemoveTab(temp);
-            	}
+                    RemoveTab(temp);
+                }
             }
             else
             {
@@ -868,7 +868,7 @@ namespace PowerSimBuilder
             }
             AddTab(tabName, data);
         }
-        
+
         /// <summary>
         ///  Function Name :  RemoveTab.
         /// </summary>
@@ -1280,5 +1280,5 @@ namespace PowerSimBuilder
             // JSON文字列を元にオブジェクトをデシリアライズ（ディープコピー）
             return JsonSerializer.Deserialize<TData>(jsonString);
         }
-}
+    }
 }

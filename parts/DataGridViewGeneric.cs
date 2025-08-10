@@ -339,7 +339,7 @@ namespace PowerSimBuilder
             MouseUp += DataGridViewGeneric_MouseUp;
             EditingControlShowing += DataGridViewGeneric_EditingControlShowing;
             DataBindingComplete += DataGridView_DataBindingComplete;
-            
+
 
             // CellLeave += DataGridView_CellLeave;
 

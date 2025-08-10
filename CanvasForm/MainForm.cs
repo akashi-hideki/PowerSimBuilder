@@ -1,9 +1,9 @@
-using System;
-using System.IO;
-using System.Windows.Forms;
-using System.Drawing;
-using System.Text.Json;
 using Python.Runtime;
+using System;
+using System.Drawing;
+using System.IO;
+using System.Text.Json;
+using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
@@ -11,7 +11,7 @@ namespace PowerSimBuilder
     {
         private readonly CanvasManager _canvasManager;
         private PythonCodeGenerator _codeGenerator = new PythonCodeGenerator();
-        
+
         /// <summary>
         /// メインフォームのコンストラクタ
         /// 注意事項: イベントハンドラの初期設定とCanvasManagerの初期化を行う
@@ -20,7 +20,7 @@ namespace PowerSimBuilder
         public MainForm()
         {
             InitializeComponent();
-            
+
             // イベントハンドラの接続
             this.addComponentToolStripButton.Click += AddComponentToolStripButton_Click;
             this.addButton.Click += addButton_Click;
@@ -30,23 +30,23 @@ namespace PowerSimBuilder
             this.undoButton.Click += undoButton_Click;
             this.redoButton.Click += redoButton_Click;
             this.runButton.Click += runButton_Click;
-            
+
             // CanvasManager の初期化
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
-            
+
             // イベントのサブスクライブ
             _canvasManager.CanvasModified += CanvasManager_CanvasModified;
             _canvasManager.SelectionChanged += CanvasManager_SelectionChanged;
-            
+
             // コンポーネント選択イベントの購読
             componentPalette1.ComponentSelected += ComponentPalette_ComponentSelected;
-            
+
             // 初期状態の更新
             UpdateSaveStatus();
             UpdateUndoRedoButtons();
             UpdateDeleteButton();
         }
-        
+
         /// <summary>
         /// コンポーネントパレット選択イベントハンドラ
         /// 注意事項: 追加ボタンの有効/無効を制御する
@@ -57,7 +57,7 @@ namespace PowerSimBuilder
             // 追加ボタンを有効化
             addButton.Enabled = (componentPalette1.SelectedComponent != null);
         }
-        
+
         /// <summary>
         /// コンポーネント追加ボタンクリックイベント
         /// 注意事項: AddComponentFormを表示して新しいコンポーネントを追加する
@@ -73,7 +73,7 @@ namespace PowerSimBuilder
                 }
             }
         }
-        
+
         /// <summary>
         /// キャンバス変更イベントハンドラ
         /// 注意事項: 保存状態とUndo/Redoボタンを更新する
@@ -84,7 +84,7 @@ namespace PowerSimBuilder
             UpdateSaveStatus();
             UpdateUndoRedoButtons();
         }
-        
+
         /// <summary>
         /// 選択状態変更イベントハンドラ
         /// 注意事項: プロパティグリッドと削除ボタンを更新する
@@ -95,7 +95,7 @@ namespace PowerSimBuilder
             propertyGrid1.SelectedObject = _canvasManager.SelectedComponent?.Parameters;
             UpdateDeleteButton();
         }
-        
+
         /// <summary>
         /// コンポーネント追加ボタンクリックイベント
         /// 注意事項: 選択されたコンポーネントをキャンバス中央に追加する
@@ -113,7 +113,7 @@ namespace PowerSimBuilder
                 _canvasManager.AddComponent(selectedDescriptor, center);
             }
         }
-        
+
         /// <summary>
         /// 削除ボタンクリックイベント
         /// 注意事項: 選択中のコンポーネントまたは接続を削除する
@@ -130,7 +130,7 @@ namespace PowerSimBuilder
                 _canvasManager.RemoveConnection(_canvasManager.SelectedConnection);
             }
         }
-        
+
         /// <summary>
         /// 保存ボタンクリックイベント
         /// 注意事項: 現在のモデルをJSON形式で保存する
@@ -149,7 +149,7 @@ namespace PowerSimBuilder
 
             var json = System.Text.Json.JsonSerializer.Serialize(model, options);
             File.WriteAllText("system.json", json);
-            
+
             // 保存状態を更新
             _canvasManager.IsModified = false;
             UpdateSaveStatus();
@@ -174,18 +174,18 @@ namespace PowerSimBuilder
 
                 var model = System.Text.Json.JsonSerializer.Deserialize<CanvasModel>(json, options);
                 _canvasManager.LoadModel(model);
-                
+
                 UpdateSaveStatus();
                 UpdateUndoRedoButtons();
                 UpdateDeleteButton();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー", 
+                MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー",
                               MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
         /// Undoボタンクリックイベント
         /// 注意事項: 直前の操作を元に戻す
@@ -195,7 +195,7 @@ namespace PowerSimBuilder
         {
             _canvasManager.Undo();
         }
-        
+
         /// <summary>
         /// Redoボタンクリックイベント
         /// 注意事項: 取り消した操作を再実行する
@@ -205,7 +205,7 @@ namespace PowerSimBuilder
         {
             _canvasManager.Redo();
         }
-        
+
         /// <summary>
         /// 実行ボタンクリックイベント
         /// 注意事項: Pythonコードを生成してシミュレーションを実行する
@@ -214,13 +214,13 @@ namespace PowerSimBuilder
         private void runButton_Click(object sender, EventArgs e)
         {
             string pythonCode = _codeGenerator.GenerateCode(_canvasManager.GetAllComponents());
-            
+
             var previewForm = new CodePreviewForm(pythonCode);
             previewForm.Show();
-            
+
             RunPythonSimulation(pythonCode);
         }
-        
+
         /// <summary>
         /// Pythonシミュレーションを実行する
         /// 注意事項: Pythonランタイムを使用してコードを実行する
@@ -236,16 +236,16 @@ namespace PowerSimBuilder
                     scope.Exec(code);
                     scope.run_simulation();
                 }
-                MessageBox.Show("シミュレーションが正常に完了しました", "成功", 
+                MessageBox.Show("シミュレーションが正常に完了しました", "成功",
                               MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"シミュレーションエラー: {ex.Message}", "エラー", 
+                MessageBox.Show($"シミュレーションエラー: {ex.Message}", "エラー",
                               MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
         /// 保存状態を更新する
         /// 注意事項: 変更状態に基づいて保存ボタンの有効/無効を切り替える
@@ -255,7 +255,7 @@ namespace PowerSimBuilder
         {
             saveButton.Enabled = _canvasManager.IsModified;
         }
-        
+
         /// <summary>
         /// Undo/Redoボタンの状態を更新する
         /// 注意事項: 操作履歴の状態に基づいてボタンの有効/無効を切り替える
@@ -266,7 +266,7 @@ namespace PowerSimBuilder
             undoButton.Enabled = _canvasManager.CanUndo;
             redoButton.Enabled = _canvasManager.CanRedo;
         }
-        
+
         /// <summary>
         /// 削除ボタンの状態を更新する
         /// 注意事項: 選択状態に基づいて削除ボタンの有効/無効を切り替える
@@ -274,11 +274,11 @@ namespace PowerSimBuilder
         /// </summary>
         private void UpdateDeleteButton()
         {
-            deleteButton.Enabled = 
-                _canvasManager.SelectedComponent != null || 
+            deleteButton.Enabled =
+                _canvasManager.SelectedComponent != null ||
                 _canvasManager.SelectedConnection != null;
         }
-        
+
         /// <summary>
         /// Pythonコードプレビュー用フォーム
         /// 注意事項: 生成されたPythonコードを表示する
@@ -295,7 +295,7 @@ namespace PowerSimBuilder
             {
                 Text = "生成されたPythonコード";
                 Size = new Size(800, 600);
-                
+
                 var textBox = new TextBox
                 {
                     Multiline = true,
@@ -305,7 +305,7 @@ namespace PowerSimBuilder
                     ScrollBars = ScrollBars.Both,
                     ReadOnly = true
                 };
-                
+
                 Controls.Add(textBox);
             }
         }

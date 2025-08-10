@@ -79,6 +79,7 @@
     <Compile Include="CanvasForm\ParameterItem.cs" />
     <Compile Include="CanvasForm\PointJsonConverter.cs" />
     <Compile Include="CanvasForm\PythonCodeGenerator.cs" />
+    <Compile Include="parts\ListDictionaryConverter.cs" />
     <Compile Include="SimRegistForm.cs">
       <SubType>Form</SubType>
     </Compile>

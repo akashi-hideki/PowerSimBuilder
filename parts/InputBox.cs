@@ -1010,7 +1010,7 @@ namespace PowerSimBuilder
                 }
                 else
                 {
-                    LogcatTraceHelper.Instance.LogError("input box ","Panel is not created. Unable to clone and add to GroupBox.");
+                    LogcatTraceHelper.Instance.LogError("input box ", "Panel is not created. Unable to clone and add to GroupBox.");
                 }
             }
         }

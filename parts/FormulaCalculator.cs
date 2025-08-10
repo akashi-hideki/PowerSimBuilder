@@ -77,7 +77,7 @@ namespace PowerSimBuilder
             if (string.IsNullOrEmpty(_formula))
             {
                 string message = "The formula is not set.";
-                LogcatTraceHelper.Instance.Log("Error",message);
+                LogcatTraceHelper.Instance.Log("Error", message);
                 MessageBox.Show(message);
                 return;
             }

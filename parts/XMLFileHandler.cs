@@ -109,7 +109,7 @@ namespace PowerSimBuilder
             {
                 LogcatTraceHelper.Instance.LogError("Error", $"Error occurred while saving data: {ex.Message}");
             }
-            }
+        }
 
         /// <summary>
         /// Method: LoadFromFile メソッド: LoadFromFile
@@ -130,7 +130,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"{filePath} Load Fail{ ex.Message } ");
+                MessageBox.Show($"{filePath} Load Fail{ex.Message} ");
             }
         }
 
