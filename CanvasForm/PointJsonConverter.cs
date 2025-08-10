@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 
 namespace PowerSimBuilder
 {
-    // Point型用カスタムコンバーター
     public class PointJsonConverter : JsonConverter<Point>
     {
         public override Point Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

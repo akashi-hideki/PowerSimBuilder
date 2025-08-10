@@ -8,12 +8,12 @@ namespace PowerSimBuilder
         public string ParamName { get; private set; }
         public string ParamType { get; private set; }
         public object DefaultValue { get; private set; }
-
+        
         public AddParameterForm()
         {
             InitializeComponent();
         }
-
+        
         private void BtnOK_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtName.Text))
@@ -22,10 +22,10 @@ namespace PowerSimBuilder
                 this.DialogResult = DialogResult.None;
                 return;
             }
-
+            
             ParamName = txtName.Text;
             ParamType = cmbType.SelectedItem.ToString();
-
+            
             try
             {
                 switch (ParamType)

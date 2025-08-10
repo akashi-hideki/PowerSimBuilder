@@ -36,8 +36,7 @@ namespace PowerSimBuilder
         
         public ComponentControl(ComponentDescriptor descriptor)
         {
-            // インスタンス名を生成 (例: "VSI_7f3a2b")
-            InstanceName = $"{descriptor.Type}_{Guid.NewGuid().ToString("N").Substring(0, 6)}";
+            // �C���X�^���X���𐶐� (��: "VSI_7f3a2b")
             Descriptor = descriptor;
             InitializeComponent();
             InitializeParameters();
@@ -71,13 +70,10 @@ namespace PowerSimBuilder
         {
             base.OnPaint(e);
             
-            // 背景
             e.Graphics.FillRectangle(Brushes.LightGray, ClientRectangle);
             
-            // テキスト
             e.Graphics.DrawString(Descriptor.Name, Font, Brushes.Black, 10, 10);
             
-            // 選択状態
             if (IsSelected)
             {
                 using (var pen = new Pen(Color.Red, 2))
@@ -86,7 +82,6 @@ namespace PowerSimBuilder
                 }
             }
             
-            // ポート
             foreach (var port in _ports)
             {
                 e.Graphics.FillEllipse(Brushes.Green, port.Value);
@@ -97,7 +92,6 @@ namespace PowerSimBuilder
         {
             base.OnMouseDown(e);
             
-            // ポートクリックをチェック
             foreach (var port in _ports)
             {
                 if (port.Value.Contains(e.Location))
@@ -107,7 +101,6 @@ namespace PowerSimBuilder
                 }
             }
             
-            // コンポーネント選択
             IsSelected = true;
             _dragOffset = e.Location;
             BringToFront();
@@ -119,21 +112,15 @@ namespace PowerSimBuilder
             
             if (e.Button == MouseButtons.Left && IsSelected)
             {
-                Location = new Point(
-                    Left + e.X - _dragOffset.X,
-                    Top + e.Y - _dragOffset.Y
-                );
+                int deltaX = e.X - _dragOffset.X;
+                int deltaY = e.Y - _dragOffset.Y;
+                
+                Left += deltaX;
+                Top += deltaY;
+                
+                _dragOffset = e.Location;
+                Parent.Invalidate();
             }
-        }
-    }
-    
-    public class PortEventArgs : EventArgs
-    {
-        public string PortName { get; }
-        
-        public PortEventArgs(string portName)
-        {
-            PortName = portName;
         }
     }
 }

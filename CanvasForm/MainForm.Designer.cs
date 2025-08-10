@@ -30,6 +30,7 @@ namespace PowerSimBuilder
         {
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.saveButton = new System.Windows.Forms.ToolStripButton();
+            this.loadButton = new System.Windows.Forms.ToolStripButton(); // 追加
             this.undoButton = new System.Windows.Forms.ToolStripButton();
             this.redoButton = new System.Windows.Forms.ToolStripButton();
             this.deleteButton = new System.Windows.Forms.ToolStripButton();
@@ -39,6 +40,7 @@ namespace PowerSimBuilder
             this.designCanvas1 = new PowerSimBuilder.DesignCanvas();
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.componentPalette1 = new PowerSimBuilder.ComponentPalette();
+            this.addButton = new System.Windows.Forms.Button();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -50,6 +52,7 @@ namespace PowerSimBuilder
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveButton,
+            this.loadButton, // 追加
             this.undoButton,
             this.redoButton,
             this.deleteButton,
@@ -68,6 +71,14 @@ namespace PowerSimBuilder
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(35, 22);
             this.saveButton.Text = "保存";
+            // 
+            // loadButton
+            // 
+            this.loadButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.loadButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.loadButton.Name = "loadButton";
+            this.loadButton.Size = new System.Drawing.Size(47, 22);
+            this.loadButton.Text = "読み込み";
             // 
             // undoButton
             // 
@@ -151,11 +162,23 @@ namespace PowerSimBuilder
             this.componentPalette1.Size = new System.Drawing.Size(200, 425);
             this.componentPalette1.TabIndex = 2;
             // 
+            // addButton
+            // 
+            this.addButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.addButton.Enabled = false;
+            this.addButton.Location = new System.Drawing.Point(12, 415);
+            this.addButton.Name = "addButton";
+            this.addButton.Size = new System.Drawing.Size(75, 23);
+            this.addButton.TabIndex = 3;
+            this.addButton.Text = "追加";
+            this.addButton.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(884, 450);
+            this.Controls.Add(this.addButton);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.componentPalette1);
             this.Controls.Add(this.toolStrip1);
@@ -176,14 +199,16 @@ namespace PowerSimBuilder
 
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton saveButton;
+        private System.Windows.Forms.ToolStripButton loadButton; // 追加
         private System.Windows.Forms.ToolStripButton undoButton;
         private System.Windows.Forms.ToolStripButton redoButton;
         private System.Windows.Forms.ToolStripButton deleteButton;
         private System.Windows.Forms.ToolStripButton runButton;
+        private System.Windows.Forms.ToolStripButton addComponentToolStripButton;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private DesignCanvas designCanvas1;
         private System.Windows.Forms.PropertyGrid propertyGrid1;
         private ComponentPalette componentPalette1;
-        private System.Windows.Forms.ToolStripButton addComponentToolStripButton;
+        private System.Windows.Forms.Button addButton;
     }
 }

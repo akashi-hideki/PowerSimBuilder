@@ -24,7 +24,7 @@ namespace PowerSimBuilder
             this.BorderStyle = BorderStyle.FixedSingle;
             this.ResumeLayout(false);
         }
-        
+            
         private void InitializeComponentPalette()
         {
             // 初期コンポーネントの追加
@@ -124,6 +124,9 @@ namespace PowerSimBuilder
             var button = (Button)sender;
             SelectedComponent = (ComponentDescriptor)button.Tag;
             
+            // 選択状態を通知
+            OnComponentSelected(EventArgs.Empty);
+            
             // 選択されたボタンを強調表示
             foreach (Control control in Controls)
             {
@@ -132,6 +135,14 @@ namespace PowerSimBuilder
                     btn.BackColor = (btn == button) ? Color.LightBlue : Color.WhiteSmoke;
                 }
             }
+        }
+        
+        // コンポーネント選択イベント
+        public event EventHandler ComponentSelected;
+        
+        protected virtual void OnComponentSelected(EventArgs e)
+        {
+            ComponentSelected?.Invoke(this, e);
         }
     }
     

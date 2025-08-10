@@ -17,3 +17,22 @@ Stack Trace:    場所 System.Drawing.Color.CheckByte(Int32 value, String name)
    場所 System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
    場所 System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
 ====================================
+=== Crash Report ===
+Date: 2025/08/10 8:54:04
+Error Message: '-88' の値は 'red' に対して有効ではありません。'red' は 0 以上または 255 以下でなければなりません。
+Stack Trace:    場所 System.Drawing.Color.CheckByte(Int32 value, String name)
+   場所 System.Drawing.Color.FromArgb(Int32 alpha, Int32 red, Int32 green, Int32 blue)
+   場所 System.Drawing.Color.FromArgb(Int32 red, Int32 green, Int32 blue)
+   場所 PowerSimBuilder.AddComponentForm.GenerateIcon(String type) 場所 D:\source2\PowerSimBuilder\CanvasForm\AddComponentForm.cs:行 60
+   場所 PowerSimBuilder.AddComponentForm.BtnOK_Click(Object sender, EventArgs e) 場所 D:\source2\PowerSimBuilder\CanvasForm\AddComponentForm.cs:行 45
+   場所 System.Windows.Forms.Control.OnClick(EventArgs e)
+   場所 System.Windows.Forms.Button.OnClick(EventArgs e)
+   場所 System.Windows.Forms.Button.OnMouseUp(MouseEventArgs mevent)
+   場所 System.Windows.Forms.Control.WmMouseUp(Message& m, MouseButtons button, Int32 clicks)
+   場所 System.Windows.Forms.Control.WndProc(Message& m)
+   場所 System.Windows.Forms.ButtonBase.WndProc(Message& m)
+   場所 System.Windows.Forms.Button.WndProc(Message& m)
+   場所 System.Windows.Forms.Control.ControlNativeWindow.OnMessage(Message& m)
+   場所 System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
+   場所 System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
+====================================

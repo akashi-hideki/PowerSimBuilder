@@ -15,7 +15,6 @@ namespace PowerSimBuilder
             code.AppendLine("from scipy.integrate import solve_ivp");
             code.AppendLine();
             
-            // コンポーネントのインスタンス化
             foreach (var component in components)
             {
                 component.InstanceName = $"comp{_componentCounter++}";
@@ -23,11 +22,9 @@ namespace PowerSimBuilder
             }
             code.AppendLine();
             
-            // 接続の設定
             GenerateConnectionsCode(code, components);
             code.AppendLine();
             
-            // シミュレーション実行関数
             code.AppendLine("def run_simulation():");
             code.AppendLine("    # シミュレーションロジックをここに実装");
             code.AppendLine("    print(\"シミュレーションを開始します\")");

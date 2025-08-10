@@ -21,13 +21,18 @@ namespace PowerSimBuilder
         private bool _isDragging;
         
         public List<ComponentControl> Components { get; } = new List<ComponentControl>();
-        public List<Connection> Connections { get; } = new List<Connection>(); // 接続管理リスト追加
+        public List<Connection> Connections { get; } = new List<Connection>();
         public ComponentControl SelectedComponent { get; private set; }
         
         public DesignCanvas()
         {
             InitializeComponent();
             DoubleBuffered = true;
+            
+            // ドロップ操作を許可
+            this.AllowDrop = true;
+            this.DragEnter += DesignCanvas_DragEnter;
+            this.DragDrop += DesignCanvas_DragDrop;
         }
         
         protected override void OnPaint(PaintEventArgs e)
@@ -35,7 +40,7 @@ namespace PowerSimBuilder
             base.OnPaint(e);
             
             // 既存の接続を描画
-            foreach (var connection in Connections) // Connectionsリストを使用
+            foreach (var connection in Connections)
             {
                 DrawConnection(e.Graphics, connection);
             }
@@ -69,14 +74,6 @@ namespace PowerSimBuilder
             }
         }
         
-        // 既存メソッド（ディスクリプタ使用）
-        public void AddComponent(ComponentDescriptor descriptor, Point location)
-        {
-            var control = new ComponentControl(descriptor) { Location = location };
-            AddComponent(control); // 新しいメソッド呼び出し
-        }
-        
-        // 新しいコンポーネント追加メソッド
         public void AddComponent(ComponentControl control)
         {
             if (!Controls.Contains(control))
@@ -97,7 +94,13 @@ namespace PowerSimBuilder
             }
         }
         
-        // コンポーネント削除メソッド
+        // コンポーネント追加メソッド（位置指定版）
+        public void AddComponent(ComponentDescriptor descriptor, Point location)
+        {
+            var control = new ComponentControl(descriptor) { Location = location };
+            AddComponent(control);
+        }
+        
         public void RemoveComponent(ComponentControl component)
         {
             if (Controls.Contains(component))
@@ -140,12 +143,11 @@ namespace PowerSimBuilder
                 _currentConnection.EndComponent = (ComponentControl)sender;
                 _currentConnection.EndPort = e.PortName;
                 
-                AddConnection(_currentConnection); // 接続追加メソッド使用
+                AddConnection(_currentConnection);
                 _currentConnection = null;
             }
         }
         
-        // 接続追加メソッド
         public void AddConnection(Connection connection)
         {
             if (!Connections.Contains(connection))
@@ -158,7 +160,6 @@ namespace PowerSimBuilder
             }
         }
         
-        // 接続削除メソッド
         public void RemoveConnection(Connection connection)
         {
             if (Connections.Contains(connection))
@@ -170,6 +171,7 @@ namespace PowerSimBuilder
                 Invalidate();
             }
         }
+        
         public void Clear()
         {
             Components.Clear();
@@ -281,6 +283,28 @@ namespace PowerSimBuilder
         {
             return Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2));
         }
+        
+        private void DesignCanvas_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("ComponentDescriptor"))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private void DesignCanvas_DragDrop(object sender, DragEventArgs e)
+        {
+            Point dropLocation = this.PointToClient(new Point(e.X, e.Y));
+            
+            if (e.Data.GetData("ComponentDescriptor") is ComponentDescriptor descriptor)
+            {
+                AddComponent(descriptor, dropLocation);
+            }
+        }
     }
     
     public class Connection
@@ -289,5 +313,35 @@ namespace PowerSimBuilder
         public string StartPort { get; set; }
         public ComponentControl EndComponent { get; set; }
         public string EndPort { get; set; }
+    }
+    
+    public class ComponentEventArgs : EventArgs
+    {
+        public ComponentControl Component { get; }
+        
+        public ComponentEventArgs(ComponentControl component)
+        {
+            Component = component;
+        }
+    }
+    
+    public class ConnectionEventArgs : EventArgs
+    {
+        public Connection Connection { get; }
+        
+        public ConnectionEventArgs(Connection connection)
+        {
+            Connection = connection;
+        }
+    }
+    
+    public class PortEventArgs : EventArgs
+    {
+        public string PortName { get; }
+        
+        public PortEventArgs(string portName)
+        {
+            PortName = portName;
+        }
     }
 }

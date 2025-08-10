@@ -9,12 +9,12 @@ namespace PowerSimBuilder
     {
         public ComponentDescriptor NewComponent { get; private set; }
         private List<ParameterDescriptor> _parameters = new List<ParameterDescriptor>();
-
+        
         public AddComponentForm()
         {
             InitializeComponent();
         }
-
+        
         private void BtnAddParam_Click(object sender, EventArgs e)
         {
             using (var paramForm = new AddParameterForm())
@@ -53,19 +53,25 @@ namespace PowerSimBuilder
         
         private Bitmap GenerateIcon(string type)
         {
-            var color = Color.FromArgb(
-                (type.GetHashCode() * 17) % 256,
-                (type.GetHashCode() * 31) % 256,
-                (type.GetHashCode() * 53) % 256);
+            // 安全なカラー生成
+            uint hash = (uint)Math.Abs(type.GetHashCode());
+            byte red = (byte)((hash * 17) % 256);
+            byte green = (byte)((hash * 31) % 256);
+            byte blue = (byte)((hash * 53) % 256);
             
-            var bmp = new Bitmap(32, 32);
-            using (var g = Graphics.FromImage(bmp))
+            Color color = Color.FromArgb(red, green, blue);
+            
+            Bitmap bmp = new Bitmap(32, 32);
+            using (Graphics graphics = Graphics.FromImage(bmp))
             {
-                g.FillRectangle(new SolidBrush(color), 0, 0, 32, 32);
-                g.DrawRectangle(Pens.Black, 0, 0, 31, 31);
-                g.DrawString(type[0].ToString(), 
-                            new Font("Arial", 10, FontStyle.Bold), 
-                            Brushes.White, new PointF(10, 8));
+                graphics.FillRectangle(new SolidBrush(color), 0, 0, 32, 32);
+                graphics.DrawRectangle(Pens.Black, 0, 0, 31, 31);
+                
+                // 空文字チェック
+                string firstChar = !string.IsNullOrEmpty(type) ? type[0].ToString() : "?";
+                graphics.DrawString(firstChar, 
+                                  new Font("Arial", 10, FontStyle.Bold), 
+                                  Brushes.White, new PointF(10, 8));
             }
             return bmp;
         }
