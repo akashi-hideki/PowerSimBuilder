@@ -440,6 +440,8 @@ namespace PowerSimBuilder
         /// 作成日: 2025-08-10
         /// </summary>
         public string EndPort { get; set; }
+
+        public string DataType { get; set; } = "double"; // デフォルト値
     }
 
     /// <summary>

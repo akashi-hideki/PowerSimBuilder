@@ -9,6 +9,7 @@ namespace PowerSimBuilder
     {
         public event EventHandler SelectedChanged;
         public event EventHandler<PortEventArgs> PortClicked;
+        public event EventHandler DoubleClicked;
 
         private bool _selected;
         private readonly Dictionary<string, Rectangle> _ports = new Dictionary<string, Rectangle>();
@@ -16,32 +17,26 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネント記述子
-        /// 作成日: 2025-08-10
         /// </summary>
         public ComponentDescriptor Descriptor { get; }
 
         /// <summary>
         /// 関連接続リスト
-        /// 作成日: 2025-08-10
         /// </summary>
         public List<Connection> Connections { get; } = new List<Connection>();
 
         /// <summary>
         /// パラメータ辞書
-        /// 作成日: 2025-08-10
         /// </summary>
         public Dictionary<string, object> Parameters { get; } = new Dictionary<string, object>();
 
         /// <summary>
         /// インスタンス名
-        /// 作成日: 2025-08-10
         /// </summary>
         public string InstanceName { get; set; } = "comp";
 
         /// <summary>
         /// 選択状態
-        /// 注意事項: 設定時にSelectedChangedイベントを発行する
-        /// 作成日: 2025-08-10
         /// </summary>
         public bool IsSelected
         {
@@ -59,22 +54,38 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネントコントロールのコンストラクタ
-        /// 注意事項: パラメータとポートを初期化する
-        /// 作成日: 2025-08-10
         /// </summary>
         public ComponentControl(ComponentDescriptor descriptor)
         {
-            // インスタンス名を生成 (例: "VSI_7f3a2b")
             Descriptor = descriptor;
             InitializeComponent();
             InitializeParameters();
             InitializePorts();
+            InitializeEvents();
+        }
+
+        private void InitializeComponentParts()
+        {
+            this.SuspendLayout();
+            // 
+            // ComponentControl
+            // 
+            this.BackColor = System.Drawing.Color.LightGray;
+            this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.Size = new System.Drawing.Size(100, 70);
+            this.ResumeLayout(false);
+        }
+
+        /// <summary>
+        /// イベントハンドラを初期化
+        /// </summary>
+        private void InitializeEvents()
+        {
+            this.DoubleClick += (s, e) => DoubleClicked?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// パラメータを初期化する
-        /// 注意事項: デフォルト値でパラメータ辞書を設定する
-        /// 作成日: 2025-08-10
         /// </summary>
         private void InitializeParameters()
         {
@@ -86,42 +97,66 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// ポートを初期化する
-        /// 注意事項: 入力ポートと出力ポートを設定する
-        /// 作成日: 2025-08-10
         /// </summary>
-        private void InitializePorts()
+        public  void InitializePorts()
         {
-            _ports.Add("Input", new Rectangle(0, Height / 2 - 5, 10, 10));
-            _ports.Add("Output", new Rectangle(Width - 10, Height / 2 - 5, 10, 10));
+            _ports.Clear();
+            int portSize = 10;
+
+            // 入力ポートを左側に配置
+            if (Descriptor.InputPorts != null)
+            {
+                for (int i = 0; i < Descriptor.InputPorts.Length; i++)
+                {
+                    string portName = Descriptor.InputPorts[i];
+                    int yPos = (i + 1) * Height / (Descriptor.InputPorts.Length + 1);
+                    _ports[portName] = new Rectangle(0, yPos - portSize / 2, portSize, portSize);
+                }
+            }
+
+            // 出力ポートを右側に配置
+            if (Descriptor.OutputPorts != null)
+            {
+                for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
+                {
+                    string portName = Descriptor.OutputPorts[i];
+                    int yPos = (i + 1) * Height / (Descriptor.OutputPorts.Length + 1);
+                    _ports[portName] = new Rectangle(Width - portSize, yPos - portSize / 2, portSize, portSize);
+                }
+            }
         }
 
         /// <summary>
         /// ポート位置を取得する
-        /// 注意事項: 親コントロール上の絶対位置を返す
-        /// 作成日: 2025-08-10
         /// </summary>
         public Point GetPortLocation(string portName)
         {
             if (_ports.TryGetValue(portName, out var rect))
             {
-                return new Point(Left + rect.X + rect.Width / 2, Top + rect.Y + rect.Height / 2);
+                return PointToScreen(new Point(
+                    rect.X + rect.Width / 2,
+                    rect.Y + rect.Height / 2));
             }
-            return Location;
+            return PointToScreen(Location);
         }
 
         /// <summary>
         /// 描画処理
-        /// 注意事項: 選択状態に応じて枠線を描画する
-        /// 作成日: 2025-08-10
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
 
+            // 背景を描画
             e.Graphics.FillRectangle(Brushes.LightGray, ClientRectangle);
 
-            e.Graphics.DrawString(Descriptor.Name, Font, Brushes.Black, 10, 10);
+            // コンポーネント名を描画
+            using (var font = new Font("Arial", 8))
+            {
+                e.Graphics.DrawString(InstanceName, font, Brushes.Black, 10, 10);
+            }
 
+            // 選択状態の枠を描画
             if (IsSelected)
             {
                 using (var pen = new Pen(Color.Red, 2))
@@ -130,21 +165,43 @@ namespace PowerSimBuilder
                 }
             }
 
+            // ポートを描画
             foreach (var port in _ports)
             {
-                e.Graphics.FillEllipse(Brushes.Green, port.Value);
+                // ポートタイプ判定部分の修正
+                if (port.Key.IndexOf("Input", StringComparison.Ordinal) >= 0)
+                {
+                    e.Graphics.FillEllipse(Brushes.Blue, port.Value);
+                }
+                else if (port.Key.IndexOf("Output", StringComparison.Ordinal) >= 0)
+                {
+                    e.Graphics.FillEllipse(Brushes.Green, port.Value);
+                }
+
+                // ポート名を描画（デバッグ用）
+                // e.Graphics.DrawString(port.Key, Font, Brushes.Black, port.Value.X, port.Value.Y);
             }
         }
 
         /// <summary>
+        /// サイズ変更時の処理
+        /// </summary>
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            InitializePorts();
+            Invalidate();
+        }
+
+        /// <summary>
         /// マウスダウンイベント処理
-        /// 注意事項: ポートクリック時は接続処理、それ以外は選択処理を行う
-        /// 作成日: 2025-08-10
         /// </summary>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+            this.Focus();
 
+            // ポートクリックチェック
             foreach (var port in _ports)
             {
                 if (port.Value.Contains(e.Location))
@@ -154,6 +211,7 @@ namespace PowerSimBuilder
                 }
             }
 
+            // ポート以外をクリックした場合は選択状態を更新
             IsSelected = true;
             _dragOffset = e.Location;
             BringToFront();
@@ -161,8 +219,6 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// マウス移動イベント処理
-        /// 注意事項: 左ボタンドラッグでコンポーネントを移動する
-        /// 作成日: 2025-08-10
         /// </summary>
         protected override void OnMouseMove(MouseEventArgs e)
         {
@@ -170,6 +226,9 @@ namespace PowerSimBuilder
 
             if (e.Button == MouseButtons.Left && IsSelected)
             {
+                // ドラッグ中はカーソルを移動カーソルに変更
+                Cursor = Cursors.SizeAll;
+
                 int deltaX = e.X - _dragOffset.X;
                 int deltaY = e.Y - _dragOffset.Y;
 
@@ -179,6 +238,29 @@ namespace PowerSimBuilder
                 _dragOffset = e.Location;
                 Parent.Invalidate();
             }
+            else
+            {
+                // ポート上にカーソルがある場合は手のアイコンに変更
+                bool overPort = false;
+                foreach (var port in _ports)
+                {
+                    if (port.Value.Contains(e.Location))
+                    {
+                        overPort = true;
+                        break;
+                    }
+                }
+                Cursor = overPort ? Cursors.Hand : Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// マウスアップイベント処理
+        /// </summary>
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            Cursor = Cursors.Default;
         }
     }
 }

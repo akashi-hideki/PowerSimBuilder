@@ -64,11 +64,29 @@
     <Compile Include="CanvasForm\ComponentPalette.Designer.cs">
       <DependentUpon>ComponentPalette.cs</DependentUpon>
     </Compile>
+    <Compile Include="CanvasForm\ComponentPropertyForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CanvasForm\ComponentPropertyForm.Designer.cs">
+      <DependentUpon>ComponentPropertyForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CanvasForm\ConnectionEditorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CanvasForm\ConnectionEditorForm.Designer.cs">
+      <DependentUpon>ConnectionEditorForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CanvasForm\DesignCanvas.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="CanvasForm\DesignCanvas.Designer.cs">
       <DependentUpon>DesignCanvas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CanvasForm\FaultConditionEditorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CanvasForm\FaultConditionEditorForm.Designer.cs">
+      <DependentUpon>FaultConditionEditorForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CanvasForm\MainForm.cs">
       <SubType>Form</SubType>
@@ -79,6 +97,12 @@
     <Compile Include="CanvasForm\ParameterItem.cs" />
     <Compile Include="CanvasForm\PointJsonConverter.cs" />
     <Compile Include="CanvasForm\PythonCodeGenerator.cs" />
+    <Compile Include="CanvasForm\ThermalParameterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CanvasForm\ThermalParameterForm.Designer.cs">
+      <DependentUpon>ThermalParameterForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="parts\ListDictionaryConverter.cs" />
     <Compile Include="SimRegistForm.cs">
       <SubType>Form</SubType>

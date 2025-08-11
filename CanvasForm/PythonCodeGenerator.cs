@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,44 +8,104 @@ namespace PowerSimBuilder
     {
         private int _componentCounter = 1;
 
-        /// <summary>
-        /// Pythonコードを生成する
-        /// 注意事項: コンポーネントと接続情報からシミュレーションコードを生成
-        /// 作成日: 2025-08-10
-        /// </summary>
-        public string GenerateCode(IEnumerable<ComponentControl> components)
+        public string GenerateCode(IEnumerable<ComponentControl> components, List<Connection> connections)
         {
             var code = new StringBuilder();
             code.AppendLine("from power_system_simulator import *");
             code.AppendLine("import numpy as np");
-            code.AppendLine("from scipy.integrate import solve_ivp");
             code.AppendLine();
 
             foreach (var component in components)
             {
                 component.InstanceName = $"comp{_componentCounter++}";
-                GenerateComponentCode(code, component);
+                code.AppendLine(GenerateComponentCode(component));
             }
             code.AppendLine();
 
-            GenerateConnectionsCode(code, components);
+            code.AppendLine(GenerateConnectionsCode(connections));
             code.AppendLine();
 
             code.AppendLine("def run_simulation():");
-            code.AppendLine("    # シミュレーションロジックをここに実装");
-            code.AppendLine("    print(\"シミュレーションを開始します\")");
+            code.AppendLine("    manager = SimulationManager()");
+            foreach (var component in components)
+            {
+                code.AppendLine($"    manager.add_component({component.InstanceName})");
+            }
+            code.AppendLine("    manager.run_simulation(t_total=0.5, dt=0.001)");
             code.AppendLine();
 
             return code.ToString();
         }
 
-        /// <summary>
-        /// コンポーネントコードを生成する
-        /// 注意事項: パラメータ情報を含むインスタンス作成コードを生成
-        /// 作成日: 2025-08-10
-        /// </summary>
-        private void GenerateComponentCode(StringBuilder code, ComponentControl component)
+        public string GenerateComponentCode(ComponentControl component)
         {
+            switch (component.Descriptor.Type)
+            {
+                case "InductionMotor":
+                    return GenerateMotorCode(component);
+                
+                case "FaultMonitor":
+                    return GenerateFaultMonitorCode(component);
+                
+                default:
+                    return GenerateDefaultComponentCode(component);
+            }
+        }
+
+        private string GenerateMotorCode(ComponentControl motor)
+        {
+            var code = new StringBuilder();
+            code.AppendLine($"{motor.InstanceName} = InductionMotor(");
+            code.AppendLine($"    name='{motor.InstanceName}',");
+            code.AppendLine($"    params={{");
+            
+            bool firstParam = true;
+            foreach (var param in motor.Parameters)
+            {
+                if (!firstParam) code.AppendLine(",");
+                
+                if (param.Key == "ThermalResistance" || param.Key == "ThermalCapacity")
+                {
+                    code.Append($"        '{param.Key}': {param.Value}");
+                }
+                else
+                {
+                    code.Append($"        '{param.Key}': {FormatValue(param.Value)}");
+                }
+                
+                firstParam = false;
+            }
+            
+            code.AppendLine();
+            code.AppendLine($"    }}");
+            code.AppendLine($")");
+            return code.ToString();
+        }
+
+        private string GenerateFaultMonitorCode(ComponentControl monitor)
+        {
+            var code = new StringBuilder();
+            code.AppendLine($"{monitor.InstanceName} = FaultMonitor()");
+            
+            if (monitor.Parameters.TryGetValue("Conditions", out var conditionsObj) && 
+                conditionsObj is List<FaultCondition> conditions)
+            {
+                foreach (var condition in conditions)
+                {
+                    code.AppendLine($"{monitor.InstanceName}.add_condition(");
+                    code.AppendLine($"    component_name='{condition.ComponentName}',");
+                    code.AppendLine($"    state_name='{condition.StateName}',");
+                    code.AppendLine($"    condition_type='{condition.ConditionType}'");
+                    code.AppendLine($")");
+                }
+            }
+            
+            return code.ToString();
+        }
+
+        private string GenerateDefaultComponentCode(ComponentControl component)
+        {
+            var code = new StringBuilder();
             code.Append($"{component.InstanceName} = {component.Descriptor.Type}(");
             code.Append($"name='{component.InstanceName}'");
 
@@ -66,32 +127,21 @@ namespace PowerSimBuilder
             }
 
             code.AppendLine(")");
+            return code.ToString();
         }
 
-        /// <summary>
-        /// 接続コードを生成する
-        /// 注意事項: コンポーネント間の接続情報をコード化する
-        /// 作成日: 2025-08-10
-        /// </summary>
-        private void GenerateConnectionsCode(StringBuilder code, IEnumerable<ComponentControl> components)
+        private string GenerateConnectionsCode(List<Connection> connections)
         {
-            foreach (var component in components)
+            var code = new StringBuilder();
+            foreach (var connection in connections)
             {
-                foreach (var connection in component.Connections)
-                {
-                    if (connection.StartComponent == component && connection.EndComponent != null)
-                    {
-                        code.AppendLine($"{component.InstanceName}.connect({connection.EndComponent.InstanceName})");
-                    }
-                }
+                code.AppendLine($"{connection.StartComponent.InstanceName}.connect(" +
+                               $"{connection.EndComponent.InstanceName}, " +
+                               $"'{connection.StartPort}', '{connection.EndPort}')");
             }
+            return code.ToString();
         }
 
-        /// <summary>
-        /// 値をフォーマットする
-        /// 注意事項: 文字列型はクォーテーションで囲む
-        /// 作成日: 2025-08-10
-        /// </summary>
         private string FormatValue(object value)
         {
             if (value is string strValue)

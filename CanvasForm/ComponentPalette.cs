@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -9,20 +10,16 @@ namespace PowerSimBuilder
     {
         /// <summary>
         /// 利用可能なコンポーネントリスト
-        /// 作成日: 2025-08-10
         /// </summary>
         public List<ComponentDescriptor> AvailableComponents { get; } = new List<ComponentDescriptor>();
 
         /// <summary>
         /// 選択中のコンポーネント
-        /// 作成日: 2025-08-10
         /// </summary>
         public ComponentDescriptor SelectedComponent { get; private set; }
 
         /// <summary>
         /// コンポーネントパレットのコンストラクタ
-        /// 注意事項: 初期コンポーネントを追加する
-        /// 作成日: 2025-08-10
         /// </summary>
         public ComponentPalette()
         {
@@ -32,66 +29,107 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネントパレットの初期化
-        /// 作成日: 2025-08-10
         /// </summary>
         private void InitializeComponent()
         {
             this.SuspendLayout();
+            // 
+            // ComponentPalette
+            // 
             this.AutoScroll = true;
-            this.BackColor = Color.White;
-            this.BorderStyle = BorderStyle.FixedSingle;
+            this.BackColor = System.Drawing.Color.White;
+            this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.ResumeLayout(false);
         }
 
         /// <summary>
         /// コンポーネントパレットの初期化
-        /// 注意事項: デフォルトコンポーネントを追加する
-        /// 作成日: 2025-08-10
         /// </summary>
         private void InitializeComponentPalette()
         {
-            // 初期コンポーネントの追加
             AddDefaultComponents();
         }
 
         /// <summary>
         /// デフォルトコンポーネントを追加する
-        /// 作成日: 2025-08-10
         /// </summary>
         private void AddDefaultComponents()
         {
-            // デフォルトコンポーネントの追加
+            // 電圧形インバータ
             AddComponent(new ComponentDescriptor
             {
                 Name = "電圧形インバータ",
                 Type = "VoltageSourceInverter",
-                Icon = CreateIcon(Color.Red),
+                Icon = CreateIcon(new ComponentDescriptor { Type = "VoltageSourceInverter" }, Color.Red),
                 Category = "電源",
                 Parameters = new List<ParameterDescriptor>
                 {
                     new ParameterDescriptor { Name = "V_dc", Type = "double", DefaultValue = 300 },
                     new ParameterDescriptor { Name = "f_rated", Type = "double", DefaultValue = 60 }
-                }
+                },
+                InputPorts = new string[0], // 入力ポートなし
+                OutputPorts = new[] { "Output" }
             });
 
+            // 誘導電動機
             AddComponent(new ComponentDescriptor
             {
                 Name = "誘導電動機",
                 Type = "InductionMotor",
-                Icon = CreateIcon(Color.Blue),
+                Icon = CreateIcon(new ComponentDescriptor { Type = "InductionMotor" }, Color.Blue),
                 Category = "負荷",
                 Parameters = new List<ParameterDescriptor>
                 {
                     new ParameterDescriptor { Name = "R1", Type = "double", DefaultValue = 0.15 },
-                    new ParameterDescriptor { Name = "Lm", Type = "double", DefaultValue = 0.008 }
-                }
+                    new ParameterDescriptor { Name = "R2", Type = "double", DefaultValue = 0.25 },
+                    new ParameterDescriptor { Name = "Lm", Type = "double", DefaultValue = 0.008 },
+                    new ParameterDescriptor { Name = "J", Type = "double", DefaultValue = 0.02 },
+                    new ParameterDescriptor { Name = "B", Type = "double", DefaultValue = 0.005 },
+                    new ParameterDescriptor { Name = "poles", Type = "int", DefaultValue = 4 }
+                },
+                InputPorts = new[] { "VoltageInput" },
+                OutputPorts = new[] { "SpeedOutput", "CurrentOutput" }
+            });
+
+            // 機械負荷
+            AddComponent(new ComponentDescriptor
+            {
+                Name = "機械負荷",
+                Type = "MechanicalLoad",
+                Icon = CreateIcon(new ComponentDescriptor { Type = "MechanicalLoad" }, Color.Green),
+                Category = "負荷",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new ParameterDescriptor { Name = "load_type", Type = "string", DefaultValue = "constant" },
+                    new ParameterDescriptor { Name = "torque_coeff", Type = "double", DefaultValue = 0.1 }
+                },
+                InputPorts = new[] { "SpeedInput" },
+                OutputPorts = new[] { "TorqueOutput" }
+            });
+
+            // 故障監視システム
+            AddComponent(new ComponentDescriptor
+            {
+                Name = "故障監視システム",
+                Type = "FaultMonitor",
+                Icon = CreateIcon(new ComponentDescriptor { Type = "FaultMonitor" },Color.Orange),
+                Category = "監視",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new ParameterDescriptor 
+                    { 
+                        Name = "Conditions", 
+                        Type = "List<FaultCondition>", 
+                        DefaultValue = new List<FaultCondition>() 
+                    }
+                },
+                InputPorts = new[] { "Input1", "Input2" },
+                OutputPorts = new string[0] // 出力ポートなし
             });
         }
 
         /// <summary>
         /// コンポーネントを追加する
-        /// 注意事項: 重複追加を防止する
-        /// 作成日: 2025-08-10
         /// </summary>
         public void AddComponent(ComponentDescriptor component)
         {
@@ -104,8 +142,6 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネントボタンを作成する
-        /// 注意事項: ドラッグ＆ドロップと選択イベントを設定する
-        /// 作成日: 2025-08-10
         /// </summary>
         private void CreateComponentButton(ComponentDescriptor component)
         {
@@ -134,16 +170,36 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// アイコン画像を作成する
-        /// 作成日: 2025-08-10
         /// </summary>
-        private Bitmap CreateIcon(Color color)
+        private Bitmap CreateIcon(ComponentDescriptor component, Color color)
         {
             var bmp = new Bitmap(32, 32);
             using (var g = Graphics.FromImage(bmp))
             {
                 g.FillRectangle(new SolidBrush(color), 0, 0, 32, 32);
                 g.DrawRectangle(Pens.Black, 0, 0, 31, 31);
-                g.DrawString("C", new Font("Arial", 10, FontStyle.Bold),
+
+                string symbol;
+                switch (component.Type)
+                {
+                    case "VoltageSourceInverter":
+                        symbol = "V";
+                        break;
+                    case "InductionMotor":
+                        symbol = "M";
+                        break;
+                    case "MechanicalLoad":
+                        symbol = "L";
+                        break;
+                    case "FaultMonitor":
+                        symbol = "F";
+                        break;
+                    default:
+                        symbol = "C";
+                        break;
+                }
+
+                g.DrawString(symbol, new Font("Arial", 10, FontStyle.Bold),
                             Brushes.White, new PointF(8, 8));
             }
             return bmp;
@@ -151,8 +207,6 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネントボタンマウスダウンイベント
-        /// 注意事項: ドラッグ操作を開始する
-        /// 作成日: 2025-08-10
         /// </summary>
         private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
         {
@@ -167,8 +221,6 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネントボタンクリックイベント
-        /// 注意事項: 選択状態を更新しイベントを発行する
-        /// 作成日: 2025-08-10
         /// </summary>
         private void ComponentButton_Click(object sender, EventArgs e)
         {
@@ -190,13 +242,11 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネント選択イベント
-        /// 作成日: 2025-08-10
         /// </summary>
         public event EventHandler ComponentSelected;
 
         /// <summary>
         /// コンポーネント選択イベントを発行する
-        /// 作成日: 2025-08-10
         /// </summary>
         protected virtual void OnComponentSelected(EventArgs e)
         {
@@ -206,7 +256,6 @@ namespace PowerSimBuilder
 
     /// <summary>
     /// コンポーネント記述子クラス
-    /// 作成日: 2025-08-10
     /// </summary>
     public class ComponentDescriptor
     {
@@ -214,7 +263,9 @@ namespace PowerSimBuilder
         public string Type { get; set; }
         public Image Icon { get; set; }
         public string Category { get; set; }
-        public List<ParameterDescriptor> Parameters { get; set; }
+        public List<ParameterDescriptor> Parameters { get; set; } = new List<ParameterDescriptor>();
+        public string[] InputPorts { get; set; } = Array.Empty<string>();
+        public string[] OutputPorts { get; set; } = Array.Empty<string>();
 
         public override string ToString()
         {
@@ -224,7 +275,6 @@ namespace PowerSimBuilder
 
     /// <summary>
     /// パラメータ記述子クラス
-    /// 作成日: 2025-08-10
     /// </summary>
     public class ParameterDescriptor
     {
@@ -236,5 +286,16 @@ namespace PowerSimBuilder
         {
             return $"{Name}: {DefaultValue} ({Type})";
         }
+    }
+
+    /// <summary>
+    /// 故障条件クラス
+    /// </summary>
+    public class FaultCondition
+    {
+        public string ComponentName { get; set; }
+        public string StateName { get; set; }
+        public string ConditionType { get; set; }
+        public Dictionary<string, object> Parameters { get; } = new Dictionary<string, object>();
     }
 }

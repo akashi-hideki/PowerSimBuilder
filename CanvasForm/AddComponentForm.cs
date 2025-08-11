@@ -60,14 +60,17 @@ namespace PowerSimBuilder
                 DialogResult = DialogResult.None;
                 return;
             }
-
             NewComponent = new ComponentDescriptor
             {
                 Name = txtName.Text,
                 Type = txtType.Text,
                 Category = txtCategory.Text,
                 Parameters = new List<ParameterDescriptor>(_parameters),
-                Icon = GenerateIcon(txtType.Text)
+                Icon = GenerateIcon(txtType.Text),
+
+                // ポート情報を初期化
+                InputPorts = new[] { "Input" },
+                OutputPorts = new[] { "Output" }
             };
         }
 

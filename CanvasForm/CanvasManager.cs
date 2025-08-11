@@ -157,7 +157,10 @@ namespace PowerSimBuilder
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             Canvas.Invalidate();
         }
-
+        public List<Connection> GetAllConnections()
+        {
+            return new List<Connection>(_connections);
+        }
         public void SelectConnection(Connection connection)
         {
             if (SelectedConnection == connection) return;
