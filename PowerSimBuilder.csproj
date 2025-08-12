@@ -102,6 +102,8 @@
     </Compile>
     <Compile Include="CanvasForm\ParameterItem.cs" />
     <Compile Include="CanvasForm\PointJsonConverter.cs" />
+    <Compile Include="SimPartsManege\ComponentDefinition.cs" />
+    <Compile Include="SimPartsManege\ComponentDefinitionManager.cs" />
     <Compile Include="SimulationGenerate\PythonCodeGenerator.cs" />
     <Compile Include="CanvasForm\ThermalParameterForm.cs">
       <SubType>Form</SubType>
