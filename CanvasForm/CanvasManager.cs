@@ -6,34 +6,75 @@ using System.Text.Json.Serialization;
 
 namespace PowerSimBuilder
 {
+    /// <summary>
+    /// キャンバスの状態と操作を管理するクラス
+    /// 作成日: 2025-08-12
+    /// 注意点: UNDO/REDO機能、保存/読み込み機能を実装
+    /// </summary>
     public class CanvasManager
     {
-        // �C�x���g
+        // イベント定義
         public event EventHandler CanvasModified;
         public event EventHandler SelectionChanged;
 
+        // 状態管理用フィールド
         private readonly List<ComponentControl> _components = new List<ComponentControl>();
         private readonly List<Connection> _connections = new List<Connection>();
         private readonly Stack<CanvasState> _undoStack = new Stack<CanvasState>();
         private readonly Stack<CanvasState> _redoStack = new Stack<CanvasState>();
 
-        // �I�����
+        /// <summary>
+        /// 選択中のコンポーネント
+        /// 注意点: 単一選択のみ対応
+        /// </summary>
         public ComponentControl SelectedComponent { get; private set; }
+
+        /// <summary>
+        /// 選択中の接続
+        /// 注意点: 単一選択のみ対応
+        /// </summary>
         public Connection SelectedConnection { get; private set; }
 
-        // �ύX��ԃt���O
+        /// <summary>
+        /// 変更状態フラグ
+        /// 注意点: 保存時にfalseにリセット
+        /// </summary>
         public bool IsModified { get; set; }
+
+        /// <summary>
+        /// UNDO可能状態
+        /// 注意点: ツールバーボタンの有効化に使用
+        /// </summary>
         public bool CanUndo => _undoStack.Count > 0;
+
+        /// <summary>
+        /// REDO可能状態
+        /// 注意点: ツールバーボタンの有効化に使用
+        /// </summary>
         public bool CanRedo => _redoStack.Count > 0;
 
+        /// <summary>
+        /// デザインキャンバス
+        /// 注意点: 操作対象のキャンバス
+        /// </summary>
         public DesignCanvas Canvas { get; }
+
+        /// <summary>
+        /// コンポーネントパレット
+        /// 注意点: コンポーネント追加時に使用
+        /// </summary>
         public ComponentPalette Palette { get; }
 
+        /// <summary>
+        /// コンストラクタ
+        /// 注意点: イベントハンドラを登録
+        /// </summary>
         public CanvasManager(DesignCanvas canvas, ComponentPalette palette)
         {
             Canvas = canvas ?? throw new ArgumentNullException(nameof(canvas));
             Palette = palette ?? throw new ArgumentNullException(nameof(palette));
 
+            // キャンバスイベント購読
             Canvas.ComponentAdded += Canvas_ComponentAdded;
             Canvas.ComponentRemoved += Canvas_ComponentRemoved;
             Canvas.ComponentSelected += Canvas_ComponentSelected;
@@ -42,28 +83,31 @@ namespace PowerSimBuilder
             Canvas.ConnectionSelected += Canvas_ConnectionSelected;
         }
 
-
+        /// <summary>
+        /// コンポーネントを追加
+        /// 注意点: UNDO用状態保存を実行
+        /// </summary>
         public void AddComponent(ComponentDescriptor descriptor, Point location)
         {
             SaveStateForUndo();
 
-            var component = new ComponentControl(descriptor)
-            {
-                Location = location
-            };
-
+            var component = new ComponentControl(descriptor) { Location = location };
             _components.Add(component);
             Canvas.AddComponent(component);
-
             NotifyCanvasModified();
         }
 
+        /// <summary>
+        /// コンポーネントを削除
+        /// 注意点: 関連接続も同時削除
+        /// </summary>
         public void RemoveComponent(ComponentControl component)
         {
             if (component == null) return;
 
             SaveStateForUndo();
 
+            // 関連接続を削除
             var relatedConnections = _connections
                 .Where(c => c.StartComponent == component || c.EndComponent == component)
                 .ToList();
@@ -73,9 +117,11 @@ namespace PowerSimBuilder
                 RemoveConnection(connection);
             }
 
+            // コンポーネント削除
             _components.Remove(component);
             Canvas.RemoveComponent(component);
 
+            // 選択状態更新
             if (SelectedComponent == component)
             {
                 SelectedComponent = null;
@@ -85,31 +131,36 @@ namespace PowerSimBuilder
             NotifyCanvasModified();
         }
 
+        /// <summary>
+        /// コンポーネントを移動
+        /// 注意点: UNDO用状態保存を実行
+        /// </summary>
         public void MoveComponent(ComponentControl component, Point newLocation)
         {
             if (component == null) return;
 
             SaveStateForUndo();
-
             component.Location = newLocation;
             Canvas.Invalidate();
             NotifyCanvasModified();
         }
 
+        /// <summary>
+        /// 接続を追加
+        /// 注意点: 重複接続は追加しない
+        /// </summary>
         public void AddConnection(ComponentControl startComponent, string startPort,
                                 ComponentControl endComponent, string endPort)
         {
             if (startComponent == null || endComponent == null)
                 throw new ArgumentNullException();
 
-            if (string.IsNullOrEmpty(startPort))
-                throw new ArgumentException("Start port must be specified");
-
-            if (string.IsNullOrEmpty(endPort))
-                throw new ArgumentException("End port must be specified");
+            if (string.IsNullOrEmpty(startPort) || string.IsNullOrEmpty(endPort))
+                throw new ArgumentException("ポート名を指定してください");
 
             SaveStateForUndo();
 
+            // 重複チェック
             if (_connections.Any(c =>
                 c.StartComponent == startComponent && c.StartPort == startPort &&
                 c.EndComponent == endComponent && c.EndPort == endPort))
@@ -127,19 +178,22 @@ namespace PowerSimBuilder
 
             _connections.Add(connection);
             Canvas.AddConnection(connection);
-
             NotifyCanvasModified();
         }
 
+        /// <summary>
+        /// 接続を削除
+        /// 注意点: 選択状態も更新
+        /// </summary>
         public void RemoveConnection(Connection connection)
         {
             if (connection == null) return;
 
             SaveStateForUndo();
-
             _connections.Remove(connection);
             Canvas.RemoveConnection(connection);
 
+            // 選択状態更新
             if (SelectedConnection == connection)
             {
                 SelectedConnection = null;
@@ -149,6 +203,10 @@ namespace PowerSimBuilder
             NotifyCanvasModified();
         }
 
+        /// <summary>
+        /// コンポーネントを選択
+        /// 注意点: 既存選択を解除
+        /// </summary>
         public void SelectComponent(ComponentControl component)
         {
             if (SelectedComponent == component) return;
@@ -158,10 +216,20 @@ namespace PowerSimBuilder
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             Canvas.Invalidate();
         }
+
+        /// <summary>
+        /// 全接続を取得
+        /// 注意点: 外部からの読み取り専用アクセス用
+        /// </summary>
         public List<Connection> GetAllConnections()
         {
             return new List<Connection>(_connections);
         }
+
+        /// <summary>
+        /// 接続を選択
+        /// 注意点: 既存選択を解除
+        /// </summary>
         public void SelectConnection(Connection connection)
         {
             if (SelectedConnection == connection) return;
@@ -172,6 +240,10 @@ namespace PowerSimBuilder
             Canvas.Invalidate();
         }
 
+        /// <summary>
+        /// 全選択解除
+        /// 注意点: コンポーネントと接続の選択を解除
+        /// </summary>
         public void DeselectAll()
         {
             SelectedComponent = null;
@@ -180,6 +252,10 @@ namespace PowerSimBuilder
             Canvas.Invalidate();
         }
 
+        /// <summary>
+        /// UNDO操作
+        /// 注意点: REDOスタックに現在状態を保存
+        /// </summary>
         public void Undo()
         {
             if (!CanUndo) return;
@@ -191,6 +267,10 @@ namespace PowerSimBuilder
             ApplyState(previousState);
         }
 
+        /// <summary>
+        /// REDO操作
+        /// 注意点: UNDOスタックに現在状態を保存
+        /// </summary>
         public void Redo()
         {
             if (!CanRedo) return;
@@ -202,6 +282,10 @@ namespace PowerSimBuilder
             ApplyState(nextState);
         }
 
+        /// <summary>
+        /// モデルを保存
+        /// 注意点: シリアライズ可能な形式で出力
+        /// </summary>
         public CanvasModel SaveModel()
         {
             return new CanvasModel
@@ -227,12 +311,16 @@ namespace PowerSimBuilder
             };
         }
 
+        /// <summary>
+        /// モデルを読み込み
+        /// 注意点: UNDOスタックをクリア
+        /// </summary>
         public void LoadModel(CanvasModel model)
         {
             SaveStateForUndo();
-
             Clear();
 
+            // コンポーネント復元
             foreach (var compModel in model.Components)
             {
                 var component = new ComponentControl(compModel.Descriptor)
@@ -241,6 +329,7 @@ namespace PowerSimBuilder
                     InstanceName = compModel.InstanceName
                 };
 
+                // パラメータ復元
                 foreach (var param in compModel.Parameters)
                 {
                     if (component.Parameters.ContainsKey(param.Key))
@@ -253,10 +342,13 @@ namespace PowerSimBuilder
                 Canvas.AddComponent(component);
             }
 
+            // 接続復元
             foreach (var connModel in model.Connections)
             {
-                if (connModel.StartComponentIndex >= 0 && connModel.StartComponentIndex < _components.Count &&
-                    connModel.EndComponentIndex >= 0 && connModel.EndComponentIndex < _components.Count)
+                if (connModel.StartComponentIndex >= 0 && 
+                    connModel.StartComponentIndex < _components.Count &&
+                    connModel.EndComponentIndex >= 0 && 
+                    connModel.EndComponentIndex < _components.Count)
                 {
                     var startComponent = _components[connModel.StartComponentIndex];
                     var endComponent = _components[connModel.EndComponentIndex];
@@ -274,11 +366,14 @@ namespace PowerSimBuilder
                 }
             }
 
-            SelectedComponent = model.SelectedComponentIndex >= 0 && model.SelectedComponentIndex < _components.Count
+            // 選択状態復元
+            SelectedComponent = model.SelectedComponentIndex >= 0 && 
+                model.SelectedComponentIndex < _components.Count
                 ? _components[model.SelectedComponentIndex]
                 : null;
 
-            SelectedConnection = model.SelectedConnectionIndex >= 0 && model.SelectedConnectionIndex < _connections.Count
+            SelectedConnection = model.SelectedConnectionIndex >= 0 && 
+                model.SelectedConnectionIndex < _connections.Count
                 ? _connections[model.SelectedConnectionIndex]
                 : null;
 
@@ -288,29 +383,46 @@ namespace PowerSimBuilder
             Canvas.Invalidate();
         }
 
+        /// <summary>
+        /// 全コンポーネントを取得
+        /// 注意点: 外部からの読み取り専用アクセス用
+        /// </summary>
         public List<ComponentControl> GetAllComponents()
         {
             return new List<ComponentControl>(_components);
         }
 
+        /// <summary>
+        /// キャンバスをクリア
+        /// 注意点: UNDO/REDOスタックは保持
+        /// </summary>
         public void Clear()
         {
             _components.Clear();
             _connections.Clear();
-            Canvas.Clear(); // Clear���\�b�h���Ăяo��
+            Canvas.Clear();
             SelectedComponent = null;
             SelectedConnection = null;
             IsModified = false;
         }
 
-
+        /// <summary>
+        /// UNDO用状態保存
+        /// 注意点: REDOスタックをクリア
+        /// </summary>
         private void SaveStateForUndo()
         {
             _undoStack.Push(new CanvasState(this));
             _redoStack.Clear();
         }
+
+        /// <summary>
+        /// 状態を適用
+        /// 注意点: モデル全体を再構築
+        /// </summary>
         private void ApplyState(CanvasState state)
         {
+            // コンポーネント復元
             _components.Clear();
             foreach (var compModel in state.Components)
             {
@@ -320,6 +432,7 @@ namespace PowerSimBuilder
                     InstanceName = compModel.InstanceName
                 };
 
+                // パラメータ復元
                 foreach (var param in compModel.Parameters)
                 {
                     if (component.Parameters.ContainsKey(param.Key))
@@ -327,13 +440,10 @@ namespace PowerSimBuilder
                         component.Parameters[param.Key] = param.Value;
                     }
                 }
-                for (int i = 0; i < _connections.Count && i < state.ConnectionSelectionStates.Count; i++)
-                {
-                    _connections[i].IsSelected = state.ConnectionSelectionStates[i];
-                }
                 _components.Add(component);
             }
 
+            // 接続復元
             _connections.Clear();
             foreach (var connModel in state.Connections)
             {
@@ -357,7 +467,7 @@ namespace PowerSimBuilder
                 }
             }
 
-            // �L�����o�X�ɃR���|�[�l���g�Ɛڑ���ǉ�
+            // キャンバスに再追加
             Canvas.Clear();
             foreach (var component in _components)
             {
@@ -368,7 +478,7 @@ namespace PowerSimBuilder
                 Canvas.AddConnection(connection);
             }
 
-            // �I����Ԃ̕���
+            // 選択状態復元
             SelectedComponent = state.SelectedComponentIndex >= 0 &&
                 state.SelectedComponentIndex < _components.Count
                 ? _components[state.SelectedComponentIndex]
@@ -384,8 +494,8 @@ namespace PowerSimBuilder
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             Canvas.Invalidate();
         }
- 
 
+        #region イベントハンドラ
         private void Canvas_ComponentAdded(object sender, ComponentEventArgs e)
         {
             if (!_components.Contains(e.Component))
@@ -425,16 +535,24 @@ namespace PowerSimBuilder
         {
             SelectConnection(e.Connection);
         }
+        #endregion
 
+        /// <summary>
+        /// 変更通知
+        /// 注意点: 変更フラグを設定しイベント発行
+        /// </summary>
         private void NotifyCanvasModified()
         {
             IsModified = true;
             CanvasModified?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// キャンバス状態保持クラス
+        /// 注意点: シリアライズ可能な形式で状態保存
+        /// </summary>
         private class CanvasState
         {
-            
             public List<ComponentModel> Components { get; } = new List<ComponentModel>();
             public List<ConnectionModel> Connections { get; } = new List<ConnectionModel>();
             public int SelectedComponentIndex { get; set; } = -1;
@@ -443,6 +561,7 @@ namespace PowerSimBuilder
 
             public CanvasState(CanvasManager manager)
             {
+                // コンポーネント状態保存
                 foreach (var component in manager._components)
                 {
                     Components.Add(new ComponentModel
@@ -454,6 +573,7 @@ namespace PowerSimBuilder
                     });
                 }
 
+                // 接続状態保存
                 foreach (var connection in manager._connections)
                 {
                     Connections.Add(new ConnectionModel
@@ -466,12 +586,18 @@ namespace PowerSimBuilder
                     ConnectionSelectionStates.Add(connection.IsSelected);
                 }
 
+                // 選択状態保存
                 SelectedComponentIndex = manager._components.IndexOf(manager.SelectedComponent);
                 SelectedConnectionIndex = manager._connections.IndexOf(manager.SelectedConnection);
             }
         }
     }
 
+    #region モデルクラス
+    /// <summary>
+    /// キャンバスモデルクラス
+    /// 注意点: シリアライズ用データ構造
+    /// </summary>
     public class CanvasModel
     {
         public List<ComponentModel> Components { get; set; } = new List<ComponentModel>();
@@ -480,6 +606,10 @@ namespace PowerSimBuilder
         public int SelectedConnectionIndex { get; set; } = -1;
     }
 
+    /// <summary>
+    /// コンポーネントモデルクラス
+    /// 注意点: シリアライズ用データ構造
+    /// </summary>
     public class ComponentModel
     {
         public ComponentDescriptor Descriptor { get; set; }
@@ -490,6 +620,10 @@ namespace PowerSimBuilder
         public string InstanceName { get; set; }
     }
 
+    /// <summary>
+    /// 接続モデルクラス
+    /// 注意点: インデックス参照でコンポーネントを特定
+    /// </summary>
     public class ConnectionModel
     {
         public int StartComponentIndex { get; set; }
@@ -497,4 +631,5 @@ namespace PowerSimBuilder
         public int EndComponentIndex { get; set; }
         public string EndPort { get; set; }
     }
+    #endregion
 }

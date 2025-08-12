@@ -6,27 +6,30 @@ namespace PowerSimBuilder
 {
     /// <summary>
     /// 接続線を描画するための抽象クラス
+    /// 作成日: 2025-08-12
+    /// 注意点: 各レンダラーで共通のフォールバック処理を実装
     /// </summary>
     public abstract class ConnectionRenderer
     {
+        /// <summary>
+        /// 接続線を描画する抽象メソッド
+        /// </summary>
         public abstract void Render(Graphics g, Connection connection);
 
         /// <summary>
         /// 共通のフォールバック接続描画
+        /// 注意点: コンポーネントがnullの場合描画しない
         /// </summary>
-        // ConnectionRenderer.cs
         protected void RenderFallbackConnection(Graphics g, Connection connection)
         {
             if (connection.StartComponent == null || connection.EndComponent == null)
                 return;
 
-            // 開始点計算
             Point start = new Point(
                 connection.StartComponent.Left + connection.StartComponent.Width / 2,
                 connection.StartComponent.Top + connection.StartComponent.Height / 2
             );
 
-            // 終了点計算
             Point end = new Point(
                 connection.EndComponent.Left + connection.EndComponent.Width / 2,
                 connection.EndComponent.Top + connection.EndComponent.Height / 2
@@ -47,25 +50,31 @@ namespace PowerSimBuilder
 
     /// <summary>
     /// 直線で接続線を描画するレンダラー
+    /// 作成日: 2025-08-12
+    /// 注意点: パスポイント不足時はフォールバック処理を呼び出す
     /// </summary>
     public class StraightConnectionRenderer : ConnectionRenderer
     {
+        /// <summary>
+        /// 直線接続を描画
+        /// </summary>
         public override void Render(Graphics g, Connection connection)
         {
-            // パスポイントが不足している場合のフォールバック処理
             if (connection.Visual.PathPoints.Count < 2)
             {
                 RenderFallbackConnection(g, connection);
                 return;
             }
 
-            // 通常の描画処理
             using (var pen = CreatePen(connection))
             {
                 g.DrawLines(pen, connection.Visual.PathPoints.ToArray());
             }
         }
-        // ... 既存の CreatePen メソッド ...
+
+        /// <summary>
+        /// ペンを作成（選択状態で色変更）
+        /// </summary>
         protected virtual Pen CreatePen(Connection connection)
         {
             return new Pen(connection.Visual.IsSelected ? Color.Red : Color.Blue, 2)
@@ -78,40 +87,45 @@ namespace PowerSimBuilder
 
     /// <summary>
     /// ベジエ曲線で接続線を描画するレンダラー
+    /// 作成日: 2025-08-12
+    /// 注意点: 制御点の計算ロジックを実装
     /// </summary>
     public class BezierConnectionRenderer : ConnectionRenderer
     {
+        /// <summary>
+        /// ベジエ曲線で接続を描画
+        /// </summary>
         public override void Render(Graphics g, Connection connection)
         {
-            // フォールバック処理
             if (connection.Visual.PathPoints.Count < 2)
             {
                 RenderFallbackConnection(g, connection);
                 return;
             }
 
-            // 通常の描画処理
             var points = CalculateBezierPoints(connection.Visual.PathPoints);
             using (var pen = CreatePen(connection))
             {
                 g.DrawBeziers(pen, points);
             }
 
-            // 開始点と終了点を取得
             Point startPoint = connection.Visual.PathPoints[0];
             Point endPoint = connection.Visual.PathPoints[connection.Visual.PathPoints.Count - 1];
 
-            // 選択状態に応じた色
             Color color = connection.IsSelected ? Color.Red : Color.Orange;
             using (var pen = new Pen(color, 2) { DashStyle = DashStyle.Dash })
             {
                 g.DrawLine(pen, startPoint, endPoint);
             }
         }
+
+        /// <summary>
+        /// ベジエ制御点を計算
+        /// 注意点: 単純な中間点を使用した実装
+        /// </summary>
         private PointF[] CalculateBezierPoints(List<Point> pathPoints)
         {
             var points = new List<PointF>();
-
             points.Add(pathPoints[0]);
 
             for (int i = 1; i < pathPoints.Count - 1; i++)
@@ -120,12 +134,13 @@ namespace PowerSimBuilder
                 points.Add(pathPoints[i]);
             }
 
-            // C# 7.3 互換の最後の要素アクセス
             points.Add(pathPoints[pathPoints.Count - 1]);
-
             return points.ToArray();
         }
-        // ... 既存の CreatePen メソッド ...
+
+        /// <summary>
+        /// ペンを作成（選択状態で色変更）
+        /// </summary>
         protected virtual Pen CreatePen(Connection connection)
         {
             return new Pen(connection.Visual.IsSelected ? Color.Red : Color.Blue, 2)
@@ -138,25 +153,33 @@ namespace PowerSimBuilder
 
     /// <summary>
     /// 直交線で接続線を描画するレンダラー
+    /// 作成日: 2025-08-12
+    /// 注意点: 2点間のみの直交変換をサポート
     /// </summary>
     public class OrthogonalConnectionRenderer : ConnectionRenderer
     {
+        /// <summary>
+        /// 直交接続を描画
+        /// </summary>
         public override void Render(Graphics g, Connection connection)
         {
-            // フォールバック処理
             if (connection.Visual.PathPoints.Count < 2)
             {
                 RenderFallbackConnection(g, connection);
                 return;
             }
 
-            // 通常の描画処理
             var points = CalculateOrthogonalPoints(connection.Visual.PathPoints);
             using (var pen = CreatePen(connection))
             {
                 g.DrawLines(pen, points);
             }
         }
+
+        /// <summary>
+        /// 直交点を計算
+        /// 注意点: 2点間のみの簡易実装
+        /// </summary>
         private Point[] CalculateOrthogonalPoints(List<Point> pathPoints)
         {
             if (pathPoints.Count != 2) 
@@ -164,7 +187,6 @@ namespace PowerSimBuilder
 
             var start = pathPoints[0];
             var end = pathPoints[1];
-            
             int midX = (start.X + end.X) / 2;
             
             return new[]
@@ -176,6 +198,9 @@ namespace PowerSimBuilder
             };
         }
 
+        /// <summary>
+        /// ペンを作成（選択状態で色変更）
+        /// </summary>
         protected virtual Pen CreatePen(Connection connection)
         {
             return new Pen(connection.Visual.IsSelected ? Color.Red : Color.Green, 2)
