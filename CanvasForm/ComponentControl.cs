@@ -5,8 +5,14 @@ using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
+    /// <summary>
+    /// コンポーネント表示用コントロールクラス
+    /// 作成日: 2025-08-12
+    /// 注意点: コンポーネントのUI表示とインタラクションを担当
+    /// </summary>
     public partial class ComponentControl : UserControl
     {
+        // イベント定義
         public event EventHandler SelectedChanged;
         public event EventHandler<PortEventArgs> PortClicked;
         public event EventHandler DoubleClicked;
@@ -15,21 +21,25 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネント記述子
+        /// 注意点: タイプ、パラメータ、ポート情報を含む
         /// </summary>
         public ComponentDescriptor Descriptor { get; }
 
         /// <summary>
         /// パラメータ辞書
+        /// 注意点: キー=パラメータ名, 値=パラメータ値
         /// </summary>
         public Dictionary<string, object> Parameters { get; } = new Dictionary<string, object>();
 
         /// <summary>
         /// インスタンス名
+        /// 注意点: シミュレーションコード内で使用
         /// </summary>
         public string InstanceName { get; set; } = "comp";
 
         /// <summary>
         /// 選択状態
+        /// 注意点: true時は赤枠で表示
         /// </summary>
         public bool IsSelected
         {
@@ -39,14 +49,15 @@ namespace PowerSimBuilder
                 if (_selected != value)
                 {
                     _selected = value;
-                    Invalidate();
+                    Invalidate();  // 再描画をトリガー
                     SelectedChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
 
         /// <summary>
-        /// コンポーネントコントロールのコンストラクタ
+        /// コンストラクタ
+        /// 注意点: ディスクリプタからコンポーネントを初期化
         /// </summary>
         public ComponentControl(ComponentDescriptor descriptor)
         {
@@ -54,22 +65,32 @@ namespace PowerSimBuilder
             InitializeComponent();
             InitializeParameters();
             InitializeEvents();
-        }
-        public void InitializePortsDummy()
-        {
-            // 座標非依存アーキテクチャではデザイナーコード
-            // 必要に応じてロジックを追加
-        }
-        /// <summary>
-        /// イベントハンドラを初期化
-        /// </summary>
-        private void InitializeEvents()
-        {
+            
+            // ダブルクリックイベント登録
             this.DoubleClick += (s, e) => DoubleClicked?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// パラメータを初期化する
+        /// ポート初期化（ダミー）
+        /// 注意点: デザイナー互換用
+        /// </summary>
+        public void InitializePortsDummy()
+        {
+            // 座標非依存アーキテクチャでは不要
+        }
+
+        /// <summary>
+        /// イベントハンドラを初期化
+        /// 注意点: マウスイベントを登録
+        /// </summary>
+        private void InitializeEvents()
+        {
+            this.MouseDown += ComponentControl_MouseDown;
+        }
+
+        /// <summary>
+        /// パラメータを初期化
+        /// 注意点: ディスクリプタのデフォルト値を設定
         /// </summary>
         private void InitializeParameters()
         {
@@ -81,19 +102,20 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 描画処理
+        /// 注意点: 選択状態、ポート位置を可視化
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
             e.Graphics.FillRectangle(Brushes.LightGray, ClientRectangle);
 
-            // コンポーネント名の描画
+            // コンポーネント名表示
             using (var font = new Font("Arial", 8))
             {
                 e.Graphics.DrawString(InstanceName, font, Brushes.Black, 10, 10);
             }
 
-            // 選択状態の枠
+            // 選択状態の枠表示
             if (IsSelected)
             {
                 using (var pen = new Pen(Color.Red, 2))
@@ -102,74 +124,63 @@ namespace PowerSimBuilder
                 }
             }
 
-            // 入力ポートの描画 (左側)
+            // 入力ポート描画 (左側)
             if (Descriptor.InputPorts != null)
             {
                 for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    // ratio を計算
                     float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
                     int yPos = (int)(Height * ratio);
 
-                    // ポートの円を描画
+                    // ポート円描画
                     Rectangle portRect = new Rectangle(5, yPos - 5, 10, 10);
                     e.Graphics.FillEllipse(Brushes.Blue, portRect);
                     e.Graphics.DrawEllipse(Pens.Black, portRect);
 
-                    // ポート名を表示 (デバッグ用)
-// #if DEBUG
+                    // ポート名表示 (デバッグ時のみ)
                     e.Graphics.DrawString(Descriptor.InputPorts[i], Font, Brushes.Black, 20, yPos - 7);
-// #endif
                 }
             }
 
-            // 出力ポートの描画 (右側)
+            // 出力ポート描画 (右側)
             if (Descriptor.OutputPorts != null)
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
-                    // ratio を計算
                     float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
                     int yPos = (int)(Height * ratio);
 
-                    // ポートの円を描画
+                    // ポート円描画
                     Rectangle portRect = new Rectangle(Width - 15, yPos - 5, 10, 10);
                     e.Graphics.FillEllipse(Brushes.Green, portRect);
                     e.Graphics.DrawEllipse(Pens.Black, portRect);
 
-                    // ポート名を表示 (デバッグ用)
-// #if DEBUG
+                    // ポート名表示 (デバッグ時のみ)
                     e.Graphics.DrawString(Descriptor.OutputPorts[i], Font, Brushes.Black, Width - 50, yPos - 7);
-// #endif
                 }
             }
         }
+        
         /// <summary>
         /// マウスダウンイベント処理
+        /// 注意点: ポートクリック検出と選択状態更新
         /// </summary>
-        // ComponentControl.cs
-        protected override void OnMouseDown(MouseEventArgs e)
+        private void ComponentControl_MouseDown(object sender, MouseEventArgs e)
         {
-            base.OnMouseDown(e);
-            this.Focus();
-
+            this.Focus();  // フォーカスを取得
+            
             // 入力ポートチェック（左側）
             if (Descriptor.InputPorts != null)
             {
                 for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    // ratio を計算
                     float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
                     int yPos = (int)(Height * ratio);
-
-                    // ポート周辺の矩形領域 (描画位置と一致)
                     var portRect = new Rectangle(5, yPos - 5, 10, 10);
 
                     if (portRect.Contains(e.Location))
                     {
-                        // portName を取得
-                        string portName = Descriptor.InputPorts[i];
-                        PortClicked?.Invoke(this, new PortEventArgs(portName));
+                        PortClicked?.Invoke(this, new PortEventArgs(Descriptor.InputPorts[i]));
                         return;
                     }
                 }
@@ -180,27 +191,21 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
-                    // ratio を計算
                     float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
                     int yPos = (int)(Height * ratio);
-
-                    // ポート周辺の矩形領域 (描画位置と一致)
                     var portRect = new Rectangle(Width - 15, yPos - 5, 10, 10);
 
                     if (portRect.Contains(e.Location))
                     {
-                        // portName を取得
-                        string portName = Descriptor.OutputPorts[i];
-                        PortClicked?.Invoke(this, new PortEventArgs(portName));
+                        PortClicked?.Invoke(this, new PortEventArgs(Descriptor.OutputPorts[i]));
                         return;
                     }
                 }
             }
 
-            // ポート以外をクリック
+            // ポート以外をクリック: 選択状態更新
             IsSelected = true;
             BringToFront();
         }
- 
     }
 }

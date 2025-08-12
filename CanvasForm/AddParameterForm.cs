@@ -3,29 +3,34 @@ using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
+    /// <summary>
+    /// パラメータ追加フォーム
+    /// 作成日: 2025-08-12
+    /// 注意点: コンポーネントパラメータを定義
+    /// </summary>
     public partial class AddParameterForm : Form
     {
         /// <summary>
         /// パラメータ名
-        /// 作成日: 2025-08-10
+        /// 注意点: ユーザー入力値
         /// </summary>
         public string ParamName { get; private set; }
 
         /// <summary>
         /// パラメータ型
-        /// 作成日: 2025-08-10
+        /// 注意点: コンボボックスから選択
         /// </summary>
         public string ParamType { get; private set; }
 
         /// <summary>
         /// デフォルト値
-        /// 作成日: 2025-08-10
+        /// 注意点: 型に応じた変換が必要
         /// </summary>
         public object DefaultValue { get; private set; }
 
         /// <summary>
-        /// パラメータ追加フォームのコンストラクタ
-        /// 作成日: 2025-08-10
+        /// コンストラクタ
+        /// 注意点: フォームコントロールを初期化
         /// </summary>
         public AddParameterForm()
         {
@@ -33,9 +38,8 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// OKボタンクリックイベント
-        /// 注意事項: 入力内容を検証しパラメータを設定する
-        /// 作成日: 2025-08-10
+        /// OKボタンクリック
+        /// 注意点: 入力内容を検証しパラメータを設定
         /// </summary>
         private void BtnOK_Click(object sender, EventArgs e)
         {
@@ -47,10 +51,19 @@ namespace PowerSimBuilder
             }
 
             ParamName = txtName.Text;
-            ParamType = cmbType.SelectedItem.ToString();
+            ParamType = cmbType.SelectedItem?.ToString();
+
+            // 型選択チェック
+            if (string.IsNullOrEmpty(ParamType))
+            {
+                MessageBox.Show("パラメータ型を選択してください");
+                this.DialogResult = DialogResult.None;
+                return;
+            }
 
             try
             {
+                // 型に応じた値変換
                 switch (ParamType)
                 {
                     case "double":

@@ -7,7 +7,8 @@ namespace PowerSimBuilder
 {
     /// <summary>
     /// 自動レイアウトエンジン
-    /// コンポーネントを自動的に配置する
+    /// 作成日: 2025-08-12
+    /// 注意点: グラフ理論に基づいたコンポーネント配置アルゴリズムを実装
     /// </summary>
     public class AutoLayoutEngine
     {
@@ -17,6 +18,13 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネントを自動配置する
+        /// 処理内容:
+        ///   1. ルートコンポーネント（入力のないコンポーネント）を検出
+        ///   2. BFS（幅優先探索）でコンポーネントの階層を決定
+        ///   3. 各階層のコンポーネントを水平方向に均等配置
+        /// 注意点:
+        ///   - 接続関係に基づいた配置のため、事前に接続情報が必要
+        ///   - ルートコンポーネントがない場合、配置は実行されない
         /// </summary>
         public void ArrangeComponents(DesignCanvas canvas)
         {
@@ -27,17 +35,17 @@ namespace PowerSimBuilder
             if (!rootComponents.Any()) return;
 
             var layout = new Dictionary<int, List<ComponentControl>>();
-            // int currentLevel = 0; // 未使用変数を削除
-
             var queue = new Queue<(ComponentControl, int)>();
             var visited = new HashSet<ComponentControl>();
 
+            // ルートコンポーネントから探索開始
             foreach (var root in rootComponents)
             {
                 queue.Enqueue((root, 0));
                 visited.Add(root);
             }
 
+            // BFSで階層構造を構築
             while (queue.Count > 0)
             {
                 var (current, level) = queue.Dequeue();
@@ -47,6 +55,7 @@ namespace PowerSimBuilder
 
                 layout[level].Add(current);
 
+                // 下流コンポーネントを探索
                 var nextComponents = canvas.ConnectionGraph
                     .GetConnectionsFrom(current)
                     .Select(c => c.EndComponent)
@@ -61,6 +70,7 @@ namespace PowerSimBuilder
 
             int maxWidth = canvas.Width - Margin * 2;
 
+            // 各階層のコンポーネントを配置
             for (int level = 0; level < layout.Count; level++)
             {
                 var levelComponents = layout[level];
@@ -80,6 +90,10 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// ルートコンポーネントを検出（入力ポートがないコンポーネント）
+        /// 処理内容:
+        ///   - 全コンポーネントから入力ポートを持たないものを抽出
+        /// 注意点:
+        ///   - 入力ポート配列がnullまたは空の場合をルートと判定
         /// </summary>
         private List<ComponentControl> FindRootComponents(DesignCanvas canvas)
         {

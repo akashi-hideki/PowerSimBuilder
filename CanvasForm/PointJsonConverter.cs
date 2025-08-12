@@ -7,14 +7,17 @@ namespace PowerSimBuilder
 {
     /// <summary>
     /// Point構造体のJSONコンバータ
-    /// 注意事項: Point構造体をJSONオブジェクト形式でシリアライズする
-    /// 作成日: 2025-08-10
+    /// 作成日: 2025-08-12
+    /// 注意点: System.Drawing.Pointのシリアライズ/デシリアライズをカスタマイズ
     /// </summary>
     public class PointJsonConverter : JsonConverter<Point>
     {
         /// <summary>
         /// JSONからPointを読み込む
-        /// 作成日: 2025-08-10
+        /// 処理内容:
+        ///   - JSONオブジェクトを解析しX,Y座標を抽出
+        /// 注意点:
+        ///   - 厳密なJSON構造を要求
         /// </summary>
         public override Point Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -48,7 +51,10 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// PointをJSONに書き込む
-        /// 作成日: 2025-08-10
+        /// 処理内容:
+        ///   - Pointを{X,Y}形式のJSONオブジェクトに変換
+        /// 注意点:
+        ///   - プロパティ名は小文字で出力
         /// </summary>
         public override void Write(Utf8JsonWriter writer, Point value, JsonSerializerOptions options)
         {

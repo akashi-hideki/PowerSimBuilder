@@ -5,18 +5,23 @@ using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
+    /// <summary>
+    /// カスタムコンポーネント追加フォーム
+    /// 作成日: 2025-08-12
+    /// 注意点: ユーザー定義コンポーネントを作成
+    /// </summary>
     public partial class AddComponentForm : Form
     {
         /// <summary>
         /// 新規コンポーネント
-        /// 作成日: 2025-08-10
+        /// 注意点: フォーム完了時に設定される
         /// </summary>
         public ComponentDescriptor NewComponent { get; private set; }
         private List<ParameterDescriptor> _parameters = new List<ParameterDescriptor>();
 
         /// <summary>
-        /// コンポーネント追加フォームのコンストラクタ
-        /// 作成日: 2025-08-10
+        /// コンストラクタ
+        /// 注意点: UIコンポーネントを初期化
         /// </summary>
         public AddComponentForm()
         {
@@ -24,9 +29,8 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// パラメータ追加ボタンクリックイベント
-        /// 注意事項: AddParameterFormを表示してパラメータを追加する
-        /// 作成日: 2025-08-10
+        /// パラメータ追加ボタンクリック
+        /// 注意点: パラメータ追加フォームを表示
         /// </summary>
         private void BtnAddParam_Click(object sender, EventArgs e)
         {
@@ -48,9 +52,8 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// OKボタンクリックイベント
-        /// 注意事項: 入力内容を検証し新規コンポーネントを作成する
-        /// 作成日: 2025-08-10
+        /// OKボタンクリック
+        /// 注意点: 入力内容を検証しコンポーネントを作成
         /// </summary>
         private void BtnOK_Click(object sender, EventArgs e)
         {
@@ -60,6 +63,7 @@ namespace PowerSimBuilder
                 DialogResult = DialogResult.None;
                 return;
             }
+            
             NewComponent = new ComponentDescriptor
             {
                 Name = txtName.Text,
@@ -75,13 +79,12 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// アイコンを生成する
-        /// 注意事項: タイプ名のハッシュから色を生成する
-        /// 作成日: 2025-08-10
+        /// アイコンを生成
+        /// 注意点: タイプ名から色を生成
         /// </summary>
         private Bitmap GenerateIcon(string type)
         {
-            // 安全なカラー生成
+            // タイプ名のハッシュからRGB値を生成
             uint hash = (uint)Math.Abs(type.GetHashCode());
             byte red = (byte)((hash * 17) % 256);
             byte green = (byte)((hash * 31) % 256);
@@ -95,7 +98,7 @@ namespace PowerSimBuilder
                 graphics.FillRectangle(new SolidBrush(color), 0, 0, 32, 32);
                 graphics.DrawRectangle(Pens.Black, 0, 0, 31, 31);
 
-                // 空文字チェック
+                // 先頭文字を表示
                 string firstChar = !string.IsNullOrEmpty(type) ? type[0].ToString() : "?";
                 graphics.DrawString(firstChar,
                                   new Font("Arial", 10, FontStyle.Bold),
