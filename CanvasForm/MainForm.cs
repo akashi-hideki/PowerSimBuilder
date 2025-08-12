@@ -1,4 +1,3 @@
-using Python.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -29,7 +28,6 @@ namespace PowerSimBuilder
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
             SubscribeToEvents();
 
-            // 接続レンダラーの初期設定
             designCanvas1.ConnectionRenderer = new BezierConnectionRenderer();
             designCanvas1.ConnectionSelected += DesignCanvas_ConnectionSelected;
         }
@@ -224,16 +222,45 @@ namespace PowerSimBuilder
         /// </summary>
         private void runButton_Click(object sender, EventArgs e)
         {
-            // コンポーネントと接続を取得
             var components = _canvasManager.GetAllComponents();
             var connections = _canvasManager.GetAllConnections();
             
-            // Pythonコード生成
+            // コード生成
             string pythonCode = _codeGenerator.GenerateSimulationCode(components, connections);
             
-            var previewForm = new CodePreviewForm(pythonCode);
-            previewForm.Show();
-            RunPythonSimulation(pythonCode);
+            // ファイル保存（デフォルトディレクトリはアプリケーションデータフォルダ）
+            string outputDir = GetPythonOutputDirectory();
+            if (_codeGenerator.SaveCodeToFile(outputDir))
+            {
+                // ビューアー表示
+                _codeGenerator.ShowCodeViewer();
+            }
+        }
+        /// <summary>
+        /// Pythonシミュレーションコードの出力ディレクトリパスを取得します
+        /// 処理内容:
+        ///   - アプリケーションデータフォルダ下に専用ディレクトリを構成
+        ///   - ディレクトリが存在しない場合は新規作成
+        /// 注意点:
+        ///   - 環境ごとの適切なアプリケーションデータフォルダを使用
+        ///   - マルチユーザー環境でも安全に動作
+        /// 出力例:
+        ///   - Windows: C:\Users\[ユーザー名]\AppData\Roaming\PowerSimBuilder\PythonOutput\
+        ///   - macOS: /Users/[ユーザー名]/.config/PowerSimBuilder/PythonOutput/
+        ///   - Linux: /home/[ユーザー名]/.config/PowerSimBuilder/PythonOutput/
+        /// </summary>
+        /// <returns>Pythonコードファイルの保存先ディレクトリのフルパス</returns>
+        private string GetPythonOutputDirectory()
+        {
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string outputDir = Path.Combine(appData, "PowerSimBuilder", "PythonOutput");
+            
+            if (!Directory.Exists(outputDir))
+            {
+                Directory.CreateDirectory(outputDir);
+            }
+            
+            return outputDir;
         }
 
         /// <summary>
@@ -286,30 +313,6 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// Pythonシミュレーションを実行
-        /// 注意点: Python.Runtimeを使用
-        /// </summary>
-        private void RunPythonSimulation(string code)
-        {
-            try
-            {
-                using (Py.GIL())
-                {
-                    dynamic scope = Py.CreateScope();
-                    scope.Exec(code);
-                    scope.run_simulation();
-                }
-                MessageBox.Show("シミュレーションが正常に完了しました", "成功",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"シミュレーションエラー: {ex.Message}", "エラー",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
         /// 保存状態を更新
         /// 注意点: 保存ボタンの有効状態を制御
         /// </summary>
@@ -336,31 +339,6 @@ namespace PowerSimBuilder
             deleteButton.Enabled =
                 _canvasManager.SelectedComponent != null ||
                 _canvasManager.SelectedConnection != null;
-        }
-
-        /// <summary>
-        /// コードプレビューフォームクラス
-        /// 注意点: 生成されたPythonコードを表示
-        /// </summary>
-        public class CodePreviewForm : Form
-        {
-            public CodePreviewForm(string code)
-            {
-                Text = "生成されたPythonコード";
-                Size = new Size(800, 600);
-
-                var textBox = new TextBox
-                {
-                    Multiline = true,
-                    Dock = DockStyle.Fill,
-                    Text = code,
-                    Font = new Font("Consolas", 10),
-                    ScrollBars = ScrollBars.Both,
-                    ReadOnly = true
-                };
-
-                Controls.Add(textBox);
-            }
         }
     }
 }
