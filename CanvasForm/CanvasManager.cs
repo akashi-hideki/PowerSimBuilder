@@ -327,7 +327,10 @@ namespace PowerSimBuilder
                         component.Parameters[param.Key] = param.Value;
                     }
                 }
-
+                for (int i = 0; i < _connections.Count && i < state.ConnectionSelectionStates.Count; i++)
+                {
+                    _connections[i].IsSelected = state.ConnectionSelectionStates[i];
+                }
                 _components.Add(component);
             }
 
@@ -431,10 +434,12 @@ namespace PowerSimBuilder
 
         private class CanvasState
         {
+            
             public List<ComponentModel> Components { get; } = new List<ComponentModel>();
             public List<ConnectionModel> Connections { get; } = new List<ConnectionModel>();
             public int SelectedComponentIndex { get; set; } = -1;
             public int SelectedConnectionIndex { get; set; } = -1;
+            public List<bool> ConnectionSelectionStates { get; } = new List<bool>();
 
             public CanvasState(CanvasManager manager)
             {
@@ -458,6 +463,7 @@ namespace PowerSimBuilder
                         EndComponentIndex = manager._components.IndexOf(connection.EndComponent),
                         EndPort = connection.EndPort
                     });
+                    ConnectionSelectionStates.Add(connection.IsSelected);
                 }
 
                 SelectedComponentIndex = manager._components.IndexOf(manager.SelectedComponent);

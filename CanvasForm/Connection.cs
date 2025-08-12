@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 
 namespace PowerSimBuilder
@@ -37,6 +38,7 @@ namespace PowerSimBuilder
         /// 接続の視覚的表現
         /// </summary>
         public ConnectionVisual Visual { get; set; } = new ConnectionVisual();
+        public bool IsSelected { get; set; }  
 
     }
 
@@ -53,6 +55,8 @@ namespace PowerSimBuilder
         /// <summary>
         /// 接続が選択されているかどうか
         /// </summary>
-        public bool IsSelected { get; set; }
+
+        [Browsable(false)] // プロパティグリッドに表示しない
+        public bool IsSelected { get; set; } // 直接プロパティを定義
     }
 }

@@ -79,6 +79,7 @@
       <DependentUpon>ConnectionEditorForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CanvasForm\ConnectionGraph.cs" />
+    <Compile Include="CanvasForm\ConnectionProperties.cs" />
     <Compile Include="CanvasForm\ConnectionRenderer.cs" />
     <Compile Include="CanvasForm\DesignCanvas.cs">
       <SubType>Component</SubType>

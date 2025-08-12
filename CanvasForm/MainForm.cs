@@ -23,6 +23,8 @@ namespace PowerSimBuilder
             
             // 接続レンダラーの設定
             designCanvas1.ConnectionRenderer = new BezierConnectionRenderer();
+
+            designCanvas1.ConnectionSelected += DesignCanvas_ConnectionSelected;
         }
 
         private void InitializeEventHandlers()
@@ -163,7 +165,20 @@ namespace PowerSimBuilder
             previewForm.Show();
             RunPythonSimulation(pythonCode);
         }
-
+        // 接続選択イベントハンドラ
+        private void DesignCanvas_ConnectionSelected(object sender, ConnectionEventArgs e)
+        {
+            if (e.Connection != null)
+            {
+                // 接続プロパティを表示
+                propertyGrid1.SelectedObject = new ConnectionProperties(e.Connection);
+            }
+            else
+            {
+                // 何も選択されていない場合はクリア
+                propertyGrid1.SelectedObject = null;
+            }
+        }
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             if (_canvasManager.SelectedComponent?.Descriptor.Type == "FaultMonitor" && 

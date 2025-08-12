@@ -40,8 +40,11 @@ namespace PowerSimBuilder
         /// </summary>
         public ComponentControl SelectedComponent { get; private set; }
         public ConnectionGraph ConnectionGraph { get; } = new ConnectionGraph();
-        public AutoLayoutEngine LayoutEngine { get; } = new AutoLayoutEngine();
+        public AutoLayoutEngine AutoLayoutEngine { get; } = new AutoLayoutEngine();
         public ConnectionRenderer ConnectionRenderer { get; set; } = new BezierConnectionRenderer();
+
+        // 選択中の接続プロパティ追加
+        public Connection SelectedConnection { get; private set; }
 
         /// <summary>
         /// デザインキャンバスのコンストラクタ
@@ -88,6 +91,22 @@ namespace PowerSimBuilder
             {
                 DrawTemporaryConnection(e.Graphics);
             }
+            using (var font = new Font("Arial", 8))
+            {
+                foreach (var connection in Connections)
+                {
+                    if (connection.Visual.PathPoints.Count >= 2)
+                    {
+                        Point midPoint = new Point(
+                            (connection.Visual.PathPoints[0].X + connection.Visual.PathPoints[1].X) / 2,
+                            (connection.Visual.PathPoints[0].Y + connection.Visual.PathPoints[1].Y) / 2
+                        );
+
+                        string info = $"{connection.StartPort}→{connection.EndPort}";
+                        e.Graphics.DrawString(info, font, Brushes.Red, midPoint);
+                    }
+                }
+            }
         }
 
         private void DrawTemporaryConnection(Graphics g)
@@ -106,7 +125,13 @@ namespace PowerSimBuilder
             int x = isOutput ? component.Right : component.Left;
             return new Point(x, component.Top + component.Height / 2);
         }
-
+        // 接続近接判定メソッド実装
+        private bool IsPointNearConnection(Point point, Connection connection)
+        {
+            // 簡易実装例（実際は幾何学的計算が必要）
+            return connection.Visual.PathPoints.Any(p =>
+                Math.Abs(p.X - point.X) < 10 && Math.Abs(p.Y - point.Y) < 10);
+        }
         /// <summary>
         /// コンポーネントを追加する
         /// 注意事項: イベントハンドラを設定しキャンバスに追加する
@@ -235,18 +260,40 @@ namespace PowerSimBuilder
                 Invalidate();
             }
         }
-
+        // DesignCanvas.cs
         private void UpdateConnectionVisual(Connection connection)
         {
-            Point start = GetComponentConnectionPoint(connection.StartComponent, true);
-            Point end = GetComponentConnectionPoint(connection.EndComponent, false);
-            
+            if (connection.StartComponent == null || connection.EndComponent == null) return;
+
+            // 開始ポートの位置計算
+            int startIndex = Array.IndexOf(connection.StartComponent.Descriptor.OutputPorts, connection.StartPort);
+            if (startIndex < 0) return;
+
+            float startRatio = (startIndex + 1f) / (connection.StartComponent.Descriptor.OutputPorts.Length + 1);
+            Point start = new Point(
+                connection.StartComponent.Left + connection.StartComponent.Width,
+                connection.StartComponent.Top + (int)(connection.StartComponent.Height * startRatio)
+            );
+
+            // 終了ポートの位置計算
+            int endIndex = Array.IndexOf(connection.EndComponent.Descriptor.InputPorts, connection.EndPort);
+            if (endIndex < 0) return;
+
+            float endRatio = (endIndex + 1f) / (connection.EndComponent.Descriptor.InputPorts.Length + 1);
+            Point end = new Point(
+                connection.EndComponent.Left,
+                connection.EndComponent.Top + (int)(connection.EndComponent.Height * endRatio)
+            );
+
             connection.Visual.PathPoints = new List<Point> { start, end };
         }
 
+        // ポート位置計算メソッド（不要になったため削除）
+        // private Point CalculatePortPosition(...) は削除
+
         public void ArrangeComponents()
         {
-            LayoutEngine.ArrangeComponents(this);
+            AutoLayoutEngine.ArrangeComponents(this);
             UpdateAllConnectionVisuals();
             Invalidate();
         }
@@ -302,7 +349,41 @@ namespace PowerSimBuilder
             _isDragging = false;
             _draggedComponent = null;
         }
+        // 接続選択イベントの実装
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
 
+            // 接続線の選択チェック
+            foreach (var connection in Connections)
+            {
+                if (IsPointNearConnection(e.Location, connection))
+                {
+                    // 接続選択イベントを発火
+                    ConnectionSelected?.Invoke(this, new ConnectionEventArgs(connection));
+
+                    // 選択状態を更新
+                    SelectedConnection = connection;
+                    connection.Visual.IsSelected = true;
+
+                    Invalidate();
+                    return;
+                }
+            }
+
+            // 接続線以外をクリックした場合
+            ConnectionSelected?.Invoke(this, new ConnectionEventArgs(null));
+            DeselectAllConnections();
+            Invalidate();
+        }
+
+        private void DeselectAllConnections()
+        {
+            foreach (var connection in Connections)
+            {
+                connection.Visual.IsSelected = false;
+            }
+        }
         private void DesignCanvas_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent("ComponentDescriptor"))

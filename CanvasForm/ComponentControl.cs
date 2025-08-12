@@ -117,9 +117,9 @@ namespace PowerSimBuilder
                     e.Graphics.DrawEllipse(Pens.Black, portRect);
 
                     // ポート名を表示 (デバッグ用)
-#if DEBUG
+// #if DEBUG
                     e.Graphics.DrawString(Descriptor.InputPorts[i], Font, Brushes.Black, 20, yPos - 7);
-#endif
+// #endif
                 }
             }
 
@@ -138,9 +138,9 @@ namespace PowerSimBuilder
                     e.Graphics.DrawEllipse(Pens.Black, portRect);
 
                     // ポート名を表示 (デバッグ用)
-#if DEBUG
+// #if DEBUG
                     e.Graphics.DrawString(Descriptor.OutputPorts[i], Font, Brushes.Black, Width - 50, yPos - 7);
-#endif
+// #endif
                 }
             }
         }
