@@ -42,6 +42,7 @@ namespace PowerSimBuilder
             Canvas.ConnectionSelected += Canvas_ConnectionSelected;
         }
 
+
         public void AddComponent(ComponentDescriptor descriptor, Point location)
         {
             SaveStateForUndo();
@@ -296,18 +297,18 @@ namespace PowerSimBuilder
         {
             _components.Clear();
             _connections.Clear();
-            Canvas.Clear();
+            Canvas.Clear(); // Clearメソッドを呼び出す
             SelectedComponent = null;
             SelectedConnection = null;
             IsModified = false;
         }
+
 
         private void SaveStateForUndo()
         {
             _undoStack.Push(new CanvasState(this));
             _redoStack.Clear();
         }
-
         private void ApplyState(CanvasState state)
         {
             _components.Clear();
@@ -333,28 +334,27 @@ namespace PowerSimBuilder
             _connections.Clear();
             foreach (var connModel in state.Connections)
             {
-                var startComponent = _components[connModel.StartComponentIndex];
-                var endComponent = _components[connModel.EndComponentIndex];
-
-                var connection = new Connection
+                if (connModel.StartComponentIndex >= 0 &&
+                    connModel.StartComponentIndex < _components.Count &&
+                    connModel.EndComponentIndex >= 0 &&
+                    connModel.EndComponentIndex < _components.Count)
                 {
-                    StartComponent = startComponent,
-                    StartPort = connModel.StartPort,
-                    EndComponent = endComponent,
-                    EndPort = connModel.EndPort
-                };
+                    var startComponent = _components[connModel.StartComponentIndex];
+                    var endComponent = _components[connModel.EndComponentIndex];
 
-                _connections.Add(connection);
+                    var connection = new Connection
+                    {
+                        StartComponent = startComponent,
+                        StartPort = connModel.StartPort,
+                        EndComponent = endComponent,
+                        EndPort = connModel.EndPort
+                    };
+
+                    _connections.Add(connection);
+                }
             }
 
-            SelectedComponent = state.SelectedComponentIndex >= 0
-                ? _components[state.SelectedComponentIndex]
-                : null;
-
-            SelectedConnection = state.SelectedConnectionIndex >= 0
-                ? _connections[state.SelectedConnectionIndex]
-                : null;
-
+            // キャンバスにコンポーネントと接続を追加
             Canvas.Clear();
             foreach (var component in _components)
             {
@@ -365,11 +365,23 @@ namespace PowerSimBuilder
                 Canvas.AddConnection(connection);
             }
 
+            // 選択状態の復元
+            SelectedComponent = state.SelectedComponentIndex >= 0 &&
+                state.SelectedComponentIndex < _components.Count
+                ? _components[state.SelectedComponentIndex]
+                : null;
+
+            SelectedConnection = state.SelectedConnectionIndex >= 0 &&
+                state.SelectedConnectionIndex < _connections.Count
+                ? _connections[state.SelectedConnectionIndex]
+                : null;
+
             IsModified = true;
             NotifyCanvasModified();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             Canvas.Invalidate();
         }
+ 
 
         private void Canvas_ComponentAdded(object sender, ComponentEventArgs e)
         {

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace PowerSimBuilder
@@ -37,6 +39,9 @@ namespace PowerSimBuilder
         /// 作成日: 2025-08-10
         /// </summary>
         public ComponentControl SelectedComponent { get; private set; }
+        public ConnectionGraph ConnectionGraph { get; } = new ConnectionGraph();
+        public AutoLayoutEngine LayoutEngine { get; } = new AutoLayoutEngine();
+        public ConnectionRenderer ConnectionRenderer { get; set; } = new BezierConnectionRenderer();
 
         /// <summary>
         /// デザインキャンバスのコンストラクタ
@@ -47,13 +52,21 @@ namespace PowerSimBuilder
         {
             InitializeComponent();
             DoubleBuffered = true;
-
+            AllowDrop = true;
+            
             // ドロップ操作を許可
             this.AllowDrop = true;
             this.DragEnter += DesignCanvas_DragEnter;
             this.DragDrop += DesignCanvas_DragDrop;
         }
-
+        public void Clear()
+        {
+            Components.Clear();
+            Connections.Clear();
+            Controls.Clear();
+            ConnectionGraph.Clear();
+            Invalidate();
+        }
         /// <summary>
         /// キャンバスの描画処理
         /// 注意事項: 接続線とコンポーネントを描画する
@@ -62,50 +75,36 @@ namespace PowerSimBuilder
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
-            // 既存の接続を描画
+            // 接続線を描画
             foreach (var connection in Connections)
             {
-                DrawConnection(e.Graphics, connection);
+                ConnectionRenderer.Render(e.Graphics, connection);
             }
 
-            // 作成中の接続を描画
+            // 仮接続線を描画
             if (_currentConnection != null && _currentConnection.EndComponent == null)
             {
                 DrawTemporaryConnection(e.Graphics);
             }
         }
 
-        /// <summary>
-        /// 接続線を描画する
-        /// 注意事項: 開始ポートと終了ポートの位置を結ぶ線を描画
-        /// 作成日: 2025-08-10
-        /// </summary>
-        private void DrawConnection(Graphics g, Connection connection)
+        private void DrawTemporaryConnection(Graphics g)
         {
-            var startPos = connection.StartComponent.GetPortLocation(connection.StartPort);
-            var endPos = connection.EndComponent.GetPortLocation(connection.EndPort);
-
-            using (var pen = new Pen(Color.Blue, 2))
+            Point start = GetComponentConnectionPoint(_currentConnection.StartComponent, true);
+            Point end = PointToClient(Cursor.Position);
+            
+            using (var pen = new Pen(Color.LightBlue, 2) { DashStyle = DashStyle.Dash })
             {
-                g.DrawLine(pen, startPos, endPos);
+                g.DrawLine(pen, start, end);
             }
         }
 
-        /// <summary>
-        /// 仮の接続線を描画する
-        /// 注意事項: カーソル位置までの点線で接続を表示する
-        /// 作成日: 2025-08-10
-        /// </summary>
-        private void DrawTemporaryConnection(Graphics g)
+        private Point GetComponentConnectionPoint(ComponentControl component, bool isOutput)
         {
-            var startPos = _currentConnection.StartComponent.GetPortLocation(_currentConnection.StartPort);
-            var endPos = PointToClient(Cursor.Position);
-
-            using (var pen = new Pen(Color.LightBlue, 2) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash })
-            {
-                g.DrawLine(pen, startPos, endPos);
-            }
+            int x = isOutput ? component.Right : component.Left;
+            return new Point(x, component.Top + component.Height / 2);
         }
 
         /// <summary>
@@ -125,6 +124,9 @@ namespace PowerSimBuilder
                 };
 
                 control.PortClicked += ComponentControl_PortClicked;
+                control.MouseDown += ComponentControl_MouseDown;
+                control.MouseMove += ComponentControl_MouseMove;
+                control.MouseUp += ComponentControl_MouseUp;
 
                 Controls.Add(control);
                 Components.Add(control);
@@ -153,16 +155,7 @@ namespace PowerSimBuilder
         {
             if (Controls.Contains(component))
             {
-                // 関連接続を削除
-                var connectionsToRemove = new List<Connection>();
-                foreach (var conn in Connections)
-                {
-                    if (conn.StartComponent == component || conn.EndComponent == component)
-                    {
-                        connectionsToRemove.Add(conn);
-                    }
-                }
-
+                var connectionsToRemove = ConnectionGraph.GetConnections(component).ToList();
                 foreach (var conn in connectionsToRemove)
                 {
                     RemoveConnection(conn);
@@ -183,22 +176,31 @@ namespace PowerSimBuilder
         /// </summary>
         private void ComponentControl_PortClicked(object sender, PortEventArgs e)
         {
+            var component = (ComponentControl)sender;
+            
             if (_currentConnection == null)
             {
                 _currentConnection = new Connection
                 {
-                    StartComponent = (ComponentControl)sender,
-                    StartPort = e.PortName
+                    StartComponent = component,
+                    StartPort = e.PortName,
+                    Visual = new ConnectionVisual()
                 };
             }
             else
             {
-                _currentConnection.EndComponent = (ComponentControl)sender;
+                _currentConnection.EndComponent = component;
                 _currentConnection.EndPort = e.PortName;
 
-                AddConnection(_currentConnection);
+                if (!ConnectionGraph.ConnectionExists(_currentConnection))
+                {
+                    AddConnection(_currentConnection);
+                }
+                
                 _currentConnection = null;
             }
+            
+            Invalidate();
         }
 
         /// <summary>
@@ -211,8 +213,8 @@ namespace PowerSimBuilder
             if (!Connections.Contains(connection))
             {
                 Connections.Add(connection);
-                connection.StartComponent.Connections.Add(connection);
-                connection.EndComponent.Connections.Add(connection);
+                ConnectionGraph.AddConnection(connection);
+                UpdateConnectionVisual(connection);
                 ConnectionAdded?.Invoke(this, new ConnectionEventArgs(connection));
                 Invalidate();
             }
@@ -228,161 +230,79 @@ namespace PowerSimBuilder
             if (Connections.Contains(connection))
             {
                 Connections.Remove(connection);
-                connection.StartComponent?.Connections.Remove(connection);
-                connection.EndComponent?.Connections.Remove(connection);
+                ConnectionGraph.RemoveConnection(connection);
                 ConnectionRemoved?.Invoke(this, new ConnectionEventArgs(connection));
                 Invalidate();
             }
         }
 
-        /// <summary>
-        /// キャンバスをクリアする
-        /// 注意事項: すべてのコンポーネントと接続を削除する
-        /// 作成日: 2025-08-10
-        /// </summary>
-        public void Clear()
+        private void UpdateConnectionVisual(Connection connection)
         {
-            Components.Clear();
-            Connections.Clear();
-            Controls.Clear();
+            Point start = GetComponentConnectionPoint(connection.StartComponent, true);
+            Point end = GetComponentConnectionPoint(connection.EndComponent, false);
+            
+            connection.Visual.PathPoints = new List<Point> { start, end };
+        }
+
+        public void ArrangeComponents()
+        {
+            LayoutEngine.ArrangeComponents(this);
+            UpdateAllConnectionVisuals();
             Invalidate();
         }
 
-        /// <summary>
-        /// マウスダウンイベント処理
-        /// 注意事項: コンポーネントのドラッグ開始または接続選択を行う
-        /// 作成日: 2025-08-10
-        /// </summary>
-        protected override void OnMouseDown(MouseEventArgs e)
+        private void UpdateAllConnectionVisuals()
         {
-            base.OnMouseDown(e);
-
-            if (e.Button == MouseButtons.Left)
+            foreach (var connection in Connections)
             {
-                bool componentClicked = false;
-
-                // コンポーネントのドラッグ処理
-                foreach (var component in Components)
-                {
-                    if (component.Bounds.Contains(e.Location))
-                    {
-                        _isDragging = true;
-                        _draggedComponent = component;
-                        _dragStartPosition = e.Location;
-                        component.BringToFront();
-                        componentClicked = true;
-                        break;
-                    }
-                }
-
-                // 接続選択処理（コンポーネントがクリックされなかった場合）
-                if (!componentClicked)
-                {
-                    foreach (var connection in Connections)
-                    {
-                        Point start = connection.StartComponent.GetPortLocation(connection.StartPort);
-                        Point end = connection.EndComponent.GetPortLocation(connection.EndPort);
-
-                        if (IsPointNearLine(e.Location, start, end))
-                        {
-                            ConnectionSelected?.Invoke(this, new ConnectionEventArgs(connection));
-                            return;
-                        }
-                    }
-                    // 接続が選択されなかった場合
-                    ConnectionSelected?.Invoke(this, new ConnectionEventArgs(null));
-                }
-            }
-            else if (e.Button == MouseButtons.Right)
-            {
-                _currentConnection = null;
-                Invalidate();
+                UpdateConnectionVisual(connection);
             }
         }
 
-        /// <summary>
-        /// マウス移動イベント処理
-        /// 注意事項: ドラッグ中のコンポーネントを移動する
-        /// 作成日: 2025-08-10
-        /// </summary>
-        protected override void OnMouseMove(MouseEventArgs e)
+        private void ComponentControl_MouseDown(object sender, MouseEventArgs e)
         {
-            base.OnMouseMove(e);
+            var component = (ComponentControl)sender;
+            component.BringToFront();
+            
+            if (e.Button == MouseButtons.Left)
+            {
+                _isDragging = true;
+                _draggedComponent = component;
+                _dragStartPosition = e.Location;
+            }
+        }
 
-            if (_isDragging && _draggedComponent != null)
+        private void ComponentControl_MouseMove(object sender, MouseEventArgs e)
+        {
+            var component = (ComponentControl)sender;
+            
+            if (_isDragging && _draggedComponent == component)
             {
                 int deltaX = e.X - _dragStartPosition.X;
                 int deltaY = e.Y - _dragStartPosition.Y;
 
-                _draggedComponent.Left += deltaX;
-                _draggedComponent.Top += deltaY;
-
-                _dragStartPosition = e.Location;
+                component.Left += deltaX;
+                component.Top += deltaY;
+                
+                UpdateComponentConnections(component);
                 Invalidate();
             }
         }
 
-        /// <summary>
-        /// マウスアップイベント処理
-        /// 注意事項: ドラッグ状態をリセットする
-        /// 作成日: 2025-08-10
-        /// </summary>
-        protected override void OnMouseUp(MouseEventArgs e)
+        private void UpdateComponentConnections(ComponentControl component)
         {
-            base.OnMouseUp(e);
+            foreach (var connection in ConnectionGraph.GetConnections(component))
+            {
+                UpdateConnectionVisual(connection);
+            }
+        }
+
+        private void ComponentControl_MouseUp(object sender, MouseEventArgs e)
+        {
             _isDragging = false;
             _draggedComponent = null;
         }
 
-        /// <summary>
-        /// 点と線の距離判定
-        /// 注意事項: 指定距離内にあるかどうかを判定する
-        /// 作成日: 2025-08-10
-        /// </summary>
-        private bool IsPointNearLine(Point point, Point lineStart, Point lineEnd)
-        {
-            double distance = DistanceFromPointToLine(point, lineStart, lineEnd);
-            return distance < 5; // 5ピクセル以内をヒット判定
-        }
-
-        /// <summary>
-        /// 点と線分の距離計算
-        /// 注意事項: ベクトル計算を使用して最短距離を求める
-        /// 作成日: 2025-08-10
-        /// </summary>
-        private double DistanceFromPointToLine(Point point, Point lineStart, Point lineEnd)
-        {
-            double lineLengthSquared = Math.Pow(lineEnd.X - lineStart.X, 2) +
-                                      Math.Pow(lineEnd.Y - lineStart.Y, 2);
-
-            if (lineLengthSquared == 0)
-                return Distance(point, lineStart);
-
-            double t = Math.Max(0, Math.Min(1,
-                ((point.X - lineStart.X) * (lineEnd.X - lineStart.X) +
-                 (point.Y - lineStart.Y) * (lineEnd.Y - lineStart.Y)) / lineLengthSquared));
-
-            Point projection = new Point(
-                (int)(lineStart.X + t * (lineEnd.X - lineStart.X)),
-                (int)(lineStart.Y + t * (lineEnd.Y - lineStart.Y)));
-
-            return Distance(point, projection);
-        }
-
-        /// <summary>
-        /// 2点間の距離計算
-        /// 作成日: 2025-08-10
-        /// </summary>
-        private double Distance(Point a, Point b)
-        {
-            return Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2));
-        }
-
-        /// <summary>
-        /// ドラッグエンターイベント処理
-        /// 注意事項: ComponentDescriptorのドラッグ操作を許可する
-        /// 作成日: 2025-08-10
-        /// </summary>
         private void DesignCanvas_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent("ComponentDescriptor"))
@@ -395,11 +315,6 @@ namespace PowerSimBuilder
             }
         }
 
-        /// <summary>
-        /// ドラッグドロップイベント処理
-        /// 注意事項: ドロップ位置にコンポーネントを追加する
-        /// 作成日: 2025-08-10
-        /// </summary>
         private void DesignCanvas_DragDrop(object sender, DragEventArgs e)
         {
             Point dropLocation = this.PointToClient(new Point(e.X, e.Y));
@@ -407,94 +322,8 @@ namespace PowerSimBuilder
             if (e.Data.GetData("ComponentDescriptor") is ComponentDescriptor descriptor)
             {
                 AddComponent(descriptor, dropLocation);
+                ArrangeComponents();
             }
-        }
-    }
-
-    /// <summary>
-    /// 接続情報クラス
-    /// 作成日: 2025-08-10
-    /// </summary>
-    public class Connection
-    {
-        /// <summary>
-        /// 接続開始コンポーネント
-        /// 作成日: 2025-08-10
-        /// </summary>
-        public ComponentControl StartComponent { get; set; }
-
-        /// <summary>
-        /// 接続開始ポート名
-        /// 作成日: 2025-08-10
-        /// </summary>
-        public string StartPort { get; set; }
-
-        /// <summary>
-        /// 接続終了コンポーネント
-        /// 作成日: 2025-08-10
-        /// </summary>
-        public ComponentControl EndComponent { get; set; }
-
-        /// <summary>
-        /// 接続終了ポート名
-        /// 作成日: 2025-08-10
-        /// </summary>
-        public string EndPort { get; set; }
-
-        public string DataType { get; set; } = "double"; // デフォルト値
-    }
-
-    /// <summary>
-    /// コンポーネントイベント引数クラス
-    /// 作成日: 2025-08-10
-    /// </summary>
-    public class ComponentEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 関連コンポーネント
-        /// 作成日: 2025-08-10
-        /// </summary>
-        public ComponentControl Component { get; }
-
-        public ComponentEventArgs(ComponentControl component)
-        {
-            Component = component;
-        }
-    }
-
-    /// <summary>
-    /// 接続イベント引数クラス
-    /// 作成日: 2025-08-10
-    /// </summary>
-    public class ConnectionEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 関連接続
-        /// 作成日: 2025-08-10
-        /// </summary>
-        public Connection Connection { get; }
-
-        public ConnectionEventArgs(Connection connection)
-        {
-            Connection = connection;
-        }
-    }
-
-    /// <summary>
-    /// ポートイベント引数クラス
-    /// 作成日: 2025-08-10
-    /// </summary>
-    public class PortEventArgs : EventArgs
-    {
-        /// <summary>
-        /// ポート名
-        /// 作成日: 2025-08-10
-        /// </summary>
-        public string PortName { get; }
-
-        public PortEventArgs(string portName)
-        {
-            PortName = portName;
         }
     }
 }

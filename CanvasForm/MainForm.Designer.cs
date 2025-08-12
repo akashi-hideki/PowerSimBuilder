@@ -30,12 +30,13 @@ namespace PowerSimBuilder
         {
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.saveButton = new System.Windows.Forms.ToolStripButton();
-            this.loadButton = new System.Windows.Forms.ToolStripButton(); // 追加
+            this.loadButton = new System.Windows.Forms.ToolStripButton();
             this.undoButton = new System.Windows.Forms.ToolStripButton();
             this.redoButton = new System.Windows.Forms.ToolStripButton();
             this.deleteButton = new System.Windows.Forms.ToolStripButton();
             this.runButton = new System.Windows.Forms.ToolStripButton();
             this.addComponentToolStripButton = new System.Windows.Forms.ToolStripButton();
+            this.arrangeButton = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.designCanvas1 = new PowerSimBuilder.DesignCanvas();
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
@@ -52,12 +53,13 @@ namespace PowerSimBuilder
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveButton,
-            this.loadButton, // 追加
+            this.loadButton,
             this.undoButton,
             this.redoButton,
             this.deleteButton,
             this.runButton,
-            this.addComponentToolStripButton});
+            this.addComponentToolStripButton,
+            this.arrangeButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(884, 25);
@@ -119,6 +121,14 @@ namespace PowerSimBuilder
             this.addComponentToolStripButton.Name = "addComponentToolStripButton";
             this.addComponentToolStripButton.Size = new System.Drawing.Size(87, 22);
             this.addComponentToolStripButton.Text = "コンポーネント追加";
+            // 
+            // arrangeButton
+            // 
+            this.arrangeButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.arrangeButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.arrangeButton.Name = "arrangeButton";
+            this.arrangeButton.Size = new System.Drawing.Size(51, 22);
+            this.arrangeButton.Text = "配置整理";
             // 
             // splitContainer1
             // 
@@ -199,12 +209,13 @@ namespace PowerSimBuilder
 
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton saveButton;
-        private System.Windows.Forms.ToolStripButton loadButton; // 追加
+        private System.Windows.Forms.ToolStripButton loadButton;
         private System.Windows.Forms.ToolStripButton undoButton;
         private System.Windows.Forms.ToolStripButton redoButton;
         private System.Windows.Forms.ToolStripButton deleteButton;
         private System.Windows.Forms.ToolStripButton runButton;
         private System.Windows.Forms.ToolStripButton addComponentToolStripButton;
+        private System.Windows.Forms.ToolStripButton arrangeButton;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private DesignCanvas designCanvas1;
         private System.Windows.Forms.PropertyGrid propertyGrid1;

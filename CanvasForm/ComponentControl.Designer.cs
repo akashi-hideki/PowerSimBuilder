@@ -26,10 +26,17 @@ namespace PowerSimBuilder
         /// デザイナー サポートに必要なメソッドです。このメソッドの内容を 
         /// コード エディターで変更しないでください。
         /// </summary>
+        /// <summary> 
+        /// デザイナー サポートに必要なメソッドです。このメソッドの内容を 
+        /// コード エディターで変更しないでください。
+        /// </summary>
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.LightGray;
+            this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.Size = new System.Drawing.Size(100, 70);
         }
 
         #endregion

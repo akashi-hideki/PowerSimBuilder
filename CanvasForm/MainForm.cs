@@ -13,7 +13,6 @@ namespace PowerSimBuilder
     {
         private readonly CanvasManager _canvasManager;
         private readonly PythonCodeGenerator _codeGenerator = new PythonCodeGenerator();
-        private int _componentCounter = 1;
 
         public MainForm()
         {
@@ -21,6 +20,9 @@ namespace PowerSimBuilder
             InitializeEventHandlers();
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
             SubscribeToEvents();
+            
+            // 接続レンダラーの設定
+            designCanvas1.ConnectionRenderer = new BezierConnectionRenderer();
         }
 
         private void InitializeEventHandlers()
@@ -33,6 +35,7 @@ namespace PowerSimBuilder
             undoButton.Click += undoButton_Click;
             redoButton.Click += redoButton_Click;
             runButton.Click += runButton_Click;
+            arrangeButton.Click += arrangeButton_Click;
             propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
         }
 
@@ -78,6 +81,9 @@ namespace PowerSimBuilder
             {
                 Point center = new Point(designCanvas1.Width / 2, designCanvas1.Height / 2);
                 _canvasManager.AddComponent(selectedDescriptor, center);
+                
+                // 自動配置
+                designCanvas1.ArrangeComponents();
             }
         }
 
@@ -122,6 +128,7 @@ namespace PowerSimBuilder
 
                 var model = JsonSerializer.Deserialize<CanvasModel>(json, options);
                 _canvasManager.LoadModel(model);
+                designCanvas1.ArrangeComponents();
                 UpdateSaveStatus();
                 UpdateUndoRedoButtons();
                 UpdateDeleteButton();
@@ -135,11 +142,18 @@ namespace PowerSimBuilder
         private void undoButton_Click(object sender, EventArgs e)
         {
             _canvasManager.Undo();
+            designCanvas1.Invalidate();
         }
 
         private void redoButton_Click(object sender, EventArgs e)
         {
             _canvasManager.Redo();
+            designCanvas1.Invalidate();
+        }
+
+        private void arrangeButton_Click(object sender, EventArgs e)
+        {
+            designCanvas1.ArrangeComponents();
         }
 
         private void runButton_Click(object sender, EventArgs e)
@@ -185,7 +199,6 @@ namespace PowerSimBuilder
             // コンポーネントコード生成
             foreach (var component in _canvasManager.GetAllComponents())
             {
-                component.InstanceName = $"comp{_componentCounter++}";
                 code.AppendLine(GenerateComponentCode(component));
             }
             code.AppendLine();
@@ -208,7 +221,9 @@ namespace PowerSimBuilder
             {
                 code.AppendLine($"    manager.connection_manager.add_connection(" +
                                $"'{connection.StartComponent.InstanceName}', " +
-                               $"'{connection.EndComponent.InstanceName}')");
+                               $"'{connection.StartPort}', " +
+                               $"'{connection.EndComponent.InstanceName}', " +
+                               $"'{connection.EndPort}')");
             }
             
             code.AppendLine("    manager.run_simulation(t_total=0.5, dt=0.001)");

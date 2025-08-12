@@ -12,18 +12,11 @@ namespace PowerSimBuilder
         public event EventHandler DoubleClicked;
 
         private bool _selected;
-        private readonly Dictionary<string, Rectangle> _ports = new Dictionary<string, Rectangle>();
-        private Point _dragOffset;
 
         /// <summary>
         /// コンポーネント記述子
         /// </summary>
         public ComponentDescriptor Descriptor { get; }
-
-        /// <summary>
-        /// 関連接続リスト
-        /// </summary>
-        public List<Connection> Connections { get; } = new List<Connection>();
 
         /// <summary>
         /// パラメータ辞書
@@ -60,22 +53,13 @@ namespace PowerSimBuilder
             Descriptor = descriptor;
             InitializeComponent();
             InitializeParameters();
-            InitializePorts();
             InitializeEvents();
         }
-
-        private void InitializeComponentParts()
+        public void InitializePortsDummy()
         {
-            this.SuspendLayout();
-            // 
-            // ComponentControl
-            // 
-            this.BackColor = System.Drawing.Color.LightGray;
-            this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.Size = new System.Drawing.Size(100, 70);
-            this.ResumeLayout(false);
+            // 座標非依存アーキテクチャではデザイナーコード
+            // 必要に応じてロジックを追加
         }
-
         /// <summary>
         /// イベントハンドラを初期化
         /// </summary>
@@ -96,67 +80,20 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// ポートを初期化する
-        /// </summary>
-        public  void InitializePorts()
-        {
-            _ports.Clear();
-            int portSize = 10;
-
-            // 入力ポートを左側に配置
-            if (Descriptor.InputPorts != null)
-            {
-                for (int i = 0; i < Descriptor.InputPorts.Length; i++)
-                {
-                    string portName = Descriptor.InputPorts[i];
-                    int yPos = (i + 1) * Height / (Descriptor.InputPorts.Length + 1);
-                    _ports[portName] = new Rectangle(0, yPos - portSize / 2, portSize, portSize);
-                }
-            }
-
-            // 出力ポートを右側に配置
-            if (Descriptor.OutputPorts != null)
-            {
-                for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
-                {
-                    string portName = Descriptor.OutputPorts[i];
-                    int yPos = (i + 1) * Height / (Descriptor.OutputPorts.Length + 1);
-                    _ports[portName] = new Rectangle(Width - portSize, yPos - portSize / 2, portSize, portSize);
-                }
-            }
-        }
-
-        /// <summary>
-        /// ポート位置を取得する
-        /// </summary>
-        public Point GetPortLocation(string portName)
-        {
-            if (_ports.TryGetValue(portName, out var rect))
-            {
-                return PointToScreen(new Point(
-                    rect.X + rect.Width / 2,
-                    rect.Y + rect.Height / 2));
-            }
-            return PointToScreen(Location);
-        }
-
-        /// <summary>
         /// 描画処理
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-
-            // 背景を描画
             e.Graphics.FillRectangle(Brushes.LightGray, ClientRectangle);
 
-            // コンポーネント名を描画
+            // コンポーネント名の描画
             using (var font = new Font("Arial", 8))
             {
                 e.Graphics.DrawString(InstanceName, font, Brushes.Black, 10, 10);
             }
 
-            // 選択状態の枠を描画
+            // 選択状態の枠
             if (IsSelected)
             {
                 using (var pen = new Pen(Color.Red, 2))
@@ -165,102 +102,105 @@ namespace PowerSimBuilder
                 }
             }
 
-            // ポートを描画
-            foreach (var port in _ports)
+            // 入力ポートの描画 (左側)
+            if (Descriptor.InputPorts != null)
             {
-                // ポートタイプ判定部分の修正
-                if (port.Key.IndexOf("Input", StringComparison.Ordinal) >= 0)
+                for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    e.Graphics.FillEllipse(Brushes.Blue, port.Value);
-                }
-                else if (port.Key.IndexOf("Output", StringComparison.Ordinal) >= 0)
-                {
-                    e.Graphics.FillEllipse(Brushes.Green, port.Value);
-                }
+                    // ratio を計算
+                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
 
-                // ポート名を描画（デバッグ用）
-                // e.Graphics.DrawString(port.Key, Font, Brushes.Black, port.Value.X, port.Value.Y);
+                    // ポートの円を描画
+                    Rectangle portRect = new Rectangle(5, yPos - 5, 10, 10);
+                    e.Graphics.FillEllipse(Brushes.Blue, portRect);
+                    e.Graphics.DrawEllipse(Pens.Black, portRect);
+
+                    // ポート名を表示 (デバッグ用)
+#if DEBUG
+                    e.Graphics.DrawString(Descriptor.InputPorts[i], Font, Brushes.Black, 20, yPos - 7);
+#endif
+                }
+            }
+
+            // 出力ポートの描画 (右側)
+            if (Descriptor.OutputPorts != null)
+            {
+                for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
+                {
+                    // ratio を計算
+                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
+
+                    // ポートの円を描画
+                    Rectangle portRect = new Rectangle(Width - 15, yPos - 5, 10, 10);
+                    e.Graphics.FillEllipse(Brushes.Green, portRect);
+                    e.Graphics.DrawEllipse(Pens.Black, portRect);
+
+                    // ポート名を表示 (デバッグ用)
+#if DEBUG
+                    e.Graphics.DrawString(Descriptor.OutputPorts[i], Font, Brushes.Black, Width - 50, yPos - 7);
+#endif
+                }
             }
         }
-
-        /// <summary>
-        /// サイズ変更時の処理
-        /// </summary>
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            InitializePorts();
-            Invalidate();
-        }
-
         /// <summary>
         /// マウスダウンイベント処理
         /// </summary>
+        // ComponentControl.cs
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
             this.Focus();
 
-            // ポートクリックチェック
-            foreach (var port in _ports)
+            // 入力ポートチェック（左側）
+            if (Descriptor.InputPorts != null)
             {
-                if (port.Value.Contains(e.Location))
+                for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    PortClicked?.Invoke(this, new PortEventArgs(port.Key));
-                    return;
-                }
-            }
+                    // ratio を計算
+                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
 
-            // ポート以外をクリックした場合は選択状態を更新
-            IsSelected = true;
-            _dragOffset = e.Location;
-            BringToFront();
-        }
+                    // ポート周辺の矩形領域 (描画位置と一致)
+                    var portRect = new Rectangle(5, yPos - 5, 10, 10);
 
-        /// <summary>
-        /// マウス移動イベント処理
-        /// </summary>
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            base.OnMouseMove(e);
-
-            if (e.Button == MouseButtons.Left && IsSelected)
-            {
-                // ドラッグ中はカーソルを移動カーソルに変更
-                Cursor = Cursors.SizeAll;
-
-                int deltaX = e.X - _dragOffset.X;
-                int deltaY = e.Y - _dragOffset.Y;
-
-                Left += deltaX;
-                Top += deltaY;
-
-                _dragOffset = e.Location;
-                Parent.Invalidate();
-            }
-            else
-            {
-                // ポート上にカーソルがある場合は手のアイコンに変更
-                bool overPort = false;
-                foreach (var port in _ports)
-                {
-                    if (port.Value.Contains(e.Location))
+                    if (portRect.Contains(e.Location))
                     {
-                        overPort = true;
-                        break;
+                        // portName を取得
+                        string portName = Descriptor.InputPorts[i];
+                        PortClicked?.Invoke(this, new PortEventArgs(portName));
+                        return;
                     }
                 }
-                Cursor = overPort ? Cursors.Hand : Cursors.Default;
             }
-        }
 
-        /// <summary>
-        /// マウスアップイベント処理
-        /// </summary>
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            base.OnMouseUp(e);
-            Cursor = Cursors.Default;
+            // 出力ポートチェック（右側）
+            if (Descriptor.OutputPorts != null)
+            {
+                for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
+                {
+                    // ratio を計算
+                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
+
+                    // ポート周辺の矩形領域 (描画位置と一致)
+                    var portRect = new Rectangle(Width - 15, yPos - 5, 10, 10);
+
+                    if (portRect.Contains(e.Location))
+                    {
+                        // portName を取得
+                        string portName = Descriptor.OutputPorts[i];
+                        PortClicked?.Invoke(this, new PortEventArgs(portName));
+                        return;
+                    }
+                }
+            }
+
+            // ポート以外をクリック
+            IsSelected = true;
+            BringToFront();
         }
+ 
     }
 }

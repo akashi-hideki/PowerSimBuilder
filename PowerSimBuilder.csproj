@@ -51,6 +51,7 @@
     <Compile Include="CanvasForm\AddParameterForm.Designer.cs">
       <DependentUpon>AddParameterForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CanvasForm\AutoLayoutEngine.cs" />
     <Compile Include="CanvasForm\CanvasManager.cs" />
     <Compile Include="CanvasForm\ComponentControl.cs">
       <SubType>UserControl</SubType>
@@ -70,18 +71,22 @@
     <Compile Include="CanvasForm\ComponentPropertyForm.Designer.cs">
       <DependentUpon>ComponentPropertyForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CanvasForm\Connection.cs" />
     <Compile Include="CanvasForm\ConnectionEditorForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="CanvasForm\ConnectionEditorForm.Designer.cs">
       <DependentUpon>ConnectionEditorForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CanvasForm\ConnectionGraph.cs" />
+    <Compile Include="CanvasForm\ConnectionRenderer.cs" />
     <Compile Include="CanvasForm\DesignCanvas.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="CanvasForm\DesignCanvas.Designer.cs">
       <DependentUpon>DesignCanvas.cs</DependentUpon>
     </Compile>
+    <Compile Include="CanvasForm\EventArguments.cs" />
     <Compile Include="CanvasForm\FaultConditionEditorForm.cs">
       <SubType>Form</SubType>
     </Compile>

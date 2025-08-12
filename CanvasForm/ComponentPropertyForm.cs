@@ -90,7 +90,7 @@ namespace PowerSimBuilder
                     new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 
                 // ポートを再初期化
-                _component.InitializePorts();
+                _component.InitializePortsDummy();
             };
         }
 
