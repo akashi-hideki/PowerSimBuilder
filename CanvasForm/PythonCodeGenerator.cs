@@ -3,17 +3,29 @@ using System.Text;
 
 namespace PowerSimBuilder
 {
+    /// <summary>
+    /// Pythonシミュレーションコード生成クラス
+    /// 作成日: 2025-08-13
+    /// 注意点: システム構成からPythonシミュレーションコードを生成
+    /// </summary>
     public class PythonCodeGenerator
     {
         private int _componentCounter = 1;
 
-        public string GenerateCode(IEnumerable<ComponentControl> components, List<Connection> connections)
+        /// <summary>
+        /// シミュレーション全体のコードを生成
+        /// </summary>
+        public string GenerateSimulationCode(IEnumerable<ComponentControl> components, List<Connection> connections)
         {
             var code = new StringBuilder();
             code.AppendLine("from power_system_simulator import *");
             code.AppendLine("import numpy as np");
             code.AppendLine();
 
+            // インスタンス名をリセット
+            _componentCounter = 1;
+            
+            // コンポーネントコード生成
             foreach (var component in components)
             {
                 component.InstanceName = $"comp{_componentCounter++}";
@@ -21,22 +33,39 @@ namespace PowerSimBuilder
             }
             code.AppendLine();
 
+            // 接続コード生成
             code.AppendLine(GenerateConnectionsCode(connections));
             code.AppendLine();
 
+            // シミュレーション実行コード
             code.AppendLine("def run_simulation():");
             code.AppendLine("    manager = SimulationManager()");
+
             foreach (var component in components)
             {
                 code.AppendLine($"    manager.add_component({component.InstanceName})");
             }
+
+            // 接続を追加
+            foreach (var connection in connections)
+            {
+                code.AppendLine($"    manager.connection_manager.add_connection(" +
+                               $"'{connection.StartComponent.InstanceName}', " +
+                               $"'{connection.StartPort}', " +
+                               $"'{connection.EndComponent.InstanceName}', " +
+                               $"'{connection.EndPort}')");
+            }
+
             code.AppendLine("    manager.run_simulation(t_total=0.5, dt=0.001)");
             code.AppendLine();
 
             return code.ToString();
         }
 
-        public string GenerateComponentCode(ComponentControl component)
+        /// <summary>
+        /// コンポーネント別コード生成
+        /// </summary>
+        private string GenerateComponentCode(ComponentControl component)
         {
             switch (component.Descriptor.Type)
             {
@@ -51,6 +80,9 @@ namespace PowerSimBuilder
             }
         }
 
+        /// <summary>
+        /// モーター用コード生成
+        /// </summary>
         private string GenerateMotorCode(ComponentControl motor)
         {
             var code = new StringBuilder();
@@ -81,6 +113,9 @@ namespace PowerSimBuilder
             return code.ToString();
         }
 
+        /// <summary>
+        /// 故障監視システム用コード生成
+        /// </summary>
         private string GenerateFaultMonitorCode(ComponentControl monitor)
         {
             var code = new StringBuilder();
@@ -102,6 +137,9 @@ namespace PowerSimBuilder
             return code.ToString();
         }
 
+        /// <summary>
+        /// デフォルトコンポーネント用コード生成
+        /// </summary>
         private string GenerateDefaultComponentCode(ComponentControl component)
         {
             var code = new StringBuilder();
@@ -129,6 +167,9 @@ namespace PowerSimBuilder
             return code.ToString();
         }
 
+        /// <summary>
+        /// 接続コード生成
+        /// </summary>
         private string GenerateConnectionsCode(List<Connection> connections)
         {
             var code = new StringBuilder();
@@ -141,6 +182,9 @@ namespace PowerSimBuilder
             return code.ToString();
         }
 
+        /// <summary>
+        /// 値のフォーマット処理
+        /// </summary>
         private string FormatValue(object value)
         {
             if (value is string strValue)
