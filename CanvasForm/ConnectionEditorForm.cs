@@ -1,4 +1,3 @@
-using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -45,9 +44,10 @@ namespace PowerSimBuilder
 
             // ソースコンポーネント名
             var lblSourceComp = new Label { Text = "ソース:", Location = new Point(20, 20) };
-            var txtSourceComp = new TextBox { 
-                Text = _source.InstanceName, 
-                Location = new Point(100, 20), 
+            var txtSourceComp = new TextBox
+            {
+                Text = _source.InstanceName,
+                Location = new Point(100, 20),
                 ReadOnly = true,
                 Width = 200
             };
@@ -55,7 +55,7 @@ namespace PowerSimBuilder
             // ソースポート
             var lblSourcePort = new Label { Text = "ソースポート:", Location = new Point(20, 50) };
             var cmbSourcePort = new ComboBox { Location = new Point(100, 50), Width = 200 };
-            
+
             if (_source.Descriptor.OutputPorts != null)
             {
                 cmbSourcePort.Items.AddRange(_source.Descriptor.OutputPorts);
@@ -63,9 +63,10 @@ namespace PowerSimBuilder
 
             // ターゲットコンポーネント名
             var lblTargetComp = new Label { Text = "ターゲット:", Location = new Point(20, 80) };
-            var txtTargetComp = new TextBox { 
-                Text = _target.InstanceName, 
-                Location = new Point(100, 80), 
+            var txtTargetComp = new TextBox
+            {
+                Text = _target.InstanceName,
+                Location = new Point(100, 80),
                 ReadOnly = true,
                 Width = 200
             };
@@ -73,7 +74,7 @@ namespace PowerSimBuilder
             // ターゲットポート
             var lblTargetPort = new Label { Text = "ターゲットポート:", Location = new Point(20, 110) };
             var cmbTargetPort = new ComboBox { Location = new Point(100, 110), Width = 200 };
-            
+
             if (_target.Descriptor.InputPorts != null)
             {
                 cmbTargetPort.Items.AddRange(_target.Descriptor.InputPorts);
@@ -114,7 +115,8 @@ namespace PowerSimBuilder
             });
 
             // イベントハンドラ
-            btnOK.Click += (s, e) => {
+            btnOK.Click += (s, e) =>
+            {
                 if (cmbSourcePort.SelectedItem == null || cmbTargetPort.SelectedItem == null)
                 {
                     MessageBox.Show("ソースポートとターゲットポートを選択してください");

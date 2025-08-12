@@ -38,60 +38,60 @@ namespace PowerSimBuilder
 
             // 名前入力
             var lblName = new Label { Text = "名前:", Location = new Point(20, 20), Size = new Size(80, 20) };
-            var txtName = new TextBox 
-            { 
-                Text = _component.InstanceName, 
-                Location = new Point(100, 20), 
-                Size = new Size(200, 20) 
+            var txtName = new TextBox
+            {
+                Text = _component.InstanceName,
+                Location = new Point(100, 20),
+                Size = new Size(200, 20)
             };
 
             // 位置設定
             var lblX = new Label { Text = "X位置:", Location = new Point(20, 50), Size = new Size(80, 20) };
-            var numX = new NumericUpDown 
-            { 
-                Value = _component.Location.X, 
-                Location = new Point(100, 50), 
-                Size = new Size(80, 20) 
+            var numX = new NumericUpDown
+            {
+                Value = _component.Location.X,
+                Location = new Point(100, 50),
+                Size = new Size(80, 20)
             };
-            
+
             var lblY = new Label { Text = "Y位置:", Location = new Point(190, 50), Size = new Size(80, 20) };
-            var numY = new NumericUpDown 
-            { 
-                Value = _component.Location.Y, 
-                Location = new Point(270, 50), 
-                Size = new Size(80, 20) 
+            var numY = new NumericUpDown
+            {
+                Value = _component.Location.Y,
+                Location = new Point(270, 50),
+                Size = new Size(80, 20)
             };
 
             // ポート設定
             var lblInputPorts = new Label { Text = "入力ポート:", Location = new Point(20, 80), Size = new Size(80, 20) };
-            var txtInputPorts = new TextBox 
-            { 
+            var txtInputPorts = new TextBox
+            {
                 Text = string.Join(",", _component.Descriptor.InputPorts ?? Array.Empty<string>()),
-                Location = new Point(100, 80), 
+                Location = new Point(100, 80),
                 Size = new Size(200, 20)
             };
 
             var lblOutputPorts = new Label { Text = "出力ポート:", Location = new Point(20, 110), Size = new Size(80, 20) };
-            var txtOutputPorts = new TextBox 
-            { 
+            var txtOutputPorts = new TextBox
+            {
                 Text = string.Join(",", _component.Descriptor.OutputPorts ?? Array.Empty<string>()),
-                Location = new Point(100, 110), 
+                Location = new Point(100, 110),
                 Size = new Size(200, 20)
             };
 
             // 特殊設定ボタン
-            var btnThermal = new Button 
-            { 
-                Text = "熱パラメータ設定", 
-                Location = new Point(20, 150), 
-                Visible = false 
+            var btnThermal = new Button
+            {
+                Text = "熱パラメータ設定",
+                Location = new Point(20, 150),
+                Visible = false
             };
-            
-            var btnFault = new Button 
-            { 
-                Text = "故障条件設定", 
-                Location = new Point(150, 150), 
-                Visible = false 
+
+            var btnFault = new Button
+            {
+                Text = "故障条件設定",
+                Location = new Point(150, 150),
+                Visible = false
             };
 
             // コンポーネントタイプに応じたボタン表示
@@ -105,18 +105,18 @@ namespace PowerSimBuilder
             }
 
             // OK/キャンセルボタン
-            var btnOK = new Button 
-            { 
-                Text = "OK", 
-                DialogResult = DialogResult.OK, 
-                Location = new Point(120, 220) 
+            var btnOK = new Button
+            {
+                Text = "OK",
+                DialogResult = DialogResult.OK,
+                Location = new Point(120, 220)
             };
-            
-            var btnCancel = new Button 
-            { 
-                Text = "キャンセル", 
-                DialogResult = DialogResult.Cancel, 
-                Location = new Point(220, 220) 
+
+            var btnCancel = new Button
+            {
+                Text = "キャンセル",
+                DialogResult = DialogResult.Cancel,
+                Location = new Point(220, 220)
             };
 
             // コントロール追加
@@ -132,20 +132,20 @@ namespace PowerSimBuilder
             // イベントハンドラ登録
             btnThermal.Click += (s, e) => OpenThermalSettings();
             btnFault.Click += (s, e) => OpenFaultConditions();
-            
-            btnOK.Click += (s, e) => 
+
+            btnOK.Click += (s, e) =>
             {
                 // 変更内容を適用
                 _component.InstanceName = txtName.Text;
                 _component.Location = new Point((int)numX.Value, (int)numY.Value);
-                
+
                 // ポート情報更新
                 _component.Descriptor.InputPorts = txtInputPorts.Text.Split(
                     new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                
+
                 _component.Descriptor.OutputPorts = txtOutputPorts.Text.Split(
                     new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                
+
                 // ポート再初期化
                 _component.InitializePortsDummy();
             };

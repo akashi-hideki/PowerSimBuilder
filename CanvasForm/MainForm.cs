@@ -29,7 +29,7 @@ namespace PowerSimBuilder
             InitializeEventHandlers();
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
             SubscribeToEvents();
-            
+
             // 接続レンダラーの初期設定
             designCanvas1.ConnectionRenderer = new BezierConnectionRenderer();
             designCanvas1.ConnectionSelected += DesignCanvas_ConnectionSelected;
@@ -119,7 +119,7 @@ namespace PowerSimBuilder
             {
                 Point center = new Point(designCanvas1.Width / 2, designCanvas1.Height / 2);
                 _canvasManager.AddComponent(selectedDescriptor, center);
-                
+
                 // 自動配置実行
                 designCanvas1.ArrangeComponents();
             }
@@ -185,7 +185,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー", 
+                MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -253,7 +253,7 @@ namespace PowerSimBuilder
         /// </summary>
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
-            if (_canvasManager.SelectedComponent?.Descriptor.Type == "FaultMonitor" && 
+            if (_canvasManager.SelectedComponent?.Descriptor.Type == "FaultMonitor" &&
                 e.ChangedItem.Label == "Conditions")
             {
                 OpenFaultConditionEditor();
@@ -305,12 +305,12 @@ namespace PowerSimBuilder
             // シミュレーション実行コード
             code.AppendLine("def run_simulation():");
             code.AppendLine("    manager = SimulationManager()");
-            
+
             foreach (var component in _canvasManager.GetAllComponents())
             {
                 code.AppendLine($"    manager.add_component({component.InstanceName})");
             }
-            
+
             // 接続を追加
             foreach (var connection in _canvasManager.GetAllConnections())
             {
@@ -320,9 +320,9 @@ namespace PowerSimBuilder
                                $"'{connection.EndComponent.InstanceName}', " +
                                $"'{connection.EndPort}')");
             }
-            
+
             code.AppendLine("    manager.run_simulation(t_total=0.5, dt=0.001)");
-            
+
             return code.ToString();
         }
 
@@ -336,10 +336,10 @@ namespace PowerSimBuilder
             {
                 case "InductionMotor":
                     return GenerateMotorCode(component);
-                
+
                 case "FaultMonitor":
                     return GenerateFaultMonitorCode(component);
-                
+
                 default:
                     return GenerateDefaultComponentCode(component);
             }
@@ -355,12 +355,12 @@ namespace PowerSimBuilder
             code.AppendLine($"{motor.InstanceName} = InductionMotor(");
             code.AppendLine($"    name='{motor.InstanceName}',");
             code.AppendLine($"    params={{");
-            
+
             bool firstParam = true;
             foreach (var param in motor.Parameters)
             {
                 if (!firstParam) code.AppendLine(",");
-                
+
                 if (param.Key == "ThermalResistance" || param.Key == "ThermalCapacity")
                 {
                     code.Append($"        '{param.Key}': {param.Value}");
@@ -369,10 +369,10 @@ namespace PowerSimBuilder
                 {
                     code.Append($"        '{param.Key}': {FormatValue(param.Value)}");
                 }
-                
+
                 firstParam = false;
             }
-            
+
             code.AppendLine();
             code.AppendLine($"    }}");
             code.AppendLine($")");
@@ -387,8 +387,8 @@ namespace PowerSimBuilder
         {
             var code = new StringBuilder();
             code.AppendLine($"{monitor.InstanceName} = FaultMonitor()");
-            
-            if (monitor.Parameters.TryGetValue("Conditions", out var conditionsObj) && 
+
+            if (monitor.Parameters.TryGetValue("Conditions", out var conditionsObj) &&
                 conditionsObj is List<FaultCondition> conditions)
             {
                 foreach (var condition in conditions)
@@ -400,7 +400,7 @@ namespace PowerSimBuilder
                     code.AppendLine($")");
                 }
             }
-            
+
             return code.ToString();
         }
 
@@ -477,12 +477,12 @@ namespace PowerSimBuilder
                     scope.Exec(code);
                     scope.run_simulation();
                 }
-                MessageBox.Show("シミュレーションが正常に完了しました", "成功", 
+                MessageBox.Show("シミュレーションが正常に完了しました", "成功",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"シミュレーションエラー: {ex.Message}", "エラー", 
+                MessageBox.Show($"シミュレーションエラー: {ex.Message}", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -511,8 +511,8 @@ namespace PowerSimBuilder
         /// </summary>
         private void UpdateDeleteButton()
         {
-            deleteButton.Enabled = 
-                _canvasManager.SelectedComponent != null || 
+            deleteButton.Enabled =
+                _canvasManager.SelectedComponent != null ||
                 _canvasManager.SelectedConnection != null;
         }
 

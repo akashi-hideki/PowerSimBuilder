@@ -63,7 +63,7 @@ namespace PowerSimBuilder
                 DialogResult = DialogResult.None;
                 return;
             }
-            
+
             NewComponent = new ComponentDescriptor
             {
                 Name = txtName.Text,

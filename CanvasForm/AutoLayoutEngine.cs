@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -98,8 +97,8 @@ namespace PowerSimBuilder
         private List<ComponentControl> FindRootComponents(DesignCanvas canvas)
         {
             return canvas.Components
-                .Where(c => 
-                    c.Descriptor.InputPorts == null || 
+                .Where(c =>
+                    c.Descriptor.InputPorts == null ||
                     c.Descriptor.InputPorts.Length == 0)
                 .ToList();
         }

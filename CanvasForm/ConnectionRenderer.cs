@@ -15,7 +15,19 @@ namespace PowerSimBuilder
         /// 接続線を描画する抽象メソッド
         /// </summary>
         public abstract void Render(Graphics g, Connection connection);
+        // ConnectionRenderer.cs の変更点
+        // CreatePenを抽象メソッドに変更
+        protected abstract Pen CreatePen(Connection connection);
 
+
+        // ConnectionVisual.cs に新しいプロパティ追加
+        public class ConnectionVisual
+        {
+            public List<Point> PathPoints { get; set; } = new List<Point>();
+            public bool IsSelected { get; set; }
+            public bool IsHovered { get; set; }
+            public bool IsConnected { get; set; } = true;
+        }
         /// <summary>
         /// 共通のフォールバック接続描画
         /// 注意点: コンポーネントがnullの場合描画しない
@@ -75,7 +87,8 @@ namespace PowerSimBuilder
         /// <summary>
         /// ペンを作成（選択状態で色変更）
         /// </summary>
-        protected virtual Pen CreatePen(Connection connection)
+        // overrideキーワードを追加
+        protected override Pen CreatePen(Connection connection)
         {
             return new Pen(connection.Visual.IsSelected ? Color.Red : Color.Blue, 2)
             {
@@ -141,7 +154,8 @@ namespace PowerSimBuilder
         /// <summary>
         /// ペンを作成（選択状態で色変更）
         /// </summary>
-        protected virtual Pen CreatePen(Connection connection)
+       // overrideキーワードを追加
+        protected override Pen CreatePen(Connection connection)
         {
             return new Pen(connection.Visual.IsSelected ? Color.Red : Color.Blue, 2)
             {
@@ -182,13 +196,13 @@ namespace PowerSimBuilder
         /// </summary>
         private Point[] CalculateOrthogonalPoints(List<Point> pathPoints)
         {
-            if (pathPoints.Count != 2) 
+            if (pathPoints.Count != 2)
                 return pathPoints.ToArray();
 
             var start = pathPoints[0];
             var end = pathPoints[1];
             int midX = (start.X + end.X) / 2;
-            
+
             return new[]
             {
                 start,
@@ -201,7 +215,8 @@ namespace PowerSimBuilder
         /// <summary>
         /// ペンを作成（選択状態で色変更）
         /// </summary>
-        protected virtual Pen CreatePen(Connection connection)
+       // overrideキーワードを追加
+        protected override Pen CreatePen(Connection connection)
         {
             return new Pen(connection.Visual.IsSelected ? Color.Red : Color.Green, 2)
             {

@@ -80,7 +80,7 @@ namespace PowerSimBuilder
             InitializeComponent();
             DoubleBuffered = true;
             AllowDrop = true;
-            
+
             this.DragEnter += DesignCanvas_DragEnter;
             this.DragDrop += DesignCanvas_DragDrop;
         }
@@ -137,19 +137,109 @@ namespace PowerSimBuilder
                 }
             }
         }
+        /// <summary>
+        /// マウスダウンイベント処理
+        /// 注意点: 接続線の選択処理を実装
+        /// </summary>
 
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            // 接続線の選択チェック
+            foreach (var connection in Connections)
+            {
+                if (IsPointNearConnection(e.Location, connection))
+                {
+                    ConnectionSelected?.Invoke(this, new ConnectionEventArgs(connection));
+                    SelectedConnection = connection;
+                    connection.Visual.IsSelected = true;
+                    Invalidate();
+                    return;
+                }
+            }
+
+            // ポートクリックチェック
+            foreach (Control control in Controls)
+            {
+                if (control is ComponentControl component)
+                {
+                    var clientPos = component.PointToClient(PointToScreen(e.Location));
+
+                    // 入力ポートチェック
+                    if (component.Descriptor.InputPorts != null)
+                    {
+                        for (int i = 0; i < component.Descriptor.InputPorts.Length; i++)
+                        {
+                            float ratio = (i + 1f) / (component.Descriptor.InputPorts.Length + 1);
+                            int yPos = (int)(component.Height * ratio);
+                            var portRect = new Rectangle(5, yPos - 5, 10, 10);
+
+                            if (portRect.Contains(clientPos))
+                            {
+                                ComponentControl_PortClicked(component, new PortEventArgs(component.Descriptor.InputPorts[i]));
+                                return;
+                            }
+                        }
+                    }
+
+                    // 出力ポートチェック
+                    if (component.Descriptor.OutputPorts != null)
+                    {
+                        for (int i = 0; i < component.Descriptor.OutputPorts.Length; i++)
+                        {
+                            float ratio = (i + 1f) / (component.Descriptor.OutputPorts.Length + 1);
+                            int yPos = (int)(component.Height * ratio);
+                            var portRect = new Rectangle(component.Width - 15, yPos - 5, 10, 10);
+
+                            if (portRect.Contains(clientPos))
+                            {
+                                ComponentControl_PortClicked(component, new PortEventArgs(component.Descriptor.OutputPorts[i]));
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 接続線以外をクリックした場合
+            ConnectionSelected?.Invoke(this, new ConnectionEventArgs(null));
+            DeselectAllConnections();
+            Invalidate();
+        }
         /// <summary>
         /// 仮接続線を描画
         /// 注意点: ドラッグ中の接続作成時に表示
         /// </summary>
+
         private void DrawTemporaryConnection(Graphics g)
         {
             Point start = GetComponentConnectionPoint(_currentConnection.StartComponent, true);
             Point end = PointToClient(Cursor.Position);
-            
-            using (var pen = new Pen(Color.LightBlue, 2) { DashStyle = DashStyle.Dash })
+
+            // 接続線のスタイルを状態に応じて変更
+            Color lineColor = Color.LightBlue;
+            DashStyle dashStyle = DashStyle.Dash;
+
+            // ポート上にホバーしている場合は接続可能状態を示す
+            foreach (Control control in Controls)
+            {
+                if (control is ComponentControl component &&
+                    component.Bounds.Contains(end))
+                {
+                    lineColor = Color.LightGreen;
+                    dashStyle = DashStyle.Solid;
+                    break;
+                }
+            }
+
+            using (var pen = new Pen(lineColor, 2) { DashStyle = dashStyle })
             {
                 g.DrawLine(pen, start, end);
+
+                // 接続ポイントを示すマーカー
+                g.FillEllipse(Brushes.White, end.X - 4, end.Y - 4, 8, 8);
+                g.DrawEllipse(Pens.Black, end.X - 4, end.Y - 4, 8, 8);
             }
         }
 
@@ -242,7 +332,7 @@ namespace PowerSimBuilder
         private void ComponentControl_PortClicked(object sender, PortEventArgs e)
         {
             var component = (ComponentControl)sender;
-            
+
             if (_currentConnection == null)
             {
                 // 接続開始
@@ -263,10 +353,10 @@ namespace PowerSimBuilder
                 {
                     AddConnection(_currentConnection);
                 }
-                
+
                 _currentConnection = null;
             }
-            
+
             Invalidate();
         }
 
@@ -362,7 +452,7 @@ namespace PowerSimBuilder
         {
             var component = (ComponentControl)sender;
             component.BringToFront();
-            
+
             if (e.Button == MouseButtons.Left)
             {
                 _isDragging = true;
@@ -378,7 +468,7 @@ namespace PowerSimBuilder
         private void ComponentControl_MouseMove(object sender, MouseEventArgs e)
         {
             var component = (ComponentControl)sender;
-            
+
             if (_isDragging && _draggedComponent == component)
             {
                 int deltaX = e.X - _dragStartPosition.X;
@@ -386,7 +476,7 @@ namespace PowerSimBuilder
 
                 component.Left += deltaX;
                 component.Top += deltaY;
-                
+
                 UpdateComponentConnections(component);
                 Invalidate();
             }
@@ -412,33 +502,7 @@ namespace PowerSimBuilder
             _draggedComponent = null;
         }
 
-        /// <summary>
-        /// マウスダウンイベント処理
-        /// 注意点: 接続線の選択処理を実装
-        /// </summary>
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            base.OnMouseDown(e);
 
-            // 接続線の選択チェック
-            foreach (var connection in Connections)
-            {
-                if (IsPointNearConnection(e.Location, connection))
-                {
-                    // 接続選択イベント発火
-                    ConnectionSelected?.Invoke(this, new ConnectionEventArgs(connection));
-                    SelectedConnection = connection;
-                    connection.Visual.IsSelected = true;
-                    Invalidate();
-                    return;
-                }
-            }
-
-            // 接続線以外をクリック: 選択解除
-            ConnectionSelected?.Invoke(this, new ConnectionEventArgs(null));
-            DeselectAllConnections();
-            Invalidate();
-        }
 
         /// <summary>
         /// 全接続の選択解除

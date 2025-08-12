@@ -73,12 +73,12 @@ namespace PowerSimBuilder
         /// ソースオブジェクトのプロパティ名
         /// </summary>
         public string SourceProperty { get; set; }
-        
+
         /// <summary>
         /// ターゲットオブジェクトのプロパティ名
         /// </summary>
         public string TargetProperty { get; set; }
-        
+
         /// <summary>
         /// 適用する変換関数の名前（登録済みの関数名）
         /// </summary>
@@ -152,7 +152,7 @@ namespace PowerSimBuilder
         #region 変換関数管理
 
         // 変換関数の辞書（名前 → 関数）
-        private readonly Dictionary<string, Func<object, object>> _conversionFunctions = 
+        private readonly Dictionary<string, Func<object, object>> _conversionFunctions =
             new Dictionary<string, Func<object, object>>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
@@ -183,7 +183,7 @@ namespace PowerSimBuilder
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Function name cannot be empty", nameof(name));
-            
+
             _conversionFunctions[name] = conversionFunc;
         }
 
@@ -246,7 +246,7 @@ namespace PowerSimBuilder
             return source =>
             {
                 if (source == null) return default;
-                
+
                 T2 target = Activator.CreateInstance<T2>();
                 ApplyMappings(source, target, MappingTable.T1ToT2Mappings);
                 return target;
@@ -262,7 +262,7 @@ namespace PowerSimBuilder
             return source =>
             {
                 if (source == null) return default;
-                
+
                 T1 target = Activator.CreateInstance<T1>();
                 ApplyMappings(source, target, MappingTable.T2ToT1Mappings);
                 return target;
@@ -278,27 +278,27 @@ namespace PowerSimBuilder
         /// <param name="target">ターゲットオブジェクト</param>
         /// <param name="mappings">適用するマッピングリスト</param>
         private void ApplyMappings<TSource, TTarget>(
-            TSource source, 
+            TSource source,
             TTarget target,
             List<PropertyConversion> mappings)
         {
             Type sourceType = typeof(TSource);
             Type targetType = typeof(TTarget);
-            
+
             foreach (PropertyConversion mapping in mappings)
             {
                 PropertyInfo sourceProp = sourceType.GetProperty(mapping.SourceProperty);
                 PropertyInfo targetProp = targetType.GetProperty(mapping.TargetProperty);
-                
+
                 if (sourceProp == null || targetProp == null) continue;
-                
+
                 object value = sourceProp.GetValue(source);
-                
+
                 // 変換関数が指定されている場合
                 if (!string.IsNullOrEmpty(mapping.ConversionFunctionName))
                 {
                     if (_conversionFunctions.TryGetValue(
-                        mapping.ConversionFunctionName, 
+                        mapping.ConversionFunctionName,
                         out Func<object, object> conversionFunc))
                     {
                         value = conversionFunc(value);
@@ -309,13 +309,13 @@ namespace PowerSimBuilder
                             $"Conversion function '{mapping.ConversionFunctionName}' not found");
                     }
                 }
-                
+
                 // 型変換が必要な場合
                 if (value != null && targetProp.PropertyType != value.GetType())
                 {
                     value = Convert.ChangeType(value, targetProp.PropertyType);
                 }
-                
+
                 targetProp.SetValue(target, value);
             }
         }
@@ -353,7 +353,7 @@ namespace PowerSimBuilder
                 kv => kv.Value.Select(ConvertT2ToT1).ToList()
             );
         }
-        
+
         /// <summary>
         /// T1ディクショナリ → 文字列リストディクショナリ 変換
         /// </summary>
@@ -368,7 +368,7 @@ namespace PowerSimBuilder
                 kv => kv.Value.SelectMany(ConvertT1ToStringList).ToList()
             );
         }
-        
+
         /// <summary>
         /// 文字列リストディクショナリ → T1ディクショナリ 変換
         /// </summary>
@@ -383,7 +383,7 @@ namespace PowerSimBuilder
                 kv => ChunkList(kv.Value, ConvertStringListToT1).ToList()
             );
         }
-        
+
         /// <summary>
         /// T2ディクショナリ → 文字列リストディクショナリ 変換
         /// </summary>
@@ -398,7 +398,7 @@ namespace PowerSimBuilder
                 kv => kv.Value.SelectMany(ConvertT2ToStringList).ToList()
             );
         }
-        
+
         /// <summary>
         /// 文字列リストディクショナリ → T2ディクショナリ 変換
         /// </summary>
@@ -436,7 +436,7 @@ namespace PowerSimBuilder
                 yield return converter(chunk);
             }
         }
-        
+
         /// <summary>
         /// チャンクサイズを決定（オーバーライド可能）
         /// </summary>
@@ -447,7 +447,7 @@ namespace PowerSimBuilder
         {
             return 1; // デフォルト: 1要素=1オブジェクト
         }
-        
+
         /// <summary>
         /// 変換関数の有効性を検証
         /// </summary>
@@ -482,23 +482,23 @@ namespace PowerSimBuilder
             RegisterConversionFunction("Trim", value => value?.ToString()?.Trim());
             RegisterConversionFunction("TrimStart", value => value?.ToString()?.TrimStart());
             RegisterConversionFunction("TrimEnd", value => value?.ToString()?.TrimEnd());
-            RegisterConversionFunction("ToBase64", value => 
+            RegisterConversionFunction("ToBase64", value =>
             {
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(value.ToString());
                 return Convert.ToBase64String(bytes);
             });
-            RegisterConversionFunction("FromBase64", value => 
+            RegisterConversionFunction("FromBase64", value =>
             {
                 byte[] bytes = Convert.FromBase64String(value.ToString());
                 return System.Text.Encoding.UTF8.GetString(bytes);
             });
-            RegisterConversionFunction("ToCamelCase", value => 
+            RegisterConversionFunction("ToCamelCase", value =>
                 char.ToLowerInvariant(value.ToString()[0]) + value.ToString().Substring(1));
-            RegisterConversionFunction("ToPascalCase", value => 
+            RegisterConversionFunction("ToPascalCase", value =>
                 char.ToUpperInvariant(value.ToString()[0]) + value.ToString().Substring(1));
-            RegisterConversionFunction("ToTitleCase", value => 
+            RegisterConversionFunction("ToTitleCase", value =>
                 System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value.ToString()));
-            RegisterConversionFunction("ToJson", value => 
+            RegisterConversionFunction("ToJson", value =>
                 System.Text.Json.JsonSerializer.Serialize(value));
         }
 

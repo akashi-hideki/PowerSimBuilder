@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -43,10 +42,10 @@ namespace PowerSimBuilder
             {
                 case "InductionMotor":
                     return GenerateMotorCode(component);
-                
+
                 case "FaultMonitor":
                     return GenerateFaultMonitorCode(component);
-                
+
                 default:
                     return GenerateDefaultComponentCode(component);
             }
@@ -58,12 +57,12 @@ namespace PowerSimBuilder
             code.AppendLine($"{motor.InstanceName} = InductionMotor(");
             code.AppendLine($"    name='{motor.InstanceName}',");
             code.AppendLine($"    params={{");
-            
+
             bool firstParam = true;
             foreach (var param in motor.Parameters)
             {
                 if (!firstParam) code.AppendLine(",");
-                
+
                 if (param.Key == "ThermalResistance" || param.Key == "ThermalCapacity")
                 {
                     code.Append($"        '{param.Key}': {param.Value}");
@@ -72,10 +71,10 @@ namespace PowerSimBuilder
                 {
                     code.Append($"        '{param.Key}': {FormatValue(param.Value)}");
                 }
-                
+
                 firstParam = false;
             }
-            
+
             code.AppendLine();
             code.AppendLine($"    }}");
             code.AppendLine($")");
@@ -86,8 +85,8 @@ namespace PowerSimBuilder
         {
             var code = new StringBuilder();
             code.AppendLine($"{monitor.InstanceName} = FaultMonitor()");
-            
-            if (monitor.Parameters.TryGetValue("Conditions", out var conditionsObj) && 
+
+            if (monitor.Parameters.TryGetValue("Conditions", out var conditionsObj) &&
                 conditionsObj is List<FaultCondition> conditions)
             {
                 foreach (var condition in conditions)
@@ -99,7 +98,7 @@ namespace PowerSimBuilder
                     code.AppendLine($")");
                 }
             }
-            
+
             return code.ToString();
         }
 

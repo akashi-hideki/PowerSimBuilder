@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -58,14 +57,16 @@ namespace PowerSimBuilder
             });
 
             // イベントハンドラ
-            btnAdd.Click += (s, e) => {
+            btnAdd.Click += (s, e) =>
+            {
                 if (cmbComponent.SelectedItem == null || cmbState.SelectedItem == null || cmbType.SelectedItem == null)
                 {
                     MessageBox.Show("すべてのフィールドを選択してください");
                     return;
                 }
 
-                var condition = new FaultCondition {
+                var condition = new FaultCondition
+                {
                     ComponentName = cmbComponent.SelectedItem.ToString(),
                     StateName = cmbState.SelectedItem.ToString(),
                     ConditionType = cmbType.SelectedItem.ToString()
@@ -74,7 +75,8 @@ namespace PowerSimBuilder
                 conditionList.Items.Add($"{condition.ComponentName}.{condition.StateName} ({condition.ConditionType})");
             };
 
-            btnRemove.Click += (s, e) => {
+            btnRemove.Click += (s, e) =>
+            {
                 if (conditionList.SelectedIndex != -1)
                 {
                     Conditions.RemoveAt(conditionList.SelectedIndex);
@@ -82,7 +84,8 @@ namespace PowerSimBuilder
                 }
             };
 
-            cmbComponent.SelectedIndexChanged += (s, e) => {
+            cmbComponent.SelectedIndexChanged += (s, e) =>
+            {
                 cmbState.Items.Clear();
                 var compName = cmbComponent.SelectedItem?.ToString();
                 if (compName != null)

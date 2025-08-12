@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -112,15 +111,15 @@ namespace PowerSimBuilder
             {
                 Name = "故障監視システム",
                 Type = "FaultMonitor",
-                Icon = CreateIcon(new ComponentDescriptor { Type = "FaultMonitor" },Color.Orange),
+                Icon = CreateIcon(new ComponentDescriptor { Type = "FaultMonitor" }, Color.Orange),
                 Category = "監視",
                 Parameters = new List<ParameterDescriptor>
                 {
-                    new ParameterDescriptor 
-                    { 
-                        Name = "Conditions", 
-                        Type = "List<FaultCondition>", 
-                        DefaultValue = new List<FaultCondition>() 
+                    new ParameterDescriptor
+                    {
+                        Name = "Conditions",
+                        Type = "List<FaultCondition>",
+                        DefaultValue = new List<FaultCondition>()
                     }
                 },
                 InputPorts = new[] { "Input1", "Input2" },

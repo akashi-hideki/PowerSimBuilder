@@ -51,7 +51,7 @@ namespace PowerSimBuilder
         /// 選択状態フラグ
         /// 注意点: UI表示制御に使用
         /// </summary>
-        public bool IsSelected { get; set; }  
+        public bool IsSelected { get; set; }
     }
 
     /// <summary>
@@ -73,5 +73,7 @@ namespace PowerSimBuilder
         /// </summary>
         [Browsable(false)]
         public bool IsSelected { get; set; }
+        public bool IsHovered { get; set; }
+        public bool IsConnected { get; set; } = true;
     }
 }

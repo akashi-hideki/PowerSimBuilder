@@ -1,4 +1,3 @@
-using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -24,8 +23,9 @@ namespace PowerSimBuilder
 
             // 熱抵抗
             var lblResistance = new Label { Text = "熱抵抗 [K/W]:", Location = new Point(20, 20) };
-            var numResistance = new NumericUpDown { 
-                Value = (decimal)ThermalResistance, 
+            var numResistance = new NumericUpDown
+            {
+                Value = (decimal)ThermalResistance,
                 Location = new Point(120, 20),
                 DecimalPlaces = 2,
                 Minimum = 0.01m,
@@ -34,8 +34,9 @@ namespace PowerSimBuilder
 
             // 熱容量
             var lblCapacity = new Label { Text = "熱容量 [J/K]:", Location = new Point(20, 50) };
-            var numCapacity = new NumericUpDown { 
-                Value = (decimal)ThermalCapacity, 
+            var numCapacity = new NumericUpDown
+            {
+                Value = (decimal)ThermalCapacity,
                 Location = new Point(120, 50),
                 DecimalPlaces = 2,
                 Minimum = 1m,
@@ -54,7 +55,8 @@ namespace PowerSimBuilder
             });
 
             // イベントハンドラ
-            btnOK.Click += (s, e) => {
+            btnOK.Click += (s, e) =>
+            {
                 ThermalResistance = (double)numResistance.Value;
                 ThermalCapacity = (double)numCapacity.Value;
             };

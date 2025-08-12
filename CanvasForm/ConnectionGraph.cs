@@ -8,10 +8,10 @@ namespace PowerSimBuilder
     /// </summary>
     public class ConnectionGraph
     {
-        private readonly Dictionary<ComponentControl, List<Connection>> _connectionsFrom 
+        private readonly Dictionary<ComponentControl, List<Connection>> _connectionsFrom
             = new Dictionary<ComponentControl, List<Connection>>();
-        
-        private readonly Dictionary<ComponentControl, List<Connection>> _connectionsTo 
+
+        private readonly Dictionary<ComponentControl, List<Connection>> _connectionsTo
             = new Dictionary<ComponentControl, List<Connection>>();
 
         /// <summary>
@@ -37,14 +37,14 @@ namespace PowerSimBuilder
         /// </summary>
         public IEnumerable<Connection> GetConnections(ComponentControl component)
         {
-            var fromList = _connectionsFrom.ContainsKey(component) 
-                ? _connectionsFrom[component] 
+            var fromList = _connectionsFrom.ContainsKey(component)
+                ? _connectionsFrom[component]
                 : Enumerable.Empty<Connection>();
-            
-            var toList = _connectionsTo.ContainsKey(component) 
-                ? _connectionsTo[component] 
+
+            var toList = _connectionsTo.ContainsKey(component)
+                ? _connectionsTo[component]
                 : Enumerable.Empty<Connection>();
-            
+
             return fromList.Concat(toList).Distinct();
         }
 
@@ -53,8 +53,8 @@ namespace PowerSimBuilder
         /// </summary>
         public IEnumerable<Connection> GetConnectionsFrom(ComponentControl component)
         {
-            return _connectionsFrom.ContainsKey(component) 
-                ? _connectionsFrom[component] 
+            return _connectionsFrom.ContainsKey(component)
+                ? _connectionsFrom[component]
                 : Enumerable.Empty<Connection>();
         }
 
@@ -63,8 +63,8 @@ namespace PowerSimBuilder
         /// </summary>
         public IEnumerable<Connection> GetConnectionsTo(ComponentControl component)
         {
-            return _connectionsTo.ContainsKey(component) 
-                ? _connectionsTo[component] 
+            return _connectionsTo.ContainsKey(component)
+                ? _connectionsTo[component]
                 : Enumerable.Empty<Connection>();
         }
 
@@ -80,13 +80,13 @@ namespace PowerSimBuilder
         /// <summary>
         /// 特定の接続が存在するか確認
         /// </summary>
-        public bool ConnectionExists(ComponentControl start, string startPort, 
+        public bool ConnectionExists(ComponentControl start, string startPort,
                                     ComponentControl end, string endPort)
         {
             return _connectionsFrom.ContainsKey(start) &&
-                   _connectionsFrom[start].Any(c => 
-                       c.StartPort == startPort && 
-                       c.EndComponent == end && 
+                   _connectionsFrom[start].Any(c =>
+                       c.StartPort == startPort &&
+                       c.EndComponent == end &&
                        c.EndPort == endPort);
         }
 
@@ -99,16 +99,16 @@ namespace PowerSimBuilder
             _connectionsTo.Clear();
         }
 
-        private void AddToDictionary(Dictionary<ComponentControl, List<Connection>> dict, 
+        private void AddToDictionary(Dictionary<ComponentControl, List<Connection>> dict,
                                     ComponentControl key, Connection connection)
         {
             if (!dict.ContainsKey(key))
                 dict[key] = new List<Connection>();
-            
+
             dict[key].Add(connection);
         }
 
-        private void RemoveFromDictionary(Dictionary<ComponentControl, List<Connection>> dict, 
+        private void RemoveFromDictionary(Dictionary<ComponentControl, List<Connection>> dict,
                                          ComponentControl key, Connection connection)
         {
             if (dict.ContainsKey(key))

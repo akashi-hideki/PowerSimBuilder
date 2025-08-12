@@ -345,9 +345,9 @@ namespace PowerSimBuilder
             // 接続復元
             foreach (var connModel in model.Connections)
             {
-                if (connModel.StartComponentIndex >= 0 && 
+                if (connModel.StartComponentIndex >= 0 &&
                     connModel.StartComponentIndex < _components.Count &&
-                    connModel.EndComponentIndex >= 0 && 
+                    connModel.EndComponentIndex >= 0 &&
                     connModel.EndComponentIndex < _components.Count)
                 {
                     var startComponent = _components[connModel.StartComponentIndex];
@@ -367,12 +367,12 @@ namespace PowerSimBuilder
             }
 
             // 選択状態復元
-            SelectedComponent = model.SelectedComponentIndex >= 0 && 
+            SelectedComponent = model.SelectedComponentIndex >= 0 &&
                 model.SelectedComponentIndex < _components.Count
                 ? _components[model.SelectedComponentIndex]
                 : null;
 
-            SelectedConnection = model.SelectedConnectionIndex >= 0 && 
+            SelectedConnection = model.SelectedConnectionIndex >= 0 &&
                 model.SelectedConnectionIndex < _connections.Count
                 ? _connections[model.SelectedConnectionIndex]
                 : null;

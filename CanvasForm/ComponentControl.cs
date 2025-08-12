@@ -12,6 +12,13 @@ namespace PowerSimBuilder
     /// </summary>
     public partial class ComponentControl : UserControl
     {
+        // ポート描画サイズとヒットエリアの拡大
+        private const int PortRadius = 8; // 描画半径
+        private const int HitTestRadius = 12; // ヒットテスト半径
+
+        // マウス位置追跡用フィールド追加
+        private string _hoveredPort = null;
+        private bool _isInputPortHovered = false;
         // イベント定義
         public event EventHandler SelectedChanged;
         public event EventHandler<PortEventArgs> PortClicked;
@@ -65,7 +72,7 @@ namespace PowerSimBuilder
             InitializeComponent();
             InitializeParameters();
             InitializeEvents();
-            
+
             // ダブルクリックイベント登録
             this.DoubleClick += (s, e) => DoubleClicked?.Invoke(this, EventArgs.Empty);
         }
@@ -100,6 +107,132 @@ namespace PowerSimBuilder
             }
         }
 
+
+        /// <summary>
+        /// マウスダウンイベント処理
+        /// 注意点: ポートクリック検出と選択状態更新
+        /// </summary>
+
+        private void ComponentControl_MouseDown(object sender, MouseEventArgs e)
+        {
+            this.Focus();
+
+            // 入力ポートチェック
+            if (Descriptor.InputPorts != null)
+            {
+                for (int i = 0; i < Descriptor.InputPorts.Length; i++)
+                {
+                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
+                    var portCenter = new Point(5 + PortRadius, yPos);
+
+                    if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
+                    {
+                        PortClicked?.Invoke(this, new PortEventArgs(Descriptor.InputPorts[i]));
+                        return;
+                    }
+                }
+            }
+
+            // 出力ポートチェック
+            if (Descriptor.OutputPorts != null)
+            {
+                for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
+                {
+                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
+                    var portCenter = new Point(Width - 15 + PortRadius, yPos);
+
+                    if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
+                    {
+                        PortClicked?.Invoke(this, new PortEventArgs(Descriptor.OutputPorts[i]));
+                        return;
+                    }
+                }
+            }
+
+            IsSelected = true;
+            BringToFront();
+        }
+        /// <summary>
+        /// マウス移動
+        /// クリック有効時　色変更
+        /// </summary>
+        /// 有効範囲判定
+        /// </summary>
+        private bool IsPointInCircle(Point point, Point center, int radius)
+        {
+            int dx = point.X - center.X;
+            int dy = point.Y - center.Y;
+            return (dx * dx + dy * dy) <= (radius * radius);
+        }
+        /// <summary>
+        /// マウス移動イベント処理（アクセス修飾子をpublicに変更）
+        /// 注意点: DesignCanvasから直接呼び出すためpublicが必要
+        /// </summary>
+        public void HandleMouseMove(MouseEventArgs e)
+        {
+            bool portHovered = false;
+
+            // 入力ポートホバーチェック
+            if (Descriptor.InputPorts != null)
+            {
+                for (int i = 0; i < Descriptor.InputPorts.Length; i++)
+                {
+                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
+                    var portCenter = new Point(5 + PortRadius, yPos);
+
+                    if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
+                    {
+                        _hoveredPort = Descriptor.InputPorts[i];
+                        _isInputPortHovered = true;
+                        portHovered = true;
+                        Cursor = Cursors.Hand;
+                        break;
+                    }
+                }
+            }
+
+            // 出力ポートホバーチェック
+            if (!portHovered && Descriptor.OutputPorts != null)
+            {
+                for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
+                {
+                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
+                    var portCenter = new Point(Width - 15 + PortRadius, yPos);
+
+                    if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
+                    {
+                        _hoveredPort = Descriptor.OutputPorts[i];
+                        _isInputPortHovered = false;
+                        portHovered = true;
+                        Cursor = Cursors.Hand;
+                        break;
+                    }
+                }
+            }
+
+            // ポート上でない場合
+            if (!portHovered)
+            {
+                _hoveredPort = null;
+                Cursor = Cursors.Default;
+            }
+
+            Invalidate();
+        }
+
+        /// <summary>
+        /// 標準のマウス移動イベント処理
+        /// 注意点: 内部でカスタム処理を呼び出す
+        /// </summary>
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            HandleMouseMove(e);
+        }
         /// <summary>
         /// 描画処理
         /// 注意点: 選択状態、ポート位置を可視化
@@ -109,13 +242,11 @@ namespace PowerSimBuilder
             base.OnPaint(e);
             e.Graphics.FillRectangle(Brushes.LightGray, ClientRectangle);
 
-            // コンポーネント名表示
             using (var font = new Font("Arial", 8))
             {
                 e.Graphics.DrawString(InstanceName, font, Brushes.Black, 10, 10);
             }
 
-            // 選択状態の枠表示
             if (IsSelected)
             {
                 using (var pen = new Pen(Color.Red, 2))
@@ -124,88 +255,62 @@ namespace PowerSimBuilder
                 }
             }
 
-            // 入力ポート描画 (左側)
+            // 入力ポート描画
             if (Descriptor.InputPorts != null)
             {
                 for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
                     float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
                     int yPos = (int)(Height * ratio);
+                    var portCenter = new Point(5 + PortRadius, yPos);
 
-                    // ポート円描画
-                    Rectangle portRect = new Rectangle(5, yPos - 5, 10, 10);
-                    e.Graphics.FillEllipse(Brushes.Blue, portRect);
-                    e.Graphics.DrawEllipse(Pens.Black, portRect);
+                    bool isHovered = (_hoveredPort == Descriptor.InputPorts[i] && _isInputPortHovered);
+                    using (var brush = new SolidBrush(isHovered ? Color.Cyan : Color.Blue))
+                    {
+                        e.Graphics.FillEllipse(brush,
+                            portCenter.X - PortRadius,
+                            portCenter.Y - PortRadius,
+                            PortRadius * 2,
+                            PortRadius * 2);
+                    }
+                    e.Graphics.DrawEllipse(Pens.Black,
+                        portCenter.X - PortRadius,
+                        portCenter.Y - PortRadius,
+                        PortRadius * 2,
+                        PortRadius * 2);
 
-                    // ポート名表示 (デバッグ時のみ)
                     e.Graphics.DrawString(Descriptor.InputPorts[i], Font, Brushes.Black, 20, yPos - 7);
                 }
             }
 
-            // 出力ポート描画 (右側)
+            // 出力ポート描画
             if (Descriptor.OutputPorts != null)
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
                     float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
                     int yPos = (int)(Height * ratio);
+                    var portCenter = new Point(Width - 15 + PortRadius, yPos);
 
-                    // ポート円描画
-                    Rectangle portRect = new Rectangle(Width - 15, yPos - 5, 10, 10);
-                    e.Graphics.FillEllipse(Brushes.Green, portRect);
-                    e.Graphics.DrawEllipse(Pens.Black, portRect);
+                    bool isHovered = (_hoveredPort == Descriptor.OutputPorts[i] && !_isInputPortHovered);
+                    using (var brush = new SolidBrush(isHovered ? Color.Cyan : Color.Green))
+                    {
+                        e.Graphics.FillEllipse(brush,
+                            portCenter.X - PortRadius,
+                            portCenter.Y - PortRadius,
+                            PortRadius * 2,
+                            PortRadius * 2);
+                    }
+                    e.Graphics.DrawEllipse(Pens.Black,
+                        portCenter.X - PortRadius,
+                        portCenter.Y - PortRadius,
+                        PortRadius * 2,
+                        PortRadius * 2);
 
-                    // ポート名表示 (デバッグ時のみ)
                     e.Graphics.DrawString(Descriptor.OutputPorts[i], Font, Brushes.Black, Width - 50, yPos - 7);
                 }
             }
         }
-        
-        /// <summary>
-        /// マウスダウンイベント処理
-        /// 注意点: ポートクリック検出と選択状態更新
-        /// </summary>
-        private void ComponentControl_MouseDown(object sender, MouseEventArgs e)
-        {
-            this.Focus();  // フォーカスを取得
-            
-            // 入力ポートチェック（左側）
-            if (Descriptor.InputPorts != null)
-            {
-                for (int i = 0; i < Descriptor.InputPorts.Length; i++)
-                {
-                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
-                    int yPos = (int)(Height * ratio);
-                    var portRect = new Rectangle(5, yPos - 5, 10, 10);
-
-                    if (portRect.Contains(e.Location))
-                    {
-                        PortClicked?.Invoke(this, new PortEventArgs(Descriptor.InputPorts[i]));
-                        return;
-                    }
-                }
-            }
-
-            // 出力ポートチェック（右側）
-            if (Descriptor.OutputPorts != null)
-            {
-                for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
-                {
-                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
-                    int yPos = (int)(Height * ratio);
-                    var portRect = new Rectangle(Width - 15, yPos - 5, 10, 10);
-
-                    if (portRect.Contains(e.Location))
-                    {
-                        PortClicked?.Invoke(this, new PortEventArgs(Descriptor.OutputPorts[i]));
-                        return;
-                    }
-                }
-            }
-
-            // ポート以外をクリック: 選択状態更新
-            IsSelected = true;
-            BringToFront();
-        }
     }
+
 }
