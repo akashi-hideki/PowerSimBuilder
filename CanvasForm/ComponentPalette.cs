@@ -1,3 +1,17 @@
+/* 
+ * ComponentPalette.cs
+ * 
+ * シミュレーションビルダーアプリケーションのコンポーネントパレットクラス
+ * コンポーネント定義を表示・選択するためのパネルを提供します。
+ * 
+ * 変更履歴:
+ * 2025-08-20 - パレット表示問題の修正
+ *   - レイアウトをFlowLayoutPanelに変更
+ *   - カテゴリタブを廃止しシンプルなリスト表示に変更
+ *   - 選択状態の視覚的フィードバックを強化
+ *   - ドラッグ&ドロップ処理の互換性を確保
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -5,26 +19,47 @@ using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
-    public partial class ComponentPalette : Panel
+    /// <summary>
+    /// コンポーネントパレットクラス
+    /// 利用可能なコンポーネントを表示し、選択操作を提供します
+    /// </summary>
+    public partial class ComponentPalette : FlowLayoutPanel
     {
         private ComponentDefinitionManager _definitionManager;
-        private TabControl _categoryTabControl;
 
+        /// <summary>
+        /// 選択中のコンポーネント定義
+        /// </summary>
         public ComponentDefinition SelectedDefinition { get; private set; }
+
+        /// <summary>
+        /// コンポーネント選択イベント
+        /// </summary>
         public event EventHandler ComponentSelected;
 
+        /// <summary>
+        /// コンポーネントパレットのコンストラクタ
+        /// </summary>
         public ComponentPalette()
         {
             InitializeComponent();
-            ShowInitializingMessage(); // 初期化中メッセージを表示
+            ShowInitializingMessage();
         }
 
+        /// <summary>
+        /// コンポーネントパレットのUI初期化
+        /// </summary>
         private void InitializeComponent()
         {
             this.SuspendLayout();
+            // 
+            // ComponentPalette
+            // 
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.FlowDirection = FlowDirection.TopDown;
+            this.WrapContents = false;
             this.ResumeLayout(false);
         }
 
@@ -45,10 +80,25 @@ namespace PowerSimBuilder
         /// <summary>
         /// 定義マネージャーを設定し、パレットを初期化
         /// </summary>
+        /// <param name="manager">コンポーネント定義マネージャー</param>
         public void InitializePalette(ComponentDefinitionManager manager)
         {
             _definitionManager = manager;
             RefreshPalette();
+        }
+
+        /// <summary>
+        /// データバインディングを設定
+        /// </summary>
+        /// <param name="manager">コンポーネント定義マネージャー</param>
+        public void BindData(ComponentDefinitionManager manager)
+        {
+            _definitionManager = manager;
+            _definitionManager.DefinitionsChanged += (s, e) => 
+            {
+                ShowComponents(_definitionManager.Definitions);
+            };
+            ShowComponents(_definitionManager.Definitions);
         }
 
         /// <summary>
@@ -60,112 +110,96 @@ namespace PowerSimBuilder
 
             if (_definitionManager == null)
             {
-                // マネージャーが初期化されていない場合はデフォルト定義を直接使用
                 ShowComponents(DefaultComponentDefinitions.Definitions);
                 return;
             }
 
             try
             {
-                // マネージャーから定義を取得
                 ShowComponents(_definitionManager.Definitions);
             }
             catch (Exception ex)
             {
-                // エラー時はデフォルト定義を表示
                 ShowComponents(DefaultComponentDefinitions.Definitions);
                 ShowErrorMessage($"コンポーネントの読み込みに失敗しました: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// コンポーネントを表示
+        /// </summary>
+        /// <param name="definitions">表示するコンポーネント定義のリスト</param>
         public void ShowComponents(IEnumerable<ComponentDefinition> definitions)
         {
-            // カテゴリ別にグループ化
-            var categories = new Dictionary<string, List<ComponentDefinition>>();
-            foreach (var definition in definitions)
-            {
-                if (!categories.ContainsKey(definition.Category))
-                {
-                    categories[definition.Category] = new List<ComponentDefinition>();
-                }
-                categories[definition.Category].Add(definition);
-            }
-
-            CreateCategoryTabs(categories);
-        }
-
-        private void CreateCategoryTabs(Dictionary<string, List<ComponentDefinition>> categories)
-        {
-            if (categories == null || categories.Count == 0)
-            {
-                ShowInfoMessage("利用可能なコンポーネントがありません");
-                return;
-            }
-
-            _categoryTabControl = new TabControl
-            {
-                Dock = DockStyle.Fill,
-                Alignment = TabAlignment.Left,
-                SizeMode = TabSizeMode.Fixed,
-                Multiline = true,
-                ItemSize = new Size(25, 100),
-                Padding = new Point(0, 0)
-            };
-
-            foreach (var category in categories)
-            {
-                var tabPage = new TabPage(category.Key)
-                {
-                    BackColor = Color.White,
-                    Padding = new Padding(5)
-                };
-
-                CreateComponentButtons(tabPage, category.Value);
-                _categoryTabControl.TabPages.Add(tabPage);
-            }
-
-            Controls.Add(_categoryTabControl);
-        }
-
-        private void CreateComponentButtons(TabPage tabPage, List<ComponentDefinition> definitions)
-        {
-            var flowLayout = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                AutoScroll = true,
-                WrapContents = false,
-                FlowDirection = FlowDirection.TopDown
-            };
+            SuspendLayout();
+            Controls.Clear();
 
             foreach (var definition in definitions)
             {
-                var button = new Button
-                {
-                    Text = definition.Name,
-                    Image = CreateIcon(definition),
-                    ImageAlign = ContentAlignment.MiddleLeft,
-                    TextAlign = ContentAlignment.MiddleRight,
-                    Tag = definition,
-                    Height = 40,
-                    Width = 180,
-                    Margin = new Padding(5),
-                    FlatStyle = FlatStyle.Flat,
-                    BackColor = Color.WhiteSmoke
-                };
-
-                button.FlatAppearance.BorderSize = 1;
-                button.FlatAppearance.BorderColor = Color.LightGray;
-
-                button.MouseDown += ComponentButton_MouseDown;
-                button.Click += ComponentButton_Click;
-
-                flowLayout.Controls.Add(button);
+                CreateComponentButton(definition);
             }
 
-            tabPage.Controls.Add(flowLayout);
+            ResumeLayout(true);
+            PerformLayout();
+            Invalidate();
         }
 
+        /// <summary>
+        /// コンポーネントボタンを作成
+        /// </summary>
+        /// <param name="definition">コンポーネント定義</param>
+        private void CreateComponentButton(ComponentDefinition definition)
+        {
+            var button = new Button
+            {
+                Text = definition.Name,
+                Image = CreateIcon(definition),
+                ImageAlign = ContentAlignment.MiddleLeft,
+                TextAlign = ContentAlignment.MiddleRight,
+                Tag = definition,
+                Height = 40,
+                Width = 180,
+                Margin = new Padding(5),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.WhiteSmoke
+            };
+
+            button.FlatAppearance.BorderSize = 1;
+            button.FlatAppearance.BorderColor = Color.LightGray;
+
+            button.MouseDown += (sender, e) => 
+            {
+                var data = new DataObject();
+                data.SetData("ComponentDefinition", definition);
+                button.DoDragDrop(data, DragDropEffects.Copy);
+            };
+
+            button.Click += (sender, e) => 
+            {
+                SelectedDefinition = definition;
+                UpdateButtonSelection(button);
+                OnComponentSelected(EventArgs.Empty);
+            };
+
+            Controls.Add(button);
+        }
+
+        /// <summary>
+        /// コンポーネントアイコンを作成
+        /// </summary>
+        /// <param name="definition">コンポーネント定義</param>
+        /// <returns>生成されたアイコン画像</returns>
         private Bitmap CreateIcon(ComponentDefinition definition)
         {
+            // タイプとシンボルのマッピング
+            var typeSymbols = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                {"VoltageSourceInverter", "V"},
+                {"InductionMotor", "M"},
+                {"MechanicalLoad", "L"},
+                {"FaultMonitor", "F"}
+            };
+
             Color color = Color.Gray;
             try
             {
@@ -182,25 +216,18 @@ namespace PowerSimBuilder
                 g.FillRectangle(new SolidBrush(color), 0, 0, 32, 32);
                 g.DrawRectangle(Pens.Black, 0, 0, 31, 31);
 
+                // タイプに応じたシンボルを取得
                 string symbol;
-                switch (definition.Type)
+                if (!string.IsNullOrEmpty(definition.Type) && 
+                    typeSymbols.TryGetValue(definition.Type, out var foundSymbol))
                 {
-                    case "VoltageSourceInverter":
-                        symbol = "V";
-                        break;
-                    case "InductionMotor":
-                        symbol = "M";
-                        break;
-                    case "MechanicalLoad":
-                        symbol = "L";
-                        break;
-                    case "FaultMonitor":
-                        symbol = "F";
-                        break;
-                    default:
-                        symbol = !string.IsNullOrEmpty(definition.Type) ?
-                            definition.Type[0].ToString() : "C";
-                        break;
+                    symbol = foundSymbol;
+                }
+                else
+                {
+                    // マッピングがない場合はタイプの最初の文字を使用
+                    symbol = !string.IsNullOrEmpty(definition.Type) ? 
+                        definition.Type[0].ToString() : "C";
                 }
 
                 g.DrawString(symbol, new Font("Arial", 10, FontStyle.Bold),
@@ -209,54 +236,43 @@ namespace PowerSimBuilder
             return bmp;
         }
 
-        private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
-        {
-            var button = (Button)sender;
-            var definition = (ComponentDefinition)button.Tag;
-
-            var data = new DataObject();
-            data.SetData("ComponentDefinition", definition);
-
-            button.DoDragDrop(data, DragDropEffects.Copy);
-        }
-
-        private void ComponentButton_Click(object sender, EventArgs e)
-        {
-            var button = (Button)sender;
-            SelectedDefinition = (ComponentDefinition)button.Tag;
-
-            OnComponentSelected(EventArgs.Empty);
-            UpdateButtonSelection(button);
-        }
-
+        /// <summary>
+        /// ボタンの選択状態を更新
+        /// </summary>
+        /// <param name="selectedButton">選択されたボタン</param>
         private void UpdateButtonSelection(Button selectedButton)
         {
-            if (_categoryTabControl == null) return;
-
-            foreach (TabPage tabPage in _categoryTabControl.TabPages)
+            foreach (Control control in Controls)
             {
-                foreach (Control control in tabPage.Controls)
+                if (control is Button btn)
                 {
-                    if (control is FlowLayoutPanel flowLayout)
+                    if (btn == selectedButton)
                     {
-                        foreach (Control btnControl in flowLayout.Controls)
-                        {
-                            if (btnControl is Button btn)
-                            {
-                                btn.BackColor = (btn == selectedButton) ?
-                                    Color.LightBlue : Color.WhiteSmoke;
-                            }
-                        }
+                        btn.BackColor = Color.LightBlue;
+                        btn.Font = new Font(btn.Font, FontStyle.Bold);
+                    }
+                    else
+                    {
+                        btn.BackColor = Color.WhiteSmoke;
+                        btn.Font = new Font(btn.Font, FontStyle.Regular);
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// コンポーネント選択イベントを発行
+        /// </summary>
+        /// <param name="e">イベント引数</param>
         protected virtual void OnComponentSelected(EventArgs e)
         {
             ComponentSelected?.Invoke(this, e);
         }
 
+        /// <summary>
+        /// コンポーネントを追加
+        /// </summary>
+        /// <param name="definition">追加するコンポーネント定義</param>
         public void AddComponent(ComponentDefinition definition)
         {
             if (_definitionManager == null ||
@@ -270,6 +286,10 @@ namespace PowerSimBuilder
             RefreshPalette();
         }
 
+        /// <summary>
+        /// エラーメッセージを表示
+        /// </summary>
+        /// <param name="message">表示するエラーメッセージ</param>
         private void ShowErrorMessage(string message)
         {
             Controls.Clear();
@@ -282,6 +302,10 @@ namespace PowerSimBuilder
             });
         }
 
+        /// <summary>
+        /// 情報メッセージを表示
+        /// </summary>
+        /// <param name="message">表示する情報メッセージ</param>
         private void ShowInfoMessage(string message)
         {
             Controls.Clear();
@@ -294,50 +318,5 @@ namespace PowerSimBuilder
             });
         }
     }
-
-    /// <summary>
-    /// コンポーネント記述子クラス
-    /// </summary>
-    public class ComponentDescriptor
-    {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public Image Icon { get; set; }
-        public string Category { get; set; }
-        public List<ParameterDescriptor> Parameters { get; set; } = new List<ParameterDescriptor>();
-        public string[] InputPorts { get; set; } = Array.Empty<string>();
-        public string[] OutputPorts { get; set; } = Array.Empty<string>();
-
-        public override string ToString()
-        {
-            return $"{Name} ({Type})";
-        }
-    }
-
-    /// <summary>
-    /// パラメータ記述子クラス
-    /// </summary>
-    public class ParameterDescriptor
-    {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public object DefaultValue { get; set; }
-
-        public override string ToString()
-        {
-            return $"{Name}: {DefaultValue} ({Type})";
-        }
-    }
-
-    /// <summary>
-    /// 故障条件クラス
-    /// </summary>
-    public class FaultCondition
-    {
-        public string ComponentName { get; set; }
-        public string StateName { get; set; }
-        public string ConditionType { get; set; }
-        public Dictionary<string, object> Parameters { get; } = new Dictionary<string, object>();
-    }
-
 }
+
