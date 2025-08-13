@@ -44,7 +44,7 @@ namespace PowerSimBuilder
         {
             if (string.IsNullOrEmpty(_lastGeneratedCode))
             {
-                MessageBox.Show("生成されたコードがありません", "エラー", 
+                MessageBox.Show("生成されたコードがありません", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
@@ -60,7 +60,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ファイルの保存に失敗しました: {ex.Message}", "エラー", 
+                MessageBox.Show($"ファイルの保存に失敗しました: {ex.Message}", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
@@ -73,7 +73,7 @@ namespace PowerSimBuilder
         {
             if (string.IsNullOrEmpty(_lastGeneratedCode))
             {
-                MessageBox.Show("生成されたコードがありません", "エラー", 
+                MessageBox.Show("生成されたコードがありません", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -88,10 +88,10 @@ namespace PowerSimBuilder
         public void RunPythonSimulation(string filePath)
         {
             if (string.IsNullOrEmpty(filePath)) filePath = _lastFilePath;
-            
+
             if (!File.Exists(filePath))
             {
-                MessageBox.Show("実行可能なファイルが見つかりません", "エラー", 
+                MessageBox.Show("実行可能なファイルが見つかりません", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -104,7 +104,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"シミュレーション実行エラー: {ex.Message}", "エラー", 
+                MessageBox.Show($"シミュレーション実行エラー: {ex.Message}", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -120,7 +120,7 @@ namespace PowerSimBuilder
             code.AppendLine();
 
             _componentCounter = 1;
-            
+
             foreach (var component in components)
             {
                 component.InstanceName = $"comp{_componentCounter++}";
@@ -339,7 +339,7 @@ namespace PowerSimBuilder
                 Left = 170
             };
 
-            runButton.Click += (s, e) => 
+            runButton.Click += (s, e) =>
             {
                 var generator = new PythonCodeGenerator();
                 generator.RunPythonSimulation(_filePath);
@@ -354,7 +354,7 @@ namespace PowerSimBuilder
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"フォルダを開けませんでした: {ex.Message}", "エラー", 
+                    MessageBox.Show($"フォルダを開けませんでした: {ex.Message}", "エラー",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             };

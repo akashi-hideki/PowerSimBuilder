@@ -2,96 +2,105 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Configuration;
 
 namespace PowerSimBuilder
 {
-    /// <summary>
-    /// コンポーネントパレットコントロール
-    /// 作成日: 2025-08-15
-    /// 変更内容: XMLベースのコンポーネント定義管理に移行
-    /// 注意点: カテゴリ別にコンポーネントをグループ化表示
-    /// </summary>
     public partial class ComponentPalette : Panel
     {
         private ComponentDefinitionManager _definitionManager;
         private TabControl _categoryTabControl;
 
-        /// <summary>
-        /// 選択中のコンポーネント定義
-        /// 作成日: 2025-08-15
-        /// 注意点: パレットで選択されたコンポーネントの定義
-        /// </summary>
         public ComponentDefinition SelectedDefinition { get; private set; }
-
-        /// <summary>
-        /// コンポーネント選択イベント
-        /// 作成日: 2025-08-15
-        /// 注意点: コンポーネントが選択された時に発生
-        /// </summary>
         public event EventHandler ComponentSelected;
 
-        /// <summary>
-        /// コンストラクタ
-        /// 作成日: 2025-08-15
-        /// 処理内容: コンポーネント定義をロードしUIを初期化
-        /// </summary>
         public ComponentPalette()
         {
             InitializeComponent();
-            InitializeComponentPalette();
+            ShowInitializingMessage(); // 初期化中メッセージを表示
         }
-        /// </summary>
+
         private void InitializeComponent()
         {
             this.SuspendLayout();
-            // 
-            // ComponentPalette
-            // 
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.ResumeLayout(false);
         }
+
         /// <summary>
-        /// 定義マネージャーを設定
+        /// 初期化中メッセージを表示
         /// </summary>
-        public void SetDefinitionManager(ComponentDefinitionManager manager)
+        public void ShowInitializingMessage()
         {
-            _definitionManager = manager;
-            RefreshPalette(); // 設定後にUIを更新
-        }
-        /// <summary>
-        /// コンポーネントパレットの初期化
-        /// 作成日: 2025-08-15
-        /// 処理内容:
-        ///   - 定義マネージャーの初期化
-        ///   - カテゴリタブコントロールの作成
-        ///   - コンポーネントボタンの生成
-        /// </summary>
-        private void InitializeComponentPalette()
-        {
-            // レイアウト設定
-            this.AutoScroll = true;
-            this.BackColor = Color.White;
-            this.BorderStyle = BorderStyle.FixedSingle;
-            this.Dock = DockStyle.Fill;
-            
-            // 定義マネージャーの初期化
-            // _definitionManager = new ComponentDefinitionManager();
-            // _definitionManager.LoadDefinitions();
-            
-            // カテゴリタブコントロールの作成
-            CreateCategoryTabs();
+            Controls.Clear();
+            Controls.Add(new Label
+            {
+                Text = "コンポーネントを読み込み中...",
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter
+            });
         }
 
         /// <summary>
-        /// カテゴリタブを作成
-        /// 作成日: 2025-08-15
-        /// 処理内容: カテゴリごとにタブページを生成
+        /// 定義マネージャーを設定し、パレットを初期化
         /// </summary>
-        private void CreateCategoryTabs()
+        public void InitializePalette(ComponentDefinitionManager manager)
         {
+            _definitionManager = manager;
+            RefreshPalette();
+        }
+
+        /// <summary>
+        /// パレットを再読み込み
+        /// </summary>
+        public void RefreshPalette()
+        {
+            Controls.Clear();
+
+            if (_definitionManager == null)
+            {
+                // マネージャーが初期化されていない場合はデフォルト定義を直接使用
+                ShowComponents(DefaultComponentDefinitions.Definitions);
+                return;
+            }
+
+            try
+            {
+                // マネージャーから定義を取得
+                ShowComponents(_definitionManager.Definitions);
+            }
+            catch (Exception ex)
+            {
+                // エラー時はデフォルト定義を表示
+                ShowComponents(DefaultComponentDefinitions.Definitions);
+                ShowErrorMessage($"コンポーネントの読み込みに失敗しました: {ex.Message}");
+            }
+        }
+        public void ShowComponents(IEnumerable<ComponentDefinition> definitions)
+        {
+            // カテゴリ別にグループ化
+            var categories = new Dictionary<string, List<ComponentDefinition>>();
+            foreach (var definition in definitions)
+            {
+                if (!categories.ContainsKey(definition.Category))
+                {
+                    categories[definition.Category] = new List<ComponentDefinition>();
+                }
+                categories[definition.Category].Add(definition);
+            }
+
+            CreateCategoryTabs(categories);
+        }
+
+        private void CreateCategoryTabs(Dictionary<string, List<ComponentDefinition>> categories)
+        {
+            if (categories == null || categories.Count == 0)
+            {
+                ShowInfoMessage("利用可能なコンポーネントがありません");
+                return;
+            }
+
             _categoryTabControl = new TabControl
             {
                 Dock = DockStyle.Fill,
@@ -102,29 +111,21 @@ namespace PowerSimBuilder
                 Padding = new Point(0, 0)
             };
 
-            // カテゴリごとにタブページを作成
-            var categories = _definitionManager.GetDefinitionsByCategory();
             foreach (var category in categories)
-        {
-                var tabPage = new TabPage(category.Key)
             {
+                var tabPage = new TabPage(category.Key)
+                {
                     BackColor = Color.White,
                     Padding = new Padding(5)
                 };
 
-                // カテゴリ内のコンポーネントを追加
                 CreateComponentButtons(tabPage, category.Value);
                 _categoryTabControl.TabPages.Add(tabPage);
             }
 
-            this.Controls.Add(_categoryTabControl);
+            Controls.Add(_categoryTabControl);
         }
 
-        /// <summary>
-        /// コンポーネントボタンを作成
-        /// 作成日: 2025-08-15
-        /// 処理内容: 定義に基づいてコンポーネントボタンを生成
-        /// </summary>
         private void CreateComponentButtons(TabPage tabPage, List<ComponentDefinition> definitions)
         {
             var flowLayout = new FlowLayoutPanel
@@ -136,26 +137,26 @@ namespace PowerSimBuilder
             };
 
             foreach (var definition in definitions)
-        {
-            var button = new Button
             {
+                var button = new Button
+                {
                     Text = definition.Name,
                     Image = CreateIcon(definition),
-                ImageAlign = ContentAlignment.MiddleLeft,
-                TextAlign = ContentAlignment.MiddleRight,
+                    ImageAlign = ContentAlignment.MiddleLeft,
+                    TextAlign = ContentAlignment.MiddleRight,
                     Tag = definition,
-                Height = 40,
-                Width = 180,
-                Margin = new Padding(5),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.WhiteSmoke
-            };
+                    Height = 40,
+                    Width = 180,
+                    Margin = new Padding(5),
+                    FlatStyle = FlatStyle.Flat,
+                    BackColor = Color.WhiteSmoke
+                };
 
-            button.FlatAppearance.BorderSize = 1;
-            button.FlatAppearance.BorderColor = Color.LightGray;
+                button.FlatAppearance.BorderSize = 1;
+                button.FlatAppearance.BorderColor = Color.LightGray;
 
-            button.MouseDown += ComponentButton_MouseDown;
-            button.Click += ComponentButton_Click;
+                button.MouseDown += ComponentButton_MouseDown;
+                button.Click += ComponentButton_Click;
 
                 flowLayout.Controls.Add(button);
             }
@@ -163,11 +164,6 @@ namespace PowerSimBuilder
             tabPage.Controls.Add(flowLayout);
         }
 
-        /// <summary>
-        /// アイコン画像を作成
-        /// 作成日: 2025-08-15
-        /// 処理内容: コンポーネント定義に基づいたアイコンを生成
-        /// </summary>
         private Bitmap CreateIcon(ComponentDefinition definition)
         {
             Color color = Color.Gray;
@@ -202,7 +198,7 @@ namespace PowerSimBuilder
                         symbol = "F";
                         break;
                     default:
-                        symbol = !string.IsNullOrEmpty(definition.Type) ? 
+                        symbol = !string.IsNullOrEmpty(definition.Type) ?
                             definition.Type[0].ToString() : "C";
                         break;
                 }
@@ -213,11 +209,6 @@ namespace PowerSimBuilder
             return bmp;
         }
 
-        /// <summary>
-        /// コンポーネントボタンマウスダウンイベント
-        /// 作成日: 2025-08-15
-        /// 処理内容: ドラッグ操作を開始
-        /// </summary>
         private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
         {
             var button = (Button)sender;
@@ -229,41 +220,30 @@ namespace PowerSimBuilder
             button.DoDragDrop(data, DragDropEffects.Copy);
         }
 
-        /// <summary>
-        /// コンポーネントボタンクリックイベント
-        /// 作成日: 2025-08-15
-        /// 処理内容: コンポーネント選択状態を更新
-        /// </summary>
         private void ComponentButton_Click(object sender, EventArgs e)
         {
             var button = (Button)sender;
             SelectedDefinition = (ComponentDefinition)button.Tag;
 
-            // 選択状態を通知
             OnComponentSelected(EventArgs.Empty);
-
-            // 選択されたボタンを強調表示
             UpdateButtonSelection(button);
         }
 
-        /// <summary>
-        /// ボタン選択状態を更新
-        /// 作成日: 2025-08-15
-        /// 処理内容: 選択されたボタンのみ強調表示
-        /// </summary>
         private void UpdateButtonSelection(Button selectedButton)
         {
+            if (_categoryTabControl == null) return;
+
             foreach (TabPage tabPage in _categoryTabControl.TabPages)
             {
                 foreach (Control control in tabPage.Controls)
-            {
-                    if (control is FlowLayoutPanel flowLayout)
                 {
+                    if (control is FlowLayoutPanel flowLayout)
+                    {
                         foreach (Control btnControl in flowLayout.Controls)
                         {
                             if (btnControl is Button btn)
                             {
-                                btn.BackColor = (btn == selectedButton) ? 
+                                btn.BackColor = (btn == selectedButton) ?
                                     Color.LightBlue : Color.WhiteSmoke;
                             }
                         }
@@ -272,47 +252,49 @@ namespace PowerSimBuilder
             }
         }
 
-        /// <summary>
-        /// コンポーネント選択イベントを発行
-        /// 作成日: 2025-08-15
-        /// </summary>
         protected virtual void OnComponentSelected(EventArgs e)
         {
             ComponentSelected?.Invoke(this, e);
         }
 
-    /// <summary>
-        /// コンポーネントを追加
-        /// 作成日: 2025-08-15
-        /// 処理内容: パレットに新しいコンポーネントを追加
-    /// </summary>
         public void AddComponent(ComponentDefinition definition)
-    {
-            if (_definitionManager.GetDefinition(definition.Type) == null)
         {
-                _definitionManager.AddDefinition(definition);
-                _definitionManager.SaveDefinitions();
-                RefreshPalette();
+            if (_definitionManager == null ||
+                _definitionManager.GetDefinition(definition.Type) != null)
+            {
+                return;
+            }
+
+            _definitionManager.AddDefinition(definition);
+            _definitionManager.SaveDefinitions();
+            RefreshPalette();
+        }
+
+        private void ShowErrorMessage(string message)
+        {
+            Controls.Clear();
+            Controls.Add(new Label
+            {
+                Text = message,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter,
+                ForeColor = Color.Red
+            });
+        }
+
+        private void ShowInfoMessage(string message)
+        {
+            Controls.Clear();
+            Controls.Add(new Label
+            {
+                Text = message,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter,
+                ForeColor = Color.Blue
+            });
         }
     }
 
-    /// <summary>
-        /// パレットを再読み込み
-        /// 作成日: 2025-08-15
-        /// 処理内容: 定義を再読み込みしてUIを更新
-    /// </summary>
-        public void RefreshPalette()
-    {
-            // 既存のコントロールをクリア
-            this.Controls.Clear();
-
-            // 定義を再読み込み
-            _definitionManager.LoadDefinitions();
-            
-            // UIを再構築
-            CreateCategoryTabs();
-        }
-    }
     /// <summary>
     /// コンポーネント記述子クラス
     /// </summary>
@@ -357,4 +339,5 @@ namespace PowerSimBuilder
         public string ConditionType { get; set; }
         public Dictionary<string, object> Parameters { get; } = new Dictionary<string, object>();
     }
+
 }

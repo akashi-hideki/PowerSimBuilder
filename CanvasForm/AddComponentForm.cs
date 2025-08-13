@@ -22,14 +22,14 @@ namespace PowerSimBuilder
         /// 注意点: ユーザーが追加したパラメータを保持
         /// </summary>
         private List<ParameterDefinition> _parameters = new List<ParameterDefinition>();
-        
+
         /// <summary>
         /// コンポーネント定義マネージャー
         /// 作成日: 2025-08-15
         /// 注意点: コンポーネント定義の読み込み/保存を担当
         /// </summary>
         private readonly ComponentDefinitionManager _definitionManager;
-        
+
         /// <summary>
         /// ツールチップコンポーネント
         /// 作成日: 2025-08-15
@@ -80,7 +80,7 @@ namespace PowerSimBuilder
             cmbCategory.Items.AddRange(_definitionManager.GetCategories().ToArray());
             cmbCategory.Items.Add("<< 新規カテゴリ >>");
             cmbCategory.SelectedIndex = 0;
-            
+
             // 色コンボボックス初期化
             cmbColor.Items.AddRange(new[] { "Red", "Blue", "Green", "Orange", "Purple", "Yellow" });
             cmbColor.SelectedIndex = 0;
@@ -143,7 +143,7 @@ namespace PowerSimBuilder
             // 必須フィールドチェック
             if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtType.Text))
             {
-                MessageBox.Show("名前とタイプは必須です", "入力エラー", 
+                MessageBox.Show("名前とタイプは必須です", "入力エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 DialogResult = DialogResult.None;
                 return;
@@ -152,7 +152,7 @@ namespace PowerSimBuilder
             // タイプ重複チェック
             if (_definitionManager.GetDefinition(txtType.Text) != null)
             {
-                MessageBox.Show("このタイプは既に存在します", "重複エラー", 
+                MessageBox.Show("このタイプは既に存在します", "重複エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 DialogResult = DialogResult.None;
                 return;
@@ -179,13 +179,13 @@ namespace PowerSimBuilder
             // ポート情報変換
             var inputPorts = new List<string>();
             var outputPorts = new List<string>();
-            
+
             if (!string.IsNullOrWhiteSpace(txtInputPorts.Text))
             {
                 inputPorts.AddRange(txtInputPorts.Text.Split(
                     new[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
             }
-            
+
             if (!string.IsNullOrWhiteSpace(txtOutputPorts.Text))
             {
                 outputPorts.AddRange(txtOutputPorts.Text.Split(
@@ -235,21 +235,21 @@ namespace PowerSimBuilder
             /// 注意点: ユーザー入力値
             /// </summary>
             public string ParamName { get; private set; }
-            
+
             /// <summary>
             /// パラメータ型プロパティ
             /// 作成日: 2025-08-15
             /// 注意点: コンボボックスから選択
             /// </summary>
             public string ParamType { get; private set; }
-            
+
             /// <summary>
             /// デフォルト値プロパティ
             /// 作成日: 2025-08-15
             /// 注意点: 型に応じた変換が必要
             /// </summary>
             public object DefaultValue { get; private set; }
-            
+
             /// <summary>
             /// 単位プロパティ
             /// 作成日: 2025-08-15
@@ -346,7 +346,7 @@ namespace PowerSimBuilder
                 // 必須入力チェック
                 if (string.IsNullOrWhiteSpace(txtName.Text))
                 {
-                    MessageBox.Show("パラメータ名は必須です", "入力エラー", 
+                    MessageBox.Show("パラメータ名は必須です", "入力エラー",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     DialogResult = DialogResult.None;
                     return;
@@ -378,7 +378,7 @@ namespace PowerSimBuilder
                 }
                 catch
                 {
-                    MessageBox.Show("デフォルト値が型に一致しません", "変換エラー", 
+                    MessageBox.Show("デフォルト値が型に一致しません", "変換エラー",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     DialogResult = DialogResult.None;
                 }
@@ -400,7 +400,7 @@ namespace PowerSimBuilder
             /// 注意点: ユーザーが入力したカテゴリ名
             /// </summary>
             public string InputValue { get; private set; }
-            
+
             private TextBox txtInput;
 
             /// <summary>
@@ -483,7 +483,7 @@ namespace PowerSimBuilder
             {
                 if (string.IsNullOrWhiteSpace(txtInput.Text))
                 {
-                    MessageBox.Show("カテゴリ名を入力してください", "入力エラー", 
+                    MessageBox.Show("カテゴリ名を入力してください", "入力エラー",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     DialogResult = DialogResult.None;
                     return;

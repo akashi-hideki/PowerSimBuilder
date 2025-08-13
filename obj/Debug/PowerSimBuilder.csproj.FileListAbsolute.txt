@@ -7,7 +7,7 @@ D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.exe.config
 D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.SimRegistForm.resources
 D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.csproj.GenerateResource.cache
 D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.csproj.CoreCompileInputs.cache
-D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.exe
-D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.pdb
 D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.csproj.Fody.CopyLocal.cache
 D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.csproj.Fody.RuntimeCopyLocal.cache
+D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.exe
+D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.pdb
