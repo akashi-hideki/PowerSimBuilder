@@ -16,8 +16,8 @@ namespace PowerSimBuilder
         private ComponentDefinitionManager _definitionManager;
         
         // UIコントロール (デザイナーで生成されるもの)
-        private ToolStripStatusLabel toolStripStatusLabel;
-        private ProgressBar loadingProgressBar;
+        // private ToolStripStatusLabel toolStripStatusLabel;
+        // private ProgressBar loadingProgressBar;
 
         public MainForm()
         {
