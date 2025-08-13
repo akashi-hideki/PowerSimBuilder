@@ -2,32 +2,45 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Configuration;
 
 namespace PowerSimBuilder
 {
-    public partial class ComponentPalette : FlowLayoutPanel
+    /// <summary>
+    /// コンポーネントパレットコントロール
+    /// 作成日: 2025-08-15
+    /// 変更内容: XMLベースのコンポーネント定義管理に移行
+    /// 注意点: カテゴリ別にコンポーネントをグループ化表示
+    /// </summary>
+    public partial class ComponentPalette : Panel
     {
-        /// <summary>
-        /// 利用可能なコンポーネントリスト
-        /// </summary>
-        public List<ComponentDescriptor> AvailableComponents { get; } = new List<ComponentDescriptor>();
+        private ComponentDefinitionManager _definitionManager;
+        private TabControl _categoryTabControl;
 
         /// <summary>
-        /// 選択中のコンポーネント
+        /// 選択中のコンポーネント定義
+        /// 作成日: 2025-08-15
+        /// 注意点: パレットで選択されたコンポーネントの定義
         /// </summary>
-        public ComponentDescriptor SelectedComponent { get; private set; }
+        public ComponentDefinition SelectedDefinition { get; private set; }
 
         /// <summary>
-        /// コンポーネントパレットのコンストラクタ
+        /// コンポーネント選択イベント
+        /// 作成日: 2025-08-15
+        /// 注意点: コンポーネントが選択された時に発生
+        /// </summary>
+        public event EventHandler ComponentSelected;
+
+        /// <summary>
+        /// コンストラクタ
+        /// 作成日: 2025-08-15
+        /// 処理内容: コンポーネント定義をロードしUIを初期化
         /// </summary>
         public ComponentPalette()
         {
             InitializeComponent();
             InitializeComponentPalette();
         }
-
-        /// <summary>
-        /// コンポーネントパレットの初期化
         /// </summary>
         private void InitializeComponent()
         {
@@ -40,117 +53,97 @@ namespace PowerSimBuilder
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.ResumeLayout(false);
         }
-
+        /// <summary>
+        /// 定義マネージャーを設定
+        /// </summary>
+        public void SetDefinitionManager(ComponentDefinitionManager manager)
+        {
+            _definitionManager = manager;
+            RefreshPalette(); // 設定後にUIを更新
+        }
         /// <summary>
         /// コンポーネントパレットの初期化
+        /// 作成日: 2025-08-15
+        /// 処理内容:
+        ///   - 定義マネージャーの初期化
+        ///   - カテゴリタブコントロールの作成
+        ///   - コンポーネントボタンの生成
         /// </summary>
         private void InitializeComponentPalette()
         {
-            AddDefaultComponents();
+            // レイアウト設定
+            this.AutoScroll = true;
+            this.BackColor = Color.White;
+            this.BorderStyle = BorderStyle.FixedSingle;
+            this.Dock = DockStyle.Fill;
+            
+            // 定義マネージャーの初期化
+            // _definitionManager = new ComponentDefinitionManager();
+            // _definitionManager.LoadDefinitions();
+            
+            // カテゴリタブコントロールの作成
+            CreateCategoryTabs();
         }
 
         /// <summary>
-        /// デフォルトコンポーネントを追加する
+        /// カテゴリタブを作成
+        /// 作成日: 2025-08-15
+        /// 処理内容: カテゴリごとにタブページを生成
         /// </summary>
-        private void AddDefaultComponents()
+        private void CreateCategoryTabs()
         {
-            // 電圧形インバータ
-            AddComponent(new ComponentDescriptor
+            _categoryTabControl = new TabControl
             {
-                Name = "電圧形インバータ",
-                Type = "VoltageSourceInverter",
-                Icon = CreateIcon(new ComponentDescriptor { Type = "VoltageSourceInverter" }, Color.Red),
-                Category = "電源",
-                Parameters = new List<ParameterDescriptor>
-                {
-                    new ParameterDescriptor { Name = "V_dc", Type = "double", DefaultValue = 300 },
-                    new ParameterDescriptor { Name = "f_rated", Type = "double", DefaultValue = 60 }
-                },
-                InputPorts = new string[0], // 入力ポートなし
-                OutputPorts = new[] { "Output" }
-            });
+                Dock = DockStyle.Fill,
+                Alignment = TabAlignment.Left,
+                SizeMode = TabSizeMode.Fixed,
+                Multiline = true,
+                ItemSize = new Size(25, 100),
+                Padding = new Point(0, 0)
+            };
 
-            // 誘導電動機
-            AddComponent(new ComponentDescriptor
-            {
-                Name = "誘導電動機",
-                Type = "InductionMotor",
-                Icon = CreateIcon(new ComponentDescriptor { Type = "InductionMotor" }, Color.Blue),
-                Category = "負荷",
-                Parameters = new List<ParameterDescriptor>
-                {
-                    new ParameterDescriptor { Name = "R1", Type = "double", DefaultValue = 0.15 },
-                    new ParameterDescriptor { Name = "R2", Type = "double", DefaultValue = 0.25 },
-                    new ParameterDescriptor { Name = "Lm", Type = "double", DefaultValue = 0.008 },
-                    new ParameterDescriptor { Name = "J", Type = "double", DefaultValue = 0.02 },
-                    new ParameterDescriptor { Name = "B", Type = "double", DefaultValue = 0.005 },
-                    new ParameterDescriptor { Name = "poles", Type = "int", DefaultValue = 4 }
-                },
-                InputPorts = new[] { "VoltageInput" },
-                OutputPorts = new[] { "SpeedOutput", "CurrentOutput" }
-            });
-
-            // 機械負荷
-            AddComponent(new ComponentDescriptor
-            {
-                Name = "機械負荷",
-                Type = "MechanicalLoad",
-                Icon = CreateIcon(new ComponentDescriptor { Type = "MechanicalLoad" }, Color.Green),
-                Category = "負荷",
-                Parameters = new List<ParameterDescriptor>
-                {
-                    new ParameterDescriptor { Name = "load_type", Type = "string", DefaultValue = "constant" },
-                    new ParameterDescriptor { Name = "torque_coeff", Type = "double", DefaultValue = 0.1 }
-                },
-                InputPorts = new[] { "SpeedInput" },
-                OutputPorts = new[] { "TorqueOutput" }
-            });
-
-            // 故障監視システム
-            AddComponent(new ComponentDescriptor
-            {
-                Name = "故障監視システム",
-                Type = "FaultMonitor",
-                Icon = CreateIcon(new ComponentDescriptor { Type = "FaultMonitor" }, Color.Orange),
-                Category = "監視",
-                Parameters = new List<ParameterDescriptor>
-                {
-                    new ParameterDescriptor
-                    {
-                        Name = "Conditions",
-                        Type = "List<FaultCondition>",
-                        DefaultValue = new List<FaultCondition>()
-                    }
-                },
-                InputPorts = new[] { "Input1", "Input2" },
-                OutputPorts = new string[0] // 出力ポートなし
-            });
-        }
-
-        /// <summary>
-        /// コンポーネントを追加する
-        /// </summary>
-        public void AddComponent(ComponentDescriptor component)
+            // カテゴリごとにタブページを作成
+            var categories = _definitionManager.GetDefinitionsByCategory();
+            foreach (var category in categories)
         {
-            if (!AvailableComponents.Contains(component))
+                var tabPage = new TabPage(category.Key)
             {
-                AvailableComponents.Add(component);
-                CreateComponentButton(component);
+                    BackColor = Color.White,
+                    Padding = new Padding(5)
+                };
+
+                // カテゴリ内のコンポーネントを追加
+                CreateComponentButtons(tabPage, category.Value);
+                _categoryTabControl.TabPages.Add(tabPage);
             }
+
+            this.Controls.Add(_categoryTabControl);
         }
 
         /// <summary>
-        /// コンポーネントボタンを作成する
+        /// コンポーネントボタンを作成
+        /// 作成日: 2025-08-15
+        /// 処理内容: 定義に基づいてコンポーネントボタンを生成
         /// </summary>
-        private void CreateComponentButton(ComponentDescriptor component)
+        private void CreateComponentButtons(TabPage tabPage, List<ComponentDefinition> definitions)
+        {
+            var flowLayout = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                WrapContents = false,
+                FlowDirection = FlowDirection.TopDown
+            };
+
+            foreach (var definition in definitions)
         {
             var button = new Button
             {
-                Text = component.Name,
-                Image = component.Icon,
+                    Text = definition.Name,
+                    Image = CreateIcon(definition),
                 ImageAlign = ContentAlignment.MiddleLeft,
                 TextAlign = ContentAlignment.MiddleRight,
-                Tag = component,
+                    Tag = definition,
                 Height = 40,
                 Width = 180,
                 Margin = new Padding(5),
@@ -164,14 +157,29 @@ namespace PowerSimBuilder
             button.MouseDown += ComponentButton_MouseDown;
             button.Click += ComponentButton_Click;
 
-            this.Controls.Add(button);
+                flowLayout.Controls.Add(button);
+            }
+
+            tabPage.Controls.Add(flowLayout);
         }
 
         /// <summary>
-        /// アイコン画像を作成する
+        /// アイコン画像を作成
+        /// 作成日: 2025-08-15
+        /// 処理内容: コンポーネント定義に基づいたアイコンを生成
         /// </summary>
-        private Bitmap CreateIcon(ComponentDescriptor component, Color color)
+        private Bitmap CreateIcon(ComponentDefinition definition)
         {
+            Color color = Color.Gray;
+            try
+            {
+                color = Color.FromName(definition.IconColor);
+            }
+            catch
+            {
+                // 無効な色名の場合はデフォルト色を使用
+            }
+
             var bmp = new Bitmap(32, 32);
             using (var g = Graphics.FromImage(bmp))
             {
@@ -179,7 +187,7 @@ namespace PowerSimBuilder
                 g.DrawRectangle(Pens.Black, 0, 0, 31, 31);
 
                 string symbol;
-                switch (component.Type)
+                switch (definition.Type)
                 {
                     case "VoltageSourceInverter":
                         symbol = "V";
@@ -194,7 +202,8 @@ namespace PowerSimBuilder
                         symbol = "F";
                         break;
                     default:
-                        symbol = "C";
+                        symbol = !string.IsNullOrEmpty(definition.Type) ? 
+                            definition.Type[0].ToString() : "C";
                         break;
                 }
 
@@ -206,53 +215,104 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネントボタンマウスダウンイベント
+        /// 作成日: 2025-08-15
+        /// 処理内容: ドラッグ操作を開始
         /// </summary>
         private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
         {
             var button = (Button)sender;
-            var component = (ComponentDescriptor)button.Tag;
+            var definition = (ComponentDefinition)button.Tag;
 
             var data = new DataObject();
-            data.SetData("ComponentDescriptor", component);
+            data.SetData("ComponentDefinition", definition);
 
             button.DoDragDrop(data, DragDropEffects.Copy);
         }
 
         /// <summary>
         /// コンポーネントボタンクリックイベント
+        /// 作成日: 2025-08-15
+        /// 処理内容: コンポーネント選択状態を更新
         /// </summary>
         private void ComponentButton_Click(object sender, EventArgs e)
         {
             var button = (Button)sender;
-            SelectedComponent = (ComponentDescriptor)button.Tag;
+            SelectedDefinition = (ComponentDefinition)button.Tag;
 
             // 選択状態を通知
             OnComponentSelected(EventArgs.Empty);
 
             // 選択されたボタンを強調表示
-            foreach (Control control in Controls)
+            UpdateButtonSelection(button);
+        }
+
+        /// <summary>
+        /// ボタン選択状態を更新
+        /// 作成日: 2025-08-15
+        /// 処理内容: 選択されたボタンのみ強調表示
+        /// </summary>
+        private void UpdateButtonSelection(Button selectedButton)
+        {
+            foreach (TabPage tabPage in _categoryTabControl.TabPages)
             {
-                if (control is Button btn)
+                foreach (Control control in tabPage.Controls)
+            {
+                    if (control is FlowLayoutPanel flowLayout)
                 {
-                    btn.BackColor = (btn == button) ? Color.LightBlue : Color.WhiteSmoke;
+                        foreach (Control btnControl in flowLayout.Controls)
+                        {
+                            if (btnControl is Button btn)
+                            {
+                                btn.BackColor = (btn == selectedButton) ? 
+                                    Color.LightBlue : Color.WhiteSmoke;
+                            }
+                        }
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// コンポーネント選択イベント
-        /// </summary>
-        public event EventHandler ComponentSelected;
-
-        /// <summary>
-        /// コンポーネント選択イベントを発行する
+        /// コンポーネント選択イベントを発行
+        /// 作成日: 2025-08-15
         /// </summary>
         protected virtual void OnComponentSelected(EventArgs e)
         {
             ComponentSelected?.Invoke(this, e);
         }
+
+    /// <summary>
+        /// コンポーネントを追加
+        /// 作成日: 2025-08-15
+        /// 処理内容: パレットに新しいコンポーネントを追加
+    /// </summary>
+        public void AddComponent(ComponentDefinition definition)
+    {
+            if (_definitionManager.GetDefinition(definition.Type) == null)
+        {
+                _definitionManager.AddDefinition(definition);
+                _definitionManager.SaveDefinitions();
+                RefreshPalette();
+        }
     }
 
+    /// <summary>
+        /// パレットを再読み込み
+        /// 作成日: 2025-08-15
+        /// 処理内容: 定義を再読み込みしてUIを更新
+    /// </summary>
+        public void RefreshPalette()
+    {
+            // 既存のコントロールをクリア
+            this.Controls.Clear();
+
+            // 定義を再読み込み
+            _definitionManager.LoadDefinitions();
+            
+            // UIを再構築
+            CreateCategoryTabs();
+        }
+    }
     /// <summary>
     /// コンポーネント記述子クラス
     /// </summary>

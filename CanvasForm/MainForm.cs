@@ -4,37 +4,51 @@ using System.Drawing;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Forms;
+using System.Configuration;
 
 namespace PowerSimBuilder
 {
     /// <summary>
-    /// アプリケーションのメインフォームクラス
-    /// 作成日: 2025-08-12
-    /// 注意点: ユーザーインターフェイスと主要ロジックを統合
+    /// メインフォームクラス
+    /// 作成日: 2025-08-15
+    /// 変更内容: XMLベースコンポーネント定義システムの統合
+    /// 注意点: アプリケーションの主要UIとコントロールを管理
     /// </summary>
     public partial class MainForm : Form
     {
         private readonly CanvasManager _canvasManager;
         private readonly PythonCodeGenerator _codeGenerator = new PythonCodeGenerator();
+        private readonly ComponentDefinitionManager _definitionManager = new ComponentDefinitionManager();
 
         /// <summary>
-        /// メインフォームのコンストラクタ
-        /// 注意点: UIコンポーネントとイベントハンドラを初期化
+        /// コンストラクタ
+        /// 作成日: 2025-08-15
+        /// 処理内容: UIコンポーネントと定義マネージャーを初期化
         /// </summary>
         public MainForm()
         {
+            // 定義マネージャーの初期化
+            _definitionManager.LoadDefinitions();
+            
+            // UIコンポーネントの初期化
             InitializeComponent();
-            InitializeEventHandlers();
+            
+            // パレットに定義マネージャーを設定
+            componentPalette1.SetDefinitionManager(_definitionManager);
+            
+            // キャンバス管理の初期化
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
+            InitializeEventHandlers();
             SubscribeToEvents();
 
+            // 接続レンダラーの設定
             designCanvas1.ConnectionRenderer = new BezierConnectionRenderer();
             designCanvas1.ConnectionSelected += DesignCanvas_ConnectionSelected;
         }
 
         /// <summary>
         /// イベントハンドラを初期化
-        /// 注意点: ツールバーボタンとプロパティグリッドのイベントを登録
+        /// 作成日: 2025-08-15
         /// </summary>
         private void InitializeEventHandlers()
         {
@@ -52,7 +66,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// イベント購読を設定
-        /// 注意点: キャンバス管理クラスのイベントを購読
+        /// 作成日: 2025-08-15
         /// </summary>
         private void SubscribeToEvents()
         {
@@ -63,31 +77,35 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネントパレット選択イベント
-        /// 注意点: 追加ボタンの有効状態を更新
+        /// 作成日: 2025-08-15
         /// </summary>
         private void ComponentPalette_ComponentSelected(object sender, EventArgs e)
         {
-            addButton.Enabled = (componentPalette1.SelectedComponent != null);
+            addButton.Enabled = (componentPalette1.SelectedDefinition != null);
         }
 
         /// <summary>
         /// コンポーネント追加ボタンクリック
-        /// 注意点: カスタムコンポーネント追加フォームを表示
+        /// 作成日: 2025-08-15
         /// </summary>
         private void AddComponentToolStripButton_Click(object sender, EventArgs e)
         {
-            using (var form = new AddComponentForm())
+            using (var form = new AddComponentForm(_definitionManager))
             {
-                if (form.ShowDialog() == DialogResult.OK && form.NewComponent != null)
+                if (form.ShowDialog() == DialogResult.OK && form.NewComponentDefinition != null)
                 {
-                    componentPalette1.AddComponent(form.NewComponent);
+                    // パレットに追加
+                    componentPalette1.AddComponent(form.NewComponentDefinition);
+                    
+                    // パレットを更新
+                    componentPalette1.RefreshPalette();
                 }
             }
         }
 
         /// <summary>
         /// キャンバス変更イベント
-        /// 注意点: 保存状態とUNDO/REDOボタンを更新
+        /// 作成日: 2025-08-15
         /// </summary>
         private void CanvasManager_CanvasModified(object sender, EventArgs e)
         {
@@ -97,7 +115,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 選択変更イベント
-        /// 注意点: プロパティグリッドに選択オブジェクトを表示
+        /// 作成日: 2025-08-15
         /// </summary>
         private void CanvasManager_SelectionChanged(object sender, EventArgs e)
         {
@@ -107,24 +125,84 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// コンポーネント追加ボタンクリック
-        /// 注意点: パレットで選択中のコンポーネントをキャンバスに追加
+        /// 作成日: 2025-08-15
         /// </summary>
         private void addButton_Click(object sender, EventArgs e)
         {
-            var selectedDescriptor = componentPalette1.SelectedComponent;
-            if (selectedDescriptor != null)
+            var selectedDefinition = componentPalette1.SelectedDefinition;
+            if (selectedDefinition != null)
             {
                 Point center = new Point(designCanvas1.Width / 2, designCanvas1.Height / 2);
-                _canvasManager.AddComponent(selectedDescriptor, center);
-
-                // 自動配置実行
-                designCanvas1.ArrangeComponents();
+                AddComponentToCanvas(selectedDefinition, center);
             }
         }
 
         /// <summary>
+        /// キャンバスにコンポーネントを追加
+        /// 作成日: 2025-08-15
+        /// </summary>
+        private void AddComponentToCanvas(ComponentDefinition definition, Point location)
+        {
+            // ディスクリプタに変換
+            var descriptor = new ComponentDescriptor
+            {
+                Name = definition.Name,
+                Type = definition.Type,
+                Category = definition.Category,
+                Parameters = ConvertParameters(definition.Parameters),
+                InputPorts = definition.InputPorts.ToArray(),
+                OutputPorts = definition.OutputPorts.ToArray()
+            };
+
+            _canvasManager.AddComponent(descriptor, location);
+                designCanvas1.ArrangeComponents();
+            }
+
+        /// <summary>
+        /// パラメータ定義を変換
+        /// 作成日: 2025-08-15
+        /// </summary>
+        private List<ParameterDescriptor> ConvertParameters(List<ParameterDefinition> parameters)
+        {
+            var result = new List<ParameterDescriptor>();
+            foreach (var param in parameters)
+            {
+                // デフォルト値の型変換
+                object defaultValue = param.DefaultValue;
+                try
+                {
+                    switch (param.Type)
+                    {
+                        case "double":
+                            defaultValue = double.Parse(param.DefaultValue);
+                            break;
+                        case "int":
+                            defaultValue = int.Parse(param.DefaultValue);
+                            break;
+                        case "bool":
+                            defaultValue = bool.Parse(param.DefaultValue);
+                            break;
+                        // string とその他の型はそのまま
+                    }
+                }
+                catch
+                {
+                    // 変換失敗時は文字列のまま
+                }
+                
+                result.Add(new ParameterDescriptor
+                {
+                    Name = param.Name,
+                    Type = param.Type,
+                    DefaultValue = defaultValue
+                });
+            }
+            return result;
+        }
+
+        /// <summary>
         /// 削除ボタンクリック
-        /// 注意点: 選択中のコンポーネントまたは接続を削除
+        /// 作成日: 2025-08-15
         /// </summary>
         private void deleteButton_Click(object sender, EventArgs e)
         {
@@ -140,7 +218,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 保存ボタンクリック
-        /// 注意点: JSON形式でシステム構成を保存
+        /// 作成日: 2025-08-15
         /// </summary>
         private void saveButton_Click(object sender, EventArgs e)
         {
@@ -160,7 +238,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 読み込みボタンクリック
-        /// 注意点: JSONファイルからシステム構成を復元
+        /// 作成日: 2025-08-15
         /// </summary>
         private void loadButton_Click(object sender, EventArgs e)
         {
@@ -189,7 +267,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// UNDOボタンクリック
-        /// 注意点: 直前の操作を取り消し
+        /// 作成日: 2025-08-15
         /// </summary>
         private void undoButton_Click(object sender, EventArgs e)
         {
@@ -199,7 +277,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// REDOボタンクリック
-        /// 注意点: 取り消した操作を再実行
+        /// 作成日: 2025-08-15
         /// </summary>
         private void redoButton_Click(object sender, EventArgs e)
         {
@@ -209,7 +287,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 配置整理ボタンクリック
-        /// 注意点: 自動レイアウトを実行
+        /// 作成日: 2025-08-15
         /// </summary>
         private void arrangeButton_Click(object sender, EventArgs e)
         {
@@ -218,7 +296,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 実行ボタンクリック
-        /// 注意点: Pythonシミュレーションコードを生成・実行
+        /// 作成日: 2025-08-15
         /// </summary>
         private void runButton_Click(object sender, EventArgs e)
         {
@@ -237,19 +315,9 @@ namespace PowerSimBuilder
             }
         }
         /// <summary>
-        /// Pythonシミュレーションコードの出力ディレクトリパスを取得します
-        /// 処理内容:
-        ///   - アプリケーションデータフォルダ下に専用ディレクトリを構成
-        ///   - ディレクトリが存在しない場合は新規作成
-        /// 注意点:
-        ///   - 環境ごとの適切なアプリケーションデータフォルダを使用
-        ///   - マルチユーザー環境でも安全に動作
-        /// 出力例:
-        ///   - Windows: C:\Users\[ユーザー名]\AppData\Roaming\PowerSimBuilder\PythonOutput\
-        ///   - macOS: /Users/[ユーザー名]/.config/PowerSimBuilder/PythonOutput/
-        ///   - Linux: /home/[ユーザー名]/.config/PowerSimBuilder/PythonOutput/
+        /// Python出力ディレクトリを取得
+        /// 作成日: 2025-08-15
         /// </summary>
-        /// <returns>Pythonコードファイルの保存先ディレクトリのフルパス</returns>
         private string GetPythonOutputDirectory()
         {
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -265,7 +333,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 接続選択イベントハンドラ
-        /// 注意点: プロパティグリッドに接続プロパティを表示
+        /// 作成日: 2025-08-15
         /// </summary>
         private void DesignCanvas_ConnectionSelected(object sender, ConnectionEventArgs e)
         {
@@ -281,7 +349,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// プロパティ値変更イベント
-        /// 注意点: 故障監視システムの条件編集をトリガー
+        /// 作成日: 2025-08-15
         /// </summary>
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
@@ -294,7 +362,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 故障条件エディタを開く
-        /// 注意点: 選択中の故障監視システムに対して実行
+        /// 作成日: 2025-08-15
         /// </summary>
         public void OpenFaultConditionEditor()
         {
@@ -314,7 +382,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 保存状態を更新
-        /// 注意点: 保存ボタンの有効状態を制御
+        /// 作成日: 2025-08-15
         /// </summary>
         private void UpdateSaveStatus()
         {
@@ -323,6 +391,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// UNDO/REDOボタン状態を更新
+        /// 作成日: 2025-08-15
         /// </summary>
         private void UpdateUndoRedoButtons()
         {
@@ -332,7 +401,7 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// 削除ボタン状態を更新
-        /// 注意点: 選択対象がある場合のみ有効化
+        /// 作成日: 2025-08-15
         /// </summary>
         private void UpdateDeleteButton()
         {
