@@ -100,9 +100,9 @@
     <Compile Include="CanvasForm\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="CanvasForm\PannnelData.cs" />
     <Compile Include="CanvasForm\ParameterItem.cs" />
     <Compile Include="CanvasForm\PointJsonConverter.cs" />
+    <Compile Include="PalletteDataDefine.cs" />
     <Compile Include="SimPartsManege\ComponentDefinition.cs" />
     <Compile Include="SimPartsManege\ComponentDefinitionManager.cs" />
     <Compile Include="SimPartsManege\DefaultComponentDefinitions.cs" />

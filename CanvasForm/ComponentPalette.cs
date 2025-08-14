@@ -1,42 +1,21 @@
-/* 
- * ComponentPalette.cs
- * 
- * シミュレーションビルダーアプリケーションのコンポーネントパレットクラス
- * コンポーネント定義を表示・選択するためのパネルを提供します。
- * 
- * 変更履歴:
- * 2025-08-20 - パレット表示問題の修正
- *   - レイアウトをFlowLayoutPanelに変更
- *   - カテゴリタブを廃止しシンプルなリスト表示に変更
- *   - 選択状態の視覚的フィードバックを強化
- *   - ドラッグ&ドロップ処理の互換性を確保
- */
-
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
-    /// <summary>
-    /// コンポーネントパレットクラス
-    /// 利用可能なコンポーネントを表示し、選択操作を提供します
-    /// </summary>
     public partial class ComponentPalette : FlowLayoutPanel
     {
-        private ComponentDefinitionManager _definitionManager;
+        /// <summary>
+        /// 利用可能なコンポーネントリスト
+        /// </summary>
+        public List<ComponentDescriptor> AvailableComponents { get; } = new List<ComponentDescriptor>();
 
         /// <summary>
-        /// 選択中のコンポーネント定義
+        /// 選択中のコンポーネント
         /// </summary>
-        public ComponentDefinition SelectedDefinition { get; private set; }
-
-        /// <summary>
-        /// コンポーネント選択イベント
-        /// </summary>
-        public event EventHandler ComponentSelected;
+        public ComponentDescriptor SelectedComponent { get; private set; }
 
         /// <summary>
         /// コンポーネントパレットのコンストラクタ
@@ -44,11 +23,11 @@ namespace PowerSimBuilder
         public ComponentPalette()
         {
             InitializeComponent();
-            ShowInitializingMessage();
+            InitializeComponentPalette();
         }
 
         /// <summary>
-        /// コンポーネントパレットのUI初期化
+        /// コンポーネントパレットの初期化
         /// </summary>
         private void InitializeComponent()
         {
@@ -59,105 +38,119 @@ namespace PowerSimBuilder
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.FlowDirection = FlowDirection.TopDown;
-            this.WrapContents = false;
             this.ResumeLayout(false);
         }
 
         /// <summary>
-        /// 初期化中メッセージを表示
+        /// コンポーネントパレットの初期化
         /// </summary>
-        public void ShowInitializingMessage()
+        private void InitializeComponentPalette()
         {
-            Controls.Clear();
-            Controls.Add(new Label
+            AddDefaultComponents();
+        }
+
+        /// <summary>
+        /// デフォルトコンポーネントを追加する
+        /// </summary>
+        private void AddDefaultComponents()
+        {
+            // 電圧形インバータ
+            AddComponent(new ComponentDescriptor
             {
-                Text = "コンポーネントを読み込み中...",
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter
+                Name = "電圧形インバータ",
+                Type = "VoltageSourceInverter",
+                Icon = CreateIcon(new ComponentDescriptor { Type = "VoltageSourceInverter" }, Color.Red),
+                Category = "電源",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new ParameterDescriptor { Name = "V_dc", Type = "double", DefaultValue = 300 },
+                    new ParameterDescriptor { Name = "f_rated", Type = "double", DefaultValue = 60 }
+                },
+                InputPorts = new string[0], // 入力ポートなし
+                OutputPorts = new[] { "Output" }
+            });
+
+            // 誘導電動機
+            AddComponent(new ComponentDescriptor
+            {
+                Name = "誘導電動機",
+                Type = "InductionMotor",
+                Icon = CreateIcon(new ComponentDescriptor { Type = "InductionMotor" }, Color.Blue),
+                Category = "負荷",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new ParameterDescriptor { Name = "R1", Type = "double", DefaultValue = 0.15 },
+                    new ParameterDescriptor { Name = "R2", Type = "double", DefaultValue = 0.25 },
+                    new ParameterDescriptor { Name = "Lm", Type = "double", DefaultValue = 0.008 },
+                    new ParameterDescriptor { Name = "J", Type = "double", DefaultValue = 0.02 },
+                    new ParameterDescriptor { Name = "B", Type = "double", DefaultValue = 0.005 },
+                    new ParameterDescriptor { Name = "poles", Type = "int", DefaultValue = 4 }
+                },
+                InputPorts = new[] { "VoltageInput" },
+                OutputPorts = new[] { "SpeedOutput", "CurrentOutput" }
+            });
+
+            // 機械負荷
+            AddComponent(new ComponentDescriptor
+            {
+                Name = "機械負荷",
+                Type = "MechanicalLoad",
+                Icon = CreateIcon(new ComponentDescriptor { Type = "MechanicalLoad" }, Color.Green),
+                Category = "負荷",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new ParameterDescriptor { Name = "load_type", Type = "string", DefaultValue = "constant" },
+                    new ParameterDescriptor { Name = "torque_coeff", Type = "double", DefaultValue = 0.1 }
+                },
+                InputPorts = new[] { "SpeedInput" },
+                OutputPorts = new[] { "TorqueOutput" }
+            });
+
+            // 故障監視システム
+            AddComponent(new ComponentDescriptor
+            {
+                Name = "故障監視システム",
+                Type = "FaultMonitor",
+                Icon = CreateIcon(new ComponentDescriptor { Type = "FaultMonitor" }, Color.Orange),
+                Category = "監視",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new ParameterDescriptor
+                    {
+                        Name = "Conditions",
+                        Type = "List<FaultCondition>",
+                        DefaultValue = new List<FaultCondition>()
+                    }
+                },
+                InputPorts = new[] { "Input1", "Input2" },
+                OutputPorts = new string[0] // 出力ポートなし
             });
         }
 
         /// <summary>
-        /// 定義マネージャーを設定し、パレットを初期化
+        /// コンポーネントを追加する
         /// </summary>
-        /// <param name="manager">コンポーネント定義マネージャー</param>
-        public void InitializePalette(ComponentDefinitionManager manager)
+        public void AddComponent(ComponentDescriptor component)
         {
-            _definitionManager = manager;
-            RefreshPalette();
-        }
-
-        /// <summary>
-        /// データバインディングを設定
-        /// </summary>
-        /// <param name="manager">コンポーネント定義マネージャー</param>
-        public void BindData(ComponentDefinitionManager manager)
-        {
-            _definitionManager = manager;
-            _definitionManager.DefinitionsChanged += (s, e) => 
+            if (!AvailableComponents.Contains(component))
             {
-                ShowComponents(_definitionManager.Definitions);
-            };
-            ShowComponents(_definitionManager.Definitions);
-        }
-
-        /// <summary>
-        /// パレットを再読み込み
-        /// </summary>
-        public void RefreshPalette()
-        {
-            Controls.Clear();
-
-            if (_definitionManager == null)
-            {
-                ShowComponents(DefaultComponentDefinitions.Definitions);
-                return;
-            }
-
-            try
-            {
-                ShowComponents(_definitionManager.Definitions);
-            }
-            catch (Exception ex)
-            {
-                ShowComponents(DefaultComponentDefinitions.Definitions);
-                ShowErrorMessage($"コンポーネントの読み込みに失敗しました: {ex.Message}");
+                AvailableComponents.Add(component);
+                CreateComponentButton(component);
             }
         }
 
         /// <summary>
-        /// コンポーネントを表示
+        /// コンポーネントボタンを作成する
         /// </summary>
-        /// <param name="definitions">表示するコンポーネント定義のリスト</param>
-        public void ShowComponents(IEnumerable<ComponentDefinition> definitions)
-        {
-            SuspendLayout();
-            Controls.Clear();
-
-            foreach (var definition in definitions)
-            {
-                CreateComponentButton(definition);
-            }
-
-            ResumeLayout(true);
-            PerformLayout();
-            Invalidate();
-        }
-
-        /// <summary>
-        /// コンポーネントボタンを作成
-        /// </summary>
-        /// <param name="definition">コンポーネント定義</param>
-        private void CreateComponentButton(ComponentDefinition definition)
+        private void CreateComponentButton(ComponentDescriptor component)
         {
             var button = new Button
             {
-                Text = definition.Name,
-                Image = CreateIcon(definition),
+                Text = component.Name,
+                Image = component.Icon,
                 ImageAlign = ContentAlignment.MiddleLeft,
                 TextAlign = ContentAlignment.MiddleRight,
-                Tag = definition, // 定義をTagに保存
+                Tag = component,
                 Height = 40,
                 Width = 180,
                 Margin = new Padding(5),
@@ -168,93 +161,41 @@ namespace PowerSimBuilder
             button.FlatAppearance.BorderSize = 1;
             button.FlatAppearance.BorderColor = Color.LightGray;
 
-            // イベントハンドラをメソッドで登録
             button.MouseDown += ComponentButton_MouseDown;
             button.Click += ComponentButton_Click;
 
-            Controls.Add(button);
-        }
-        // マウスダウンイベントハンドラ
-        private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (sender is Button button && button.Tag is ComponentDefinition definition)
-            {
-                // 定義からディスクリプタに変換
-                var descriptor = new ComponentDescriptor
-                {
-                    Name = definition.Name,
-                    Type = definition.Type,
-                    Category = definition.Category,
-                    Parameters = definition.Parameters.Select(p => new ParameterDescriptor
-                    {
-                        Name = p.Name,
-                        Type = p.Type,
-                        DefaultValue = p.DefaultValue
-                    }).ToList(),
-                    InputPorts = definition.InputPorts?.ToArray() ?? Array.Empty<string>(),
-                    OutputPorts = definition.OutputPorts?.ToArray() ?? Array.Empty<string>()
-                };
-
-                var data = new DataObject();
-                data.SetData("ComponentDescriptor", descriptor);
-                button.DoDragDrop(data, DragDropEffects.Copy);
-            }
+            this.Controls.Add(button);
         }
 
-        // クリックイベントハンドラ
-        private void ComponentButton_Click(object sender, EventArgs e)
-        {
-            if (sender is Button button && button.Tag is ComponentDefinition definition)
-            {
-                SelectedDefinition = definition;
-                UpdateButtonSelection(button);
-                OnComponentSelected(EventArgs.Empty);
-            }
-        }
         /// <summary>
-        /// コンポーネントアイコンを作成
+        /// アイコン画像を作成する
         /// </summary>
-        /// <param name="definition">コンポーネント定義</param>
-        /// <returns>生成されたアイコン画像</returns>
-        private Bitmap CreateIcon(ComponentDefinition definition)
+        private Bitmap CreateIcon(ComponentDescriptor component, Color color)
         {
-            // タイプとシンボルのマッピング
-            var typeSymbols = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                {"VoltageSourceInverter", "V"},
-                {"InductionMotor", "M"},
-                {"MechanicalLoad", "L"},
-                {"FaultMonitor", "F"}
-            };
-
-            Color color = Color.Gray;
-            try
-            {
-                color = Color.FromName(definition.IconColor);
-            }
-            catch
-            {
-                // 無効な色名の場合はデフォルト色を使用
-            }
-
             var bmp = new Bitmap(32, 32);
             using (var g = Graphics.FromImage(bmp))
             {
                 g.FillRectangle(new SolidBrush(color), 0, 0, 32, 32);
                 g.DrawRectangle(Pens.Black, 0, 0, 31, 31);
 
-                // タイプに応じたシンボルを取得
                 string symbol;
-                if (!string.IsNullOrEmpty(definition.Type) && 
-                    typeSymbols.TryGetValue(definition.Type, out var foundSymbol))
+                switch (component.Type)
                 {
-                    symbol = foundSymbol;
-                }
-                else
-                {
-                    // マッピングがない場合はタイプの最初の文字を使用
-                    symbol = !string.IsNullOrEmpty(definition.Type) ? 
-                        definition.Type[0].ToString() : "C";
+                    case "VoltageSourceInverter":
+                        symbol = "V";
+                        break;
+                    case "InductionMotor":
+                        symbol = "M";
+                        break;
+                    case "MechanicalLoad":
+                        symbol = "L";
+                        break;
+                    case "FaultMonitor":
+                        symbol = "F";
+                        break;
+                    default:
+                        symbol = "C";
+                        break;
                 }
 
                 g.DrawString(symbol, new Font("Arial", 10, FontStyle.Bold),
@@ -264,86 +205,53 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// ボタンの選択状態を更新
+        /// コンポーネントボタンマウスダウンイベント
         /// </summary>
-        /// <param name="selectedButton">選択されたボタン</param>
-        private void UpdateButtonSelection(Button selectedButton)
+        private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
         {
+            var button = (Button)sender;
+            var component = (ComponentDescriptor)button.Tag;
+
+            var data = new DataObject();
+            data.SetData("ComponentDescriptor", component);
+
+            button.DoDragDrop(data, DragDropEffects.Copy);
+        }
+
+        /// <summary>
+        /// コンポーネントボタンクリックイベント
+        /// </summary>
+        private void ComponentButton_Click(object sender, EventArgs e)
+        {
+            var button = (Button)sender;
+            SelectedComponent = (ComponentDescriptor)button.Tag;
+
+            // 選択状態を通知
+            OnComponentSelected(EventArgs.Empty);
+
+            // 選択されたボタンを強調表示
             foreach (Control control in Controls)
             {
                 if (control is Button btn)
                 {
-                    if (btn == selectedButton)
-                    {
-                        btn.BackColor = Color.LightBlue;
-                        btn.Font = new Font(btn.Font, FontStyle.Bold);
-                    }
-                    else
-                    {
-                        btn.BackColor = Color.WhiteSmoke;
-                        btn.Font = new Font(btn.Font, FontStyle.Regular);
-                    }
+                    btn.BackColor = (btn == button) ? Color.LightBlue : Color.WhiteSmoke;
                 }
             }
         }
 
         /// <summary>
-        /// コンポーネント選択イベントを発行
+        /// コンポーネント選択イベント
         /// </summary>
-        /// <param name="e">イベント引数</param>
+        public event EventHandler ComponentSelected;
+
+        /// <summary>
+        /// コンポーネント選択イベントを発行する
+        /// </summary>
         protected virtual void OnComponentSelected(EventArgs e)
         {
             ComponentSelected?.Invoke(this, e);
         }
-
-        /// <summary>
-        /// コンポーネントを追加
-        /// </summary>
-        /// <param name="definition">追加するコンポーネント定義</param>
-        public void AddComponent(ComponentDefinition definition)
-        {
-            if (_definitionManager == null ||
-                _definitionManager.GetDefinition(definition.Type) != null)
-            {
-                return;
-            }
-
-            _definitionManager.AddDefinition(definition);
-            _definitionManager.SaveDefinitions();
-            RefreshPalette();
-        }
-
-        /// <summary>
-        /// エラーメッセージを表示
-        /// </summary>
-        /// <param name="message">表示するエラーメッセージ</param>
-        private void ShowErrorMessage(string message)
-        {
-            Controls.Clear();
-            Controls.Add(new Label
-            {
-                Text = message,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter,
-                ForeColor = Color.Red
-            });
-        }
-
-        /// <summary>
-        /// 情報メッセージを表示
-        /// </summary>
-        /// <param name="message">表示する情報メッセージ</param>
-        private void ShowInfoMessage(string message)
-        {
-            Controls.Clear();
-            Controls.Add(new Label
-            {
-                Text = message,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter,
-                ForeColor = Color.Blue
-            });
-        }
     }
-}
 
+
+}

@@ -1,13 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
     /// <summary>
     /// コンポーネント記述子クラス
-    /// コンポーネントのプロパティを定義します
     /// </summary>
     public class ComponentDescriptor
     {
@@ -27,7 +25,6 @@ namespace PowerSimBuilder
 
     /// <summary>
     /// パラメータ記述子クラス
-    /// コンポーネントパラメータの定義を保持します
     /// </summary>
     public class ParameterDescriptor
     {
@@ -43,7 +40,6 @@ namespace PowerSimBuilder
 
     /// <summary>
     /// 故障条件クラス
-    /// 故障監視システムの条件を定義します
     /// </summary>
     public class FaultCondition
     {
@@ -52,6 +48,4 @@ namespace PowerSimBuilder
         public string ConditionType { get; set; }
         public Dictionary<string, object> Parameters { get; } = new Dictionary<string, object>();
     }
-
-  
 }
