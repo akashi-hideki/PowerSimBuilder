@@ -72,11 +72,12 @@ namespace PowerSimBuilder
                 // ステップ1: コンポーネント定義マネージャーの初期化
                 _definitionManager = new ComponentDefinitionManager();
                 _definitionManager.LoadDefinitions();
-                
+
                 // ステップ2: コンポーネントパレットの初期化
-                componentPalette1.InitializePalette(_definitionManager);
+                // 直接表示を呼び出し
+                componentPalette1.ShowComponents(_definitionManager.Definitions);
                 componentPalette1.ComponentSelected += ComponentPalette_ComponentSelected;
-                
+
                 // ステップ3: キャンバスマネージャーの初期化
                 _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
                 _canvasManager.CanvasModified += CanvasManager_CanvasModified;
@@ -100,6 +101,8 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
+                // エラー時はデフォルト定義を表示
+                componentPalette1.ShowComponents(DefaultComponentDefinitions.Definitions);
                 // エラー処理: フォールバック動作
                 HandleInitializationError(ex);
             }

@@ -531,7 +531,6 @@ namespace PowerSimBuilder
                 e.Effect = DragDropEffects.None;
             }
         }
-
         /// <summary>
         /// ドロップイベント処理
         /// 注意点: パレットからコンポーネントを追加
@@ -546,5 +545,7 @@ namespace PowerSimBuilder
                 ArrangeComponents();
             }
         }
+    
+
     }
 }

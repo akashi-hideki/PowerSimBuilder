@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace PowerSimBuilder
@@ -156,7 +157,7 @@ namespace PowerSimBuilder
                 Image = CreateIcon(definition),
                 ImageAlign = ContentAlignment.MiddleLeft,
                 TextAlign = ContentAlignment.MiddleRight,
-                Tag = definition,
+                Tag = definition, // 定義をTagに保存
                 Height = 40,
                 Width = 180,
                 Margin = new Padding(5),
@@ -167,23 +168,49 @@ namespace PowerSimBuilder
             button.FlatAppearance.BorderSize = 1;
             button.FlatAppearance.BorderColor = Color.LightGray;
 
-            button.MouseDown += (sender, e) => 
-            {
-                var data = new DataObject();
-                data.SetData("ComponentDefinition", definition);
-                button.DoDragDrop(data, DragDropEffects.Copy);
-            };
+            // イベントハンドラをメソッドで登録
+            button.MouseDown += ComponentButton_MouseDown;
+            button.Click += ComponentButton_Click;
 
-            button.Click += (sender, e) => 
+            Controls.Add(button);
+        }
+        // マウスダウンイベントハンドラ
+        private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (sender is Button button && button.Tag is ComponentDefinition definition)
+            {
+                // 定義からディスクリプタに変換
+                var descriptor = new ComponentDescriptor
+                {
+                    Name = definition.Name,
+                    Type = definition.Type,
+                    Category = definition.Category,
+                    Parameters = definition.Parameters.Select(p => new ParameterDescriptor
+                    {
+                        Name = p.Name,
+                        Type = p.Type,
+                        DefaultValue = p.DefaultValue
+                    }).ToList(),
+                    InputPorts = definition.InputPorts?.ToArray() ?? Array.Empty<string>(),
+                    OutputPorts = definition.OutputPorts?.ToArray() ?? Array.Empty<string>()
+                };
+
+                var data = new DataObject();
+                data.SetData("ComponentDescriptor", descriptor);
+                button.DoDragDrop(data, DragDropEffects.Copy);
+            }
+        }
+
+        // クリックイベントハンドラ
+        private void ComponentButton_Click(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.Tag is ComponentDefinition definition)
             {
                 SelectedDefinition = definition;
                 UpdateButtonSelection(button);
                 OnComponentSelected(EventArgs.Empty);
-            };
-
-            Controls.Add(button);
+            }
         }
-
         /// <summary>
         /// コンポーネントアイコンを作成
         /// </summary>
