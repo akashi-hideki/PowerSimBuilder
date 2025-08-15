@@ -105,6 +105,7 @@
     <Compile Include="PalletteDataDefine.cs" />
     <Compile Include="SimPartsManege\ComponentDefinition.cs" />
     <Compile Include="SimPartsManege\ComponentDefinitionManager.cs" />
+    <Compile Include="SimPartsManege\ComponentDescriptorDictionary.cs" />
     <Compile Include="SimPartsManege\DefaultComponentDefinitions.cs" />
     <Compile Include="SimulationGenerate\PythonCodeGenerator.cs" />
     <Compile Include="CanvasForm\ThermalParameterForm.cs">

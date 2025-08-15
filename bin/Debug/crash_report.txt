@@ -36,3 +36,9 @@ Stack Trace:    場所 System.Drawing.Color.CheckByte(Int32 value, String name)
    場所 System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
    場所 System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
 ====================================
+=== Crash Report ===
+Date: 2025/08/15 13:38:16
+Error Message: 型 'System.Collections.Generic.Dictionary`2[System.String,PowerSimBuilder.ComponentDescriptor]' のオブジェクトを型 'System.Collections.Generic.List`1[PowerSimBuilder.ComponentDescriptor]' にキャストできません。
+Stack Trace:    場所 PowerSimBuilder.MainForm..ctor() 場所 D:\source2\PowerSimBuilder\CanvasForm\MainForm.cs:行 28
+   場所 PowerSimBuilder.Program.Main() 場所 D:\source2\PowerSimBuilder\Program.cs:行 15
+====================================

@@ -1,17 +1,35 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
     public partial class ComponentPalette : FlowLayoutPanel
     {
+        
         /// <summary>
         /// 利用可能なコンポーネントリスト
         /// </summary>
-        public List<ComponentDescriptor> AvailableComponents { get; } = new List<ComponentDescriptor>();
+        public List<ComponentDescriptor> AvailableComponents
+        {
+            get => _availableComponents;
+            set
+            {
+                _availableComponents = value;
+                ValidateAndInitializeComponents();
+            }
+        }
+        private List<ComponentDescriptor> _availableComponents = new List<ComponentDescriptor>();
+        // 追加: 重複チェック用のコンポーネント名セット
+        private HashSet<string> _componentNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// データが有効かどうかを示すプロパティ
+        /// </summary>
+        public bool IsDataValid => _componentNames.Count > 0; // 改善: 計算プロパティに変更      
+ 
         /// <summary>
         /// 選択中のコンポーネント
         /// </summary>
@@ -23,7 +41,6 @@ namespace PowerSimBuilder
         public ComponentPalette()
         {
             InitializeComponent();
-            InitializeComponentPalette();
         }
 
         /// <summary>
@@ -40,114 +57,121 @@ namespace PowerSimBuilder
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.ResumeLayout(false);
         }
-
         /// <summary>
-        /// コンポーネントパレットの初期化
+        /// データを検証しコンポーネントを初期化
         /// </summary>
-        private void InitializeComponentPalette()
-        {
-            AddDefaultComponents();
-        }
-
         /// <summary>
-        /// デフォルトコンポーネントを追加する
+        /// データを検証しコンポーネントを初期化
         /// </summary>
-        private void AddDefaultComponents()
+        private void ValidateAndInitializeComponents()
         {
-            // 電圧形インバータ
-            AddComponent(new ComponentDescriptor
-            {
-                Name = "電圧形インバータ",
-                Type = "VoltageSourceInverter",
-                Icon = CreateIcon(new ComponentDescriptor { Type = "VoltageSourceInverter" }, Color.Red),
-                Category = "電源",
-                Parameters = new List<ParameterDescriptor>
-                {
-                    new ParameterDescriptor { Name = "V_dc", Type = "double", DefaultValue = 300 },
-                    new ParameterDescriptor { Name = "f_rated", Type = "double", DefaultValue = 60 }
-                },
-                InputPorts = new string[0], // 入力ポートなし
-                OutputPorts = new[] { "Output" }
-            });
+            // 既存のコントロールをクリア
+            this.Controls.Clear();
+            _componentNames.Clear(); // 名前セットをクリア
 
-            // 誘導電動機
-            AddComponent(new ComponentDescriptor
+            if (AvailableComponents == null || AvailableComponents.Count == 0)
             {
-                Name = "誘導電動機",
-                Type = "InductionMotor",
-                Icon = CreateIcon(new ComponentDescriptor { Type = "InductionMotor" }, Color.Blue),
-                Category = "負荷",
-                Parameters = new List<ParameterDescriptor>
-                {
-                    new ParameterDescriptor { Name = "R1", Type = "double", DefaultValue = 0.15 },
-                    new ParameterDescriptor { Name = "R2", Type = "double", DefaultValue = 0.25 },
-                    new ParameterDescriptor { Name = "Lm", Type = "double", DefaultValue = 0.008 },
-                    new ParameterDescriptor { Name = "J", Type = "double", DefaultValue = 0.02 },
-                    new ParameterDescriptor { Name = "B", Type = "double", DefaultValue = 0.005 },
-                    new ParameterDescriptor { Name = "poles", Type = "int", DefaultValue = 4 }
-                },
-                InputPorts = new[] { "VoltageInput" },
-                OutputPorts = new[] { "SpeedOutput", "CurrentOutput" }
-            });
+                MessageBox.Show("利用可能なコンポーネントがありません", "警告",
+                               MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-            // 機械負荷
-            AddComponent(new ComponentDescriptor
+            // 各コンポーネントを検証しながら追加
+            foreach (var component in AvailableComponents)
             {
-                Name = "機械負荷",
-                Type = "MechanicalLoad",
-                Icon = CreateIcon(new ComponentDescriptor { Type = "MechanicalLoad" }, Color.Green),
-                Category = "負荷",
-                Parameters = new List<ParameterDescriptor>
+                if (IsValidComponent(component))
                 {
-                    new ParameterDescriptor { Name = "load_type", Type = "string", DefaultValue = "constant" },
-                    new ParameterDescriptor { Name = "torque_coeff", Type = "double", DefaultValue = 0.1 }
-                },
-                InputPorts = new[] { "SpeedInput" },
-                OutputPorts = new[] { "TorqueOutput" }
-            });
-
-            // 故障監視システム
-            AddComponent(new ComponentDescriptor
-            {
-                Name = "故障監視システム",
-                Type = "FaultMonitor",
-                Icon = CreateIcon(new ComponentDescriptor { Type = "FaultMonitor" }, Color.Orange),
-                Category = "監視",
-                Parameters = new List<ParameterDescriptor>
-                {
-                    new ParameterDescriptor
+                    // 重複チェックを追加
+                    if (!_componentNames.Contains(component.Name))
                     {
-                        Name = "Conditions",
-                        Type = "List<FaultCondition>",
-                        DefaultValue = new List<FaultCondition>()
+                        _componentNames.Add(component.Name);
+                        CreateComponentButton(component);
                     }
-                },
-                InputPorts = new[] { "Input1", "Input2" },
-                OutputPorts = new string[0] // 出力ポートなし
-            });
+                    else
+                    {
+                        LogcatTraceHelper.Instance.LogError(component.Name, $"重複コンポーネントがスキップされました: {component.Name}");
+                    }
+                }
+                else
+                {
+                    LogcatTraceHelper.Instance.LogError(component.Name, $"無効なコンポーネント: {component.Name}");
+                }
+            }
         }
+
+        /// <summary>
+        /// コンポーネントが有効かどうかを検証
+        /// </summary>
+        private bool IsValidComponent(ComponentDescriptor component)
+        {
+            // 基本的な検証ルール
+            return !string.IsNullOrEmpty(component.Name) &&
+                   !string.IsNullOrEmpty(component.Type) &&
+                   component.Parameters != null &&
+                   component.InputPorts != null &&
+                   component.OutputPorts != null;
+        }
+
 
         /// <summary>
         /// コンポーネントを追加する
         /// </summary>
         public void AddComponent(ComponentDescriptor component)
         {
-            if (!AvailableComponents.Contains(component))
+            if (component == null)
             {
+                LogcatTraceHelper.Instance.LogError("AddComponent", "Null component");
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => AddComponent(component)));
+                return;
+            }
+
+            if (!IsValidComponent(component))
+            {
+                LogcatTraceHelper.Instance.LogError(component.Name, $"追加をスキップ: 無効なコンポーネント - {component.Name}");
+                MessageBox.Show("コンポーネント情報が不完全です", "追加エラー",
+                               MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (_componentNames.Contains(component.Name))
+            {
+                LogcatTraceHelper.Instance.LogError(component.Name, $"追加をスキップ: 重複コンポーネント - {component.Name}");
+                MessageBox.Show("同じ名前のコンポーネントが既に存在します", "追加エラー",
+                               MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                SuspendLayout();
+
                 AvailableComponents.Add(component);
+                _componentNames.Add(component.Name);
                 CreateComponentButton(component);
+
+                ResumeLayout(true);
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("AddComponent", ex.Message);
+                MessageBox.Show($"コンポーネント追加中にエラーが発生しました: {ex.Message}",
+                               "システムエラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         /// <summary>
-        /// コンポーネントボタンを作成する
+        /// コンポーネントボタンを作成する（以前の実装を保持）
         /// </summary>
         private void CreateComponentButton(ComponentDescriptor component)
         {
             var button = new Button
             {
                 Text = component.Name,
-                Image = component.Icon,
+                Image = CreateIcon(component, GetColorByType(component.Type)),
                 ImageAlign = ContentAlignment.MiddleLeft,
                 TextAlign = ContentAlignment.MiddleRight,
                 Tag = component,
@@ -168,7 +192,22 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// アイコン画像を作成する
+        /// コンポーネントタイプに基づいた色を取得（以前の実装を保持）
+        /// </summary>
+        private Color GetColorByType(string type)
+        {
+            switch (type)
+            {
+                case "VoltageSourceInverter": return Color.Red;
+                case "InductionMotor": return Color.Blue;
+                case "MechanicalLoad": return Color.Green;
+                case "FaultMonitor": return Color.Orange;
+                default: return Color.Gray;
+            }
+        }
+
+        /// <summary>
+        /// アイコン画像を作成する（以前の実装を保持）
         /// </summary>
         private Bitmap CreateIcon(ComponentDescriptor component, Color color)
         {
@@ -205,7 +244,7 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// コンポーネントボタンマウスダウンイベント
+        /// コンポーネントボタンマウスダウンイベント（以前の実装を保持）
         /// </summary>
         private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
         {
@@ -219,7 +258,7 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// コンポーネントボタンクリックイベント
+        /// コンポーネントボタンクリックイベント（以前の実装を保持）
         /// </summary>
         private void ComponentButton_Click(object sender, EventArgs e)
         {
@@ -240,12 +279,12 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// コンポーネント選択イベント
+        /// コンポーネント選択イベント（以前の実装を保持）
         /// </summary>
         public event EventHandler ComponentSelected;
 
         /// <summary>
-        /// コンポーネント選択イベントを発行する
+        /// コンポーネント選択イベントを発行する（以前の実装を保持）
         /// </summary>
         protected virtual void OnComponentSelected(EventArgs e)
         {

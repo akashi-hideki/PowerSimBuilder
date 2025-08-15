@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Windows.Forms;
 
@@ -25,6 +26,8 @@ namespace PowerSimBuilder
         {
             InitializeComponent();
             InitializeEventHandlers();
+            // 使用例
+            componentPalette1.AvailableComponents = ComponentDescriptorDictionary.Descriptors.Values.ToList();
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
             SubscribeToEvents();
 
