@@ -89,6 +89,7 @@ namespace PowerSimBuilder
                 if (form.ShowDialog() == DialogResult.OK && form.NewComponent != null)
                 {
                     componentPalette1.AddComponent(form.NewComponent);
+                    ComponentPaletteStorage.SaveDescriptors(componentPalette1.AvailableComponents);
                 }
             }
         }

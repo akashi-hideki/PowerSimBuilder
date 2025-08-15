@@ -96,7 +96,7 @@
       <ParameterDescriptor>
         <Name>Conditions</Name>
         <Type>List&lt;FaultCondition&gt;</Type>
-        <DefaultValue Type="System.Collections.Generic.List`1[[PowerSimBuilder.FaultCondition, PowerSimBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]">System.Collections.Generic.List`1[PowerSimBuilder.FaultCondition]</DefaultValue>
+        <DefaultValue Type="System.String">System.Collections.Generic.List`1[PowerSimBuilder.FaultCondition]</DefaultValue>
       </ParameterDescriptor>
     </Parameters>
     <InputPorts>
@@ -104,5 +104,17 @@
       <string>Input2</string>
     </InputPorts>
     <OutputPorts />
+  </ComponentDescriptor>
+  <ComponentDescriptor>
+    <Name>new</Name>
+    <Type>LL</Type>
+    <Category>KK</Category>
+    <Parameters />
+    <InputPorts>
+      <string>Input</string>
+    </InputPorts>
+    <OutputPorts>
+      <string>Output</string>
+    </OutputPorts>
   </ComponentDescriptor>
 </ArrayOfComponentDescriptor>
