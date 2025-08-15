@@ -102,7 +102,7 @@
     </Compile>
     <Compile Include="CanvasForm\ParameterItem.cs" />
     <Compile Include="CanvasForm\PointJsonConverter.cs" />
-    <Compile Include="PalletteDataDefine.cs" />
+    <Compile Include="CanvasForm\PalletteDataDefine.cs" />
     <Compile Include="SimPartsManege\ComponentDefinition.cs" />
     <Compile Include="SimPartsManege\ComponentDefinitionManager.cs" />
     <Compile Include="SimPartsManege\ComponentDescriptorDictionary.cs" />
