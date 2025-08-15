@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<ArrayOfComponentDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ComponentDescriptor>
+    <Name>電圧形インバータ</Name>
+    <Type>VoltageSourceInverter</Type>
+    <Category>電源</Category>
+    <Parameters>
+      <ParameterDescriptor>
+        <Name>V_dc</Name>
+        <Type>double</Type>
+        <DefaultValue Type="System.Int32">300</DefaultValue>
+      </ParameterDescriptor>
+      <ParameterDescriptor>
+        <Name>f_rated</Name>
+        <Type>double</Type>
+        <DefaultValue Type="System.Int32">60</DefaultValue>
+      </ParameterDescriptor>
+    </Parameters>
+    <InputPorts />
+    <OutputPorts>
+      <string>Output</string>
+    </OutputPorts>
+  </ComponentDescriptor>
+  <ComponentDescriptor>
+    <Name>誘導電動機</Name>
+    <Type>InductionMotor</Type>
+    <Category>負荷</Category>
+    <Parameters>
+      <ParameterDescriptor>
+        <Name>R1</Name>
+        <Type>double</Type>
+        <DefaultValue Type="System.Double">0.15</DefaultValue>
+      </ParameterDescriptor>
+      <ParameterDescriptor>
+        <Name>R2</Name>
+        <Type>double</Type>
+        <DefaultValue Type="System.Double">0.25</DefaultValue>
+      </ParameterDescriptor>
+      <ParameterDescriptor>
+        <Name>Lm</Name>
+        <Type>double</Type>
+        <DefaultValue Type="System.Double">0.008</DefaultValue>
+      </ParameterDescriptor>
+      <ParameterDescriptor>
+        <Name>J</Name>
+        <Type>double</Type>
+        <DefaultValue Type="System.Double">0.02</DefaultValue>
+      </ParameterDescriptor>
+      <ParameterDescriptor>
+        <Name>B</Name>
+        <Type>double</Type>
+        <DefaultValue Type="System.Double">0.005</DefaultValue>
+      </ParameterDescriptor>
+      <ParameterDescriptor>
+        <Name>poles</Name>
+        <Type>int</Type>
+        <DefaultValue Type="System.Int32">4</DefaultValue>
+      </ParameterDescriptor>
+    </Parameters>
+    <InputPorts>
+      <string>VoltageInput</string>
+    </InputPorts>
+    <OutputPorts>
+      <string>SpeedOutput</string>
+      <string>CurrentOutput</string>
+    </OutputPorts>
+  </ComponentDescriptor>
+  <ComponentDescriptor>
+    <Name>機械負荷</Name>
+    <Type>MechanicalLoad</Type>
+    <Category>負荷</Category>
+    <Parameters>
+      <ParameterDescriptor>
+        <Name>load_type</Name>
+        <Type>string</Type>
+        <DefaultValue Type="System.String">constant</DefaultValue>
+      </ParameterDescriptor>
+      <ParameterDescriptor>
+        <Name>torque_coeff</Name>
+        <Type>double</Type>
+        <DefaultValue Type="System.Double">0.1</DefaultValue>
+      </ParameterDescriptor>
+    </Parameters>
+    <InputPorts>
+      <string>SpeedInput</string>
+    </InputPorts>
+    <OutputPorts>
+      <string>TorqueOutput</string>
+    </OutputPorts>
+  </ComponentDescriptor>
+  <ComponentDescriptor>
+    <Name>故障監視システム</Name>
+    <Type>FaultMonitor</Type>
+    <Category>監視</Category>
+    <Parameters>
+      <ParameterDescriptor>
+        <Name>Conditions</Name>
+        <Type>List&lt;FaultCondition&gt;</Type>
+        <DefaultValue Type="System.Collections.Generic.List`1[[PowerSimBuilder.FaultCondition, PowerSimBuilder, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]">System.Collections.Generic.List`1[PowerSimBuilder.FaultCondition]</DefaultValue>
+      </ParameterDescriptor>
+    </Parameters>
+    <InputPorts>
+      <string>Input1</string>
+      <string>Input2</string>
+    </InputPorts>
+    <OutputPorts />
+  </ComponentDescriptor>
+</ArrayOfComponentDescriptor>

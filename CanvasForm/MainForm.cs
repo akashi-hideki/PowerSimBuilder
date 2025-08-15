@@ -17,17 +17,22 @@ namespace PowerSimBuilder
     {
         private readonly CanvasManager _canvasManager;
         private readonly PythonCodeGenerator _codeGenerator = new PythonCodeGenerator();
-
+   
         /// <summary>
         /// メインフォームのコンストラクタ
         /// 注意点: UIコンポーネントとイベントハンドラを初期化
         /// </summary>
         public MainForm()
         {
+            List<ComponentDescriptor> _components;
             InitializeComponent();
             InitializeEventHandlers();
             // 使用例
-            componentPalette1.AvailableComponents = ComponentDescriptorDictionary.Descriptors.Values.ToList();
+            //_paletteStorage = new ComponentPaletteStorage();
+            _components = ComponentPaletteStorage.LoadOrCreateDefault();
+
+            // componentPalette1.AvailableComponents = ComponentDescriptorDictionary.Descriptors.Values.ToList();
+            componentPalette1.AvailableComponents = _components;
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
             SubscribeToEvents();
 
