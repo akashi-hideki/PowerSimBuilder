@@ -38,6 +38,12 @@ namespace PowerSimBuilder
             this.paramListBox = new System.Windows.Forms.ListBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.lblInputPorts = new System.Windows.Forms.Label();
+            this.txtInputPorts = new System.Windows.Forms.TextBox();
+            this.lblOutputPorts = new System.Windows.Forms.Label();
+            this.txtOutputPorts = new System.Windows.Forms.TextBox();
+            this.btnEditParam = new System.Windows.Forms.Button();
+            this.btnDeleteParam = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lblName
@@ -87,26 +93,27 @@ namespace PowerSimBuilder
             // 
             // btnAddParam
             // 
-            this.btnAddParam.Location = new System.Drawing.Point(20, 110);
+            this.btnAddParam.Location = new System.Drawing.Point(20, 190);
             this.btnAddParam.Name = "btnAddParam";
-            this.btnAddParam.Size = new System.Drawing.Size(150, 30);
+            this.btnAddParam.Size = new System.Drawing.Size(100, 30);
             this.btnAddParam.TabIndex = 6;
-            this.btnAddParam.Text = "パラメータを追加";
+            this.btnAddParam.Text = "追加";
             this.btnAddParam.UseVisualStyleBackColor = true;
             this.btnAddParam.Click += new System.EventHandler(this.BtnAddParam_Click);
             // 
             // paramListBox
             // 
             this.paramListBox.FormattingEnabled = true;
-            this.paramListBox.Location = new System.Drawing.Point(20, 150);
+            this.paramListBox.Location = new System.Drawing.Point(20, 230);
             this.paramListBox.Name = "paramListBox";
             this.paramListBox.Size = new System.Drawing.Size(340, 120);
             this.paramListBox.TabIndex = 7;
+            this.paramListBox.DoubleClick += new System.EventHandler(this.paramListBox_DoubleClick);
             // 
             // btnOK
             // 
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(150, 280);
+            this.btnOK.Location = new System.Drawing.Point(150, 360);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(80, 30);
             this.btnOK.TabIndex = 8;
@@ -117,18 +124,74 @@ namespace PowerSimBuilder
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(250, 280);
+            this.btnCancel.Location = new System.Drawing.Point(250, 360);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(80, 30);
             this.btnCancel.TabIndex = 9;
             this.btnCancel.Text = "キャンセル";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
+            // lblInputPorts
+            // 
+            this.lblInputPorts.Location = new System.Drawing.Point(20, 110);
+            this.lblInputPorts.Name = "lblInputPorts";
+            this.lblInputPorts.Size = new System.Drawing.Size(80, 20);
+            this.lblInputPorts.TabIndex = 10;
+            this.lblInputPorts.Text = "入力ポート:";
+            // 
+            // txtInputPorts
+            // 
+            this.txtInputPorts.Location = new System.Drawing.Point(110, 110);
+            this.txtInputPorts.Name = "txtInputPorts";
+            this.txtInputPorts.Size = new System.Drawing.Size(250, 20);
+            this.txtInputPorts.TabIndex = 11;
+            // 
+            // lblOutputPorts
+            // 
+            this.lblOutputPorts.Location = new System.Drawing.Point(20, 140);
+            this.lblOutputPorts.Name = "lblOutputPorts";
+            this.lblOutputPorts.Size = new System.Drawing.Size(80, 20);
+            this.lblOutputPorts.TabIndex = 12;
+            this.lblOutputPorts.Text = "出力ポート:";
+            // 
+            // txtOutputPorts
+            // 
+            this.txtOutputPorts.Location = new System.Drawing.Point(110, 140);
+            this.txtOutputPorts.Name = "txtOutputPorts";
+            this.txtOutputPorts.Size = new System.Drawing.Size(250, 20);
+            this.txtOutputPorts.TabIndex = 13;
+            // 
+            // btnEditParam
+            // 
+            this.btnEditParam.Location = new System.Drawing.Point(130, 190);
+            this.btnEditParam.Name = "btnEditParam";
+            this.btnEditParam.Size = new System.Drawing.Size(100, 30);
+            this.btnEditParam.TabIndex = 14;
+            this.btnEditParam.Text = "編集";
+            this.btnEditParam.UseVisualStyleBackColor = true;
+            this.btnEditParam.Click += new System.EventHandler(this.BtnEditParam_Click);
+            // 
+            // btnDeleteParam
+            // 
+            this.btnDeleteParam.Location = new System.Drawing.Point(240, 190);
+            this.btnDeleteParam.Name = "btnDeleteParam";
+            this.btnDeleteParam.Size = new System.Drawing.Size(100, 30);
+            this.btnDeleteParam.TabIndex = 15;
+            this.btnDeleteParam.Text = "削除";
+            this.btnDeleteParam.UseVisualStyleBackColor = true;
+            this.btnDeleteParam.Click += new System.EventHandler(this.BtnDeleteParam_Click);
+            // 
             // AddComponentForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(400, 350);
+            this.ClientSize = new System.Drawing.Size(400, 400);
+            this.Controls.Add(this.btnDeleteParam);
+            this.Controls.Add(this.btnEditParam);
+            this.Controls.Add(this.txtOutputPorts);
+            this.Controls.Add(this.lblOutputPorts);
+            this.Controls.Add(this.txtInputPorts);
+            this.Controls.Add(this.lblInputPorts);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.paramListBox);
@@ -162,5 +225,11 @@ namespace PowerSimBuilder
         private System.Windows.Forms.ListBox paramListBox;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Label lblInputPorts;
+        private System.Windows.Forms.TextBox txtInputPorts;
+        private System.Windows.Forms.Label lblOutputPorts;
+        private System.Windows.Forms.TextBox txtOutputPorts;
+        private System.Windows.Forms.Button btnEditParam;
+        private System.Windows.Forms.Button btnDeleteParam;
     }
 }

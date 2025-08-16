@@ -165,6 +165,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CanvasForm\AddParameterForm.resx">
+      <DependentUpon>AddParameterForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SimRegistForm.resx">
       <DependentUpon>SimRegistForm.cs</DependentUpon>
     </EmbeddedResource>

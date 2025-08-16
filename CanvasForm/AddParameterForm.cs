@@ -35,12 +35,22 @@ namespace PowerSimBuilder
         public AddParameterForm()
         {
             InitializeComponent();
+            Text = "新規パラメータ追加";
+            cmbType.SelectedIndex = 0; // デフォルトで最初の項目を選択
         }
 
         /// <summary>
-        /// OKボタンクリック
-        /// 注意点: 入力内容を検証しパラメータを設定
-        /// </summary>
+        public AddParameterForm(ParameterDescriptor param) : this()
+        {
+            Text = "パラメータ編集";
+            btnOK.Text = "更新";
+            
+            // 既存データを設定
+            txtName.Text = param.Name;
+            cmbType.Text = param.Type;
+            txtDefaultValue.Text = param.DefaultValue?.ToString();
+        }
+
         private void BtnOK_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtName.Text))
@@ -51,39 +61,38 @@ namespace PowerSimBuilder
             }
 
             ParamName = txtName.Text;
-            ParamType = cmbType.SelectedItem?.ToString();
+            ParamType = cmbType.Text;
 
-            // 型選択チェック
-            if (string.IsNullOrEmpty(ParamType))
+            // デフォルト値の変換
+            try
             {
-                MessageBox.Show("パラメータ型を選択してください");
+                DefaultValue = ConvertValue(txtDefaultValue.Text, cmbType.Text);
+            }
+            catch (FormatException)
+            {
+                MessageBox.Show("デフォルト値が型に一致しません", "エラー",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.DialogResult = DialogResult.None;
                 return;
             }
+            
+            DialogResult = DialogResult.OK;
+        }
 
-            try
+        private object ConvertValue(string value, string type)
+        {
+            if (string.IsNullOrEmpty(value)) return null;
+
+            switch (type.ToLower())
             {
-                // 型に応じた値変換
-                switch (ParamType)
-                {
-                    case "double":
-                        DefaultValue = double.Parse(txtDefault.Text);
-                        break;
-                    case "int":
-                        DefaultValue = int.Parse(txtDefault.Text);
-                        break;
-                    case "bool":
-                        DefaultValue = bool.Parse(txtDefault.Text);
-                        break;
-                    default: // string
-                        DefaultValue = txtDefault.Text;
-                        break;
-                }
-            }
-            catch
-            {
-                MessageBox.Show("デフォルト値が型に一致しません");
-                this.DialogResult = DialogResult.None;
+                case "int": 
+                    return int.Parse(value);
+                case "double": 
+                    return double.Parse(value);
+                case "bool": 
+                    return bool.Parse(value);
+                default:
+                    return value;
             }
         }
     }

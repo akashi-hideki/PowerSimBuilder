@@ -86,9 +86,9 @@ namespace PowerSimBuilder
         {
             using (var form = new AddComponentForm())
             {
-                if (form.ShowDialog() == DialogResult.OK && form.NewComponent != null)
+                if (form.ShowDialog() == DialogResult.OK && form.ResultComponent != null)
                 {
-                    componentPalette1.AddComponent(form.NewComponent);
+                    componentPalette1.AddComponent(form.ResultComponent);
                     ComponentPaletteStorage.SaveDescriptors(componentPalette1.AvailableComponents);
                 }
             }
@@ -130,7 +130,59 @@ namespace PowerSimBuilder
                 designCanvas1.ArrangeComponents();
             }
         }
+        // パレットアイテム編集
+        private void EditPaletteButton_Click(object sender, EventArgs e)
+        {
+            if (componentPalette1.SelectedComponent == null)
+            {
+                MessageBox.Show("編集するコンポーネントを選択してください", "情報",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
 
+            using (var form = new AddComponentForm(componentPalette1.SelectedComponent))
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    // パレットを更新
+                    componentPalette1.UpdateComponent(componentPalette1.SelectedComponent, form.ResultComponent);
+
+                    // 変更を保存
+                    ComponentPaletteStorage.SaveDescriptors(componentPalette1.AvailableComponents);
+
+                    MessageBox.Show("コンポーネントを更新しました", "成功",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        // パレットアイテム削除
+        private void DeletePaletteButton_Click(object sender, EventArgs e)
+        {
+            if (componentPalette1.SelectedComponent == null)
+            {
+                MessageBox.Show("削除するコンポーネントを選択してください", "情報",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"コンポーネント '{componentPalette1.SelectedComponent.Name}' を削除しますか？",
+                "確認",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                componentPalette1.RemoveComponent(componentPalette1.SelectedComponent);
+
+                // 変更を保存
+                ComponentPaletteStorage.SaveDescriptors(componentPalette1.AvailableComponents);
+
+                MessageBox.Show("コンポーネントを削除しました", "成功",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
         /// <summary>
         /// 削除ボタンクリック
         /// 注意点: 選択中のコンポーネントまたは接続を削除

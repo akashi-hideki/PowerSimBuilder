@@ -33,31 +33,34 @@ namespace PowerSimBuilder
             this.lblType = new System.Windows.Forms.Label();
             this.cmbType = new System.Windows.Forms.ComboBox();
             this.lblDefault = new System.Windows.Forms.Label();
-            this.txtDefault = new System.Windows.Forms.TextBox();
+            this.txtDefaultValue = new System.Windows.Forms.TextBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lblName
             // 
-            this.lblName.Location = new System.Drawing.Point(20, 20);
+            this.lblName.Location = new System.Drawing.Point(27, 23);
+            this.lblName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblName.Name = "lblName";
-            this.lblName.Size = new System.Drawing.Size(80, 20);
+            this.lblName.Size = new System.Drawing.Size(107, 23);
             this.lblName.TabIndex = 0;
             this.lblName.Text = "名前:";
             // 
             // txtName
             // 
-            this.txtName.Location = new System.Drawing.Point(110, 20);
+            this.txtName.Location = new System.Drawing.Point(147, 23);
+            this.txtName.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.txtName.Name = "txtName";
-            this.txtName.Size = new System.Drawing.Size(150, 20);
+            this.txtName.Size = new System.Drawing.Size(199, 22);
             this.txtName.TabIndex = 1;
             // 
             // lblType
             // 
-            this.lblType.Location = new System.Drawing.Point(20, 50);
+            this.lblType.Location = new System.Drawing.Point(27, 58);
+            this.lblType.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblType.Name = "lblType";
-            this.lblType.Size = new System.Drawing.Size(80, 20);
+            this.lblType.Size = new System.Drawing.Size(107, 23);
             this.lblType.TabIndex = 2;
             this.lblType.Text = "タイプ:";
             // 
@@ -70,32 +73,36 @@ namespace PowerSimBuilder
             "int",
             "string",
             "bool"});
-            this.cmbType.Location = new System.Drawing.Point(110, 50);
+            this.cmbType.Location = new System.Drawing.Point(147, 58);
+            this.cmbType.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.cmbType.Name = "cmbType";
-            this.cmbType.Size = new System.Drawing.Size(150, 21);
+            this.cmbType.Size = new System.Drawing.Size(199, 23);
             this.cmbType.TabIndex = 3;
             // 
             // lblDefault
             // 
-            this.lblDefault.Location = new System.Drawing.Point(20, 80);
+            this.lblDefault.Location = new System.Drawing.Point(27, 92);
+            this.lblDefault.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblDefault.Name = "lblDefault";
-            this.lblDefault.Size = new System.Drawing.Size(80, 20);
+            this.lblDefault.Size = new System.Drawing.Size(107, 23);
             this.lblDefault.TabIndex = 4;
             this.lblDefault.Text = "デフォルト値:";
             // 
-            // txtDefault
+            // txtDefaultValue
             // 
-            this.txtDefault.Location = new System.Drawing.Point(110, 80);
-            this.txtDefault.Name = "txtDefault";
-            this.txtDefault.Size = new System.Drawing.Size(150, 20);
-            this.txtDefault.TabIndex = 5;
+            this.txtDefaultValue.Location = new System.Drawing.Point(147, 92);
+            this.txtDefaultValue.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.txtDefaultValue.Name = "txtDefaultValue";
+            this.txtDefaultValue.Size = new System.Drawing.Size(199, 22);
+            this.txtDefaultValue.TabIndex = 5;
             // 
             // btnOK
             // 
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(80, 120);
+            this.btnOK.Location = new System.Drawing.Point(107, 138);
+            this.btnOK.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(80, 30);
+            this.btnOK.Size = new System.Drawing.Size(107, 35);
             this.btnOK.TabIndex = 6;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
@@ -104,27 +111,29 @@ namespace PowerSimBuilder
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(180, 120);
+            this.btnCancel.Location = new System.Drawing.Point(240, 138);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(80, 30);
+            this.btnCancel.Size = new System.Drawing.Size(107, 35);
             this.btnCancel.TabIndex = 7;
             this.btnCancel.Text = "キャンセル";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // AddParameterForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(300, 200);
+            this.ClientSize = new System.Drawing.Size(400, 231);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
-            this.Controls.Add(this.txtDefault);
+            this.Controls.Add(this.txtDefaultValue);
             this.Controls.Add(this.lblDefault);
             this.Controls.Add(this.cmbType);
             this.Controls.Add(this.lblType);
             this.Controls.Add(this.txtName);
             this.Controls.Add(this.lblName);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AddParameterForm";
@@ -142,7 +151,7 @@ namespace PowerSimBuilder
         private System.Windows.Forms.Label lblType;
         private System.Windows.Forms.ComboBox cmbType;
         private System.Windows.Forms.Label lblDefault;
-        private System.Windows.Forms.TextBox txtDefault;
+        private System.Windows.Forms.TextBox txtDefaultValue;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
     }

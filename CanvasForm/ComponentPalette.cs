@@ -277,7 +277,90 @@ namespace PowerSimBuilder
                 }
             }
         }
+        /// <summary>
+        /// コンポーネントを更新する
+        /// </summary>
+        public void UpdateComponent(ComponentDescriptor original, ComponentDescriptor updated)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateComponent(original, updated)));
+                return;
+            }
 
+            if (original == null || updated == null) return;
+
+            // 名前が変更された場合の重複チェック
+            if (original.Name != updated.Name && _componentNames.Contains(updated.Name))
+            {
+                MessageBox.Show("この名前は既に使用されています", "エラー",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // コンポーネントリストを更新
+            int index = AvailableComponents.IndexOf(original);
+            if (index >= 0)
+            {
+                AvailableComponents[index] = updated;
+
+                // 名前セットを更新
+                _componentNames.Remove(original.Name);
+                _componentNames.Add(updated.Name);
+
+                // 対応するボタンを更新
+                var button = Controls.OfType<Button>().FirstOrDefault(b => b.Tag == original);
+                if (button != null)
+                {
+                    button.Text = updated.Name;
+                    button.Tag = updated;
+                    button.Image = CreateIcon(updated, GetColorByType(updated.Type));
+                }
+
+                // 選択中のコンポーネントを更新
+                if (SelectedComponent == original)
+                {
+                    SelectedComponent = updated;
+                }
+            }
+        }
+
+        /// <summary>
+        /// コンポーネントを削除する
+        /// </summary>
+        public void RemoveComponent(ComponentDescriptor component)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => RemoveComponent(component)));
+                return;
+            }
+
+            if (component == null) return;
+
+            // 名前セットから削除
+            _componentNames.Remove(component.Name);
+
+            // リストから削除
+            AvailableComponents.Remove(component);
+
+            // 対応するボタンを削除
+            var button = Controls.OfType<Button>().FirstOrDefault(b => b.Tag == component);
+            if (button != null)
+            {
+                Controls.Remove(button);
+                button.Dispose();
+            }
+
+            // 選択中のコンポーネントをクリア
+            if (SelectedComponent == component)
+            {
+                SelectedComponent = null;
+            }
+
+            // 状態フラグ更新
+            //IsDataValid = AvailableComponents.Count > 0;
+        }
         /// <summary>
         /// コンポーネント選択イベント（以前の実装を保持）
         /// </summary>
