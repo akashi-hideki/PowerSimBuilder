@@ -15,8 +15,9 @@ namespace PowerSimBuilder
     /// </summary>
     public partial class MainForm : Form
     {
-        private readonly CanvasManager _canvasManager;
+        private CanvasManager _canvasManager;
         private readonly PythonCodeGenerator _codeGenerator = new PythonCodeGenerator();
+        private List<ComponentDescriptor> _components;
 
         /// <summary>
         /// メインフォームのコンストラクタ
@@ -24,42 +25,55 @@ namespace PowerSimBuilder
         /// </summary>
         public MainForm()
         {
-            List<ComponentDescriptor> _components;
             InitializeComponent();
-            InitializeEventHandlers();
-            // 使用例
-            //_paletteStorage = new ComponentPaletteStorage();
-            _components = ComponentPaletteStorage.LoadOrCreateDefault();
- 
+        }
+        /// <summary>
+        /// Load Event Override
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
 
-            // componentPalette1.AvailableComponents = ComponentDescriptorDictionary.Descriptors.Values.ToList();
+            // デザイン時は初期化をスキップ
+            if (DesignMode) return;
+
+            InitializeRuntimeComponents();
+        }
+
+        private void InitializeRuntimeComponents()
+        {
+            InitializeEventHandlers();
+
+            _components = ComponentPaletteStorage.LoadOrCreateDefault();
             componentPalette1.AvailableComponents = _components;
+
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
             SubscribeToEvents();
 
+            // デザイナーファイルから移動した設定
             designCanvas1.ConnectionRenderer = new BezierConnectionRenderer();
             designCanvas1.ConnectionSelected += DesignCanvas_ConnectionSelected;
         }
-
         /// <summary>
         /// イベントハンドラを初期化
         /// 注意点: ツールバーボタンとプロパティグリッドのイベントを登録
         /// </summary>
+
         private void InitializeEventHandlers()
         {
-            addButton.Click += AddComponentToolStripButton_Click;
+            addButton.Click += addButton_Click; // 追加: イベントハンドラ登録
             saveButton.Click += saveButton_Click;
             loadButton.Click += loadButton_Click;
             undoButton.Click += undoButton_Click;
             redoButton.Click += redoButton_Click;
             runButton.Click += runButton_Click;
-            deleteButton.Click += deleteButton_Click; // パレット削除用（新規追加）
+            deleteButton.Click += deleteButton_Click;
             arrangeButton.Click += arrangeButton_Click;
-            editButton.Click += EditPaletteButton_Click; // 追加
-            removePalletButton.Click += DeletePaletteButton_Click; // 変更（既存の削除ボタンを再利用）
+            editButton.Click += editPaletteButton_Click;
+            removePalletButton.Click += deletePaletteButton_Click;
             propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
         }
-
         /// <summary>
         /// イベント購読を設定
         /// 注意点: キャンバス管理クラスのイベントを購読
@@ -128,12 +142,11 @@ namespace PowerSimBuilder
             {
                 Point center = new Point(designCanvas1.Width / 2, designCanvas1.Height / 2);
                 _canvasManager.AddComponent(selectedDescriptor, center);
-
-                // 自動配置実行
                 designCanvas1.ArrangeComponents();
             }
         }
-        private void EditPaletteButton_Click(object sender, EventArgs e)
+
+        private void editPaletteButton_Click(object sender, EventArgs e)
         {
             if (componentPalette1.SelectedComponent == null)
             {
@@ -170,7 +183,7 @@ namespace PowerSimBuilder
         }
 
         // パレットアイテム削除
-        private void DeletePaletteButton_Click(object sender, EventArgs e)
+        private void deletePaletteButton_Click(object sender, EventArgs e)
         {
             if (componentPalette1.SelectedComponent == null)
             {

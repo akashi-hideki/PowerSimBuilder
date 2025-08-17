@@ -29,7 +29,6 @@ namespace PowerSimBuilder
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            PowerSimBuilder.BezierConnectionRenderer bezierConnectionRenderer1 = new PowerSimBuilder.BezierConnectionRenderer();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.saveButton = new System.Windows.Forms.ToolStripButton();
             this.loadButton = new System.Windows.Forms.ToolStripButton();
@@ -39,11 +38,11 @@ namespace PowerSimBuilder
             this.runButton = new System.Windows.Forms.ToolStripButton();
             this.arrangeButton = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.designCanvas1 = new PowerSimBuilder.DesignCanvas();
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.addButton = new System.Windows.Forms.Button();
             this.editButton = new System.Windows.Forms.Button();
             this.removePalletButton = new System.Windows.Forms.Button();
-            this.designCanvas1 = new PowerSimBuilder.DesignCanvas();
             this.componentPalette1 = new PowerSimBuilder.ComponentPalette();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -65,7 +64,7 @@ namespace PowerSimBuilder
             this.arrangeButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1179, 27);
+            this.toolStrip1.Size = new System.Drawing.Size(1179, 31);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -74,7 +73,7 @@ namespace PowerSimBuilder
             this.saveButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.saveButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.saveButton.Name = "saveButton";
-            this.saveButton.Size = new System.Drawing.Size(43, 24);
+            this.saveButton.Size = new System.Drawing.Size(43, 28);
             this.saveButton.Text = "保存";
             // 
             // loadButton
@@ -82,7 +81,7 @@ namespace PowerSimBuilder
             this.loadButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.loadButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.loadButton.Name = "loadButton";
-            this.loadButton.Size = new System.Drawing.Size(69, 24);
+            this.loadButton.Size = new System.Drawing.Size(69, 28);
             this.loadButton.Text = "読み込み";
             // 
             // undoButton
@@ -90,7 +89,7 @@ namespace PowerSimBuilder
             this.undoButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.undoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.undoButton.Name = "undoButton";
-            this.undoButton.Size = new System.Drawing.Size(67, 24);
+            this.undoButton.Size = new System.Drawing.Size(67, 28);
             this.undoButton.Text = "元に戻す";
             // 
             // redoButton
@@ -98,7 +97,7 @@ namespace PowerSimBuilder
             this.redoButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.redoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.redoButton.Name = "redoButton";
-            this.redoButton.Size = new System.Drawing.Size(61, 24);
+            this.redoButton.Size = new System.Drawing.Size(61, 28);
             this.redoButton.Text = "やり直し";
             // 
             // deleteButton
@@ -107,7 +106,7 @@ namespace PowerSimBuilder
             this.deleteButton.Image = ((System.Drawing.Image)(resources.GetObject("deleteButton.Image")));
             this.deleteButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.deleteButton.Name = "deleteButton";
-            this.deleteButton.Size = new System.Drawing.Size(121, 24);
+            this.deleteButton.Size = new System.Drawing.Size(121, 28);
             this.deleteButton.Text = "キャンバスから削除";
             this.deleteButton.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
             // 
@@ -116,7 +115,7 @@ namespace PowerSimBuilder
             this.runButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.runButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.runButton.Name = "runButton";
-            this.runButton.Size = new System.Drawing.Size(43, 24);
+            this.runButton.Size = new System.Drawing.Size(43, 28);
             this.runButton.Text = "実行";
             // 
             // arrangeButton
@@ -124,13 +123,13 @@ namespace PowerSimBuilder
             this.arrangeButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.arrangeButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.arrangeButton.Name = "arrangeButton";
-            this.arrangeButton.Size = new System.Drawing.Size(73, 24);
+            this.arrangeButton.Size = new System.Drawing.Size(73, 28);
             this.arrangeButton.Text = "配置整理";
             // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(266, 27);
+            this.splitContainer1.Location = new System.Drawing.Point(266, 31);
             this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.splitContainer1.Name = "splitContainer1";
             // 
@@ -141,10 +140,21 @@ namespace PowerSimBuilder
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.propertyGrid1);
-            this.splitContainer1.Size = new System.Drawing.Size(913, 492);
+            this.splitContainer1.Size = new System.Drawing.Size(913, 488);
             this.splitContainer1.SplitterDistance = 608;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 1;
+            // 
+            // designCanvas1
+            // 
+            this.designCanvas1.AllowDrop = true;
+            this.designCanvas1.BackColor = System.Drawing.Color.White;
+            this.designCanvas1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.designCanvas1.Location = new System.Drawing.Point(0, 0);
+            this.designCanvas1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.designCanvas1.Name = "designCanvas1";
+            this.designCanvas1.Size = new System.Drawing.Size(608, 488);
+            this.designCanvas1.TabIndex = 0;
             // 
             // propertyGrid1
             // 
@@ -152,7 +162,7 @@ namespace PowerSimBuilder
             this.propertyGrid1.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(300, 492);
+            this.propertyGrid1.Size = new System.Drawing.Size(300, 488);
             this.propertyGrid1.TabIndex = 0;
             // 
             // addButton
@@ -188,18 +198,6 @@ namespace PowerSimBuilder
             this.removePalletButton.Text = "削除";
             this.removePalletButton.UseVisualStyleBackColor = true;
             // 
-            // designCanvas1
-            // 
-            this.designCanvas1.AllowDrop = true;
-            this.designCanvas1.BackColor = System.Drawing.Color.White;
-            this.designCanvas1.ConnectionRenderer = bezierConnectionRenderer1;
-            this.designCanvas1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.designCanvas1.Location = new System.Drawing.Point(0, 0);
-            this.designCanvas1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.designCanvas1.Name = "designCanvas1";
-            this.designCanvas1.Size = new System.Drawing.Size(608, 492);
-            this.designCanvas1.TabIndex = 0;
-            // 
             // componentPalette1
             // 
             this.componentPalette1.AutoScroll = true;
@@ -207,10 +205,10 @@ namespace PowerSimBuilder
             this.componentPalette1.BackColor = System.Drawing.Color.White;
             this.componentPalette1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.componentPalette1.Dock = System.Windows.Forms.DockStyle.Left;
-            this.componentPalette1.Location = new System.Drawing.Point(0, 27);
+            this.componentPalette1.Location = new System.Drawing.Point(0, 31);
             this.componentPalette1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.componentPalette1.Name = "componentPalette1";
-            this.componentPalette1.Size = new System.Drawing.Size(266, 492);
+            this.componentPalette1.Size = new System.Drawing.Size(266, 488);
             this.componentPalette1.TabIndex = 2;
             // 
             // MainForm

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace PowerSimBuilder
     /// 作成日: 2025-08-12
     /// 注意点: コンポーネントと接続の描画・管理を担当
     /// </summary>
+    [DesignerCategory("Code")] // デザイナーコード生成を抑制
     public partial class DesignCanvas : Panel
     {
         // イベント定義
@@ -21,6 +23,7 @@ namespace PowerSimBuilder
         public event EventHandler<ComponentEventArgs> ComponentSelected;
         public event EventHandler<ConnectionEventArgs> ConnectionAdded;
         public event EventHandler<ConnectionEventArgs> ConnectionRemoved;
+        [Browsable(false)]
         public event EventHandler<ConnectionEventArgs> ConnectionSelected;
 
         // 内部状態管理
@@ -63,6 +66,9 @@ namespace PowerSimBuilder
         /// 接続レンダラー
         /// 注意点: 描画スタイルを動的変更可能
         /// </summary>
+        // デザイン時に問題になるプロパティを非表示
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ConnectionRenderer ConnectionRenderer { get; set; } = new BezierConnectionRenderer();
 
         /// <summary>
