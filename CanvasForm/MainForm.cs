@@ -30,6 +30,7 @@ namespace PowerSimBuilder
             // 使用例
             //_paletteStorage = new ComponentPaletteStorage();
             _components = ComponentPaletteStorage.LoadOrCreateDefault();
+ 
 
             // componentPalette1.AvailableComponents = ComponentDescriptorDictionary.Descriptors.Values.ToList();
             componentPalette1.AvailableComponents = _components;
@@ -68,6 +69,7 @@ namespace PowerSimBuilder
             _canvasManager.CanvasModified += CanvasManager_CanvasModified;
             _canvasManager.SelectionChanged += CanvasManager_SelectionChanged;
             componentPalette1.ComponentSelected += ComponentPalette_ComponentSelected;
+
         }
 
         /// <summary>
@@ -77,6 +79,7 @@ namespace PowerSimBuilder
         private void ComponentPalette_ComponentSelected(object sender, EventArgs e)
         {
             addButton.Enabled = (componentPalette1.SelectedComponent != null);
+            LogcatTraceHelper.Instance.SimpleMessage("Pallet Event", "pallet Selected ");
         }
 
         /// <summary>

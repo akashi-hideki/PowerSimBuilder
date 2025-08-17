@@ -112,10 +112,11 @@ namespace PowerSimBuilder
         /// マウスダウンイベント処理
         /// 注意点: ポートクリック検出と選択状態更新
         /// </summary>
-
+        // ComponentControl.cs
         private void ComponentControl_MouseDown(object sender, MouseEventArgs e)
         {
             this.Focus();
+            bool portClicked = false;
 
             // 入力ポートチェック
             if (Descriptor.InputPorts != null)
@@ -129,13 +130,14 @@ namespace PowerSimBuilder
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
                     {
                         PortClicked?.Invoke(this, new PortEventArgs(Descriptor.InputPorts[i]));
-                        return;
+                        portClicked = true;
+                        break; // ループから抜けるが処理は続行
                     }
                 }
             }
 
-            // 出力ポートチェック
-            if (Descriptor.OutputPorts != null)
+            // 出力ポートチェック（入力ポート未クリック時のみ）
+            if (!portClicked && Descriptor.OutputPorts != null)
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
@@ -146,13 +148,18 @@ namespace PowerSimBuilder
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
                     {
                         PortClicked?.Invoke(this, new PortEventArgs(Descriptor.OutputPorts[i]));
-                        return;
+                        portClicked = true;
+                        break;
                     }
                 }
             }
 
-            IsSelected = true;
-            BringToFront();
+            // ポートがクリックされなかった場合のみ選択状態を更新
+            if (!portClicked)
+            {
+                IsSelected = true;
+                BringToFront();
+            }
         }
         /// <summary>
         /// マウス移動

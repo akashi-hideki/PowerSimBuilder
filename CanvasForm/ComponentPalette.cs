@@ -187,7 +187,7 @@ namespace PowerSimBuilder
             button.FlatAppearance.BorderColor = Color.LightGray;
 
             button.MouseDown += ComponentButton_MouseDown;
-            button.Click += ComponentButton_Click;
+            // button.Click += ComponentButton_Click;
 
             this.Controls.Add(button);
         }
@@ -252,12 +252,27 @@ namespace PowerSimBuilder
             var button = (Button)sender;
             var component = (ComponentDescriptor)button.Tag;
 
-            var data = new DataObject();
-            data.SetData("ComponentDescriptor", component);
+            // 選択状態を更新（クリックイベントの代わり）
+            SelectedComponent = component;
+            OnComponentSelected(EventArgs.Empty);
 
-            button.DoDragDrop(data, DragDropEffects.Copy);
+            // 選択されたボタンを強調表示
+            foreach (Control control in Controls)
+            {
+                if (control is Button btn)
+                {
+                    btn.BackColor = (btn == button) ? Color.LightBlue : Color.WhiteSmoke;
+                }
+            }
+
+            // ドラッグ操作は右クリック時のみ実行
+            if (e.Button == MouseButtons.Right)
+            {
+                var data = new DataObject();
+                data.SetData("ComponentDescriptor", component);
+                button.DoDragDrop(data, DragDropEffects.Copy);
+            }
         }
-
         /// <summary>
         /// コンポーネントボタンクリックイベント（以前の実装を保持）
         /// </summary>

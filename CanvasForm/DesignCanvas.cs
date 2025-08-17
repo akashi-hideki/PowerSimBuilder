@@ -80,7 +80,6 @@ namespace PowerSimBuilder
             InitializeComponent();
             DoubleBuffered = true;
             AllowDrop = true;
-
             this.DragEnter += DesignCanvas_DragEnter;
             this.DragDrop += DesignCanvas_DragDrop;
         }

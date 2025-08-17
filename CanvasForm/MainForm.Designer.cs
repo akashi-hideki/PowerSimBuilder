@@ -201,7 +201,8 @@ namespace PowerSimBuilder
             // editButton
             // 
             this.editButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.editButton.Enabled = false;
+            // 変更点: Enabledをtrueに設定
+            this.editButton.Enabled = true;
             this.editButton.Location = new System.Drawing.Point(138, 479);
             this.editButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.editButton.Name = "editButton";
