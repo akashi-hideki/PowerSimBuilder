@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace PowerSimBuilder
@@ -16,7 +17,6 @@ namespace PowerSimBuilder
         /// 新規コンポーネント
         /// 注意点: フォーム完了時に設定される
         /// </summary>
-
         public ComponentDescriptor ResultComponent { get; private set; }
         private List<ParameterDescriptor> _parameters = new List<ParameterDescriptor>();
         
@@ -28,6 +28,7 @@ namespace PowerSimBuilder
         public AddComponentForm()
         {
             InitializeComponent();
+            InitializePortGrids();
             Text = "新規コンポーネント追加";
             btnOK.Text = "追加";
             btnDeleteParam.Visible = false; // 新規追加時は削除ボタンを非表示
@@ -48,14 +49,38 @@ namespace PowerSimBuilder
             txtCategory.Text = component.Category;
             
             // 入力ポート
-            txtInputPorts.Text = string.Join(",", component.InputPorts);
+            foreach (var port in component.InputPorts)
+            {
+                inputPortsGrid.Rows.Add(port);
+            }
             
             // 出力ポート
-            txtOutputPorts.Text = string.Join(",", component.OutputPorts);
+            foreach (var port in component.OutputPorts)
+            {
+                outputPortsGrid.Rows.Add(port);
+            }
             
             // パラメータ
             _parameters = new List<ParameterDescriptor>(component.Parameters);
             RefreshParameterList();
+        }
+
+        // ポートグリッドの初期化
+        private void InitializePortGrids()
+        {
+            // 入力ポートグリッド
+            inputPortsGrid.Columns.Clear();
+            inputPortsGrid.Columns.Add("PortName", "ポート名");
+            inputPortsGrid.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            inputPortsGrid.AllowUserToAddRows = false;
+            inputPortsGrid.RowHeadersVisible = false;
+            
+            // 出力ポートグリッド
+            outputPortsGrid.Columns.Clear();
+            outputPortsGrid.Columns.Add("PortName", "ポート名");
+            outputPortsGrid.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            outputPortsGrid.AllowUserToAddRows = false;
+            outputPortsGrid.RowHeadersVisible = false;
         }
 
         // パラメータリストを更新
@@ -149,12 +174,47 @@ namespace PowerSimBuilder
             }
 
             // 入力ポートの処理
-            var inputPorts = txtInputPorts.Text.Split(
-                new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            var inputPorts = new List<string>();
+            foreach (DataGridViewRow row in inputPortsGrid.Rows)
+            {
+                if (row.Cells[0].Value != null && !string.IsNullOrWhiteSpace(row.Cells[0].Value.ToString()))
+                {
+                    inputPorts.Add(row.Cells[0].Value.ToString().Trim());
+                }
+            }
             
             // 出力ポートの処理
-            var outputPorts = txtOutputPorts.Text.Split(
-                new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            var outputPorts = new List<string>();
+            foreach (DataGridViewRow row in outputPortsGrid.Rows)
+            {
+                if (row.Cells[0].Value != null && !string.IsNullOrWhiteSpace(row.Cells[0].Value.ToString()))
+                {
+                    outputPorts.Add(row.Cells[0].Value.ToString().Trim());
+                }
+            }
+
+            // ポートのバリデーション
+            if (inputPorts.Count == 0 || outputPorts.Count == 0)
+            {
+                MessageBox.Show("入力ポートと出力ポートは少なくとも1つ必要です");
+                DialogResult = DialogResult.None;
+                return;
+            }
+            
+            if (inputPorts.Any(string.IsNullOrWhiteSpace) || outputPorts.Any(string.IsNullOrWhiteSpace))
+            {
+                MessageBox.Show("ポート名は空にできません");
+                DialogResult = DialogResult.None;
+                return;
+            }
+            
+            if (inputPorts.Count != inputPorts.Distinct().Count() || 
+                outputPorts.Count != outputPorts.Distinct().Count())
+            {
+                MessageBox.Show("ポート名は一意である必要があります");
+                DialogResult = DialogResult.None;
+                return;
+            }
 
             ResultComponent = new ComponentDescriptor
             {
@@ -164,8 +224,8 @@ namespace PowerSimBuilder
                 Parameters = new List<ParameterDescriptor>(_parameters),
                 Icon = _isEditMode && _originalComponent?.Icon != null ? 
                     _originalComponent.Icon : GenerateIcon(txtType.Text),
-                InputPorts = inputPorts,
-                OutputPorts = outputPorts
+                InputPorts = inputPorts.ToArray(),
+                OutputPorts = outputPorts.ToArray()
             };
         }
 
@@ -200,6 +260,48 @@ namespace PowerSimBuilder
         private void paramListBox_DoubleClick(object sender, EventArgs e)
         {
             BtnEditParam_Click(sender, e);
+        }
+
+        // 入力ポート追加
+        private void btnAddInputPort_Click(object sender, EventArgs e)
+        {
+            inputPortsGrid.Rows.Add("NewPort");
+        }
+
+        // 入力ポート削除
+        private void btnRemoveInputPort_Click(object sender, EventArgs e)
+        {
+            if (inputPortsGrid.SelectedRows.Count > 0)
+            {
+                foreach (DataGridViewRow row in inputPortsGrid.SelectedRows)
+                {
+                    if (!row.IsNewRow)
+                    {
+                        inputPortsGrid.Rows.Remove(row);
+                    }
+                }
+            }
+        }
+
+        // 出力ポート追加
+        private void btnAddOutputPort_Click(object sender, EventArgs e)
+        {
+            outputPortsGrid.Rows.Add("NewPort");
+        }
+
+        // 出力ポート削除
+        private void btnRemoveOutputPort_Click(object sender, EventArgs e)
+        {
+            if (outputPortsGrid.SelectedRows.Count > 0)
+            {
+                foreach (DataGridViewRow row in outputPortsGrid.SelectedRows)
+                {
+                    if (!row.IsNewRow)
+                    {
+                        outputPortsGrid.Rows.Remove(row);
+                    }
+                }
+            }
         }
     }
 }

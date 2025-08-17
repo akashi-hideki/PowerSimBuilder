@@ -38,12 +38,18 @@ namespace PowerSimBuilder
             this.paramListBox = new System.Windows.Forms.ListBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.lblInputPorts = new System.Windows.Forms.Label();
-            this.txtInputPorts = new System.Windows.Forms.TextBox();
-            this.lblOutputPorts = new System.Windows.Forms.Label();
-            this.txtOutputPorts = new System.Windows.Forms.TextBox();
             this.btnEditParam = new System.Windows.Forms.Button();
             this.btnDeleteParam = new System.Windows.Forms.Button();
+            this.lblInputPorts = new System.Windows.Forms.Label();
+            this.inputPortsGrid = new System.Windows.Forms.DataGridView();
+            this.lblOutputPorts = new System.Windows.Forms.Label();
+            this.outputPortsGrid = new System.Windows.Forms.DataGridView();
+            this.btnAddInputPort = new System.Windows.Forms.Button();
+            this.btnRemoveInputPort = new System.Windows.Forms.Button();
+            this.btnAddOutputPort = new System.Windows.Forms.Button();
+            this.btnRemoveOutputPort = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.inputPortsGrid)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.outputPortsGrid)).BeginInit();
             this.SuspendLayout();
             // 
             // lblName
@@ -93,7 +99,7 @@ namespace PowerSimBuilder
             // 
             // btnAddParam
             // 
-            this.btnAddParam.Location = new System.Drawing.Point(20, 190);
+            this.btnAddParam.Location = new System.Drawing.Point(20, 320);
             this.btnAddParam.Name = "btnAddParam";
             this.btnAddParam.Size = new System.Drawing.Size(100, 30);
             this.btnAddParam.TabIndex = 6;
@@ -104,66 +110,36 @@ namespace PowerSimBuilder
             // paramListBox
             // 
             this.paramListBox.FormattingEnabled = true;
-            this.paramListBox.Location = new System.Drawing.Point(20, 230);
+            this.paramListBox.Location = new System.Drawing.Point(20, 360);
             this.paramListBox.Name = "paramListBox";
-            this.paramListBox.Size = new System.Drawing.Size(340, 120);
+            this.paramListBox.Size = new System.Drawing.Size(340, 95);
             this.paramListBox.TabIndex = 7;
             this.paramListBox.DoubleClick += new System.EventHandler(this.paramListBox_DoubleClick);
             // 
             // btnOK
             // 
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(150, 360);
+            this.btnOK.Location = new System.Drawing.Point(150, 460);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(80, 30);
             this.btnOK.TabIndex = 8;
-            this.btnOK.Text = "OK";
+            this.btnOK.Text = "追加";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.BtnOK_Click);
             // 
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(250, 360);
+            this.btnCancel.Location = new System.Drawing.Point(250, 460);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(80, 30);
             this.btnCancel.TabIndex = 9;
             this.btnCancel.Text = "キャンセル";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // lblInputPorts
-            // 
-            this.lblInputPorts.Location = new System.Drawing.Point(20, 110);
-            this.lblInputPorts.Name = "lblInputPorts";
-            this.lblInputPorts.Size = new System.Drawing.Size(80, 20);
-            this.lblInputPorts.TabIndex = 10;
-            this.lblInputPorts.Text = "入力ポート:";
-            // 
-            // txtInputPorts
-            // 
-            this.txtInputPorts.Location = new System.Drawing.Point(110, 110);
-            this.txtInputPorts.Name = "txtInputPorts";
-            this.txtInputPorts.Size = new System.Drawing.Size(250, 20);
-            this.txtInputPorts.TabIndex = 11;
-            // 
-            // lblOutputPorts
-            // 
-            this.lblOutputPorts.Location = new System.Drawing.Point(20, 140);
-            this.lblOutputPorts.Name = "lblOutputPorts";
-            this.lblOutputPorts.Size = new System.Drawing.Size(80, 20);
-            this.lblOutputPorts.TabIndex = 12;
-            this.lblOutputPorts.Text = "出力ポート:";
-            // 
-            // txtOutputPorts
-            // 
-            this.txtOutputPorts.Location = new System.Drawing.Point(110, 140);
-            this.txtOutputPorts.Name = "txtOutputPorts";
-            this.txtOutputPorts.Size = new System.Drawing.Size(250, 20);
-            this.txtOutputPorts.TabIndex = 13;
-            // 
             // btnEditParam
             // 
-            this.btnEditParam.Location = new System.Drawing.Point(130, 190);
+            this.btnEditParam.Location = new System.Drawing.Point(130, 320);
             this.btnEditParam.Name = "btnEditParam";
             this.btnEditParam.Size = new System.Drawing.Size(100, 30);
             this.btnEditParam.TabIndex = 14;
@@ -173,7 +149,7 @@ namespace PowerSimBuilder
             // 
             // btnDeleteParam
             // 
-            this.btnDeleteParam.Location = new System.Drawing.Point(240, 190);
+            this.btnDeleteParam.Location = new System.Drawing.Point(240, 320);
             this.btnDeleteParam.Name = "btnDeleteParam";
             this.btnDeleteParam.Size = new System.Drawing.Size(100, 30);
             this.btnDeleteParam.TabIndex = 15;
@@ -181,17 +157,97 @@ namespace PowerSimBuilder
             this.btnDeleteParam.UseVisualStyleBackColor = true;
             this.btnDeleteParam.Click += new System.EventHandler(this.BtnDeleteParam_Click);
             // 
+            // lblInputPorts
+            // 
+            this.lblInputPorts.Location = new System.Drawing.Point(20, 110);
+            this.lblInputPorts.Name = "lblInputPorts";
+            this.lblInputPorts.Size = new System.Drawing.Size(80, 20);
+            this.lblInputPorts.TabIndex = 10;
+            this.lblInputPorts.Text = "入力ポート:";
+            // 
+            // inputPortsGrid
+            // 
+            this.inputPortsGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.inputPortsGrid.Location = new System.Drawing.Point(110, 110);
+            this.inputPortsGrid.Name = "inputPortsGrid";
+            this.inputPortsGrid.RowHeadersVisible = false;
+            this.inputPortsGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.inputPortsGrid.Size = new System.Drawing.Size(200, 80);
+            this.inputPortsGrid.TabIndex = 16;
+            // 
+            // lblOutputPorts
+            // 
+            this.lblOutputPorts.Location = new System.Drawing.Point(20, 200);
+            this.lblOutputPorts.Name = "lblOutputPorts";
+            this.lblOutputPorts.Size = new System.Drawing.Size(80, 20);
+            this.lblOutputPorts.TabIndex = 12;
+            this.lblOutputPorts.Text = "出力ポート:";
+            // 
+            // outputPortsGrid
+            // 
+            this.outputPortsGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.outputPortsGrid.Location = new System.Drawing.Point(110, 200);
+            this.outputPortsGrid.Name = "outputPortsGrid";
+            this.outputPortsGrid.RowHeadersVisible = false;
+            this.outputPortsGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.outputPortsGrid.Size = new System.Drawing.Size(200, 80);
+            this.outputPortsGrid.TabIndex = 17;
+            // 
+            // btnAddInputPort
+            // 
+            this.btnAddInputPort.Location = new System.Drawing.Point(320, 110);
+            this.btnAddInputPort.Name = "btnAddInputPort";
+            this.btnAddInputPort.Size = new System.Drawing.Size(40, 30);
+            this.btnAddInputPort.TabIndex = 18;
+            this.btnAddInputPort.Text = "+";
+            this.btnAddInputPort.UseVisualStyleBackColor = true;
+            this.btnAddInputPort.Click += new System.EventHandler(this.btnAddInputPort_Click);
+            // 
+            // btnRemoveInputPort
+            // 
+            this.btnRemoveInputPort.Location = new System.Drawing.Point(320, 150);
+            this.btnRemoveInputPort.Name = "btnRemoveInputPort";
+            this.btnRemoveInputPort.Size = new System.Drawing.Size(40, 30);
+            this.btnRemoveInputPort.TabIndex = 19;
+            this.btnRemoveInputPort.Text = "-";
+            this.btnRemoveInputPort.UseVisualStyleBackColor = true;
+            this.btnRemoveInputPort.Click += new System.EventHandler(this.btnRemoveInputPort_Click);
+            // 
+            // btnAddOutputPort
+            // 
+            this.btnAddOutputPort.Location = new System.Drawing.Point(320, 200);
+            this.btnAddOutputPort.Name = "btnAddOutputPort";
+            this.btnAddOutputPort.Size = new System.Drawing.Size(40, 30);
+            this.btnAddOutputPort.TabIndex = 20;
+            this.btnAddOutputPort.Text = "+";
+            this.btnAddOutputPort.UseVisualStyleBackColor = true;
+            this.btnAddOutputPort.Click += new System.EventHandler(this.btnAddOutputPort_Click);
+            // 
+            // btnRemoveOutputPort
+            // 
+            this.btnRemoveOutputPort.Location = new System.Drawing.Point(320, 240);
+            this.btnRemoveOutputPort.Name = "btnRemoveOutputPort";
+            this.btnRemoveOutputPort.Size = new System.Drawing.Size(40, 30);
+            this.btnRemoveOutputPort.TabIndex = 21;
+            this.btnRemoveOutputPort.Text = "-";
+            this.btnRemoveOutputPort.UseVisualStyleBackColor = true;
+            this.btnRemoveOutputPort.Click += new System.EventHandler(this.btnRemoveOutputPort_Click);
+            // 
             // AddComponentForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(400, 400);
+            this.ClientSize = new System.Drawing.Size(400, 500);
+            this.Controls.Add(this.btnRemoveOutputPort);
+            this.Controls.Add(this.btnAddOutputPort);
+            this.Controls.Add(this.btnRemoveInputPort);
+            this.Controls.Add(this.btnAddInputPort);
+            this.Controls.Add(this.outputPortsGrid);
+            this.Controls.Add(this.lblOutputPorts);
+            this.Controls.Add(this.inputPortsGrid);
+            this.Controls.Add(this.lblInputPorts);
             this.Controls.Add(this.btnDeleteParam);
             this.Controls.Add(this.btnEditParam);
-            this.Controls.Add(this.txtOutputPorts);
-            this.Controls.Add(this.lblOutputPorts);
-            this.Controls.Add(this.txtInputPorts);
-            this.Controls.Add(this.lblInputPorts);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.paramListBox);
@@ -208,6 +264,8 @@ namespace PowerSimBuilder
             this.Name = "AddComponentForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "コンポーネントの追加";
+            ((System.ComponentModel.ISupportInitialize)(this.inputPortsGrid)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.outputPortsGrid)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -225,11 +283,15 @@ namespace PowerSimBuilder
         private System.Windows.Forms.ListBox paramListBox;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Label lblInputPorts;
-        private System.Windows.Forms.TextBox txtInputPorts;
-        private System.Windows.Forms.Label lblOutputPorts;
-        private System.Windows.Forms.TextBox txtOutputPorts;
         private System.Windows.Forms.Button btnEditParam;
         private System.Windows.Forms.Button btnDeleteParam;
+        private System.Windows.Forms.Label lblInputPorts;
+        private System.Windows.Forms.DataGridView inputPortsGrid;
+        private System.Windows.Forms.Label lblOutputPorts;
+        private System.Windows.Forms.DataGridView outputPortsGrid;
+        private System.Windows.Forms.Button btnAddInputPort;
+        private System.Windows.Forms.Button btnRemoveInputPort;
+        private System.Windows.Forms.Button btnAddOutputPort;
+        private System.Windows.Forms.Button btnRemoveOutputPort;
     }
 }
