@@ -105,16 +105,4 @@
     </InputPorts>
     <OutputPorts />
   </ComponentDescriptor>
-  <ComponentDescriptor>
-    <Name>new</Name>
-    <Type>LL</Type>
-    <Category>KK</Category>
-    <Parameters />
-    <InputPorts>
-      <string>Input</string>
-    </InputPorts>
-    <OutputPorts>
-      <string>Output</string>
-    </OutputPorts>
-  </ComponentDescriptor>
 </ArrayOfComponentDescriptor>
