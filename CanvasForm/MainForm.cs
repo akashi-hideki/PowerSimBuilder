@@ -47,7 +47,6 @@ namespace PowerSimBuilder
         /// </summary>
         private void InitializeEventHandlers()
         {
-            addComponentToolStripButton.Click += AddComponentToolStripButton_Click;
             addButton.Click += AddComponentToolStripButton_Click;
             saveButton.Click += saveButton_Click;
             loadButton.Click += loadButton_Click;
