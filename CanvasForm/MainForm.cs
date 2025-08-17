@@ -48,15 +48,16 @@ namespace PowerSimBuilder
         private void InitializeEventHandlers()
         {
             addComponentToolStripButton.Click += AddComponentToolStripButton_Click;
-            addButton.Click += addButton_Click;
+            addButton.Click += AddComponentToolStripButton_Click;
             saveButton.Click += saveButton_Click;
             loadButton.Click += loadButton_Click;
             undoButton.Click += undoButton_Click;
             redoButton.Click += redoButton_Click;
             runButton.Click += runButton_Click;
+            deleteButton.Click += deleteButton_Click; // パレット削除用（新規追加）
             arrangeButton.Click += arrangeButton_Click;
             editButton.Click += EditPaletteButton_Click; // 追加
-            deleteButton.Click += DeletePaletteButton_Click; // 変更（既存の削除ボタンを再利用）
+            removePalletButton.Click += DeletePaletteButton_Click; // 変更（既存の削除ボタンを再利用）
             propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
         }
 
@@ -78,7 +79,7 @@ namespace PowerSimBuilder
         /// </summary>
         private void ComponentPalette_ComponentSelected(object sender, EventArgs e)
         {
-            addButton.Enabled = (componentPalette1.SelectedComponent != null);
+            editButton.Enabled = (componentPalette1.SelectedComponent != null);
             LogcatTraceHelper.Instance.SimpleMessage("Pallet Event", "pallet Selected ");
         }
 
@@ -117,7 +118,6 @@ namespace PowerSimBuilder
             propertyGrid1.SelectedObject = _canvasManager.SelectedComponent?.Parameters;
             UpdateDeleteButton();
         }
-
         /// <summary>
         /// コンポーネント追加ボタンクリック
         /// 注意点: パレットで選択中のコンポーネントをキャンバスに追加
@@ -422,7 +422,7 @@ namespace PowerSimBuilder
         /// </summary>
         private void UpdateDeleteButton()
         {
-            deleteButton.Enabled =
+            removePalletButton.Enabled =
                 _canvasManager.SelectedComponent != null ||
                 _canvasManager.SelectedConnection != null;
         }
