@@ -26,6 +26,10 @@ namespace PowerSimBuilder
         // 追加: 重複チェック用のコンポーネント名セット
         private HashSet<string> _componentNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        // クラスレベル変数を追加
+        private Point? _dragStartPoint = null;
+        private bool _isDragging = false;
+
         /// <summary>
         /// データが有効かどうかを示すプロパティ
         /// </summary>
@@ -187,6 +191,8 @@ namespace PowerSimBuilder
             button.FlatAppearance.BorderColor = Color.LightGray;
 
             button.MouseDown += ComponentButton_MouseDown;
+            button.MouseMove += ComponentButton_MouseMove;
+            button.MouseUp += ComponentButton_MouseUp;
             // button.Click += ComponentButton_Click;
 
             this.Controls.Add(button);
@@ -252,7 +258,7 @@ namespace PowerSimBuilder
             var button = (Button)sender;
             var component = (ComponentDescriptor)button.Tag;
 
-            // 選択状態を更新（クリックイベントの代わり）
+            // 選択状態を更新
             SelectedComponent = component;
             OnComponentSelected(EventArgs.Empty);
 
@@ -265,13 +271,57 @@ namespace PowerSimBuilder
                 }
             }
 
-            // ドラッグ操作は右クリック時のみ実行
-            if (e.Button == MouseButtons.Right)
+            // ドラッグ開始位置を記録（左クリックのみ）
+            if (e.Button == MouseButtons.Left)
             {
-                var data = new DataObject();
-                data.SetData("ComponentDescriptor", component);
-                button.DoDragDrop(data, DragDropEffects.Copy);
+                _dragStartPoint = e.Location;
+                _isDragging = false;
             }
+        }
+
+        // MouseMoveイベントハンドラを追加
+        private void ComponentButton_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left && _dragStartPoint.HasValue)
+            {
+                // ドラッグ開始閾値をチェック
+                int deltaX = Math.Abs(e.X - _dragStartPoint.Value.X);
+                int deltaY = Math.Abs(e.Y - _dragStartPoint.Value.Y);
+
+                if (deltaX > SystemInformation.DragSize.Width / 2 ||
+                    deltaY > SystemInformation.DragSize.Height / 2)
+                {
+                    _isDragging = true;
+                    var button = (Button)sender;
+                    var component = (ComponentDescriptor)button.Tag;
+
+                    var data = new DataObject();
+                    data.SetData("ComponentDescriptor", component);
+                    button.DoDragDrop(data, DragDropEffects.Copy);
+
+                    // ドラッグ後は状態をリセット
+                    _dragStartPoint = null;
+                    _isDragging = false;
+                }
+            }
+        }
+
+        // MouseUpイベントハンドラを追加
+        private void ComponentButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left && !_isDragging && _dragStartPoint.HasValue)
+            {
+                // ドラッグせずにマウスを離した場合、クリック処理を実行
+                var button = (Button)sender;
+                var component = (ComponentDescriptor)button.Tag;
+
+                // ここで追加のクリック処理があれば実行
+                // 例: 詳細表示など
+            }
+
+            // 状態をリセット
+            _dragStartPoint = null;
+            _isDragging = false;
         }
         /// <summary>
         /// コンポーネントボタンクリックイベント（以前の実装を保持）
