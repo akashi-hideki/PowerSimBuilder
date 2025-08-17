@@ -17,7 +17,7 @@ namespace PowerSimBuilder
     {
         private readonly CanvasManager _canvasManager;
         private readonly PythonCodeGenerator _codeGenerator = new PythonCodeGenerator();
-   
+
         /// <summary>
         /// メインフォームのコンストラクタ
         /// 注意点: UIコンポーネントとイベントハンドラを初期化
@@ -48,13 +48,14 @@ namespace PowerSimBuilder
         {
             addComponentToolStripButton.Click += AddComponentToolStripButton_Click;
             addButton.Click += addButton_Click;
-            deleteButton.Click += deleteButton_Click;
             saveButton.Click += saveButton_Click;
             loadButton.Click += loadButton_Click;
             undoButton.Click += undoButton_Click;
             redoButton.Click += redoButton_Click;
             runButton.Click += runButton_Click;
             arrangeButton.Click += arrangeButton_Click;
+            editButton.Click += EditPaletteButton_Click; // 追加
+            deleteButton.Click += DeletePaletteButton_Click; // 変更（既存の削除ボタンを再利用）
             propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
         }
 
@@ -130,7 +131,6 @@ namespace PowerSimBuilder
                 designCanvas1.ArrangeComponents();
             }
         }
-        // パレットアイテム編集
         private void EditPaletteButton_Click(object sender, EventArgs e)
         {
             if (componentPalette1.SelectedComponent == null)
@@ -140,9 +140,20 @@ namespace PowerSimBuilder
                 return;
             }
 
+            // キャンバスで使用中のコンポーネントがあるかチェック
+            bool isUsedInCanvas = _canvasManager.GetAllComponents()
+                .Any(c => c.Descriptor == componentPalette1.SelectedComponent);
+
+            if (isUsedInCanvas)
+            {
+                MessageBox.Show("このコンポーネントはキャンバス上で使用されているため編集できません", "エラー",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             using (var form = new AddComponentForm(componentPalette1.SelectedComponent))
             {
-                if (form.ShowDialog() == DialogResult.OK)
+                if (form.ShowDialog() == DialogResult.OK && form.ResultComponent != null)
                 {
                     // パレットを更新
                     componentPalette1.UpdateComponent(componentPalette1.SelectedComponent, form.ResultComponent);
@@ -163,6 +174,17 @@ namespace PowerSimBuilder
             {
                 MessageBox.Show("削除するコンポーネントを選択してください", "情報",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // キャンバスで使用中のコンポーネントがあるかチェック
+            bool isUsedInCanvas = _canvasManager.GetAllComponents()
+                .Any(c => c.Descriptor == componentPalette1.SelectedComponent);
+
+            if (isUsedInCanvas)
+            {
+                MessageBox.Show("このコンポーネントはキャンバス上で使用されているため削除できません", "エラー",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -285,10 +307,10 @@ namespace PowerSimBuilder
         {
             var components = _canvasManager.GetAllComponents();
             var connections = _canvasManager.GetAllConnections();
-            
+
             // コード生成
             string pythonCode = _codeGenerator.GenerateSimulationCode(components, connections);
-            
+
             // ファイル保存（デフォルトディレクトリはアプリケーションデータフォルダ）
             string outputDir = GetPythonOutputDirectory();
             if (_codeGenerator.SaveCodeToFile(outputDir))
@@ -315,12 +337,12 @@ namespace PowerSimBuilder
         {
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string outputDir = Path.Combine(appData, "PowerSimBuilder", "PythonOutput");
-            
+
             if (!Directory.Exists(outputDir))
             {
                 Directory.CreateDirectory(outputDir);
             }
-            
+
             return outputDir;
         }
 

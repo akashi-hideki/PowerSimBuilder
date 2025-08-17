@@ -168,6 +168,9 @@
     <EmbeddedResource Include="CanvasForm\AddParameterForm.resx">
       <DependentUpon>AddParameterForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CanvasForm\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SimRegistForm.resx">
       <DependentUpon>SimRegistForm.cs</DependentUpon>
     </EmbeddedResource>

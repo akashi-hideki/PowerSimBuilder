@@ -12,3 +12,4 @@ D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.csproj.Fody.RuntimeCopyLoca
 D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.exe
 D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.pdb
 D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.AddParameterForm.resources
+D:\source2\PowerSimBuilder\obj\Debug\PowerSimBuilder.MainForm.resources
