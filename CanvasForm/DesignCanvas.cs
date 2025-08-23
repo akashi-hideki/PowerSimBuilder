@@ -82,16 +82,6 @@ namespace PowerSimBuilder
         /// デザインキャンバスのコンストラクタ
         /// 注意点: ダブルバッファリングとドラッグ操作を有効化
         /// </summary>
-#if false
-        public DesignCanvas()
-        {
-            InitializeComponent();
-            DoubleBuffered = true;
-            AllowDrop = true;
-            this.DragEnter += DesignCanvas_DragEnter;
-            this.DragDrop += DesignCanvas_DragDrop;
-        }
-#endif
         public DesignCanvas()
         {
             // デザイン時の基本設定
@@ -179,47 +169,6 @@ namespace PowerSimBuilder
             ConnectionGraph.Clear();
             Invalidate();
         }
-#if false
-        /// <summary>
-        /// キャンバスの描画処理
-        /// 注意点: 接続線→コンポーネントの順で描画
-        /// </summary>
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-            // 接続線を描画
-            foreach (var connection in Connections)
-            {
-                ConnectionRenderer.Render(e.Graphics, connection);
-            }
-
-            // 仮接続線を描画
-            if (_currentConnection != null && _currentConnection.EndComponent == null)
-            {
-                DrawTemporaryConnection(e.Graphics);
-            }
-
-            // 接続情報を表示（デバッグ用）
-            using (var font = new Font("Arial", 8))
-            {
-                foreach (var connection in Connections)
-                {
-                    if (connection.Visual.PathPoints.Count >= 2)
-                    {
-                        Point midPoint = new Point(
-                            (connection.Visual.PathPoints[0].X + connection.Visual.PathPoints[1].X) / 2,
-                            (connection.Visual.PathPoints[0].Y + connection.Visual.PathPoints[1].Y) / 2
-                        );
-
-                        string info = $"{connection.StartPort}→{connection.EndPort}";
-                        e.Graphics.DrawString(info, font, Brushes.Red, midPoint);
-                    }
-                }
-            }
-        }
-#endif
         /// <summary>
         /// マウスダウンイベント処理
         /// 注意点: 接続線の選択処理を実装

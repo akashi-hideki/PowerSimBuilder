@@ -104,26 +104,6 @@ namespace PowerSimBuilder
                 ValidateAndInitializeComponents();
             }
         }
-#if false
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            if (IsDesignMode)
-            {
-                // デザイン時の描画
-                e.Graphics.Clear(BackColor);
-                using (var pen = new Pen(SystemColors.ControlDark))
-                {
-                    e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
-                }
-                TextRenderer.DrawText(e.Graphics, "Component Palette", Font,
-                    new Point(10, 10), ForeColor);
-                return;
-            }
-
-            // 実行時の描画処理
-            base.OnPaint(e);
-        }
-#endif
 
         /// <summary>
         /// データを検証しコンポーネントを初期化
