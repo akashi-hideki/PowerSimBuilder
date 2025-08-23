@@ -13,7 +13,8 @@ namespace PowerSimBuilder
     /// 作成日: 2025-08-12
     /// 注意点: コンポーネントと接続の描画・管理を担当
     /// </summary>
-    [DesignerCategory("Code")] // デザイナーコード生成を抑制
+    [System.ComponentModel.DesignerCategory("Code")]// デザイナーコード生成を抑制
+    [ToolboxItemFilter("PowerSimBuilder", ToolboxItemFilterType.Custom)]
     public partial class DesignCanvas : Panel
     {
         // イベント定義
@@ -81,6 +82,7 @@ namespace PowerSimBuilder
         /// デザインキャンバスのコンストラクタ
         /// 注意点: ダブルバッファリングとドラッグ操作を有効化
         /// </summary>
+#if false
         public DesignCanvas()
         {
             InitializeComponent();
@@ -89,7 +91,82 @@ namespace PowerSimBuilder
             this.DragEnter += DesignCanvas_DragEnter;
             this.DragDrop += DesignCanvas_DragDrop;
         }
+#endif
+        public DesignCanvas()
+        {
+            // デザイン時の基本設定
+            if (IsDesignMode)
+            {
+                BackColor = SystemColors.Control;
+                BorderStyle = BorderStyle.FixedSingle;
+            }
+            else
+            {
+                InitializeComponent();
+                DoubleBuffered = true;
+                AllowDrop = true;
+                this.DragEnter += DesignCanvas_DragEnter;
+                this.DragDrop += DesignCanvas_DragDrop;
+            }
+        }
+        private bool IsDesignMode
+        {
+            get
+            {
+                return (LicenseManager.UsageMode == LicenseUsageMode.Designtime) ||
+                       (Site != null && Site.DesignMode);
+            }
+        }
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            if (IsDesignMode)
+            {
+                // デザイン時の簡易描画
+                e.Graphics.Clear(BackColor);
+                using (var pen = new Pen(SystemColors.ControlDark))
+                {
+                    e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+                }
+                TextRenderer.DrawText(e.Graphics, "Design Canvas", Font,
+                    new Point(10, 10), ForeColor);
+                return;
+            }
 
+            // 実行時の描画処理
+            base.OnPaint(e);
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            // 接続線を描画
+            foreach (var connection in Connections)
+            {
+                ConnectionRenderer.Render(e.Graphics, connection);
+            }
+
+            // 仮接続線を描画
+            if (_currentConnection != null && _currentConnection.EndComponent == null)
+            {
+                DrawTemporaryConnection(e.Graphics);
+            }
+
+            // 接続情報を表示（デバッグ用）
+            using (var font = new Font("Arial", 8))
+            {
+                foreach (var connection in Connections)
+                {
+                    if (connection.Visual.PathPoints.Count >= 2)
+                    {
+                        Point midPoint = new Point(
+                            (connection.Visual.PathPoints[0].X + connection.Visual.PathPoints[1].X) / 2,
+                            (connection.Visual.PathPoints[0].Y + connection.Visual.PathPoints[1].Y) / 2
+                        );
+
+                        string info = $"{connection.StartPort}→{connection.EndPort}";
+                        e.Graphics.DrawString(info, font, Brushes.Red, midPoint);
+                    }
+                }
+            }
+
+        }
         /// <summary>
         /// キャンバスをクリア
         /// 注意点: すべてのコンポーネントと接続を削除
@@ -102,7 +179,7 @@ namespace PowerSimBuilder
             ConnectionGraph.Clear();
             Invalidate();
         }
-
+#if false
         /// <summary>
         /// キャンバスの描画処理
         /// 注意点: 接続線→コンポーネントの順で描画
@@ -142,6 +219,7 @@ namespace PowerSimBuilder
                 }
             }
         }
+#endif
         /// <summary>
         /// マウスダウンイベント処理
         /// 注意点: 接続線の選択処理を実装
@@ -550,7 +628,7 @@ namespace PowerSimBuilder
                 ArrangeComponents();
             }
         }
-    
+
 
     }
 }

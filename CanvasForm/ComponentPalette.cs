@@ -7,9 +7,11 @@ using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
+    [global::System.ComponentModel.DesignerCategory("Code")]
     public partial class ComponentPalette : FlowLayoutPanel
     {
-        
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         /// <summary>
         /// 利用可能なコンポーネントリスト
         /// </summary>
@@ -19,10 +21,14 @@ namespace PowerSimBuilder
             set
             {
                 _availableComponents = value;
-                ValidateAndInitializeComponents();
+                if (!IsDesignMode) // デザイン時は処理しない
+                {
+                    ValidateAndInitializeComponents();
+                }
             }
         }
         private List<ComponentDescriptor> _availableComponents = new List<ComponentDescriptor>();
+
         // 追加: 重複チェック用のコンポーネント名セット
         private HashSet<string> _componentNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -34,7 +40,7 @@ namespace PowerSimBuilder
         /// データが有効かどうかを示すプロパティ
         /// </summary>
         public bool IsDataValid => _componentNames.Count > 0; // 改善: 計算プロパティに変更      
- 
+
         /// <summary>
         /// 選択中のコンポーネント
         /// </summary>
@@ -45,26 +51,80 @@ namespace PowerSimBuilder
         /// </summary>
         public ComponentPalette()
         {
-            InitializeComponent();
+            InitializeDesignTimeProperties();
+
+            // デザイン時はここで終了
+            if (IsDesignMode) return;
+
+            InitializeRuntimeProperties();
         }
 
         /// <summary>
-        /// コンポーネントパレットの初期化
+        /// デザイン時のプロパティ初期化
         /// </summary>
-        private void InitializeComponent()
+        private void InitializeDesignTimeProperties()
         {
             this.SuspendLayout();
-            // 
-            // ComponentPalette
-            // 
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.ResumeLayout(false);
         }
+
         /// <summary>
-        /// データを検証しコンポーネントを初期化
+        /// 実行時のプロパティ初期化
         /// </summary>
+        private void InitializeRuntimeProperties()
+        {
+            // 実行時のみ必要な初期化
+            // イベントハンドラの登録など
+            this.MouseDown += ComponentPalette_MouseDown;
+            this.MouseMove += ComponentPalette_MouseMove;
+            this.MouseUp += ComponentPalette_MouseUp;
+        }
+
+        private bool IsDesignMode
+        {
+            get
+            {
+                return (LicenseManager.UsageMode == LicenseUsageMode.Designtime) ||
+                       (Site != null && Site.DesignMode);
+            }
+        }
+
+        // Loadメソッドを削除し、代わりにOnHandleCreatedをオーバーライドします。
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (IsDesignMode) return;
+
+            // 実行時のみの追加初期化
+            if (AvailableComponents != null && AvailableComponents.Count > 0)
+            {
+                ValidateAndInitializeComponents();
+            }
+        }
+#if false
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            if (IsDesignMode)
+            {
+                // デザイン時の描画
+                e.Graphics.Clear(BackColor);
+                using (var pen = new Pen(SystemColors.ControlDark))
+                {
+                    e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+                }
+                TextRenderer.DrawText(e.Graphics, "Component Palette", Font,
+                    new Point(10, 10), ForeColor);
+                return;
+            }
+
+            // 実行時の描画処理
+            base.OnPaint(e);
+        }
+#endif
+
         /// <summary>
         /// データを検証しコンポーネントを初期化
         /// </summary>
@@ -76,8 +136,12 @@ namespace PowerSimBuilder
 
             if (AvailableComponents == null || AvailableComponents.Count == 0)
             {
-                MessageBox.Show("利用可能なコンポーネントがありません", "警告",
-                               MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // デザイン時はメッセージボックスを表示しない
+                if (!IsDesignMode)
+                {
+                    MessageBox.Show("利用可能なコンポーネントがありません", "警告",
+                                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
                 return;
             }
 
@@ -92,12 +156,12 @@ namespace PowerSimBuilder
                         _componentNames.Add(component.Name);
                         CreateComponentButton(component);
                     }
-                    else
+                    else if (!IsDesignMode) // デザイン時はログ出力しない
                     {
                         LogcatTraceHelper.Instance.LogError(component.Name, $"重複コンポーネントがスキップされました: {component.Name}");
                     }
                 }
-                else
+                else if (!IsDesignMode) // デザイン時はログ出力しない
                 {
                     LogcatTraceHelper.Instance.LogError(component.Name, $"無効なコンポーネント: {component.Name}");
                 }
@@ -123,6 +187,8 @@ namespace PowerSimBuilder
         /// </summary>
         public void AddComponent(ComponentDescriptor component)
         {
+            if (IsDesignMode) return; // デザイン時は処理しない
+
             if (component == null)
             {
                 LogcatTraceHelper.Instance.LogError("AddComponent", "Null component");
@@ -168,8 +234,9 @@ namespace PowerSimBuilder
                                "システムエラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
         /// <summary>
-        /// コンポーネントボタンを作成する（以前の実装を保持）
+        /// コンポーネントボタンを作成する
         /// </summary>
         private void CreateComponentButton(ComponentDescriptor component)
         {
@@ -190,16 +257,19 @@ namespace PowerSimBuilder
             button.FlatAppearance.BorderSize = 1;
             button.FlatAppearance.BorderColor = Color.LightGray;
 
-            button.MouseDown += ComponentButton_MouseDown;
-            button.MouseMove += ComponentButton_MouseMove;
-            button.MouseUp += ComponentButton_MouseUp;
-            // button.Click += ComponentButton_Click;
+            // デザイン時はイベントハンドラを追加しない
+            if (!IsDesignMode)
+            {
+                button.MouseDown += ComponentButton_MouseDown;
+                button.MouseMove += ComponentButton_MouseMove;
+                button.MouseUp += ComponentButton_MouseUp;
+            }
 
             this.Controls.Add(button);
         }
 
         /// <summary>
-        /// コンポーネントタイプに基づいた色を取得（以前の実装を保持）
+        /// コンポーネントタイプに基づいた色を取得
         /// </summary>
         private Color GetColorByType(string type)
         {
@@ -214,7 +284,7 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// アイコン画像を作成する（以前の実装を保持）
+        /// アイコン画像を作成する
         /// </summary>
         private Bitmap CreateIcon(ComponentDescriptor component, Color color)
         {
@@ -251,10 +321,12 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// コンポーネントボタンマウスダウンイベント（以前の実装を保持）
+        /// コンポーネントボタンマウスダウンイベント
         /// </summary>
         private void ComponentButton_MouseDown(object sender, MouseEventArgs e)
         {
+            if (IsDesignMode) return; // デザイン時は処理しない
+
             var button = (Button)sender;
             var component = (ComponentDescriptor)button.Tag;
 
@@ -282,6 +354,8 @@ namespace PowerSimBuilder
         // MouseMoveイベントハンドラを追加
         private void ComponentButton_MouseMove(object sender, MouseEventArgs e)
         {
+            if (IsDesignMode) return; // デザイン時は処理しない
+
             if (e.Button == MouseButtons.Left && _dragStartPoint.HasValue)
             {
                 // ドラッグ開始閾値をチェック
@@ -309,6 +383,8 @@ namespace PowerSimBuilder
         // MouseUpイベントハンドラを追加
         private void ComponentButton_MouseUp(object sender, MouseEventArgs e)
         {
+            if (IsDesignMode) return; // デザイン時は処理しない
+
             if (e.Button == MouseButtons.Left && !_isDragging && _dragStartPoint.HasValue)
             {
                 // ドラッグせずにマウスを離した場合、クリック処理を実行
@@ -323,31 +399,33 @@ namespace PowerSimBuilder
             _dragStartPoint = null;
             _isDragging = false;
         }
-        /// <summary>
-        /// コンポーネントボタンクリックイベント（以前の実装を保持）
-        /// </summary>
-        private void ComponentButton_Click(object sender, EventArgs e)
+
+        // パレット自体のマウスイベントハンドラ（デザイン時用）
+        private void ComponentPalette_MouseDown(object sender, MouseEventArgs e)
         {
-            var button = (Button)sender;
-            SelectedComponent = (ComponentDescriptor)button.Tag;
-
-            // 選択状態を通知
-            OnComponentSelected(EventArgs.Empty);
-
-            // 選択されたボタンを強調表示
-            foreach (Control control in Controls)
-            {
-                if (control is Button btn)
-                {
-                    btn.BackColor = (btn == button) ? Color.LightBlue : Color.WhiteSmoke;
-                }
-            }
+            if (IsDesignMode) return;
+            // 必要に応じて実装
         }
+
+        private void ComponentPalette_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (IsDesignMode) return;
+            // 必要に応じて実装
+        }
+
+        private void ComponentPalette_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (IsDesignMode) return;
+            // 必要に応じて実装
+        }
+
         /// <summary>
         /// コンポーネントを更新する
         /// </summary>
         public void UpdateComponent(ComponentDescriptor original, ComponentDescriptor updated)
         {
+            if (IsDesignMode) return; // デザイン時は処理しない
+
             if (InvokeRequired)
             {
                 Invoke(new Action(() => UpdateComponent(original, updated)));
@@ -396,6 +474,8 @@ namespace PowerSimBuilder
         /// </summary>
         public void RemoveComponent(ComponentDescriptor component)
         {
+            if (IsDesignMode) return; // デザイン時は処理しない
+
             if (InvokeRequired)
             {
                 Invoke(new Action(() => RemoveComponent(component)));
@@ -423,23 +503,19 @@ namespace PowerSimBuilder
             {
                 SelectedComponent = null;
             }
-
-            // 状態フラグ更新
-            //IsDataValid = AvailableComponents.Count > 0;
         }
+
         /// <summary>
-        /// コンポーネント選択イベント（以前の実装を保持）
+        /// コンポーネント選択イベント
         /// </summary>
         public event EventHandler ComponentSelected;
 
         /// <summary>
-        /// コンポーネント選択イベントを発行する（以前の実装を保持）
+        /// コンポーネント選択イベントを発行する
         /// </summary>
         protected virtual void OnComponentSelected(EventArgs e)
         {
             ComponentSelected?.Invoke(this, e);
         }
     }
-
-
 }

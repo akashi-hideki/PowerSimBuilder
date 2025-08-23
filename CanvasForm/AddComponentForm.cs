@@ -19,7 +19,7 @@ namespace PowerSimBuilder
         /// </summary>
         public ComponentDescriptor ResultComponent { get; private set; }
         private List<ParameterDescriptor> _parameters = new List<ParameterDescriptor>();
-        
+
         // 編集モード用プロパティ
         private bool _isEditMode = false;
         private ComponentDescriptor _originalComponent;
@@ -42,24 +42,24 @@ namespace PowerSimBuilder
             Text = "コンポーネント編集";
             btnOK.Text = "更新";
             btnDeleteParam.Visible = true; // 編集時は削除ボタンを表示
-            
+
             // 既存データをフォームに設定
             txtName.Text = component.Name;
             txtType.Text = component.Type;
             txtCategory.Text = component.Category;
-            
+
             // 入力ポート
             foreach (var port in component.InputPorts)
             {
                 inputPortsGrid.Rows.Add(port);
             }
-            
+
             // 出力ポート
             foreach (var port in component.OutputPorts)
             {
                 outputPortsGrid.Rows.Add(port);
             }
-            
+
             // パラメータ
             _parameters = new List<ParameterDescriptor>(component.Parameters);
             RefreshParameterList();
@@ -74,7 +74,7 @@ namespace PowerSimBuilder
             inputPortsGrid.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             inputPortsGrid.AllowUserToAddRows = false;
             inputPortsGrid.RowHeadersVisible = false;
-            
+
             // 出力ポートグリッド
             outputPortsGrid.Columns.Clear();
             outputPortsGrid.Columns.Add("PortName", "ポート名");
@@ -122,10 +122,10 @@ namespace PowerSimBuilder
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            
+
             int index = paramListBox.SelectedIndex;
             var param = _parameters[index];
-            
+
             using (var paramForm = new AddParameterForm(param))
             {
                 if (paramForm.ShowDialog() == DialogResult.OK)
@@ -133,7 +133,7 @@ namespace PowerSimBuilder
                     param.Name = paramForm.ParamName;
                     param.Type = paramForm.ParamType;
                     param.DefaultValue = paramForm.DefaultValue;
-                    
+
                     RefreshParameterList();
                     paramListBox.SelectedIndex = index;
                 }
@@ -149,11 +149,11 @@ namespace PowerSimBuilder
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            
+
             int index = paramListBox.SelectedIndex;
             _parameters.RemoveAt(index);
             RefreshParameterList();
-            
+
             if (paramListBox.Items.Count > 0)
             {
                 paramListBox.SelectedIndex = Math.Min(index, paramListBox.Items.Count - 1);
@@ -182,7 +182,7 @@ namespace PowerSimBuilder
                     inputPorts.Add(row.Cells[0].Value.ToString().Trim());
                 }
             }
-            
+
             // 出力ポートの処理
             var outputPorts = new List<string>();
             foreach (DataGridViewRow row in outputPortsGrid.Rows)
@@ -200,15 +200,15 @@ namespace PowerSimBuilder
                 DialogResult = DialogResult.None;
                 return;
             }
-            
+
             if (inputPorts.Any(string.IsNullOrWhiteSpace) || outputPorts.Any(string.IsNullOrWhiteSpace))
             {
                 MessageBox.Show("ポート名は空にできません");
                 DialogResult = DialogResult.None;
                 return;
             }
-            
-            if (inputPorts.Count != inputPorts.Distinct().Count() || 
+
+            if (inputPorts.Count != inputPorts.Distinct().Count() ||
                 outputPorts.Count != outputPorts.Distinct().Count())
             {
                 MessageBox.Show("ポート名は一意である必要があります");
@@ -222,7 +222,7 @@ namespace PowerSimBuilder
                 Type = txtType.Text,
                 Category = txtCategory.Text,
                 Parameters = new List<ParameterDescriptor>(_parameters),
-                Icon = _isEditMode && _originalComponent?.Icon != null ? 
+                Icon = _isEditMode && _originalComponent?.Icon != null ?
                     _originalComponent.Icon : GenerateIcon(txtType.Text),
                 InputPorts = inputPorts.ToArray(),
                 OutputPorts = outputPorts.ToArray()

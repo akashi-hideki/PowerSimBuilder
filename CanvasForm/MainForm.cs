@@ -18,6 +18,8 @@ namespace PowerSimBuilder
         private CanvasManager _canvasManager;
         private readonly PythonCodeGenerator _codeGenerator = new PythonCodeGenerator();
         private List<ComponentDescriptor> _components;
+        private DesignCanvas designCanvas1;
+        private ComponentPalette componentPalette1;
 
         /// <summary>
         /// メインフォームのコンストラクタ
@@ -35,12 +37,48 @@ namespace PowerSimBuilder
         {
             base.OnLoad(e);
 
-            // デザイン時は初期化をスキップ
-            if (DesignMode) return;
+            // プレースホルダーを実際のコントロールで置換
+            designCanvas1 = new DesignCanvas();
+            ReplaceControl(canvasPanel, designCanvas1);
+
+            componentPalette1 = new ComponentPalette();
+            ReplaceControl(palettePanel, componentPalette1);
 
             InitializeRuntimeComponents();
+            // 境界線の設定を明示的に行う
+            designCanvas1.BorderStyle = BorderStyle.FixedSingle;
+            designCanvas1.BackColor = Color.White; // 必要に応じて背景色も設定
         }
 
+        private void ReplaceControl(Panel placeholder, Control realControl)
+        {
+            // 基本プロパティのコピー
+            realControl.Dock = placeholder.Dock;
+            realControl.Location = placeholder.Location;
+            realControl.Size = placeholder.Size;
+            realControl.Anchor = placeholder.Anchor;
+            realControl.Margin = placeholder.Margin;
+            realControl.Visible = placeholder.Visible;
+
+            // 背景色のコピー
+            realControl.BackColor = placeholder.BackColor;
+
+            // Panel の場合のみ BorderStyle をコピー
+            if (realControl is Panel panel)
+            {
+                panel.BorderStyle = placeholder.BorderStyle;
+            }
+            // FlowLayoutPanel の場合は独自の方法で境界線を処理（後述）
+
+            var parent = placeholder.Parent;
+            int index = parent.Controls.IndexOf(placeholder);
+
+            parent.Controls.Remove(placeholder);
+            parent.Controls.Add(realControl);
+            parent.Controls.SetChildIndex(realControl, index);
+
+            placeholder.Dispose();
+        }
         private void InitializeRuntimeComponents()
         {
             InitializeEventHandlers();
@@ -62,7 +100,7 @@ namespace PowerSimBuilder
 
         private void InitializeEventHandlers()
         {
-            addButton.Click += addButton_Click; // 追加: イベントハンドラ登録
+            addButton.Click += addComponentButton_Click; // 追加: イベントハンドラ登録
             saveButton.Click += saveButton_Click;
             loadButton.Click += loadButton_Click;
             undoButton.Click += undoButton_Click;
@@ -100,7 +138,7 @@ namespace PowerSimBuilder
         /// コンポーネント追加ボタンクリック
         /// 注意点: カスタムコンポーネント追加フォームを表示
         /// </summary>
-        private void AddComponentToolStripButton_Click(object sender, EventArgs e)
+        private void addComponentButton_Click(object sender, EventArgs e)
         {
             using (var form = new AddComponentForm())
             {

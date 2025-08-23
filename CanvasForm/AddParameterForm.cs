@@ -44,7 +44,7 @@ namespace PowerSimBuilder
         {
             Text = "パラメータ編集";
             btnOK.Text = "更新";
-            
+
             // 既存データを設定
             txtName.Text = param.Name;
             cmbType.Text = param.Type;
@@ -75,7 +75,7 @@ namespace PowerSimBuilder
                 this.DialogResult = DialogResult.None;
                 return;
             }
-            
+
             DialogResult = DialogResult.OK;
         }
 
@@ -85,11 +85,11 @@ namespace PowerSimBuilder
 
             switch (type.ToLower())
             {
-                case "int": 
+                case "int":
                     return int.Parse(value);
-                case "double": 
+                case "double":
                     return double.Parse(value);
-                case "bool": 
+                case "bool":
                     return bool.Parse(value);
                 default:
                     return value;

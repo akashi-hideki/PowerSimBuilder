@@ -10,7 +10,7 @@ namespace PowerSimBuilder
         /// <summary>
         /// コンポーネント記述子の辞書（読み取り専用）
         /// </summary>
-        public static IReadOnlyDictionary<string, ComponentDescriptor> Descriptors { get; } 
+        public static IReadOnlyDictionary<string, ComponentDescriptor> Descriptors { get; }
             = CreateDefaultDescriptors();
 
         private static Dictionary<string, ComponentDescriptor> CreateDefaultDescriptors()

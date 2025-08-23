@@ -11,11 +11,11 @@ namespace PowerSimBuilder
         private const string PalettesFolder = "Pallets";
         private const string FileName = "ComponentDescriptors.xml";
         private const string LogCategory = "ComponentPaletteStorage";
-        
+
         public static List<ComponentDescriptor> LoadOrCreateDefault()
         {
             string filePath = GetFilePath();
-            
+
             if (File.Exists(filePath))
             {
                 LogcatTraceHelper.Instance.SimpleMessage(LogCategory, $"Loading descriptors from: {filePath}");
@@ -23,7 +23,7 @@ namespace PowerSimBuilder
                 LogDescriptors("Loaded", loadedData);
                 return loadedData;
             }
-            
+
             LogcatTraceHelper.Instance.SimpleMessage(LogCategory, "File not found. Loading default descriptors.");
             var defaultData = ComponentDescriptorDictionary.Descriptors.Values.ToList();
             SaveToFile(defaultData, filePath);
@@ -43,13 +43,13 @@ namespace PowerSimBuilder
         {
             string appDir = AppDomain.CurrentDomain.BaseDirectory;
             string palettesDir = Path.Combine(appDir, PalettesFolder);
-            
+
             if (!Directory.Exists(palettesDir))
             {
                 Directory.CreateDirectory(palettesDir);
                 LogcatTraceHelper.Instance.SimpleMessage(LogCategory, $"Created directory: {palettesDir}");
             }
-            
+
             return Path.Combine(palettesDir, FileName);
         }
 
@@ -58,8 +58,8 @@ namespace PowerSimBuilder
             try
             {
                 var serializer = new XmlSerializer(
-                    typeof(List<ComponentDescriptor>), 
-                    new Type[] 
+                    typeof(List<ComponentDescriptor>),
+                    new Type[]
                     {
                         typeof(ParameterDescriptor),
                         typeof(FaultCondition),
@@ -67,7 +67,7 @@ namespace PowerSimBuilder
                         typeof(SerializableValue)
                     }
                 );
-                
+
                 using (var stream = new FileStream(filePath, FileMode.Open))
                 {
                     var loaded = (List<ComponentDescriptor>)serializer.Deserialize(stream);
@@ -86,8 +86,8 @@ namespace PowerSimBuilder
             try
             {
                 var serializer = new XmlSerializer(
-                    typeof(List<ComponentDescriptor>), 
-                    new Type[] 
+                    typeof(List<ComponentDescriptor>),
+                    new Type[]
                     {
                         typeof(ParameterDescriptor),
                         typeof(FaultCondition),
@@ -95,7 +95,7 @@ namespace PowerSimBuilder
                         typeof(SerializableValue)
                     }
                 );
-                
+
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     serializer.Serialize(stream, descriptors);
@@ -126,14 +126,14 @@ namespace PowerSimBuilder
             }
 
             LogcatTraceHelper.Instance.SimpleMessage(LogCategory, $"{operation} Descriptor Count: {descriptors.Count}");
-            
+
             foreach (var component in descriptors)
             {
                 LogcatTraceHelper.Instance.SimpleMessage(LogCategory, $"Component: {component.Name} ({component.Type})");
                 LogcatTraceHelper.Instance.SimpleMessage(LogCategory, $"  Category: {component.Category}");
                 LogcatTraceHelper.Instance.SimpleMessage(LogCategory, $"  InputPorts: {string.Join(", ", component.InputPorts)}");
                 LogcatTraceHelper.Instance.SimpleMessage(LogCategory, $"  OutputPorts: {string.Join(", ", component.OutputPorts)}");
-                
+
                 if (component.Parameters != null)
                 {
                     LogcatTraceHelper.Instance.SimpleMessage(LogCategory, $"  Parameters: {component.Parameters.Count}");

@@ -29,6 +29,8 @@ namespace PowerSimBuilder
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            this.canvasPanel = new System.Windows.Forms.Panel();
+            this.palettePanel = new System.Windows.Forms.Panel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.saveButton = new System.Windows.Forms.ToolStripButton();
             this.loadButton = new System.Windows.Forms.ToolStripButton();
@@ -38,18 +40,36 @@ namespace PowerSimBuilder
             this.runButton = new System.Windows.Forms.ToolStripButton();
             this.arrangeButton = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.designCanvas1 = new PowerSimBuilder.DesignCanvas();
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.addButton = new System.Windows.Forms.Button();
             this.editButton = new System.Windows.Forms.Button();
             this.removePalletButton = new System.Windows.Forms.Button();
-            this.componentPalette1 = new PowerSimBuilder.ComponentPalette();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // canvasPanel
+            // 
+            this.canvasPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.canvasPanel.BackColor = System.Drawing.SystemColors.Control;
+            this.canvasPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.canvasPanel.Location = new System.Drawing.Point(0, 0);
+            this.canvasPanel.Name = "canvasPanel";
+            this.canvasPanel.Size = new System.Drawing.Size(608, 488);
+            this.canvasPanel.TabIndex = 0;
+            // 
+            // palettePanel
+            // 
+            this.palettePanel.Dock = System.Windows.Forms.DockStyle.Left;
+            this.palettePanel.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.palettePanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.palettePanel.Location = new System.Drawing.Point(0, 31);
+            this.palettePanel.Name = "palettePanel";
+            this.palettePanel.Size = new System.Drawing.Size(266, 488);
+            this.palettePanel.TabIndex = 2;
             // 
             // toolStrip1
             // 
@@ -135,7 +155,7 @@ namespace PowerSimBuilder
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.designCanvas1);
+            this.splitContainer1.Panel1.Controls.Add(this.canvasPanel);
             // 
             // splitContainer1.Panel2
             // 
@@ -144,17 +164,6 @@ namespace PowerSimBuilder
             this.splitContainer1.SplitterDistance = 608;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 1;
-            // 
-            // designCanvas1
-            // 
-            this.designCanvas1.AllowDrop = true;
-            this.designCanvas1.BackColor = System.Drawing.Color.White;
-            this.designCanvas1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.designCanvas1.Location = new System.Drawing.Point(0, 0);
-            this.designCanvas1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.designCanvas1.Name = "designCanvas1";
-            this.designCanvas1.Size = new System.Drawing.Size(608, 488);
-            this.designCanvas1.TabIndex = 0;
             // 
             // propertyGrid1
             // 
@@ -198,19 +207,6 @@ namespace PowerSimBuilder
             this.removePalletButton.Text = "削除";
             this.removePalletButton.UseVisualStyleBackColor = true;
             // 
-            // componentPalette1
-            // 
-            this.componentPalette1.AutoScroll = true;
-            this.componentPalette1.AvailableComponents = null;
-            this.componentPalette1.BackColor = System.Drawing.Color.White;
-            this.componentPalette1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.componentPalette1.Dock = System.Windows.Forms.DockStyle.Left;
-            this.componentPalette1.Location = new System.Drawing.Point(0, 31);
-            this.componentPalette1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.componentPalette1.Name = "componentPalette1";
-            this.componentPalette1.Size = new System.Drawing.Size(266, 488);
-            this.componentPalette1.TabIndex = 2;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -220,7 +216,7 @@ namespace PowerSimBuilder
             this.Controls.Add(this.editButton);
             this.Controls.Add(this.addButton);
             this.Controls.Add(this.splitContainer1);
-            this.Controls.Add(this.componentPalette1);
+            this.Controls.Add(this.palettePanel);
             this.Controls.Add(this.toolStrip1);
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "MainForm";
@@ -238,6 +234,8 @@ namespace PowerSimBuilder
 
         #endregion
 
+        private System.Windows.Forms.Panel canvasPanel;
+        private System.Windows.Forms.Panel palettePanel;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton saveButton;
         private System.Windows.Forms.ToolStripButton loadButton;
@@ -246,12 +244,10 @@ namespace PowerSimBuilder
         private System.Windows.Forms.ToolStripButton runButton;
         private System.Windows.Forms.ToolStripButton arrangeButton;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private DesignCanvas designCanvas1;
         private System.Windows.Forms.PropertyGrid propertyGrid1;
-        private ComponentPalette componentPalette1;
         private System.Windows.Forms.Button addButton;
         private System.Windows.Forms.Button editButton;
-        private System.Windows.Forms.Button removePalletButton; // ToolStripButton → Buttonに変更
+        private System.Windows.Forms.Button removePalletButton;
         private System.Windows.Forms.ToolStripButton deleteButton;
     }
 }
