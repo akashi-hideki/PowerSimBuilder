@@ -53,9 +53,9 @@ namespace PowerSimBuilder
             // 
             // canvasPanel
             // 
-            this.canvasPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.canvasPanel.BackColor = System.Drawing.SystemColors.Control;
             this.canvasPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.canvasPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.canvasPanel.Location = new System.Drawing.Point(0, 0);
             this.canvasPanel.Name = "canvasPanel";
             this.canvasPanel.Size = new System.Drawing.Size(608, 488);
@@ -63,9 +63,9 @@ namespace PowerSimBuilder
             // 
             // palettePanel
             // 
-            this.palettePanel.Dock = System.Windows.Forms.DockStyle.Left;
             this.palettePanel.BackColor = System.Drawing.SystemColors.ControlLight;
             this.palettePanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.palettePanel.Dock = System.Windows.Forms.DockStyle.Left;
             this.palettePanel.Location = new System.Drawing.Point(0, 31);
             this.palettePanel.Name = "palettePanel";
             this.palettePanel.Size = new System.Drawing.Size(266, 488);
