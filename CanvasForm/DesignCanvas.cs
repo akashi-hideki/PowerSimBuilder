@@ -427,6 +427,8 @@ namespace PowerSimBuilder
         /// 接続の視覚情報を更新
         /// 注意点: コンポーネント位置変更時に呼び出し
         /// </summary>
+
+        // DesignCanvas.cs 内の UpdateConnectionVisual メソッドを修正
         private void UpdateConnectionVisual(Connection connection)
         {
             if (connection.StartComponent == null || connection.EndComponent == null) return;
@@ -435,25 +437,24 @@ namespace PowerSimBuilder
             int startIndex = Array.IndexOf(connection.StartComponent.Descriptor.OutputPorts, connection.StartPort);
             if (startIndex < 0) return;
 
-            float startRatio = (startIndex + 1f) / (connection.StartComponent.Descriptor.OutputPorts.Length + 1);
+            int startYPos = ComponentControl.BaseHeight / 2 + (startIndex * ComponentControl.PortSpacing);
             Point start = new Point(
                 connection.StartComponent.Left + connection.StartComponent.Width,
-                connection.StartComponent.Top + (int)(connection.StartComponent.Height * startRatio)
+                connection.StartComponent.Top + startYPos
             );
 
             // 終了ポートの位置計算
             int endIndex = Array.IndexOf(connection.EndComponent.Descriptor.InputPorts, connection.EndPort);
             if (endIndex < 0) return;
 
-            float endRatio = (endIndex + 1f) / (connection.EndComponent.Descriptor.InputPorts.Length + 1);
+            int endYPos = ComponentControl.BaseHeight / 2 + (endIndex * ComponentControl.PortSpacing);
             Point end = new Point(
                 connection.EndComponent.Left,
-                connection.EndComponent.Top + (int)(connection.EndComponent.Height * endRatio)
+                connection.EndComponent.Top + endYPos
             );
 
             connection.Visual.PathPoints = new List<Point> { start, end };
         }
-
         /// <summary>
         /// コンポーネント配置
         /// 注意点: 自動レイアウトエンジンを使用

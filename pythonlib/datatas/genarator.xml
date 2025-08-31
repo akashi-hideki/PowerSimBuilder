@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SimulationConfig>
+    <GeneratorParameters>
+        <pole_pairs>4</pole_pairs>
+        <rated_voltage>400.0</rated_voltage>
+        <rated_frequency>60.0</rated_frequency>
+        <rated_rpm>1800.0</rated_rpm>
+        <rated_torque>200.0</rated_torque>
+        <winding_resistance>0.1</winding_resistance>
+        <winding_inductance>0.01</winding_inductance>
+        <rotor_inertia>2.5</rotor_inertia>
+        <damping_coefficient>0.2</damping_coefficient>
+        <generator_type>CYLINDRICAL</generator_type>
+        <excitation_type>ELECTROMAGNETIC</excitation_type>
+        <saturation_factor>1.2</saturation_factor>
+        <operation_mode>STANDALONE</operation_mode>
+    </GeneratorParameters>
+    
+    <SimulationSettings>
+        <time_step>0.001</time_step>
+        <duration>5.0</duration>
+        <log_interval>0.01</log_interval>
+        <display_interval>0.1</display_interval>
+    </SimulationSettings>
+    
+    <InputParameters>
+        <rotation_speed_input>1800.0</rotation_speed_input>
+        <load_impedance_R>10.0</load_impedance_R>
+        <load_impedance_L>0.02</load_impedance_L>
+        <speed_reference>1800.0</speed_reference>
+    </InputParameters>
+    
+    <Connections>
+        <Connection>
+            <from>engine.outputs.torque</from>
+            <to>generator.inputs.engine_torque</to>
+        </Connection>
+        <Connection>
+            <from>generator.outputs.load_torque</from>
+            <to>engine.inputs.load_torque</to>
+        </Connection>
+        <Connection>
+            <from>generator.outputs.torque_ripple</from>
+            <to>engine.inputs.torque_disturbance</to>
+        </Connection>
+    </Connections>
+</SimulationConfig>

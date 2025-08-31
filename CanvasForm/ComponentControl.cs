@@ -15,10 +15,16 @@ namespace PowerSimBuilder
         // ポート描画サイズとヒットエリアの拡大
         private const int PortRadius = 8; // 描画半径
         private const int HitTestRadius = 12; // ヒットテスト半径
+        
+        // コンポーネントの基本サイズ（推奨サイズ）
+        public const int BaseWidth = 180;
+        public const int BaseHeight = 40; // 基本高さ（ポート以外の部分）
+        public const int PortSpacing = 20; // ポート間の間隔
 
         // マウス位置追跡用フィールド追加
         private string _hoveredPort = null;
         private bool _isInputPortHovered = false;
+        
         // イベント定義
         public event EventHandler SelectedChanged;
         public event EventHandler<PortEventArgs> PortClicked;
@@ -34,7 +40,6 @@ namespace PowerSimBuilder
 
         /// <summary>
         /// パラメータ辞書
-        /// 注意点: キー=パラメータ名, 値=パラメータ値
         /// </summary>
         public Dictionary<string, object> Parameters { get; } = new Dictionary<string, object>();
 
@@ -56,7 +61,7 @@ namespace PowerSimBuilder
                 if (_selected != value)
                 {
                     _selected = value;
-                    Invalidate();  // 再描画をトリガー
+                    Invalidate();
                     SelectedChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
@@ -72,6 +77,7 @@ namespace PowerSimBuilder
             InitializeComponent();
             InitializeParameters();
             InitializeEvents();
+            CalculateOptimalSize();
 
             // ダブルクリックイベント登録
             this.DoubleClick += (s, e) => DoubleClicked?.Invoke(this, EventArgs.Empty);
@@ -81,9 +87,12 @@ namespace PowerSimBuilder
         /// ポート初期化（ダミー）
         /// 注意点: デザイナー互換用
         /// </summary>
-        public void InitializePortsDummy()
+        private void InitializeParameters()
         {
-            // 座標非依存アーキテクチャでは不要
+            foreach (var param in Descriptor.Parameters)
+            {
+                Parameters[param.Name] = param.DefaultValue;
+            }
         }
 
         /// <summary>
@@ -99,20 +108,41 @@ namespace PowerSimBuilder
         /// パラメータを初期化
         /// 注意点: ディスクリプタのデフォルト値を設定
         /// </summary>
-        private void InitializeParameters()
+        public void InitializePortsDummy()
         {
-            foreach (var param in Descriptor.Parameters)
-            {
-                Parameters[param.Name] = param.DefaultValue;
-            }
+            // 座標非依存アーキテクチャでは不要
         }
 
+        /// <summary>
+        /// 最適なサイズを計算
+        /// </summary>
+        private void CalculateOptimalSize()
+        {
+            int maxPorts = Math.Max(
+                Descriptor.InputPorts?.Length ?? 0,
+                Descriptor.OutputPorts?.Length ?? 0
+            );
+            
+            // 基本高さ + ポート数に応じた追加高さ
+            int calculatedHeight = BaseHeight + (maxPorts * PortSpacing);
+            
+            // 最小高さを確保（少なくとも100ピクセル）
+            this.Size = new Size(BaseWidth, Math.Max(calculatedHeight, 100));
+        }
+
+        /// <summary>
+        /// 円内にポイントがあるか判定
+        /// </summary>
+        private bool IsPointInCircle(Point point, Point center, int radius)
+        {
+            int dx = point.X - center.X;
+            int dy = point.Y - center.Y;
+            return (dx * dx + dy * dy) <= (radius * radius);
+        }
 
         /// <summary>
         /// マウスダウンイベント処理
-        /// 注意点: ポートクリック検出と選択状態更新
         /// </summary>
-        // ComponentControl.cs
         private void ComponentControl_MouseDown(object sender, MouseEventArgs e)
         {
             this.Focus();
@@ -123,27 +153,25 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
-                    int yPos = (int)(Height * ratio);
-                    var portCenter = new Point(5 + PortRadius, yPos);
+                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    var portCenter = new Point(PortRadius, yPos);
 
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
                     {
                         PortClicked?.Invoke(this, new PortEventArgs(Descriptor.InputPorts[i]));
                         portClicked = true;
-                        break; // ループから抜けるが処理は続行
+                        break;
                     }
                 }
             }
 
-            // 出力ポートチェック（入力ポート未クリック時のみ）
+            // 出力ポートチェック
             if (!portClicked && Descriptor.OutputPorts != null)
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
-                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
-                    int yPos = (int)(Height * ratio);
-                    var portCenter = new Point(Width - 15 + PortRadius, yPos);
+                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    var portCenter = new Point(Width - PortRadius * 2, yPos);
 
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
                     {
@@ -161,21 +189,9 @@ namespace PowerSimBuilder
                 BringToFront();
             }
         }
+
         /// <summary>
-        /// マウス移動
-        /// クリック有効時　色変更
-        /// </summary>
-        /// 有効範囲判定
-        /// </summary>
-        private bool IsPointInCircle(Point point, Point center, int radius)
-        {
-            int dx = point.X - center.X;
-            int dy = point.Y - center.Y;
-            return (dx * dx + dy * dy) <= (radius * radius);
-        }
-        /// <summary>
-        /// マウス移動イベント処理（アクセス修飾子をpublicに変更）
-        /// 注意点: DesignCanvasから直接呼び出すためpublicが必要
+        /// マウス移動イベント処理
         /// </summary>
         public void HandleMouseMove(MouseEventArgs e)
         {
@@ -186,9 +202,8 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
-                    int yPos = (int)(Height * ratio);
-                    var portCenter = new Point(5 + PortRadius, yPos);
+                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    var portCenter = new Point(PortRadius, yPos);
 
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
                     {
@@ -206,9 +221,8 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
-                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
-                    int yPos = (int)(Height * ratio);
-                    var portCenter = new Point(Width - 15 + PortRadius, yPos);
+                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    var portCenter = new Point(Width - PortRadius * 2, yPos);
 
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
                     {
@@ -231,29 +245,27 @@ namespace PowerSimBuilder
             Invalidate();
         }
 
-        /// <summary>
-        /// 標準のマウス移動イベント処理
-        /// 注意点: 内部でカスタム処理を呼び出す
-        /// </summary>
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
             HandleMouseMove(e);
         }
+
         /// <summary>
         /// 描画処理
-        /// 注意点: 選択状態、ポート位置を可視化
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
             e.Graphics.FillRectangle(Brushes.LightGray, ClientRectangle);
 
+            // インスタンス名を描画
             using (var font = new Font("Arial", 8))
             {
                 e.Graphics.DrawString(InstanceName, font, Brushes.Black, 10, 10);
             }
 
+            // 選択状態を描画
             if (IsSelected)
             {
                 using (var pen = new Pen(Color.Red, 2))
@@ -267,9 +279,8 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
-                    int yPos = (int)(Height * ratio);
-                    var portCenter = new Point(5 + PortRadius, yPos);
+                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    var portCenter = new Point(PortRadius, yPos);
 
                     bool isHovered = (_hoveredPort == Descriptor.InputPorts[i] && _isInputPortHovered);
                     using (var brush = new SolidBrush(isHovered ? Color.Cyan : Color.Blue))
@@ -286,7 +297,13 @@ namespace PowerSimBuilder
                         PortRadius * 2,
                         PortRadius * 2);
 
-                    e.Graphics.DrawString(Descriptor.InputPorts[i], Font, Brushes.Black, 20, yPos - 7);
+                    // ポート名を描画（省略表示）
+                    string displayName = Descriptor.InputPorts[i];
+                    if (displayName.Length > 12)
+                    {
+                        displayName = displayName.Substring(0, 10) + "..";
+                    }
+                    e.Graphics.DrawString(displayName, Font, Brushes.Black, 20, yPos - 7);
                 }
             }
 
@@ -295,9 +312,8 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
-                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
-                    int yPos = (int)(Height * ratio);
-                    var portCenter = new Point(Width - 15 + PortRadius, yPos);
+                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    var portCenter = new Point(Width - PortRadius * 2, yPos);
 
                     bool isHovered = (_hoveredPort == Descriptor.OutputPorts[i] && !_isInputPortHovered);
                     using (var brush = new SolidBrush(isHovered ? Color.Cyan : Color.Green))
@@ -314,10 +330,19 @@ namespace PowerSimBuilder
                         PortRadius * 2,
                         PortRadius * 2);
 
-                    e.Graphics.DrawString(Descriptor.OutputPorts[i], Font, Brushes.Black, Width - 50, yPos - 7);
+                    // ポート名を描画（省略表示）
+                    string displayName = Descriptor.OutputPorts[i];
+                    if (displayName.Length > 12)
+                    {
+                        displayName = displayName.Substring(0, 10) + "..";
+                    }
+                    
+                    // テキストの幅を計算して右側に配置
+                    SizeF textSize = e.Graphics.MeasureString(displayName, Font);
+                    e.Graphics.DrawString(displayName, Font, Brushes.Black, 
+                        Width - textSize.Width - 30, yPos - 7);
                 }
             }
         }
     }
-
 }

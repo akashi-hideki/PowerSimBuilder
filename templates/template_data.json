@@ -1,0 +1,91 @@
+{
+  "time_step": 0.001,
+  "duration": 5.0,
+  "log_interval": 0.01,
+  "display_interval": 0.1,
+  "component_imports": [
+    "from generator import ThreePhaseGenerator, GeneratorParameters, GeneratorType, ExcitationType",
+    "from engine import DieselEngine, EngineParameters",
+    "from diode_bridge import DiodeBridge",
+    "from welder import Welder",
+    "from control import SpeedController"
+  ],
+  "components": {
+    "generator": {
+      "type": "ThreePhaseGenerator",
+      "parameters": {
+        "pole_pairs": 4,
+        "rated_voltage": 400.0,
+        "rated_frequency": 60.0,
+        "rated_rpm": 1800.0,
+        "rated_torque": 200.0,
+        "generator_type": "GeneratorType.CYLINDRICAL",
+        "excitation_type": "ExcitationType.ELECTROMAGNETIC"
+      }
+    },
+    "engine": {
+      "type": "DieselEngine",
+      "parameters": {
+        "max_torque": 300.0,
+        "rated_rpm": 1800.0,
+        "idle_rpm": 800.0
+      }
+    },
+    "bridge": {
+      "type": "DiodeBridge",
+      "parameters": {}
+    },
+    "welder": {
+      "type": "Welder",
+      "parameters": {
+        "max_current": 200.0,
+        "min_current": 50.0
+      }
+    },
+    "controller": {
+      "type": "SpeedController",
+      "parameters": {
+        "kp": 0.8,
+        "ki": 0.2,
+        "kd": 0.1
+      }
+    }
+  },
+  "connections": [
+    {
+      "from": "engine.outputs.torque",
+      "to": "generator.inputs.engine_torque"
+    },
+    {
+      "from": "generator.outputs.load_torque",
+      "to": "engine.inputs.load_torque"
+    },
+    {
+      "from": "generator.outputs.torque_ripple",
+      "to": "engine.inputs.torque_disturbance"
+    },
+    {
+      "from": "controller.outputs.speed_reference",
+      "to": "generator.inputs.speed_reference"
+    },
+    {
+      "from": "generator.outputs.rotation_speed",
+      "to": "controller.inputs.actual_speed"
+    },
+    {
+      "from": "generator.outputs.phase_voltages",
+      "to": "bridge.inputs.ac_voltage"
+    },
+    {
+      "from": "bridge.outputs.dc_voltage",
+      "to": "welder.inputs.dc_voltage"
+    }
+  ],
+  "display_code": [
+    "gen = components['generator']",
+    "eng = components['engine']",
+    "print(f'Time: {t:.2f}s, RPM: {gen.outputs[\"rotation_speed\"]:.0f}, ' +",
+    "      f'Engine T: {eng.outputs[\"torque\"]:.1f}Nm, ' +",
+    "      f'Load T: {gen.outputs[\"load_torque\"]:.1f}Nm')"
+  ]
+}

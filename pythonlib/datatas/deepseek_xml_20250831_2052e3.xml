@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SimulationConfig>
+    <Components>
+        <LCFilter id="filter1">
+            <Parameters>
+                <inductance>0.01</inductance>
+                <capacitance>0.001</capacitance>
+                <esr_inductor>0.1</esr_inductor>
+                <esr_capacitor>0.01</esr_capacitor>
+                <filter_type>low_pass</filter_type>
+            </Parameters>
+            <Connections>
+                <input_voltage source="rectifier1" output="dc_voltage"/>
+                <load_impedance value="10.0"/>
+            </Connections>
+        </LCFilter>
+
+        <DiodeBridge id="rectifier1">
+            <Parameters>
+                <diode_forward_voltage>0.7</diode_forward_voltage>
+                <diode_resistance>0.01</diode_resistance>
+                <thermal_coefficient>-0.002</thermal_coefficient>
+                <bridge_type>full_wave</bridge_type>
+            </Parameters>
+            <Connections>
+                <ac_voltage source="generator" output="phase_voltages"/>
+                <load_resistance value="15.0"/>
+            </Connections>
+        </DiodeBridge>
+
+        <IGBTRectifier id="igbt_rectifier1">
+            <Parameters>
+                <switching_frequency>10000</switching_frequency>
+                <dead_time>2e-6</dead_time>
+                <sat_voltage>2.0</sat_voltage>
+                <on_resistance>0.01</on_resistance>
+            </Parameters>
+            <Connections>
+                <ac_voltage source="generator" output="phase_voltages"/>
+                <gate_signals source="controller" output="pwm_signals"/>
+            </Connections>
+        </IGBTRectifier>
+
+        <PWMChopper id="chopper1">
+            <Parameters>
+                <switching_frequency>20000</switching_frequency>
+                <max_duty_cycle>0.95</max_duty_cycle>
+                <min_duty_cycle>0.05</min_duty_cycle>
+                <inductance>0.001</inductance>
+                <capacitance>0.0001</capacitance>
+            </Parameters>
+            <Connections>
+                <input_voltage source="igbt_rectifier1" output="dc_current"/>
+                <duty_cycle source="controller" output="duty_output"/>
+            </Connections>
+        </PWMChopper>
+    </Components>
+
+    <Connections>
+        <Connection from="generator.phase_voltages" to="rectifier1.ac_voltage"/>
+        <Connection from="rectifier1.dc_voltage" to="filter1.input_voltage"/>
+        <Connection from="filter1.output_voltage" to="load.voltage"/>
+        <Connection from="controller.pwm_signals" to="igbt_rectifier1.gate_signals"/>
+        <Connection from="controller.duty_output" to="chopper1.duty_cycle"/>
+    </Connections>
+</SimulationConfig>
