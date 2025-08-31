@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -25,6 +26,51 @@ namespace PowerSimBuilder
         ///   - 接続関係に基づいた配置のため、事前に接続情報が必要
         ///   - ルートコンポーネントがない場合、配置は実行されない
         /// </summary>
+        // AutoLayoutEngine.cs に以下のメソッドを追加（既存のものがあれば修正）
+        public void ArrangeComponents(DesignCanvas canvas)
+        {
+            // レイアウト計算中は描画を停止
+            canvas.SuspendLayout();
+
+            try
+            {
+                var components = canvas.Components;
+                if (components.Count == 0) return;
+
+                // コンポーネントの配置計算
+                int spacing = 50;
+                int x = spacing;
+                int y = spacing;
+                int maxHeightInRow = 0;
+
+                foreach (var component in components)
+                {
+                    // 行の高さを更新
+                    maxHeightInRow = Math.Max(maxHeightInRow, component.Height);
+
+                    // コンポーネント位置を設定
+                    component.Location = new Point(x, y);
+
+                    // 次の位置を計算
+                    x += component.Width + spacing;
+
+                    // 行末に達したら次の行へ
+                    if (x + component.Width > canvas.Width - spacing)
+                    {
+                        x = spacing;
+                        y += maxHeightInRow + spacing;
+                        maxHeightInRow = 0;
+                    }
+                }
+            }
+            finally
+            {
+                // レイアウトを再開
+                canvas.ResumeLayout(true);
+                canvas.PerformLayout();
+            }
+        }
+#if false
         public void ArrangeComponents(DesignCanvas canvas)
         {
             var components = canvas.Components;
@@ -86,7 +132,7 @@ namespace PowerSimBuilder
                 }
             }
         }
-
+#endif
         /// <summary>
         /// ルートコンポーネントを検出（入力ポートがないコンポーネント）
         /// 処理内容:
@@ -102,5 +148,6 @@ namespace PowerSimBuilder
                     c.Descriptor.InputPorts.Length == 0)
                 .ToList();
         }
+
     }
 }

@@ -92,7 +92,11 @@ namespace PowerSimBuilder
             }
             else
             {
+ 
                 InitializeComponent();
+                this.AutoScroll = true;
+                // 必要に応じて最小スクロール領域を設定（例: 幅2000, 高さ2000）
+                this.AutoScrollMinSize = new System.Drawing.Size(2000, 2000);
                 DoubleBuffered = true;
                 AllowDrop = true;
                 this.DragEnter += DesignCanvas_DragEnter;
@@ -461,11 +465,23 @@ namespace PowerSimBuilder
         /// </summary>
         public void ArrangeComponents()
         {
-            AutoLayoutEngine.ArrangeComponents(this);
-            UpdateAllConnectionVisuals();
+            // レイアウトを一時停止
+            this.SuspendLayout();
+
+            try
+            {
+                AutoLayoutEngine.ArrangeComponents(this);
+                UpdateAllConnectionVisuals();
+            }
+            finally
+            {
+                // レイアウトを再開して一度だけ再描画
+                this.ResumeLayout(true);
+                this.PerformLayout();
+            }
+
             Invalidate();
         }
-
         /// <summary>
         /// 全接続の視覚情報を更新
         /// 注意点: 配置変更後に呼び出し

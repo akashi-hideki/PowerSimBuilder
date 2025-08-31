@@ -118,18 +118,29 @@ namespace PowerSimBuilder
         /// </summary>
         private void CalculateOptimalSize()
         {
-            int maxPorts = Math.Max(
-                Descriptor.InputPorts?.Length ?? 0,
-                Descriptor.OutputPorts?.Length ?? 0
-            );
-            
-            // 基本高さ + ポート数に応じた追加高さ
-            int calculatedHeight = BaseHeight + (maxPorts * PortSpacing);
-            
-            // 最小高さを確保（少なくとも100ピクセル）
-            this.Size = new Size(BaseWidth, Math.Max(calculatedHeight, 100));
-        }
+            // レイアウトを一時停止
+            this.SuspendLayout();
 
+            try
+            {
+                int maxPorts = Math.Max(
+                    Descriptor.InputPorts?.Length ?? 0,
+                    Descriptor.OutputPorts?.Length ?? 0
+                );
+
+                // 基本高さ + ポート数に応じた追加高さ
+                int calculatedHeight = BaseHeight + (maxPorts * PortSpacing);
+
+                // 最小高さを確保（少なくとも100ピクセル）
+                this.Size = new Size(BaseWidth, Math.Max(calculatedHeight, 100));
+            }
+            finally
+            {
+                // レイアウトを再開
+                this.ResumeLayout(true);
+                this.PerformLayout();
+            }
+        }
         /// <summary>
         /// 円内にポイントがあるか判定
         /// </summary>

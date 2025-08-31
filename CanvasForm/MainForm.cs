@@ -37,19 +37,55 @@ namespace PowerSimBuilder
         {
             base.OnLoad(e);
 
-            // プレースホルダーを実際のコントロールで置換
+            // デザインキャンバスとコンポーネントパレットの初期化
             designCanvas1 = new DesignCanvas();
-            ReplaceControl(canvasPanel, designCanvas1);
-
             componentPalette1 = new ComponentPalette();
+
+            // コントロールの置換前にサイズを設定
+            designCanvas1.Size = canvasPanel.Size;
+            componentPalette1.Size = palettePanel.Size;
+
+            // ダブルバッファリングを有効化（ちらつき防止）
+            // designCanvas1.DoubleBuffered = true;
+            SetDoubleBuffered(componentPalette1);
+
+            // コントロールの置換
+            ReplaceControl(canvasPanel, designCanvas1);
             ReplaceControl(palettePanel, componentPalette1);
 
             InitializeRuntimeComponents();
-            // 境界線の設定を明示的に行う
+
+            // 境界線の設定
             designCanvas1.BorderStyle = BorderStyle.FixedSingle;
-            designCanvas1.BackColor = Color.White; // 必要に応じて背景色も設定
+            designCanvas1.BackColor = Color.White;
+
+            // レイアウトを一時的に停止
+            this.SuspendLayout();
+
+            // コンポーネントの初期配置
+            designCanvas1.ArrangeComponents();
+
+            // レイアウトを再開
+            this.ResumeLayout(true);
+            this.PerformLayout();
         }
 
+        // ダブルバッファリングを設定するヘルパーメソッド
+        private void SetDoubleBuffered(Control control)
+        {
+            if (SystemInformation.TerminalServerSession) return;
+
+            System.Reflection.PropertyInfo prop =
+                typeof(Control).GetProperty(
+                    "DoubleBuffered",
+                    System.Reflection.BindingFlags.NonPublic |
+                    System.Reflection.BindingFlags.Instance);
+
+            if (prop != null)
+            {
+                prop.SetValue(control, true, null);
+            }
+        }
         private void ReplaceControl(Panel placeholder, Control realControl)
         {
             // 基本プロパティのコピー
