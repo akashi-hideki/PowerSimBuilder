@@ -107,10 +107,12 @@
     <Compile Include="CanvasForm\PalletteDataDefine.cs" />
     <Compile Include="ComponentEdit\ComponentCodeGenerator.cs" />
     <Compile Include="ComponentEdit\ComponentManager.cs" />
-    <Compile Include="ComponentEdit\PythonCodeEditorForm.cs">
+    <Compile Include="ComponentEdit\PythonPartsEditorForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ComponentEdit\PythonCodeEditorForm.Designer.cs" />
+    <Compile Include="ComponentEdit\PythonPartsEditorForm.Designer.cs">
+      <DependentUpon>PythonPartsEditorForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="SimPartsManege\ComponentDescriptorDictionary.cs" />
     <Compile Include="SimPartsManege\ComponentPaletteStorage.cs" />
     <Compile Include="SimulationGenerate\PythonCodeGenerator.cs" />

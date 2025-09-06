@@ -396,19 +396,23 @@ namespace PowerSimBuilder
         /// </summary>
         private void runButton_Click(object sender, EventArgs e)
         {
-            var components = _canvasManager.GetAllComponents();
-            var connections = _canvasManager.GetAllConnections();
-
-            // コード生成
-            string pythonCode = _codeGenerator.GenerateSimulationCode(components, connections);
-
-            // ファイル保存（デフォルトディレクトリはアプリケーションデータフォルダ）
-            string outputDir = GetPythonOutputDirectory();
-            if (_codeGenerator.SaveCodeToFile(outputDir))
+            string file_path = BuildPythonSimulationWithFileDialog(_canvasManager);
+            if ((!String.IsNullOrEmpty(file_path)) && (File.Exists(file_path)))
             {
-                // ビューアー表示
-                _codeGenerator.ShowCodeViewer();
+                // ファイルパスを指定してフォームを表示
+                var editorForm = new PythonPartsEditorForm(file_path);
+                if (editorForm.ShowDialog() == DialogResult.OK)
+                {
+                    // 保存が選択された場合、編集されたコードを取得
+                    string editedCode = editorForm.GetPythonCode();
+                    // 必要に応じて editedCode を使用
+                }
+                else
+                {
+                    // キャンセルされた場合の処理
+                }
             }
+
         }
         /// <summary>
         /// Pythonシミュレーションコードの出力ディレクトリパスを取得します
