@@ -1,6 +1,6 @@
 namespace PowerSimBuilder
 {
-    partial class PythonPartsEditorForm
+    partial class PythonEditorForm
     {
         private System.ComponentModel.IContainer components = null;
 

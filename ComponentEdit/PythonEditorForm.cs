@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace PowerSimBuilder
 {
-    public partial class PythonPartsEditorForm : Form
+    public partial class PythonEditorForm : Form
     {
         private string _originalCode;
         private string _filePath;
@@ -41,7 +41,7 @@ namespace PowerSimBuilder
         /// </summary>
         /// <param name="filePath">編集するファイルのパス</param>
         /// <param name="enableRunButtons">実行ボタンを有効にする場合はtrue</param>
-        public PythonPartsEditorForm(string filePath, bool enableRunButtons)
+        public PythonEditorForm(string filePath, bool enableRunButtons)
         {
             InitializeComponent();
             InitializeContextMenu();

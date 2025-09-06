@@ -398,7 +398,7 @@ namespace PowerSimBuilder
             if ((!String.IsNullOrEmpty(file_path)) && (File.Exists(file_path)))
             {
                 // ファイルパスを指定してフォームを表示
-                var editorForm = new PythonPartsEditorForm(file_path, true);
+                var editorForm = new PythonEditorForm(file_path, true);
 
                 editorForm.Executor = new PythonExecutor();
                 if (editorForm.ShowDialog() == DialogResult.OK)

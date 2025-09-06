@@ -108,11 +108,11 @@
     <Compile Include="CanvasForm\PalletteDataDefine.cs" />
     <Compile Include="ComponentEdit\ComponentCodeGenerator.cs" />
     <Compile Include="ComponentEdit\ComponentManager.cs" />
-    <Compile Include="ComponentEdit\PythonPartsEditorForm.cs">
+    <Compile Include="ComponentEdit\PythonEditorForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ComponentEdit\PythonPartsEditorForm.Designer.cs">
-      <DependentUpon>PythonPartsEditorForm.cs</DependentUpon>
+    <Compile Include="ComponentEdit\PythonEditorForm.Designer.cs">
+      <DependentUpon>PythonEditorForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SimPartsManege\ComponentDescriptorDictionary.cs" />
     <Compile Include="SimPartsManege\ComponentPaletteStorage.cs" />
@@ -181,8 +181,8 @@
     <EmbeddedResource Include="CanvasForm\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ComponentEdit\PythonPartsEditorForm.resx">
-      <DependentUpon>PythonPartsEditorForm.cs</DependentUpon>
+    <EmbeddedResource Include="ComponentEdit\PythonEditorForm.resx">
+      <DependentUpon>PythonEditorForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SimRegistForm.resx">
       <DependentUpon>SimRegistForm.cs</DependentUpon>
