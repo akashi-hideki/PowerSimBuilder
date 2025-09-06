@@ -4,7 +4,9 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Windows;
 using System.Windows.Forms;
+using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace PowerSimBuilder
 {
@@ -511,6 +513,66 @@ namespace PowerSimBuilder
             removePalletButton.Enabled =
                 _canvasManager.SelectedComponent != null ||
                 _canvasManager.SelectedConnection != null;
+        }
+        /// <summary>
+        /// CanvasManagerからコンポーネントと接続情報を取得し、SaveFileDialogを使用して
+        /// Pythonシミュレーションファイルを生成します
+        /// </summary>
+        /// <param name="manager">コンポーネントと接続情報を含むCanvasManagerインスタンス</param>
+        /// <returns>生成されたPythonファイルのパス。ユーザーがキャンセルした場合やエラーが発生した場合は空文字列を返します</returns>
+        public string BuildPythonSimulationWithFileDialog(CanvasManager manager)
+        {
+            List<ComponentDescriptor> components = manager.UsedComponentDescriptors;
+            List<Connection> connections = manager.Connections;
+            string pyfile = string.Empty;
+            try
+            {
+                // SaveFileDialogのインスタンスを作成（Windows FormsではOpenFileDialogではなくSaveFileDialogを使用）
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+
+                // ダイアログの設定
+                saveFileDialog.Title = "Pythonシミュレーションファイルの保存先を選択";
+                saveFileDialog.Filter = "Pythonファイル|*.py|すべてのファイル|*.*";
+                saveFileDialog.DefaultExt = ".py";
+                saveFileDialog.AddExtension = true;
+
+                // 初期ディレクトリを設定（オプション）
+                saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+                // ダイアログを表示し、ユーザーがOKをクリックしたか確認
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    // PythonSimulationMainBuilderのインスタンスを作成
+                    PythonSimulationMainBuilder builder = new PythonSimulationMainBuilder();
+
+                    // ファイルパスを設定
+                    builder.FilePath = saveFileDialog.FileName;
+                    pyfile = builder.FilePath;
+
+                    // コンポーネントと接続を引数から設定
+                    builder.Components = components;
+                    builder.Connections = connections;
+
+                    // エラーハンドラーを設定（オプション）
+                    builder.ErrorHandler = (category, message) =>
+                    {
+                        MessageBox.Show($"エラー ({category}): {message}", "エラー",
+                                      MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    };
+
+                    // ファイルをビルド
+                    builder.BuildPythonSimulationFile();
+
+                    MessageBox.Show($"ファイルが正常に生成されました:\n{saveFileDialog.FileName}",
+                                  "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"ファイル生成中にエラーが発生しました:\n{ex.Message}",
+                              "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return pyfile;
         }
     }
 }

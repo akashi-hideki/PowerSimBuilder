@@ -58,7 +58,7 @@ namespace PowerSimBuilder
             this.canvasPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.canvasPanel.Location = new System.Drawing.Point(0, 0);
             this.canvasPanel.Name = "canvasPanel";
-            this.canvasPanel.Size = new System.Drawing.Size(900, 650); // サイズを大きく変更
+            this.canvasPanel.Size = new System.Drawing.Size(900, 646);
             this.canvasPanel.TabIndex = 0;
             // 
             // palettePanel
@@ -66,9 +66,9 @@ namespace PowerSimBuilder
             this.palettePanel.BackColor = System.Drawing.SystemColors.ControlLight;
             this.palettePanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.palettePanel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.palettePanel.Location = new System.Drawing.Point(0, 27);
+            this.palettePanel.Location = new System.Drawing.Point(0, 31);
             this.palettePanel.Name = "palettePanel";
-            this.palettePanel.Size = new System.Drawing.Size(300, 650); // サイズを大きく変更
+            this.palettePanel.Size = new System.Drawing.Size(300, 646);
             this.palettePanel.TabIndex = 2;
             // 
             // toolStrip1
@@ -84,7 +84,7 @@ namespace PowerSimBuilder
             this.arrangeButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1500, 27); // サイズを大きく変更
+            this.toolStrip1.Size = new System.Drawing.Size(1500, 31);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -93,7 +93,7 @@ namespace PowerSimBuilder
             this.saveButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.saveButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.saveButton.Name = "saveButton";
-            this.saveButton.Size = new System.Drawing.Size(43, 24);
+            this.saveButton.Size = new System.Drawing.Size(43, 28);
             this.saveButton.Text = "保存";
             // 
             // loadButton
@@ -101,7 +101,7 @@ namespace PowerSimBuilder
             this.loadButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.loadButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.loadButton.Name = "loadButton";
-            this.loadButton.Size = new System.Drawing.Size(69, 24);
+            this.loadButton.Size = new System.Drawing.Size(69, 28);
             this.loadButton.Text = "読み込み";
             // 
             // undoButton
@@ -109,7 +109,7 @@ namespace PowerSimBuilder
             this.undoButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.undoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.undoButton.Name = "undoButton";
-            this.undoButton.Size = new System.Drawing.Size(67, 24);
+            this.undoButton.Size = new System.Drawing.Size(67, 28);
             this.undoButton.Text = "元に戻す";
             // 
             // redoButton
@@ -117,7 +117,7 @@ namespace PowerSimBuilder
             this.redoButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.redoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.redoButton.Name = "redoButton";
-            this.redoButton.Size = new System.Drawing.Size(61, 24);
+            this.redoButton.Size = new System.Drawing.Size(61, 28);
             this.redoButton.Text = "やり直し";
             // 
             // deleteButton
@@ -126,7 +126,7 @@ namespace PowerSimBuilder
             this.deleteButton.Image = ((System.Drawing.Image)(resources.GetObject("deleteButton.Image")));
             this.deleteButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.deleteButton.Name = "deleteButton";
-            this.deleteButton.Size = new System.Drawing.Size(121, 24);
+            this.deleteButton.Size = new System.Drawing.Size(121, 28);
             this.deleteButton.Text = "キャンバスから削除";
             this.deleteButton.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
             // 
@@ -135,7 +135,7 @@ namespace PowerSimBuilder
             this.runButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.runButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.runButton.Name = "runButton";
-            this.runButton.Size = new System.Drawing.Size(43, 24);
+            this.runButton.Size = new System.Drawing.Size(43, 28);
             this.runButton.Text = "実行";
             // 
             // arrangeButton
@@ -143,13 +143,13 @@ namespace PowerSimBuilder
             this.arrangeButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.arrangeButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.arrangeButton.Name = "arrangeButton";
-            this.arrangeButton.Size = new System.Drawing.Size(73, 24);
+            this.arrangeButton.Size = new System.Drawing.Size(73, 28);
             this.arrangeButton.Text = "配置整理";
             // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(300, 27); // 位置を調整
+            this.splitContainer1.Location = new System.Drawing.Point(300, 31);
             this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.splitContainer1.Name = "splitContainer1";
             // 
@@ -160,8 +160,8 @@ namespace PowerSimBuilder
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.propertyGrid1);
-            this.splitContainer1.Size = new System.Drawing.Size(1200, 650); // サイズを大きく変更
-            this.splitContainer1.SplitterDistance = 900; // 分割位置を調整（キャンバスを広く）
+            this.splitContainer1.Size = new System.Drawing.Size(1200, 646);
+            this.splitContainer1.SplitterDistance = 900;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -171,7 +171,7 @@ namespace PowerSimBuilder
             this.propertyGrid1.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(295, 650); // サイズを調整
+            this.propertyGrid1.Size = new System.Drawing.Size(295, 646);
             this.propertyGrid1.TabIndex = 0;
             // 
             // addButton
@@ -211,7 +211,7 @@ namespace PowerSimBuilder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1500, 677); // フォームサイズを大きく変更
+            this.ClientSize = new System.Drawing.Size(1500, 677);
             this.Controls.Add(this.removePalletButton);
             this.Controls.Add(this.editButton);
             this.Controls.Add(this.addButton);

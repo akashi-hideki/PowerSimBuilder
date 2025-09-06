@@ -89,15 +89,6 @@ namespace PowerSimBuilder
             { "datetime", value => value != null ? $"datetime.strptime(\"{value}\", \"%Y-%m-%d %H:%M:%S\")" : "None" }
         };
 
-        /// <summary>コードセクション辞書（静的）</summary>
-        private static readonly Dictionary<string, List<string>> codeSections = new Dictionary<string, List<string>>
-        {
-            {"imports", new List<string>()},
-            {"function_def", new List<string>()},
-            {"plot_config", new List<string>()},
-            {"plotting_functions", new List<string>()}
-        };
-
         #endregion
 
         #region Properties
@@ -113,6 +104,7 @@ namespace PowerSimBuilder
 
         /// <summary>エラーハンドラーデリゲート</summary>
         public Action<ErrorCategory, string> ErrorHandler { get; set; } = DefaultErrorHandler;
+        public Dictionary<string, List<string>> CodeSections { get; private set; }
 
         #endregion
 
@@ -159,8 +151,8 @@ namespace PowerSimBuilder
         /// <returns>コード行リスト</returns>
         public List<string> GetCodeSection(string sectionName)
         {
-            if (codeSections.ContainsKey(sectionName))
-                return new List<string>(codeSections[sectionName]);
+            if (CodeSections.ContainsKey(sectionName))
+                return new List<string>(CodeSections[sectionName]);
 
             HandleError(ErrorCategory.SectionAccessError, sectionName);
             throw new ArgumentException($"Section '{sectionName}' not found.");
@@ -173,8 +165,8 @@ namespace PowerSimBuilder
         /// <param name="lines">コード行リスト</param>
         public void SetCodeSection(string sectionName, List<string> lines)
         {
-            if (codeSections.ContainsKey(sectionName))
-                codeSections[sectionName] = lines;
+            if (CodeSections.ContainsKey(sectionName))
+                CodeSections[sectionName] = lines;
             else
                 throw new ArgumentException($"Section '{sectionName}' not found.");
         }
@@ -186,10 +178,9 @@ namespace PowerSimBuilder
         /// <param name="line">追加する行</param>
         public void AddLineToSection(string sectionName, string line)
         {
-            if (codeSections.ContainsKey(sectionName))
-                codeSections[sectionName].Add(line);
-            else
-                throw new ArgumentException($"Section '{sectionName}' not found.");
+            if (!CodeSections.ContainsKey(sectionName))
+                CodeSections.Add(sectionName, new List<string>());
+            CodeSections[sectionName].Add(line);
         }
 
         /// <summary>
@@ -200,8 +191,8 @@ namespace PowerSimBuilder
         /// <param name="line">挿入する行</param>
         public void InsertLineToSection(string sectionName, int index, string line)
         {
-            if (codeSections.ContainsKey(sectionName))
-                codeSections[sectionName].Insert(index, line);
+            if (CodeSections.ContainsKey(sectionName))
+                CodeSections[sectionName].Insert(index, line);
             else
                 throw new ArgumentException($"Section '{sectionName}' not found.");
         }
@@ -212,8 +203,8 @@ namespace PowerSimBuilder
         /// <param name="sectionName">セクション名</param>
         public void ClearSection(string sectionName)
         {
-            if (codeSections.ContainsKey(sectionName))
-                codeSections[sectionName].Clear();
+            if (CodeSections.ContainsKey(sectionName))
+                CodeSections[sectionName].Clear();
             else
                 throw new ArgumentException($"Section '{sectionName}' not found.");
         }
@@ -224,8 +215,8 @@ namespace PowerSimBuilder
         /// <param name="sectionName">セクション名</param>
         public void AddNewSection(string sectionName)
         {
-            if (!codeSections.ContainsKey(sectionName))
-                codeSections.Add(sectionName, new List<string>());
+            if (!CodeSections.ContainsKey(sectionName))
+                CodeSections.Add(sectionName, new List<string>());
         }
 
         /// <summary>
@@ -234,8 +225,8 @@ namespace PowerSimBuilder
         /// <param name="sectionName">セクション名</param>
         public void RemoveSection(string sectionName)
         {
-            if (codeSections.ContainsKey(sectionName))
-                codeSections.Remove(sectionName);
+            if (CodeSections.ContainsKey(sectionName))
+                CodeSections.Remove(sectionName);
         }
 
         /// <summary>
@@ -244,7 +235,7 @@ namespace PowerSimBuilder
         /// <returns>セクション辞書</returns>
         public Dictionary<string, List<string>> GetAllSections()
         {
-            return new Dictionary<string, List<string>>(codeSections);
+            return new Dictionary<string, List<string>>(CodeSections);
         }
 
         /// <summary>
@@ -260,16 +251,18 @@ namespace PowerSimBuilder
         #endregion
 
         #region Private Methods
-
         /// <summary>
         /// コードセクションを初期化する
         /// </summary>
-        private static void InitializeCodeSections()
+        private void InitializeCodeSections()
         {
-            foreach (var key in codeSections.Keys.ToList())
+            CodeSections = new Dictionary<string, List<string>>
             {
-                codeSections[key] = new List<string>();
-            }
+                {"imports", new List<string>()},
+                {"function_def", new List<string>()},
+                {"plot_config", new List<string>()},
+                {"plotting_functions", new List<string>()}
+            };
         }
 
         /// <summary>
@@ -345,15 +338,14 @@ namespace PowerSimBuilder
         /// </summary>
         private void GenerateImportsSection()
         {
-            codeSections["imports"].Add("import numpy as np");
+            AddLineToSection("imports", "import numpy as np");
             
-            // 必要な追加インポートをチェック
             if (NeedsDateTimeImport())
             {
-                codeSections["imports"].Add("from datetime import datetime");
+                AddLineToSection("imports", "from datetime import datetime");
             }
             
-            codeSections["imports"].Add("");
+            AddLineToSection("imports", "");
         }
 
         /// <summary>
@@ -380,7 +372,7 @@ namespace PowerSimBuilder
         /// </summary>
         private void GenerateFunctionDefinitionSection()
         {
-            codeSections["function_def"].Add("def main():");
+            AddLineToSection("function_def", "def main():");
             AddTimeStepDefinition();
             AddSimulationDataDefinition();
             GenerateComponentParametersInFunction();
@@ -388,13 +380,12 @@ namespace PowerSimBuilder
             AddConnectionsListInFunction();
             AddSimulationLoopInFunction();
             
-            // メイン関数の最後にプロット呼び出しを追加
-            codeSections["function_def"].Add("");
-            codeSections["function_def"].Add("    # シミュレーション実行後のプロット");
-            codeSections["function_def"].Add("    plot_signals(sim_data, plot_config)");
-            codeSections["function_def"].Add("    print(\"シミュレーション完了\")");
+            AddLineToSection("function_def", "");
+            AddLineToSection("function_def", "    # シミュレーション実行後のプロット");
+            AddLineToSection("function_def", "    plot_signals(sim_data, plot_config)");
+            AddLineToSection("function_def", "    print(\"シミュレーション完了\")");
             
-            codeSections["function_def"].Add("");
+            AddLineToSection("function_def", "");
         }
 
         /// <summary>
@@ -402,8 +393,8 @@ namespace PowerSimBuilder
         /// </summary>
         private void AddTimeStepDefinition()
         {
-            codeSections["function_def"].Add("    dt = 0.001");
-            codeSections["function_def"].Add("    t_end = 5.0");
+            AddLineToSection("function_def", "    dt = 0.001");
+            AddLineToSection("function_def", "    t_end = 5.0");
         }
 
         /// <summary>
@@ -411,9 +402,9 @@ namespace PowerSimBuilder
         /// </summary>
         private void AddSimulationDataDefinition()
         {
-            codeSections["function_def"].Add("    sim_data = SimulationData()");
-            codeSections["function_def"].Add("    sim_data.time_step = dt");
-            codeSections["function_def"].Add("    sim_data.logs = []");
+            AddLineToSection("function_def", "    sim_data = SimulationData()");
+            AddLineToSection("function_def", "    sim_data.time_step = dt");
+            AddLineToSection("function_def", "    sim_data.logs = []");
         }
 
         /// <summary>
@@ -427,15 +418,15 @@ namespace PowerSimBuilder
             {
                 if (comp.Parameters != null && comp.Parameters.Any())
                 {
-                    codeSections["function_def"].Add($"    # {comp.Name} のパラメータ設定");
+                    AddLineToSection("function_def", $"    # {comp.Name} のパラメータ設定");
                     
                     foreach (var param in comp.Parameters)
                     {
                         var defaultValue = GetPythonDefaultValue(param.DefaultValue, param.Type);
-                        codeSections["function_def"].Add($"    sim_data.add_parameter('{comp.Name}', '{param.Name}', {defaultValue})");
+                        AddLineToSection("function_def", $"    sim_data.add_parameter('{comp.Name}', '{param.Name}', {defaultValue})");
                     }
                     
-                    codeSections["function_def"].Add("");
+                    AddLineToSection("function_def", "");
                 }
             }
         }
@@ -453,7 +444,6 @@ namespace PowerSimBuilder
                 return converter(defaultValue);
             }
             
-            // デフォルトの処理
             return defaultValue != null ? $"\"{defaultValue}\"" : "None";
         }
 
@@ -462,8 +452,8 @@ namespace PowerSimBuilder
         /// </summary>
         private void AddComponentDictionaryInFunction()
         {
-            codeSections["function_def"].Add("    # コンポーネント辞書の定義");
-            codeSections["function_def"].Add("    components = {");
+            AddLineToSection("function_def", "    # コンポーネント辞書の定義");
+            AddLineToSection("function_def", "    components = {");
             
             foreach (var comp in Components)
             {
@@ -473,7 +463,7 @@ namespace PowerSimBuilder
                         continue;
                         
                     var compName = comp.Name.ToLower();
-                    codeSections["function_def"].Add($"        \"{compName}\": {comp.Type}(\"{compName}\",\"{comp.Type}\"),");
+                    AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\",\"{comp.Type}\"),");
                 }
                 catch (Exception ex)
                 {
@@ -481,8 +471,8 @@ namespace PowerSimBuilder
                 }
             }
             
-            codeSections["function_def"].Add("    }");
-            codeSections["function_def"].Add("");
+            AddLineToSection("function_def", "    }");
+            AddLineToSection("function_def", "");
         }
 
         /// <summary>
@@ -490,8 +480,8 @@ namespace PowerSimBuilder
         /// </summary>
         private void AddConnectionsListInFunction()
         {
-            codeSections["function_def"].Add("    # 接続リストの定義");
-            codeSections["function_def"].Add("    connections = [");
+            AddLineToSection("function_def", "    # 接続リストの定義");
+            AddLineToSection("function_def", "    connections = [");
             
             foreach (var conn in Connections)
             {
@@ -506,7 +496,7 @@ namespace PowerSimBuilder
                     var toComp = conn.EndComponent.Name.ToLower();
                     var toPort = conn.EndPort;
 
-                    codeSections["function_def"].Add($"        {{\"from\":\"{fromComp}.outputs.{fromPort}\",\"to\":\"{toComp}.inputs.{toPort}\"}},");
+                    AddLineToSection("function_def", $"        {{\"from\":\"{fromComp}.outputs.{fromPort}\",\"to\":\"{toComp}.inputs.{toPort}\"}},");
                 }
                 catch (Exception ex)
                 {
@@ -514,8 +504,8 @@ namespace PowerSimBuilder
                 }
             }
             
-            codeSections["function_def"].Add("    ]");
-            codeSections["function_def"].Add("");
+            AddLineToSection("function_def", "    ]");
+            AddLineToSection("function_def", "");
         }
 
         /// <summary>
@@ -526,27 +516,27 @@ namespace PowerSimBuilder
             // シミュレーションループ開始
             foreach (var line in SimulationLoopStartCodeTable)
             {
-                codeSections["function_def"].Add(line);
+                AddLineToSection("function_def", line);
             }
             
             // コンポーネント更新ループ
             foreach (var line in ComponentUpdateCodeTable)
             {
-                codeSections["function_def"].Add(line);
+                AddLineToSection("function_def", line);
             }
-            codeSections["function_def"].Add("");
+            AddLineToSection("function_def", "");
             
             // 接続更新ループ
             foreach (var line in ConnectionUpdateCodeTable)
             {
-                codeSections["function_def"].Add(line);
+                AddLineToSection("function_def", line);
             }
-            codeSections["function_def"].Add("");
+            AddLineToSection("function_def", "");
             
             // ロギングセクション
             foreach (var line in LoggingCodeTable)
             {
-                codeSections["function_def"].Add(line);
+                AddLineToSection("function_def", line);
             }
         }
 
@@ -555,10 +545,10 @@ namespace PowerSimBuilder
         /// </summary>
         private void GeneratePlotConfigSection()
         {
-            codeSections["plot_config"].Add("# プロット設定（ベースデータ）");
-            codeSections["plot_config"].Add("# 接続情報から自動生成された信号設定");
-            codeSections["plot_config"].Add("plot_config = {");
-            codeSections["plot_config"].Add("    'signals': [");
+            AddLineToSection("plot_config", "# プロット設定（ベースデータ）");
+            AddLineToSection("plot_config", "# 接続情報から自動生成された信号設定");
+            AddLineToSection("plot_config", "plot_config = {");
+            AddLineToSection("plot_config", "    'signals': [");
             
             // 接続情報から信号設定を生成
             if (Connections != null && Connections.Count > 0)
@@ -588,32 +578,32 @@ namespace PowerSimBuilder
                     var color = colorPalette[colorIndex % colorPalette.Count];
                     var lineStyle = lineStyles[lineStyleIndex % lineStyles.Count];
                     
-                    codeSections["plot_config"].Add($"        {{'name': '{signalName}', 'component': '{fromComp}', 'port': '{fromPort}', 'enabled': True, 'color': '{color}', 'line_style': '{lineStyle}'}},");
+                    AddLineToSection("plot_config", $"        {{'name': '{signalName}', 'component': '{fromComp}', 'port': '{fromPort}', 'enabled': True, 'color': '{color}', 'line_style': '{lineStyle}'}},");
                     
                     colorIndex++;
-                    if (colorIndex % 3 == 0) lineStyleIndex++;
+                    if (colorIndex % 3 == 0) lineStyleIndex++; // 3つの信号ごとに線種を変更
                 }
             }
             else
             {
                 // 接続情報がない場合のデフォルト信号
-                codeSections["plot_config"].Add("        {'name': 'engine_torque', 'component': 'engine', 'port': 'torque', 'enabled': True, 'color': '#FF5733', 'line_style': '-'},");
-                codeSections["plot_config"].Add("        {'name': 'generator_voltage', 'component': 'generator', 'port': 'voltage', 'enabled': True, 'color': '#33FF57', 'line_style': '-'},");
+                AddLineToSection("plot_config", "        {'name': 'engine_torque', 'component': 'engine', 'port': 'torque', 'enabled': True, 'color': '#FF5733', 'line_style': '-'},");
+                AddLineToSection("plot_config", "        {'name': 'generator_voltage', 'component': 'generator', 'port': 'voltage', 'enabled': True, 'color': '#33FF57', 'line_style': '-'},");
             }
 
-            codeSections["plot_config"].Add("    ],");
-            codeSections["plot_config"].Add("    'global_settings': {");
-            codeSections["plot_config"].Add("        'figure_size': (12, 8),");
-            codeSections["plot_config"].Add("        'title': 'シミュレーション信号',");
-            codeSections["plot_config"].Add("        'xlabel': '時間 (秒)',");
-            codeSections["plot_config"].Add("        'ylabel': '値',");
-            codeSections["plot_config"].Add("        'grid': True,");
-            codeSections["plot_config"].Add("        'legend_location': 'upper right',");
-            codeSections["plot_config"].Add("        'save_format': 'png',");
-            codeSections["plot_config"].Add("        'dpi': 300");
-            codeSections["plot_config"].Add("    }");
-            codeSections["plot_config"].Add("}");
-            codeSections["plot_config"].Add("");
+            AddLineToSection("plot_config", "    ],");
+            AddLineToSection("plot_config", "    'global_settings': {");
+            AddLineToSection("plot_config", "        'figure_size': (12, 8),");
+            AddLineToSection("plot_config", "        'title': 'シミュレーション信号',");
+            AddLineToSection("plot_config", "        'xlabel': '時間 (秒)',");
+            AddLineToSection("plot_config", "        'ylabel': '値',");
+            AddLineToSection("plot_config", "        'grid': True,");
+            AddLineToSection("plot_config", "        'legend_location': 'upper right',");
+            AddLineToSection("plot_config", "        'save_format': 'png',");
+            AddLineToSection("plot_config", "        'dpi': 300");
+            AddLineToSection("plot_config", "    }");
+            AddLineToSection("plot_config", "}");
+            AddLineToSection("plot_config", "");
         }
 
         /// <summary>
@@ -621,120 +611,120 @@ namespace PowerSimBuilder
         /// </summary>
         private void GeneratePlottingFunctionsSection()
         {
-            codeSections["plotting_functions"].Add("# プロット関数（コード）");
-            codeSections["plotting_functions"].Add("def plot_signals(sim_data, plot_config):");
-            codeSections["plotting_functions"].Add("    \"\"\"");
-            codeSections["plotting_functions"].Add("    設定に基づいて信号をプロットする");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    Parameters:");
-            codeSections["plotting_functions"].Add("    sim_data: SimulationData");
-            codeSections["plotting_functions"].Add("        シミュレーションデータオブジェクト");
-            codeSections["plotting_functions"].Add("    plot_config: dict");
-            codeSections["plotting_functions"].Add("        プロット設定");
-            codeSections["plotting_functions"].Add("    \"\"\"");
-            codeSections["plotting_functions"].Add("    import matplotlib.pyplot as plt");
-            codeSections["plotting_functions"].Add("    import numpy as np");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    # グローバル設定の適用");
-            codeSections["plotting_functions"].Add("    settings = plot_config['global_settings']");
-            codeSections["plotting_functions"].Add("    plt.figure(figsize=settings['figure_size'])");
-            codeSections["plotting_functions"].Add("    plt.title(settings['title'])");
-            codeSections["plotting_functions"].Add("    plt.xlabel(settings['xlabel'])");
-            codeSections["plotting_functions"].Add("    plt.ylabel(settings['ylabel'])");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    if settings['grid']:");
-            codeSections["plotting_functions"].Add("        plt.grid(True, linestyle='--', alpha=0.7)");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    # 有効な信号のみをフィルタリング");
-            codeSections["plotting_functions"].Add("    enabled_signals = [s for s in plot_config['signals'] if s['enabled']]");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    # 各信号のデータを収集してプロット");
-            codeSections["plotting_functions"].Add("    for signal in enabled_signals:");
-            codeSections["plotting_functions"].Add("        comp_name = signal['component']");
-            codeSections["plotting_functions"].Add("        port_name = signal['port']");
-            codeSections["plotting_functions"].Add("        ");
-            codeSections["plotting_functions"].Add("        # 時間と値を格納するリスト");
-            codeSections["plotting_functions"].Add("        times = []");
-            codeSections["plotting_functions"].Add("        values = []");
-            codeSections["plotting_functions"].Add("        ");
-            codeSections["plotting_functions"].Add("        # 各時間ステップのデータを収集");
-            codeSections["plotting_functions"].Add("        for log in sim_data.logs:");
-            codeSections["plotting_functions"].Add("            time = log['time']");
-            codeSections["plotting_functions"].Add("            comp_data = log['components'].get(comp_name, {})");
-            codeSections["plotting_functions"].Add("            outputs = comp_data.get('outputs', {})");
-            codeSections["plotting_functions"].Add("            value = outputs.get(port_name, 0)");
-            codeSections["plotting_functions"].Add("            ");
-            codeSections["plotting_functions"].Add("            times.append(time)");
-            codeSections["plotting_functions"].Add("            values.append(value)");
-            codeSections["plotting_functions"].Add("        ");
-            codeSections["plotting_functions"].Add("        # データをプロット");
-            codeSections["plotting_functions"].Add("        if times and values:");
-            codeSections["plotting_functions"].Add("            color = signal.get('color', None)");
-            codeSections["plotting_functions"].Add("            line_style = signal.get('line_style', '-')");
-            codeSections["plotting_functions"].Add("            ");
-            codeSections["plotting_functions"].Add("            plt.plot(times, values, label=signal['name'], color=color, linestyle=line_style, linewidth=2)");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    # 凡例を追加");
-            codeSections["plotting_functions"].Add("    plt.legend(loc=settings['legend_location'])");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    # レイアウト調整");
-            codeSections["plotting_functions"].Add("    plt.tight_layout()");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    # グラフを表示");
-            codeSections["plotting_functions"].Add("    plt.show()");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    # グラフを保存");
-            codeSections["plotting_functions"].Add("    save_format = settings['save_format']");
-            codeSections["plotting_functions"].Add("    dpi = settings['dpi']");
-            codeSections["plotting_functions"].Add("    plt.savefig(f'simulation_signals.{save_format}', bbox_inches='tight', dpi=dpi)");
-            codeSections["plotting_functions"].Add("    print(f\"グラフを 'simulation_signals.{save_format}' に保存しました\")");
-            codeSections["plotting_functions"].Add("");
-            codeSections["plotting_functions"].Add("");
-            codeSections["plotting_functions"].Add("def toggle_signal(plot_config, signal_name, enabled=None):");
-            codeSections["plotting_functions"].Add("    \"\"\"");
-            codeSections["plotting_functions"].Add("    信号の有効/無効を切り替える");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    Parameters:");
-            codeSections["plotting_functions"].Add("    plot_config: dict");
-            codeSections["plotting_functions"].Add("        プロット設定");
-            codeSections["plotting_functions"].Add("    signal_name: str");
-            codeSections["plotting_functions"].Add("        信号名");
-            codeSections["plotting_functions"].Add("    enabled: bool, optional");
-            codeSections["plotting_functions"].Add("        設定する状態（Noneの場合はトグル）");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    Returns:");
-            codeSections["plotting_functions"].Add("    bool: 新しい状態");
-            codeSections["plotting_functions"].Add("    \"\"\"");
-            codeSections["plotting_functions"].Add("    for signal in plot_config['signals']:");
-            codeSections["plotting_functions"].Add("        if signal['name'] == signal_name:");
-            codeSections["plotting_functions"].Add("            if enabled is None:");
-            codeSections["plotting_functions"].Add("                # トグル");
-            codeSections["plotting_functions"].Add("                signal['enabled'] = not signal['enabled']");
-            codeSections["plotting_functions"].Add("            else:");
-            codeSections["plotting_functions"].Add("                signal['enabled'] = enabled");
-            codeSections["plotting_functions"].Add("            ");
-            codeSections["plotting_functions"].Add("            status = '有効' if signal['enabled'] else '無効'");
-            codeSections["plotting_functions"].Add("            print(f\"信号 '{signal_name}' を {status} に設定しました\")");
-            codeSections["plotting_functions"].Add("            return signal['enabled']");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    print(f\"エラー: 信号 '{signal_name}' が見つかりませんでした\")");
-            codeSections["plotting_functions"].Add("    return False");
-            codeSections["plotting_functions"].Add("");
-            codeSections["plotting_functions"].Add("");
-            codeSections["plotting_functions"].Add("def list_signals(plot_config):");
-            codeSections["plotting_functions"].Add("    \"\"\"");
-            codeSections["plotting_functions"].Add("    すべての信号とその状態をリスト表示する");
-            codeSections["plotting_functions"].Add("    ");
-            codeSections["plotting_functions"].Add("    Parameters:");
-            codeSections["plotting_functions"].Add("    plot_config: dict");
-            codeSections["plotting_functions"].Add("        プロット設定");
-            codeSections["plotting_functions"].Add("    \"\"\"");
-            codeSections["plotting_functions"].Add("    print(\"利用可能な信号:\")");
-            codeSections["plotting_functions"].Add("    print(\"-\" * 50)");
-            codeSections["plotting_functions"].Add("    for signal in plot_config['signals']:");
-            codeSections["plotting_functions"].Add("        status = \"有効\" if signal['enabled'] else \"無効\"");
-            codeSections["plotting_functions"].Add("        print(f\"{signal['name']}: {status} (コンポーネント: {signal['component']}, ポート: {signal['port']})\")");
-            codeSections["plotting_functions"].Add("");
+            AddLineToSection("plotting_functions", "# プロット関数（コード）");
+            AddLineToSection("plotting_functions", "def plot_signals(sim_data, plot_config):");
+            AddLineToSection("plotting_functions", "    \"\"\"");
+            AddLineToSection("plotting_functions", "    設定に基づいて信号をプロットする");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    Parameters:");
+            AddLineToSection("plotting_functions", "    sim_data: SimulationData");
+            AddLineToSection("plotting_functions", "        シミュレーションデータオブジェクト");
+            AddLineToSection("plotting_functions", "    plot_config: dict");
+            AddLineToSection("plotting_functions", "        プロット設定");
+            AddLineToSection("plotting_functions", "    \"\"\"");
+            AddLineToSection("plotting_functions", "    import matplotlib.pyplot as plt");
+            AddLineToSection("plotting_functions", "    import numpy as np");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    # グローバル設定の適用");
+            AddLineToSection("plotting_functions", "    settings = plot_config['global_settings']");
+            AddLineToSection("plotting_functions", "    plt.figure(figsize=settings['figure_size'])");
+            AddLineToSection("plotting_functions", "    plt.title(settings['title'])");
+            AddLineToSection("plotting_functions", "    plt.xlabel(settings['xlabel'])");
+            AddLineToSection("plotting_functions", "    plt.ylabel(settings['ylabel'])");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    if settings['grid']:");
+            AddLineToSection("plotting_functions", "        plt.grid(True, linestyle='--', alpha=0.7)");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    # 有効な信号のみをフィルタリング");
+            AddLineToSection("plotting_functions", "    enabled_signals = [s for s in plot_config['signals'] if s['enabled']]");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    # 各信号のデータを収集してプロット");
+            AddLineToSection("plotting_functions", "    for signal in enabled_signals:");
+            AddLineToSection("plotting_functions", "        comp_name = signal['component']");
+            AddLineToSection("plotting_functions", "        port_name = signal['port']");
+            AddLineToSection("plotting_functions", "        ");
+            AddLineToSection("plotting_functions", "        # 時間と値を格納するリスト");
+            AddLineToSection("plotting_functions", "        times = []");
+            AddLineToSection("plotting_functions", "        values = []");
+            AddLineToSection("plotting_functions", "        ");
+            AddLineToSection("plotting_functions", "        # 各時間ステップのデータを収集");
+            AddLineToSection("plotting_functions", "        for log in sim_data.logs:");
+            AddLineToSection("plotting_functions", "            time = log['time']");
+            AddLineToSection("plotting_functions", "            comp_data = log['components'].get(comp_name, {})");
+            AddLineToSection("plotting_functions", "            outputs = comp_data.get('outputs', {})");
+            AddLineToSection("plotting_functions", "            value = outputs.get(port_name, 0)");
+            AddLineToSection("plotting_functions", "            ");
+            AddLineToSection("plotting_functions", "            times.append(time)");
+            AddLineToSection("plotting_functions", "            values.append(value)");
+            AddLineToSection("plotting_functions", "        ");
+            AddLineToSection("plotting_functions", "        # データをプロット");
+            AddLineToSection("plotting_functions", "        if times and values:");
+            AddLineToSection("plotting_functions", "            color = signal.get('color', None)");
+            AddLineToSection("plotting_functions", "            line_style = signal.get('line_style', '-')");
+            AddLineToSection("plotting_functions", "            ");
+            AddLineToSection("plotting_functions", "            plt.plot(times, values, label=signal['name'], color=color, linestyle=line_style, linewidth=2)");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    # 凡例を追加");
+            AddLineToSection("plotting_functions", "    plt.legend(loc=settings['legend_location'])");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    # レイアウト調整");
+            AddLineToSection("plotting_functions", "    plt.tight_layout()");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    # グラフを表示");
+            AddLineToSection("plotting_functions", "    plt.show()");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    # グラフを保存");
+            AddLineToSection("plotting_functions", "    save_format = settings['save_format']");
+            AddLineToSection("plotting_functions", "    dpi = settings['dpi']");
+            AddLineToSection("plotting_functions", "    plt.savefig(f'simulation_signals.{save_format}', bbox_inches='tight', dpi=dpi)");
+            AddLineToSection("plotting_functions", "    print(f\"グラフを 'simulation_signals.{save_format}' に保存しました\")");
+            AddLineToSection("plotting_functions", "");
+            AddLineToSection("plotting_functions", "");
+            AddLineToSection("plotting_functions", "def toggle_signal(plot_config, signal_name, enabled=None):");
+            AddLineToSection("plotting_functions", "    \"\"\"");
+            AddLineToSection("plotting_functions", "    信号の有効/無効を切り替える");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    Parameters:");
+            AddLineToSection("plotting_functions", "    plot_config: dict");
+            AddLineToSection("plotting_functions", "        プロット設定");
+            AddLineToSection("plotting_functions", "    signal_name: str");
+            AddLineToSection("plotting_functions", "        信号名");
+            AddLineToSection("plotting_functions", "    enabled: bool, optional");
+            AddLineToSection("plotting_functions", "        設定する状態（Noneの場合はトグル）");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    Returns:");
+            AddLineToSection("plotting_functions", "    bool: 新しい状態");
+            AddLineToSection("plotting_functions", "    \"\"\"");
+            AddLineToSection("plotting_functions", "    for signal in plot_config['signals']:");
+            AddLineToSection("plotting_functions", "        if signal['name'] == signal_name:");
+            AddLineToSection("plotting_functions", "            if enabled is None:");
+            AddLineToSection("plotting_functions", "                # トグル");
+            AddLineToSection("plotting_functions", "                signal['enabled'] = not signal['enabled']");
+            AddLineToSection("plotting_functions", "            else:");
+            AddLineToSection("plotting_functions", "                signal['enabled'] = enabled");
+            AddLineToSection("plotting_functions", "            ");
+            AddLineToSection("plotting_functions", "            status = '有効' if signal['enabled'] else '無効'");
+            AddLineToSection("plotting_functions", "            print(f\"信号 '{signal_name}' を {status} に設定しました\")");
+            AddLineToSection("plotting_functions", "            return signal['enabled']");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    print(f\"エラー: 信号 '{signal_name}' が見つかりませんでした\")");
+            AddLineToSection("plotting_functions", "    return False");
+            AddLineToSection("plotting_functions", "");
+            AddLineToSection("plotting_functions", "");
+            AddLineToSection("plotting_functions", "def list_signals(plot_config):");
+            AddLineToSection("plotting_functions", "    \"\"\"");
+            AddLineToSection("plotting_functions", "    すべての信号とその状態をリスト表示する");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    Parameters:");
+            AddLineToSection("plotting_functions", "    plot_config: dict");
+            AddLineToSection("plotting_functions", "        プロット設定");
+            AddLineToSection("plotting_functions", "    \"\"\"");
+            AddLineToSection("plotting_functions", "    print(\"利用可能な信号:\")");
+            AddLineToSection("plotting_functions", "    print(\"-\" * 50)");
+            AddLineToSection("plotting_functions", "    for signal in plot_config['signals']:");
+            AddLineToSection("plotting_functions", "        status = \"有効\" if signal['enabled'] else \"無効\"");
+            AddLineToSection("plotting_functions", "        print(f\"{signal['name']}: {status} (コンポーネント: {signal['component']}, ポート: {signal['port']})\")");
+            AddLineToSection("plotting_functions", "");
         }
 
         /// <summary>
@@ -769,9 +759,12 @@ namespace PowerSimBuilder
 
             foreach (var section in sectionsOrder)
             {
-                allLines.AddRange(codeSections[section]);
-                if (section != "plotting_functions")
-                    allLines.Add("");
+                if (CodeSections.ContainsKey(section))
+                {
+                    allLines.AddRange(CodeSections[section]);
+                    if (section != "plotting_functions")
+                        allLines.Add("");
+                }
             }
 
             return allLines;
@@ -790,5 +783,4 @@ namespace PowerSimBuilder
 
         #endregion
     }
-
 }
