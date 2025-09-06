@@ -117,7 +117,7 @@ namespace PowerSimBuilder
         {
             // デフォルトエラーハンドラーを設定
             ErrorHandler = DefaultErrorHandler;
-            
+
             // 静的codeSectionsを初期化
             InitializeCodeSections();
         }
@@ -339,12 +339,12 @@ namespace PowerSimBuilder
         private void GenerateImportsSection()
         {
             AddLineToSection("imports", "import numpy as np");
-            
+
             if (NeedsDateTimeImport())
             {
                 AddLineToSection("imports", "from datetime import datetime");
             }
-            
+
             AddLineToSection("imports", "");
         }
 
@@ -358,7 +358,7 @@ namespace PowerSimBuilder
 
             foreach (var comp in Components)
             {
-                if (comp.Parameters != null && comp.Parameters.Any(p => 
+                if (comp.Parameters != null && comp.Parameters.Any(p =>
                     p.Type != null && p.Type.Equals("datetime", StringComparison.OrdinalIgnoreCase)))
                 {
                     return true;
@@ -379,12 +379,12 @@ namespace PowerSimBuilder
             AddComponentDictionaryInFunction();
             AddConnectionsListInFunction();
             AddSimulationLoopInFunction();
-            
+
             AddLineToSection("function_def", "");
             AddLineToSection("function_def", "    # シミュレーション実行後のプロット");
             AddLineToSection("function_def", "    plot_signals(sim_data, plot_config)");
             AddLineToSection("function_def", "    print(\"シミュレーション完了\")");
-            
+
             AddLineToSection("function_def", "");
         }
 
@@ -419,13 +419,13 @@ namespace PowerSimBuilder
                 if (comp.Parameters != null && comp.Parameters.Any())
                 {
                     AddLineToSection("function_def", $"    # {comp.Name} のパラメータ設定");
-                    
+
                     foreach (var param in comp.Parameters)
                     {
                         var defaultValue = GetPythonDefaultValue(param.DefaultValue, param.Type);
                         AddLineToSection("function_def", $"    sim_data.add_parameter('{comp.Name}', '{param.Name}', {defaultValue})");
                     }
-                    
+
                     AddLineToSection("function_def", "");
                 }
             }
@@ -443,7 +443,7 @@ namespace PowerSimBuilder
             {
                 return converter(defaultValue);
             }
-            
+
             return defaultValue != null ? $"\"{defaultValue}\"" : "None";
         }
 
@@ -454,14 +454,14 @@ namespace PowerSimBuilder
         {
             AddLineToSection("function_def", "    # コンポーネント辞書の定義");
             AddLineToSection("function_def", "    components = {");
-            
+
             foreach (var comp in Components)
             {
                 try
                 {
                     if (string.IsNullOrEmpty(comp.Name) || string.IsNullOrEmpty(comp.Type))
                         continue;
-                        
+
                     var compName = comp.Name.ToLower();
                     AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\",\"{comp.Type}\"),");
                 }
@@ -470,7 +470,7 @@ namespace PowerSimBuilder
                     HandleError(ErrorCategory.ComponentError, comp.Name, ex.Message);
                 }
             }
-            
+
             AddLineToSection("function_def", "    }");
             AddLineToSection("function_def", "");
         }
@@ -482,7 +482,7 @@ namespace PowerSimBuilder
         {
             AddLineToSection("function_def", "    # 接続リストの定義");
             AddLineToSection("function_def", "    connections = [");
-            
+
             foreach (var conn in Connections)
             {
                 try
@@ -490,7 +490,7 @@ namespace PowerSimBuilder
                     if (conn.StartComponent == null || string.IsNullOrEmpty(conn.StartPort) ||
                         conn.EndComponent == null || string.IsNullOrEmpty(conn.EndPort))
                         continue;
-                        
+
                     var fromComp = conn.StartComponent.Name.ToLower();
                     var fromPort = conn.StartPort;
                     var toComp = conn.EndComponent.Name.ToLower();
@@ -503,7 +503,7 @@ namespace PowerSimBuilder
                     HandleError(ErrorCategory.ConnectionError, ex.Message);
                 }
             }
-            
+
             AddLineToSection("function_def", "    ]");
             AddLineToSection("function_def", "");
         }
@@ -518,21 +518,21 @@ namespace PowerSimBuilder
             {
                 AddLineToSection("function_def", line);
             }
-            
+
             // コンポーネント更新ループ
             foreach (var line in ComponentUpdateCodeTable)
             {
                 AddLineToSection("function_def", line);
             }
             AddLineToSection("function_def", "");
-            
+
             // 接続更新ループ
             foreach (var line in ConnectionUpdateCodeTable)
             {
                 AddLineToSection("function_def", line);
             }
             AddLineToSection("function_def", "");
-            
+
             // ロギングセクション
             foreach (var line in LoggingCodeTable)
             {
@@ -549,37 +549,37 @@ namespace PowerSimBuilder
             AddLineToSection("plot_config", "# 接続情報から自動生成された信号設定");
             AddLineToSection("plot_config", "plot_config = {");
             AddLineToSection("plot_config", "    'signals': [");
-            
+
             // 接続情報から信号設定を生成
             if (Connections != null && Connections.Count > 0)
             {
                 var colorPalette = new List<string>
                 {
-                    "#FF5733", "#33FF57", "#3357FF", "#F333FF", "#FF33F3", 
+                    "#FF5733", "#33FF57", "#3357FF", "#F333FF", "#FF33F3",
                     "#33FFF3", "#F3FF33", "#5733FF", "#FF8333", "#33FF83"
                 };
 
                 var lineStyles = new List<string> { "-", "--", "-.", ":" };
-                
+
                 int colorIndex = 0;
                 int lineStyleIndex = 0;
-                
+
                 foreach (var conn in Connections)
                 {
                     if (conn.StartComponent == null) continue;
-                    
+
                     var fromComp = conn.StartComponent.Name.ToLower();
                     var fromPort = conn.StartPort;
-                    
+
                     // 信号名を生成（コンポーネント名_ポート名）
                     var signalName = $"{fromComp}_{fromPort}";
-                    
+
                     // 色と線種を循環して割り当て
                     var color = colorPalette[colorIndex % colorPalette.Count];
                     var lineStyle = lineStyles[lineStyleIndex % lineStyles.Count];
-                    
+
                     AddLineToSection("plot_config", $"        {{'name': '{signalName}', 'component': '{fromComp}', 'port': '{fromPort}', 'enabled': True, 'color': '{color}', 'line_style': '{lineStyle}'}},");
-                    
+
                     colorIndex++;
                     if (colorIndex % 3 == 0) lineStyleIndex++; // 3つの信号ごとに線種を変更
                 }
@@ -752,8 +752,8 @@ namespace PowerSimBuilder
         {
             var allLines = new List<string>();
 
-            var sectionsOrder = new[] { 
-                "imports", "function_def", 
+            var sectionsOrder = new[] {
+                "imports", "function_def",
                 "plot_config", "plotting_functions"
             };
 

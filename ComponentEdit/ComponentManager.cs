@@ -30,8 +30,9 @@ namespace PowerSimBuilder
                     generator.GeneratePythonCode(descriptor, filePath);
 
                     // 編集フォームを表示
-                    using (var editorForm = new PythonPartsEditorForm(filePath))
+                    using (var editorForm = new PythonPartsEditorForm(filePath,false))
                     {
+                        editorForm.Executor = new PythonExecutor();
                         if (editorForm.ShowDialog() == DialogResult.OK && editorForm.IsModified)
                         {
                             // 変更があればファイルに保存

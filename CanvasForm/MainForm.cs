@@ -4,9 +4,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Windows;
 using System.Windows.Forms;
-using MessageBox = System.Windows.Forms.MessageBox;
+
 
 namespace PowerSimBuilder
 {
@@ -18,7 +17,6 @@ namespace PowerSimBuilder
     public partial class MainForm : Form
     {
         private CanvasManager _canvasManager;
-        private readonly PythonCodeGenerator _codeGenerator = new PythonCodeGenerator();
         private List<ComponentDescriptor> _components;
         private DesignCanvas designCanvas1;
         private ComponentPalette componentPalette1;
@@ -400,7 +398,9 @@ namespace PowerSimBuilder
             if ((!String.IsNullOrEmpty(file_path)) && (File.Exists(file_path)))
             {
                 // ファイルパスを指定してフォームを表示
-                var editorForm = new PythonPartsEditorForm(file_path);
+                var editorForm = new PythonPartsEditorForm(file_path, true);
+
+                editorForm.Executor = new PythonExecutor();
                 if (editorForm.ShowDialog() == DialogResult.OK)
                 {
                     // 保存が選択された場合、編集されたコードを取得

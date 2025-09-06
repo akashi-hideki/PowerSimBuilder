@@ -43,7 +43,6 @@ namespace PowerSimBuilder
             this.panel1.SuspendLayout();
             this.panelTop.SuspendLayout();
             this.SuspendLayout();
-
             // 
             // textEditor
             // 
@@ -56,7 +55,7 @@ namespace PowerSimBuilder
             this.textEditor.Text = "";
             this.textEditor.WordWrap = false;
             this.textEditor.TextChanged += new System.EventHandler(this.textEditor_TextChanged);
-            this.textEditor.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Both;
+            // 
             // panel1
             // 
             this.panel1.Controls.Add(this.btnCancel);
@@ -66,7 +65,6 @@ namespace PowerSimBuilder
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(984, 50);
             this.panel1.TabIndex = 1;
-
             // 
             // btnCancel
             // 
@@ -78,7 +76,6 @@ namespace PowerSimBuilder
             this.btnCancel.Text = "キャンセル";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-
             // 
             // btnSave
             // 
@@ -90,7 +87,6 @@ namespace PowerSimBuilder
             this.btnSave.Text = "保存";
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
-
             // 
             // panelTop
             // 
@@ -103,50 +99,45 @@ namespace PowerSimBuilder
             this.panelTop.Name = "panelTop";
             this.panelTop.Size = new System.Drawing.Size(984, 40);
             this.panelTop.TabIndex = 2;
-
             // 
             // btnRun
             // 
-            this.btnRun.Location = new System.Drawing.Point(12, 8);
+            this.btnRun.Location = new System.Drawing.Point(225, 8);
             this.btnRun.Name = "btnRun";
             this.btnRun.Size = new System.Drawing.Size(75, 23);
             this.btnRun.TabIndex = 0;
             this.btnRun.Text = "実行";
             this.btnRun.UseVisualStyleBackColor = true;
-            this.btnRun.Click += new System.EventHandler(this.btnRun_Click);
-
+            this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
             // 
             // btnReload
             // 
-            this.btnReload.Location = new System.Drawing.Point(93, 8);
+            this.btnReload.Location = new System.Drawing.Point(12, 8);
             this.btnReload.Name = "btnReload";
-            this.btnReload.Size = new System.Drawing.Size(75, 23);
+            this.btnReload.Size = new System.Drawing.Size(101, 23);
             this.btnReload.TabIndex = 1;
             this.btnReload.Text = "再読み込み";
             this.btnReload.UseVisualStyleBackColor = true;
-            this.btnReload.Click += new System.EventHandler(this.btnReload_Click);
-
+            this.btnReload.Click += new System.EventHandler(this.BtnReload_Click);
             // 
             // btnOpenFolder
             // 
-            this.btnOpenFolder.Location = new System.Drawing.Point(174, 8);
+            this.btnOpenFolder.Location = new System.Drawing.Point(119, 8);
             this.btnOpenFolder.Name = "btnOpenFolder";
             this.btnOpenFolder.Size = new System.Drawing.Size(100, 23);
             this.btnOpenFolder.TabIndex = 2;
             this.btnOpenFolder.Text = "フォルダを開く";
             this.btnOpenFolder.UseVisualStyleBackColor = true;
-            this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
-
+            this.btnOpenFolder.Click += new System.EventHandler(this.BtnOpenFolder_Click);
             // 
             // lblStatus
             // 
             this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(280, 13);
+            this.lblStatus.Location = new System.Drawing.Point(846, 16);
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(35, 12);
+            this.lblStatus.Size = new System.Drawing.Size(45, 15);
             this.lblStatus.TabIndex = 3;
             this.lblStatus.Text = "状態: ";
-
             // 
             // PythonPartsEditorForm
             // 

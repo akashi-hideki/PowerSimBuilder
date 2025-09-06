@@ -21,6 +21,7 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="SimulationGenerate\PythonExecutor.cs" />
     <Compile Include="SimulationGenerate\PythonSimulationMainBuilder.cs" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -115,7 +116,6 @@
     </Compile>
     <Compile Include="SimPartsManege\ComponentDescriptorDictionary.cs" />
     <Compile Include="SimPartsManege\ComponentPaletteStorage.cs" />
-    <Compile Include="SimulationGenerate\PythonCodeGenerator.cs" />
     <Compile Include="CanvasForm\ThermalParameterForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -180,6 +180,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CanvasForm\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ComponentEdit\PythonPartsEditorForm.resx">
+      <DependentUpon>PythonPartsEditorForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SimRegistForm.resx">
       <DependentUpon>SimRegistForm.cs</DependentUpon>
