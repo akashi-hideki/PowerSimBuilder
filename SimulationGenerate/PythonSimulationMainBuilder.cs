@@ -89,6 +89,18 @@ namespace PowerSimBuilder
             { "datetime", value => value != null ? $"datetime.strptime(\"{value}\", \"%Y-%m-%d %H:%M:%S\")" : "None" }
         };
 
+        /// <summary>コードセクション辞書（静的）</summary>
+        private static readonly Dictionary<string, List<string>> codeSections = new Dictionary<string, List<string>>
+        {
+            {"imports", new List<string>()},
+            {"function_def", new List<string>()},
+            {"components", new List<string>()},
+            {"connections", new List<string>()},
+            {"simulation_loop", new List<string>()},
+            {"simulation_data_init", new List<string>()},
+            {"plotting", new List<string>()}
+        };
+
         #endregion
 
         #region Properties
@@ -107,21 +119,6 @@ namespace PowerSimBuilder
 
         #endregion
 
-        #region Fields
-
-        /// <summary>コードセクション辞書</summary>
-        private readonly Dictionary<string, List<string>> codeSections = new Dictionary<string, List<string>>
-        {
-            {"imports", new List<string>()},
-            {"function_def", new List<string>()},
-            {"components", new List<string>()},
-            {"connections", new List<string>()},
-            {"simulation_loop", new List<string>()},
-            {"simulation_data_init", new List<string>()}
-        };
-
-        #endregion
-
         #region Constructors
 
         /// <summary>
@@ -131,6 +128,9 @@ namespace PowerSimBuilder
         {
             // デフォルトエラーハンドラーを設定
             ErrorHandler = DefaultErrorHandler;
+            
+            // 静的codeSectionsを初期化
+            InitializeCodeSections();
         }
 
         #endregion
@@ -138,7 +138,7 @@ namespace PowerSimBuilder
         #region Public Methods
 
         /// <summary>
-        /// Pythonシミュレーション�ファイルをビルドする
+        /// Pythonシミュレーションファイルをビルドする
         /// </summary>
         public void BuildPythonSimulationFile()
         {
@@ -222,26 +222,6 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
-        /// 新しいセクションを追加する
-        /// </summary>
-        /// <param name="sectionName">セクション名</param>
-        public void AddNewSection(string sectionName)
-        {
-            if (!codeSections.ContainsKey(sectionName))
-                codeSections.Add(sectionName, new List<string>());
-        }
-
-        /// <summary>
-        /// 指定されたセクションを削除する
-        /// </summary>
-        /// <param name="sectionName">セクション名</param>
-        public void RemoveSection(string sectionName)
-        {
-            if (codeSections.ContainsKey(sectionName))
-                codeSections.Remove(sectionName);
-        }
-
-        /// <summary>
         /// すべてのセクションを取得する
         /// </summary>
         /// <returns>セクション辞書</returns>
@@ -263,6 +243,17 @@ namespace PowerSimBuilder
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// コードセクションを初期化する
+        /// </summary>
+        private static void InitializeCodeSections()
+        {
+            foreach (var key in codeSections.Keys.ToList())
+            {
+                codeSections[key] = new List<string>();
+            }
+        }
 
         /// <summary>
         /// デフォルトエラーハンドラー
@@ -326,6 +317,7 @@ namespace PowerSimBuilder
                 GenerateConnectionsListSection();
                 GenerateSimulationDataInitSection();
                 GenerateSimulationLoopSection();
+                GeneratePlottingMethodSection();
             }
             catch (Exception ex)
             {
@@ -393,7 +385,7 @@ namespace PowerSimBuilder
         /// </summary>
         private void GenerateSimulationDataInitSection()
         {
-            codeSections["simulation_data_init"].Add("    # シミュレーションデータの初期化");
+            codeSections["simulation_data_init"].Add("    # シミュレーション�ードの初期化");
             codeSections["simulation_data_init"].Add("    sim_data = SimulationData()");
             codeSections["simulation_data_init"].Add("    sim_data.time_step = dt");
             codeSections["simulation_data_init"].Add("    sim_data.logs = []");
@@ -623,6 +615,77 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
+        /// 接続データをMatplotlibで描画するメソッドを生成する
+        /// </summary>
+        private void GeneratePlottingMethodSection()
+        {
+            codeSections["plotting"].Add("");
+            codeSections["plotting"].Add("def plot_connections(sim_data, connections):");
+            codeSections["plotting"].Add("    \"\"\"");
+            codeSections["plotting"].Add("    すべての接続データを一つのグラフに描画する");
+            codeSections["plotting"].Add("    ");
+            codeSections["plotting"].Add("    Parameters:");
+            codeSections["plotting"].Add("    sim_data: SimulationData");
+            codeSections["plotting"].Add("        シミュレーションデータオブジェクト");
+            codeSections["plotting"].Add("    connections: list");
+            codeSections["plotting"].Add("        接続情報のリスト");
+            codeSections["plotting"].Add("    \"\"\"");
+            codeSections["plotting"].Add("    import matplotlib.pyplot as plt");
+            codeSections["plotting"].Add("    import numpy as np");
+            codeSections["plotting"].Add("    ");
+            codeSections["plotting"].Add("    # グラフの設定");
+            codeSections["plotting"].Add("    plt.figure(figsize=(12, 8))");
+            codeSections["plotting"].Add("    plt.title('Connection Data Over Time')");
+            codeSections["plotting"].Add("    plt.xlabel('Time (s)')");
+            codeSections["plotting"].Add("    plt.ylabel('Value')");
+            codeSections["plotting"].Add("    plt.grid(True, linestyle='--', alpha=0.7)");
+            codeSections["plotting"].Add("    ");
+            codeSections["plotting"].Add("    # カラーマップの準備（各接続に異なる色を割り当て）");
+            codeSections["plotting"].Add("    colors = plt.cm.tab10(np.linspace(0, 1, len(connections)))");
+            codeSections["plotting"].Add("    ");
+            codeSections["plotting"].Add("    # 各接続のデータをプロット");
+            codeSections["plotting"].Add("    for i, conn in enumerate(connections):");
+            codeSections["plotting"].Add("        from_path = conn['from']");
+            codeSections["plotting"].Add("        to_path = conn['to']");
+            codeSections["plotting"].Add("        ");
+            codeSections["plotting"].Add("        # 接続元のコンポーネントとポートを取得");
+            codeSections["plotting"].Add("        from_comp, from_port = from_path.split('.')");
+            codeSections["plotting"].Add("        from_comp = from_comp.replace('outputs.', '')");
+            codeSections["plotting"].Add("        ");
+            codeSections["plotting"].Add("        # 時間と値を格納するリスト");
+            codeSections["plotting"].Add("        times = []");
+            codeSections["plotting"].Add("        values = []");
+            codeSections["plotting"].Add("        ");
+            codeSections["plotting"].Add("        # 各時間ステップのデータを収集");
+            codeSections["plotting"].Add("        for log in sim_data.logs:");
+            codeSections["plotting"].Add("            time = log['time']");
+            codeSections["plotting"].Add("            comp_data = log['components'].get(from_comp, {})");
+            codeSections["plotting"].Add("            outputs = comp_data.get('outputs', {})");
+            codeSections["plotting"].Add("            value = outputs.get(from_port, 0)");
+            codeSections["plotting"].Add("            ");
+            codeSections["plotting"].Add("            times.append(time)");
+            codeSections["plotting"].Add("            values.append(value)");
+            codeSections["plotting"].Add("        ");
+            codeSections["plotting"].Add("        # データをプロット");
+            codeSections["plotting"].Add("        if times and values:");
+            codeSections["plotting"].Add("            label = f\"{from_path} → {to_path}\"");
+            codeSections["plotting"].Add("            plt.plot(times, values, color=colors[i], label=label, linewidth=2)");
+            codeSections["plotting"].Add("        ");
+            codeSections["plotting"].Add("    # 凡例を追加（グラフ外に配置）");
+            codeSections["plotting"].Add("    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)");
+            codeSections["plotting"].Add("    ");
+            codeSections["plotting"].Add("    # レイアウト調整");
+            codeSections["plotting"].Add("    plt.tight_layout()");
+            codeSections["plotting"].Add("    ");
+            codeSections["plotting"].Add("    # グラフを表示");
+            codeSections["plotting"].Add("    plt.show()");
+            codeSections["plotting"].Add("    ");
+            codeSections["plotting"].Add("    # グラフを保存");
+            codeSections["plotting"].Add("    plt.savefig('connection_plot.png', bbox_inches='tight', dpi=300)");
+            codeSections["plotting"].Add("");
+        }
+
+        /// <summary>
         /// ファイルに書き込む
         /// </summary>
         private void WriteToFile()
@@ -647,12 +710,15 @@ namespace PowerSimBuilder
         {
             var allLines = new List<string>();
 
-            var sectionsOrder = new[] { "imports", "function_def", "simulation_data_init", "components", "connections", "simulation_loop" };
+            var sectionsOrder = new[] { 
+                "imports", "function_def", "simulation_data_init", 
+                "components", "connections", "simulation_loop", "plotting" 
+            };
 
             foreach (var section in sectionsOrder)
             {
                 allLines.AddRange(codeSections[section]);
-                if (section != "simulation_loop")
+                if (section != "plotting")
                     allLines.Add("");
             }
 

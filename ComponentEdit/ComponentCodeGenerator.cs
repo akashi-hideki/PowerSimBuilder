@@ -299,8 +299,8 @@ namespace PowerSimBuilder
                   { "double", "float" },
                   { "string", "str" },
                   { "bool", "bool" },
-                　{ "list<string>", "List[str]" },
-                　{ "dictionary<string, double>", "Dict[str, float]" }
+                { "list<string>", "List[str]" },
+                { "dictionary<string, double>", "Dict[str, float]" }
             };
 
             string lowerType = csharpType.ToLower();
