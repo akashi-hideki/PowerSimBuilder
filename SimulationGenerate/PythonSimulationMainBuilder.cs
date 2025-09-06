@@ -591,7 +591,7 @@ namespace PowerSimBuilder
                     codeSections["plot_config"].Add($"        {{'name': '{signalName}', 'component': '{fromComp}', 'port': '{fromPort}', 'enabled': True, 'color': '{color}', 'line_style': '{lineStyle}'}},");
                     
                     colorIndex++;
-                    if (colorIndex % 3 == 0) lineStyleIndex++; // 3つの信号ごとに線種を変更
+                    if (colorIndex % 3 == 0) lineStyleIndex++;
                 }
             }
             else
