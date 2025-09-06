@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace PowerSimBuilder
 {
-    public class PythonCodeGenerator
+    public class ComponentCodeGenerator
     {
         // コードテンプレートをDictionaryで管理
         private static readonly Dictionary<string, List<string>> CodeTemplates = new Dictionary<string, List<string>>
@@ -211,7 +211,7 @@ namespace PowerSimBuilder
             // パラメータクラス
             lines.AddRange(CodeTemplates["ParametersClass"]
                 .Select(line => string.Format(line, descriptor.Type, descriptor.Name)));
-            
+
             foreach (var param in descriptor.Parameters)
             {
                 string pythonType = ConvertToPythonType(param.Type);
@@ -257,14 +257,14 @@ namespace PowerSimBuilder
                 lines.AddRange(CodeTemplates["UpdateInputs"]
                     .Select(line => string.Format(line, inputPort)));
             }
-            
+
             lines.AddRange(CodeTemplates["UpdateLogic"]);
             foreach (var outputPort in descriptor.OutputPorts)
             {
                 lines.AddRange(CodeTemplates["UpdateOutputs"]
                     .Select(line => string.Format(line, outputPort)));
             }
-            
+
             lines.AddRange(CodeTemplates["UpdateEnd"]);
 
             // resetメソッド
@@ -273,13 +273,13 @@ namespace PowerSimBuilder
             // 使用例
             lines.AddRange(CodeTemplates["UsageExample"]
                 .Select(line => string.Format(line, descriptor.Name, descriptor.Type, descriptor.Type.ToLower())));
-            
+
             foreach (var inputPort in descriptor.InputPorts)
             {
                 lines.AddRange(CodeTemplates["UsageInputs"]
                     .Select(line => string.Format(line, inputPort)));
             }
-            
+
             lines.AddRange(CodeTemplates["UsageSimulation"]);
             foreach (var outputPort in descriptor.OutputPorts)
             {
@@ -293,16 +293,24 @@ namespace PowerSimBuilder
 
         private string ConvertToPythonType(string csharpType)
         {
-            return csharpType.ToLower() switch
+            var typeMapping = new Dictionary<string, string>
             {
-                "int" => "int",
-                "double" => "float",
-                "string" => "str",
-                "bool" => "bool",
-                "list<string>" => "List[str]",
-                "dictionary<string, double>" => "Dict[str, float]",
-                _ => "Any"
+                  { "int", "int" },
+                  { "double", "float" },
+                  { "string", "str" },
+                  { "bool", "bool" },
+                　{ "list<string>", "List[str]" },
+                　{ "dictionary<string, double>", "Dict[str, float]" }
             };
+
+            string lowerType = csharpType.ToLower();
+
+            if (typeMapping.TryGetValue(lowerType, out string pythonType))
+            {
+                return pythonType;
+            }
+
+            return "Any";
         }
 
         private string ConvertToPythonValue(object value)

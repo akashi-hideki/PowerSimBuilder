@@ -1,6 +1,7 @@
 # Pythonシミュレーション設計指示書（完全版）
 
 ## 1. 目的
+
 - 電源、発電機、整流器、溶接機、エンジン、誘導電動機、故障装置の時間シミュレーション
 - 共通インタフェースで部品管理：
   - 初期化メソッド (`__init__`)
@@ -15,6 +16,7 @@
 ## 2. 共通データ構造
 
 ### 2.1 SimulationData（全パラメータ集約）
+
 - 電源・発電機：電圧、電流、周波数、波形
 - 整流回路：ダイオード降下、整流方式、リップル、出力電圧
 - 溶接機：設定電流、実電流、制御モード、過熱フラグ
@@ -112,14 +114,15 @@ for conn in connections:
 
 ## 4. コンポーネント詳細
 
-| クラス            | パラメータ                                        | 入力                          | 出力                                             | 補足                  |
-| -------------- | -------------------------------------------- | --------------------------- | ---------------------------------------------- | ------------------- |
-| PowerSource    | voltage, frequency, waveform                 | -                           | voltage, current                               | AC出力                |
-| Generator      | rated\_power, efficiency                     | torque                      | voltage, current                               | 発電機駆動               |
-| DiodeBridge    | diode\_drop, type                            | ac\_voltage                 | dc\_voltage, ripple                            | 半波/全波/三相            |
-| Welder         | welding\_current\_set, mode, overheat\_limit | dc\_voltage, short\_circuit | arc\_current, overheat                         | 定電流/定電圧制御           |
-| Engine         | power, torque\_max                           | -                           | torque                                         | 発電機駆動トルク            |
-| InductionMotor | rated\_power, load\_torque                   | voltage                     | torque, speed, slip                            | 応答遅れ・負荷トルク          |
+
+| クラス         | パラメータ                                   | 入力                        | 出力                                           | 補足                             |
+| -------------- | -------------------------------------------- | --------------------------- | ---------------------------------------------- | -------------------------------- |
+| PowerSource    | voltage, frequency, waveform                 | -                           | voltage, current                               | AC出力                           |
+| Generator      | rated\_power, efficiency                     | torque                      | voltage, current                               | 発電機駆動                       |
+| DiodeBridge    | diode\_drop, type                            | ac\_voltage                 | dc\_voltage, ripple                            | 半波/全波/三相                   |
+| Welder         | welding\_current\_set, mode, overheat\_limit | dc\_voltage, short\_circuit | arc\_current, overheat                         | 定電流/定電圧制御                |
+| Engine         | power, torque\_max                           | -                           | torque                                         | 発電機駆動トルク                 |
+| InductionMotor | rated\_power, load\_torque                   | voltage                     | torque, speed, slip                            | 応答遅れ・負荷トルク             |
 | FaultDevice    | fault\_type, condition\_expr, duration       | -                           | short\_circuit, open\_circuit, inrush\_current | update内でシナリオ判定・状態管理 |
 
 ---
@@ -233,26 +236,5 @@ def main():
 
 ---
 
-## 9. 検証プロセス（10段階）
 
-1. SimulationData 集約・参照統一確認 → OK
-2. FaultDevice scenario\_state 内部管理確認 → OK
-3. MAIN update 呼び出し順確認 → OK
-4. Connections 伝搬確認 → OK
-5. 複数 FaultDevice 同時使用確認 → OK
-6. ログ収集確認 → OK
-7. 条件付きシナリオ判定確認 → OK
-8. JSON形式変換確認 → OK
-9. Mermaid 図整合性確認 → OK
-10. 全体統合確認 → OK
-
-✅ **結論**：SimulationData 集約＋Connections 統一＋FaultDevice 内部シナリオ管理により完全版完成。
-
-```
-
----
-
-このMDは **スマホでもコピー可能** にまとめ、共通インタフェース部分を具体的なPythonコードとして統合しています。  
-
-希望であれば、このMDから **さらにスマホ閲覧用に余白や説明文を削減した超コンパクト版** も作れます。作りますか？
 ```

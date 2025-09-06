@@ -92,7 +92,7 @@ namespace PowerSimBuilder
             }
             else
             {
- 
+
                 InitializeComponent();
                 this.AutoScroll = true;
                 // 必要に応じて最小スクロール領域を設定（例: 幅2000, 高さ2000）

@@ -31,7 +31,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー", 
+                MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.Cancel;
                 Close();
@@ -40,7 +40,7 @@ namespace PowerSimBuilder
 
         private void UpdateTitle()
         {
-            this.Text = $"Pythonコードエディタ - {Path.GetFileName(_filePath)}" + 
+            this.Text = $"Pythonコードエディタ - {Path.GetFileName(_filePath)}" +
                        (IsModified ? " *" : "");
         }
 

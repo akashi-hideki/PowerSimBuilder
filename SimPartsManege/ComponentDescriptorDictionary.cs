@@ -33,14 +33,14 @@ namespace PowerSimBuilder
                             new ParameterDescriptor { Name = "rotor_inertia", Type = "double", DefaultValue = 2.5 },
                             new ParameterDescriptor { Name = "operation_mode", Type = "string", DefaultValue = "STANDALONE" }
                         },
-                        InputPorts = new[] 
-                        { 
+                        InputPorts = new[]
+                        {
                             "engine_torque",          // エンジントルク入力 [Nm]
                             "rotation_speed_input",   // 回転数入力 [rpm]（単独動作モード時）
                             "load_impedance"          // 負荷インピーダンス [Ω]
                         },
-                        OutputPorts = new[] 
-                        { 
+                        OutputPorts = new[]
+                        {
                             "phase_voltage",          // 相電圧 [V]
                             "line_voltage",           // 線間電圧 [V]
                             "output_current",         // 出力電流 [A]
@@ -66,14 +66,14 @@ namespace PowerSimBuilder
                             new ParameterDescriptor { Name = "pole_pairs", Type = "int", DefaultValue = 2 },
                             new ParameterDescriptor { Name = "inertia", Type = "double", DefaultValue = 0.1 }
                         },
-                        InputPorts = new[] 
-                        { 
+                        InputPorts = new[]
+                        {
                             "stator_voltage",         // 固定子電圧 [V]
                             "supply_frequency",       // 電源周波数 [Hz]
                             "load_torque"             // 負荷トルク [Nm]
                         },
-                        OutputPorts = new[] 
-                        { 
+                        OutputPorts = new[]
+                        {
                             "rotor_speed",            // 回転子速度 [rpm]
                             "stator_current",         // 固定子電流 [A]
                             "output_torque",          // 出力トルク [Nm]
@@ -97,14 +97,14 @@ namespace PowerSimBuilder
                             new ParameterDescriptor { Name = "control_method", Type = "string", DefaultValue = "v_f_control" },
                             new ParameterDescriptor { Name = "modulation_method", Type = "string", DefaultValue = "SPWM" }
                         },
-                        InputPorts = new[] 
-                        { 
+                        InputPorts = new[]
+                        {
                             "dc_voltage",             // DC入力電圧 [V]
                             "frequency_command",      // 周波数指令 [Hz]
                             "voltage_command"         // 電圧指令 [V]
                         },
-                        OutputPorts = new[] 
-                        { 
+                        OutputPorts = new[]
+                        {
                             "ac_voltage",             // AC出力電圧 [V]
                             "ac_current",             // AC出力電流 [A]
                             "dc_current",             // DC入力電流 [A]
@@ -124,13 +124,13 @@ namespace PowerSimBuilder
                             new ParameterDescriptor { Name = "diode_forward_voltage", Type = "double", DefaultValue = 0.7 },
                             new ParameterDescriptor { Name = "bridge_type", Type = "string", DefaultValue = "full_wave" }
                         },
-                        InputPorts = new[] 
-                        { 
+                        InputPorts = new[]
+                        {
                             "ac_voltage",             // AC入力電圧 [V]
                             "load_resistance"         // 負荷抵抗 [Ω]
                         },
-                        OutputPorts = new[] 
-                        { 
+                        OutputPorts = new[]
+                        {
                             "dc_voltage",             // DC出力電圧 [V]
                             "dc_current",             // DC出力電流 [A]
                             "efficiency"              // 効率 [%]
@@ -150,13 +150,13 @@ namespace PowerSimBuilder
                             new ParameterDescriptor { Name = "capacitance", Type = "double", DefaultValue = 0.001 },
                             new ParameterDescriptor { Name = "filter_type", Type = "string", DefaultValue = "low_pass" }
                         },
-                        InputPorts = new[] 
-                        { 
+                        InputPorts = new[]
+                        {
                             "input_voltage",          // 入力電圧 [V]
                             "load_impedance"          // 負荷インピーダンス [Ω]
                         },
-                        OutputPorts = new[] 
-                        { 
+                        OutputPorts = new[]
+                        {
                             "output_voltage",         // 出力電圧 [V]
                             "output_current",         // 出力電流 [A]
                             "attenuation"             // 減衰率 [dB]
@@ -175,14 +175,14 @@ namespace PowerSimBuilder
                             new ParameterDescriptor { Name = "regulation_type", Type = "string", DefaultValue = "linear" },
                             new ParameterDescriptor { Name = "dropout_voltage", Type = "double", DefaultValue = 2.0 }
                         },
-                        InputPorts = new[] 
-                        { 
+                        InputPorts = new[]
+                        {
                             "input_voltage",          // 入力電圧 [V]
                             "reference_voltage",      // 基準電圧 [V]
                             "load_current"            // 負荷電流 [A]
                         },
-                        OutputPorts = new[] 
-                        { 
+                        OutputPorts = new[]
+                        {
                             "output_voltage",         // 出力電圧 [V]
                             "regulation_error",       // レギュレーション誤差 [%]
                             "current_limit"           // 電流制限値 [A]
@@ -201,12 +201,12 @@ namespace PowerSimBuilder
                             new ParameterDescriptor { Name = "load_type", Type = "string", DefaultValue = "constant" },
                             new ParameterDescriptor { Name = "torque_value", Type = "double", DefaultValue = 10.0 }
                         },
-                        InputPorts = new[] 
-                        { 
+                        InputPorts = new[]
+                        {
                             "speed_input"             // 速度入力 [rpm]
                         },
-                        OutputPorts = new[] 
-                        { 
+                        OutputPorts = new[]
+                        {
                             "torque_output"           // トルク出力 [Nm]
                         }
                     }
@@ -238,14 +238,14 @@ namespace PowerSimBuilder
                                 }
                             }
                         },
-                        InputPorts = new[] 
-                        { 
+                        InputPorts = new[]
+                        {
                             "voltage_input",          // 電圧入力 [V]
                             "current_input",          // 電流入力 [A]
                             "speed_input"             // 回転数入力 [rpm]
                         },
-                        OutputPorts = new[] 
-                        { 
+                        OutputPorts = new[]
+                        {
                             "fault_status",           // 故障状態
                             "fault_message"           // 故障メッセージ
                         }

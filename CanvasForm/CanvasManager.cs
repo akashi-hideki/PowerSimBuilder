@@ -64,7 +64,21 @@ namespace PowerSimBuilder
         /// 注意点: コンポーネント追加時に使用
         /// </summary>
         public ComponentPalette Palette { get; }
-
+        /// <summary>
+        /// キャンバス上で使用されているコンポーネントのディスクリプタリスト
+        /// 注意点: 実際に配置されているコンポーネントの情報のみ含む
+        /// </summary>
+        public List<ComponentDescriptor> UsedComponentDescriptors
+        {
+            get
+            {
+                return _components.Select(c => c.Descriptor).ToList();
+            }
+        }
+        /// <summary>
+        /// キャンバス上の接続情報
+        /// </summary>
+        public List<Connection> Connections => Canvas.Connections;
         /// <summary>
         /// コンストラクタ
         /// 注意点: イベントハンドラを登録

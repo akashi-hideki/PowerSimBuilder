@@ -15,7 +15,7 @@ namespace PowerSimBuilder
         // ポート描画サイズとヒットエリアの拡大
         private const int PortRadius = 8; // 描画半径
         private const int HitTestRadius = 12; // ヒットテスト半径
-        
+
         // コンポーネントの基本サイズ（推奨サイズ）
         public const int BaseWidth = 180;
         public const int BaseHeight = 40; // 基本高さ（ポート以外の部分）
@@ -24,7 +24,7 @@ namespace PowerSimBuilder
         // マウス位置追跡用フィールド追加
         private string _hoveredPort = null;
         private bool _isInputPortHovered = false;
-        
+
         // イベント定義
         public event EventHandler SelectedChanged;
         public event EventHandler<PortEventArgs> PortClicked;
@@ -347,10 +347,10 @@ namespace PowerSimBuilder
                     {
                         displayName = displayName.Substring(0, 10) + "..";
                     }
-                    
+
                     // テキストの幅を計算して右側に配置
                     SizeF textSize = e.Graphics.MeasureString(displayName, Font);
-                    e.Graphics.DrawString(displayName, Font, Brushes.Black, 
+                    e.Graphics.DrawString(displayName, Font, Brushes.Black,
                         Width - textSize.Width - 30, yPos - 7);
                 }
             }

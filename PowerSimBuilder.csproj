@@ -103,6 +103,12 @@
     <Compile Include="CanvasForm\ParameterItem.cs" />
     <Compile Include="CanvasForm\PointJsonConverter.cs" />
     <Compile Include="CanvasForm\PalletteDataDefine.cs" />
+    <Compile Include="ComponentEdit\ComponentCodeGenerator.cs" />
+    <Compile Include="ComponentEdit\ComponentManager.cs" />
+    <Compile Include="ComponentEdit\PythonCodeEditorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ComponentEdit\PythonCodeEditorForm.Designer.cs" />
     <Compile Include="SimPartsManege\ComponentDescriptorDictionary.cs" />
     <Compile Include="SimPartsManege\ComponentPaletteStorage.cs" />
     <Compile Include="SimulationGenerate\PythonCodeGenerator.cs" />
@@ -175,4 +181,5 @@
       <DependentUpon>SimRegistForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
 </Project>
