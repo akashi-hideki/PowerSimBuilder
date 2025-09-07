@@ -33,9 +33,9 @@ namespace PowerSimBuilder
                     "        def __init__(self, comp_id: str, comp_type: str):",
                     "            self.id = comp_id",
                     "            self.type = comp_type",
-                    "            self.inputs: Dict[str, Any] = {}",
-                    "            self.outputs: Dict[str, Any] = {}",
-                    "            self.parameters: Dict[str, Any] = {}",
+                    "            self.inputs = {}",
+                    "            self.outputs = {}",
+                    "            self.parameters = {}",
                     "",
                     "        def update(self, t: float, dt: float, sim_data: Any = None):",
                     "            pass",
@@ -199,6 +199,31 @@ namespace PowerSimBuilder
                 }
             }
         };
+
+        // テンプレートの種類と必要な引数の数をマッピング
+        private static readonly Dictionary<string, int> TemplateArgCounts = new Dictionary<string, int>
+        {
+            { "Header", 2 },
+            { "ParametersClass", 2 },
+            { "MainClass", 2 },
+            { "InputsSection", 1 },
+            { "OutputsSection", 0 },
+            { "OutputsLine", 1 },
+            { "ParametersSection", 0 },
+            { "ParametersLine", 1 },
+            { "InternalVariables", 0 },
+            { "UpdateMethod", 0 },
+            { "UpdateInputs", 1 },
+            { "UpdateLogic", 0 },
+            { "UpdateOutputs", 1 },
+            { "UpdateEnd", 0 },
+            { "ResetMethod", 0 },
+            { "UsageExample", 3 },
+            { "UsageInputs", 1 },
+            { "UsageSimulation", 0 },
+            { "UsageOutputs", 1 }
+        };
+
         public void GeneratePythonCode(ComponentDescriptor descriptor, string filePath)
         {
             var lines = new List<string>();
@@ -208,50 +233,10 @@ namespace PowerSimBuilder
                 LogcatTraceHelper.Instance.Log("DEBUG", $"GeneratePythonCode開始: {descriptor.Name}");
                 
                 // ヘッダー
-                LogcatTraceHelper.Instance.Log("DEBUG", "ヘッダー処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["Header"]
-                        .Select(line => {
-                            try
-                            {
-                                return string.Format(line, descriptor.Name, DateTime.Now);
-                            }
-                            catch (FormatException fex)
-                            {
-                                LogcatTraceHelper.Instance.Log("ERROR", $"Headerフォーマットエラー: {fex.Message}, 行: '{line}'");
-                                throw;
-                            }
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"ヘッダー処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "Header", descriptor.Name, DateTime.Now);
 
                 // パラメータクラス
-                LogcatTraceHelper.Instance.Log("DEBUG", "パラメータクラス処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["ParametersClass"]
-                        .Select(line => {
-                            try
-                            {
-                                return string.Format(line, descriptor.Type, descriptor.Name);
-                            }
-                            catch (FormatException fex)
-                            {
-                                LogcatTraceHelper.Instance.Log("ERROR", $"ParametersClassフォーマットエラー: {fex.Message}, 行: '{line}'");
-                                throw;
-                            }
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"パラメータクラス処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "ParametersClass", descriptor.Type, descriptor.Name);
 
                 // パラメータ処理
                 LogcatTraceHelper.Instance.Log("DEBUG", $"パラメータ処理開始 (パラメータ数: {descriptor.Parameters.Count})");
@@ -277,327 +262,82 @@ namespace PowerSimBuilder
                 lines.Add("");
 
                 // メインクラス
-                LogcatTraceHelper.Instance.Log("DEBUG", "メインクラス処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["MainClass"]
-                        .Select(line => {
-                            try
-                            {
-                                return string.Format(line, descriptor.Type, descriptor.Name);
-                            }
-                            catch (FormatException fex)
-                            {
-                                LogcatTraceHelper.Instance.Log("ERROR", $"MainClassフォーマットエラー: {fex.Message}, 行: '{line}'");
-                                throw;
-                            }
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"メインクラス処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "MainClass", descriptor.Type, descriptor.Name);
 
                 // 入力ポート
                 LogcatTraceHelper.Instance.Log("DEBUG", $"入力ポート処理開始 (ポート数: {descriptor.InputPorts.Length})");
                 foreach (var inputPort in descriptor.InputPorts)
                 {
-                    try
-                    {
-                        lines.AddRange(CodeTemplates["InputsSection"]
-                            .Select(line => {
-                                try
-                                {
-                                    return string.Format(line, inputPort);
-                                }
-                                catch (FormatException fex)
-                                {
-                                    LogcatTraceHelper.Instance.Log("ERROR", $"InputsSectionフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{inputPort}'");
-                                    throw;
-                                }
-                            }));
-                    }
-                    catch (Exception ex)
-                    {
-                        LogcatTraceHelper.Instance.Log("ERROR", $"入力ポート '{inputPort}' 処理中にエラー: {ex.Message}");
-                        throw;
-                    }
+                    AddTemplateLines(lines, "InputsSection", inputPort);
                 }
 
                 // 出力ポートセクション
-                LogcatTraceHelper.Instance.Log("DEBUG", "出力ポートセクション処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["OutputsSection"]);
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"出力ポートセクション処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "OutputsSection");
 
                 // 出力ポート
                 LogcatTraceHelper.Instance.Log("DEBUG", $"出力ポート処理開始 (ポート数: {descriptor.OutputPorts.Length})");
                 foreach (var outputPort in descriptor.OutputPorts)
                 {
-                    try
-                    {
-                        lines.AddRange(CodeTemplates["OutputsLine"]
-                            .Select(line => {
-                                try
-                                {
-                                    return string.Format(line, outputPort);
-                                }
-                                catch (FormatException fex)
-                                {
-                                    LogcatTraceHelper.Instance.Log("ERROR", $"OutputsLineフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{outputPort}'");
-                                    throw;
-                                }
-                            }));
-                    }
-                    catch (Exception ex)
-                    {
-                        LogcatTraceHelper.Instance.Log("ERROR", $"出力ポート '{outputPort}' 処理中にエラー: {ex.Message}");
-                        throw;
-                    }
+                    AddTemplateLines(lines, "OutputsLine", outputPort);
                 }
 
                 // パラメータセクション
-                LogcatTraceHelper.Instance.Log("DEBUG", "パラメータセクション処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["ParametersSection"]);
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"パラメータセクション処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "ParametersSection");
 
                 // パラメータ行
                 LogcatTraceHelper.Instance.Log("DEBUG", "パラメータ行処理開始");
                 foreach (var param in descriptor.Parameters)
                 {
-                    try
-                    {
-                        lines.AddRange(CodeTemplates["ParametersLine"]
-                            .Select(line => {
-                                try
-                                {
-                                    return string.Format(line, param.Name);
-                                }
-                                catch (FormatException fex)
-                                {
-                                    LogcatTraceHelper.Instance.Log("ERROR", $"ParametersLineフォーマットエラー: {fex.Message}, 行: '{line}', パラメータ: '{param.Name}'");
-                                    throw;
-                                }
-                            }));
-                    }
-                    catch (Exception ex)
-                    {
-                        LogcatTraceHelper.Instance.Log("ERROR", $"パラメータ行 '{param.Name}' 処理中にエラー: {ex.Message}");
-                        throw;
-                    }
+                    AddTemplateLines(lines, "ParametersLine", param.Name);
                 }
 
                 // 内部変数
-                LogcatTraceHelper.Instance.Log("DEBUG", "内部変数処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["InternalVariables"]);
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"内部変数処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "InternalVariables");
 
                 // updateメソッド
-                LogcatTraceHelper.Instance.Log("DEBUG", "updateメソッド処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["UpdateMethod"]);
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"updateメソッド処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "UpdateMethod");
 
                 // update入力
                 LogcatTraceHelper.Instance.Log("DEBUG", "update入力処理開始");
                 foreach (var inputPort in descriptor.InputPorts)
                 {
-                    try
-                    {
-                        lines.AddRange(CodeTemplates["UpdateInputs"]
-                            .Select(line => {
-                                try
-                                {
-                                    return string.Format(line, inputPort);
-                                }
-                                catch (FormatException fex)
-                                {
-                                    LogcatTraceHelper.Instance.Log("ERROR", $"UpdateInputsフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{inputPort}'");
-                                    throw;
-                                }
-                            }));
-                    }
-                    catch (Exception ex)
-                    {
-                        LogcatTraceHelper.Instance.Log("ERROR", $"update入力 '{inputPort}' 処理中にエラー: {ex.Message}");
-                        throw;
-                    }
+                    AddTemplateLines(lines, "UpdateInputs", inputPort);
                 }
 
                 // updateロジック
-                LogcatTraceHelper.Instance.Log("DEBUG", "updateロジック処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["UpdateLogic"]);
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"updateロジック処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "UpdateLogic");
 
                 // update出力
                 LogcatTraceHelper.Instance.Log("DEBUG", "update出力処理開始");
                 foreach (var outputPort in descriptor.OutputPorts)
                 {
-                    try
-                    {
-                        lines.AddRange(CodeTemplates["UpdateOutputs"]
-                            .Select(line => {
-                                try
-                                {
-                                    return string.Format(line, outputPort);
-                                }
-                                catch (FormatException fex)
-                                {
-                                    LogcatTraceHelper.Instance.Log("ERROR", $"UpdateOutputsフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{outputPort}'");
-                                    throw;
-                                }
-                            }));
-                    }
-                    catch (Exception ex)
-                    {
-                        LogcatTraceHelper.Instance.Log("ERROR", $"update出力 '{outputPort}' 処理中にエラー: {ex.Message}");
-                        throw;
-                    }
+                    AddTemplateLines(lines, "UpdateOutputs", outputPort);
                 }
 
                 // update終了
-                LogcatTraceHelper.Instance.Log("DEBUG", "update終了処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["UpdateEnd"]);
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"update終了処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "UpdateEnd");
 
                 // resetメソッド
-                LogcatTraceHelper.Instance.Log("DEBUG", "resetメソッド処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["ResetMethod"]);
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"resetメソッド処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "ResetMethod");
 
                 // 使用例
-                LogcatTraceHelper.Instance.Log("DEBUG", "使用例処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["UsageExample"]
-                        .Select(line => {
-                            try
-                            {
-                                return string.Format(line, descriptor.Name, descriptor.Type, descriptor.Type.ToLower());
-                            }
-                            catch (FormatException fex)
-                            {
-                                LogcatTraceHelper.Instance.Log("ERROR", $"UsageExampleフォーマットエラー: {fex.Message}, 行: '{line}'");
-                                throw;
-                            }
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"使用例処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "UsageExample", descriptor.Name, descriptor.Type, descriptor.Type.ToLower());
 
                 // 使用入力
                 LogcatTraceHelper.Instance.Log("DEBUG", "使用入力処理開始");
                 foreach (var inputPort in descriptor.InputPorts)
                 {
-                    try
-                    {
-                        lines.AddRange(CodeTemplates["UsageInputs"]
-                            .Select(line => {
-                                try
-                                {
-                                    return string.Format(line, inputPort);
-                                }
-                                catch (FormatException fex)
-                                {
-                                    LogcatTraceHelper.Instance.Log("ERROR", $"UsageInputsフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{inputPort}'");
-                                    throw;
-                                }
-                            }));
-                    }
-                    catch (Exception ex)
-                    {
-                        LogcatTraceHelper.Instance.Log("ERROR", $"使用入力 '{inputPort}' 処理中にエラー: {ex.Message}");
-                        throw;
-                    }
+                    AddTemplateLines(lines, "UsageInputs", inputPort);
                 }
 
                 // 使用シミュレーション
-                LogcatTraceHelper.Instance.Log("DEBUG", "使用シミュレーション処理開始");
-                try
-                {
-                    lines.AddRange(CodeTemplates["UsageSimulation"]);
-                }
-                catch (Exception ex)
-                {
-                    LogcatTraceHelper.Instance.Log("ERROR", $"使用シミュレーション処理中にエラー: {ex.Message}");
-                    throw;
-                }
+                AddTemplateLines(lines, "UsageSimulation");
 
                 // 使用出力
                 LogcatTraceHelper.Instance.Log("DEBUG", "使用出力処理開始");
                 foreach (var outputPort in descriptor.OutputPorts)
                 {
-                    try
-                    {
-                        lines.AddRange(CodeTemplates["UsageOutputs"]
-                            .Select(line => {
-                                try
-                                {
-                                    return string.Format(line, outputPort);
-                                }
-                                catch (FormatException fex)
-                                {
-                                    LogcatTraceHelper.Instance.Log("ERROR", $"UsageOutputsフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{outputPort}'");
-                                    throw;
-                                }
-                            }));
-                    }
-                    catch (Exception ex)
-                    {
-                        LogcatTraceHelper.Instance.Log("ERROR", $"使用出力 '{outputPort}' 処理中にエラー: {ex.Message}");
-                        throw;
-                    }
+                    AddTemplateLines(lines, "UsageOutputs", outputPort);
                 }
 
                 // ファイルに書き込み
@@ -617,6 +357,49 @@ namespace PowerSimBuilder
             {
                 LogcatTraceHelper.Instance.Log("ERROR", $"GeneratePythonCode全体でエラー: {ex.Message}");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// テンプレート行を追加する汎用メソッド
+        /// </summary>
+        private void AddTemplateLines(List<string> lines, string templateKey, params object[] args)
+        {
+            if (!CodeTemplates.ContainsKey(templateKey))
+            {
+                LogcatTraceHelper.Instance.Log("ERROR", $"テンプレートキー '{templateKey}' が見つかりません");
+                return;
+            }
+
+            int expectedArgCount = TemplateArgCounts.ContainsKey(templateKey) ? TemplateArgCounts[templateKey] : 0;
+            
+            if (args.Length != expectedArgCount)
+            {
+                LogcatTraceHelper.Instance.Log("WARN", $"テンプレート '{templateKey}' の引数数が期待値と異なります。期待: {expectedArgCount}, 実際: {args.Length}");
+            }
+
+            foreach (var line in CodeTemplates[templateKey])
+            {
+                try
+                {
+                    // フォーマットプレースホルダーがある行だけをフォーマットする
+                    if (line.Contains("{") && args.Length > 0)
+                    {
+                        string formattedLine = string.Format(line, args);
+                        lines.Add(formattedLine);
+                    }
+                    else
+                    {
+                        // プレースホルダーがない行はそのまま追加
+                        lines.Add(line);
+                    }
+                }
+                catch (FormatException fex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"テンプレート '{templateKey}' フォーマットエラー: {fex.Message}, 行: '{line}'");
+                    // フォーマットに失敗した行はそのまま追加
+                    lines.Add(line);
+                }
             }
         }
 

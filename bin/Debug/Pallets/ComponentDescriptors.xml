@@ -249,12 +249,12 @@
       <ParameterDescriptor>
         <Name>monitored_parameters</Name>
         <Type>List&lt;string&gt;</Type>
-        <DefaultValue Type="System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]">System.Collections.Generic.List`1[System.String]</DefaultValue>
+        <DefaultValue Type="System.String">System.Collections.Generic.List`1[System.String]</DefaultValue>
       </ParameterDescriptor>
       <ParameterDescriptor>
         <Name>thresholds</Name>
         <Type>Dictionary&lt;string, double&gt;</Type>
-        <DefaultValue Type="System.Collections.Generic.Dictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Double, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]">System.Collections.Generic.Dictionary`2[System.String,System.Double]</DefaultValue>
+        <DefaultValue Type="System.String">System.Collections.Generic.Dictionary`2[System.String,System.Double]</DefaultValue>
       </ParameterDescriptor>
     </Parameters>
     <InputPorts>
