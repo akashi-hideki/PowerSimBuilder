@@ -61,32 +61,32 @@ namespace PowerSimBuilder
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.CreateNoWindow = false;
-                
-                process.OutputDataReceived += (s, e) => 
+
+                process.OutputDataReceived += (s, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                         Console.WriteLine($"出力: {e.Data}");
                 };
-                
-                process.ErrorDataReceived += (s, e) => 
+
+                process.ErrorDataReceived += (s, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                         Console.WriteLine($"エラー: {e.Data}");
                 };
-                
+
                 process.Start();
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
-                
-                MessageBox.Show("Pythonスクリプトを実行しました。コンソールウィンドウで出力を確認してください。", 
+
+                MessageBox.Show("Pythonスクリプトを実行しました。コンソールウィンドウで出力を確認してください。",
                     "情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                
+
                 return true;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Pythonスクリプトの実行に失敗しました: {ex.Message}\n\n" +
-                               "Pythonがインストールされているか確認してください。", 
+                               "Pythonがインストールされているか確認してください。",
                     "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }

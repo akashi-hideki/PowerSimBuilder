@@ -199,129 +199,506 @@ namespace PowerSimBuilder
                 }
             }
         };
-
         public void GeneratePythonCode(ComponentDescriptor descriptor, string filePath)
         {
             var lines = new List<string>();
-
-            // ヘッダー
-            lines.AddRange(CodeTemplates["Header"]
-                .Select(line => string.Format(line, descriptor.Name, DateTime.Now)));
-
-            // パラメータクラス
-            lines.AddRange(CodeTemplates["ParametersClass"]
-                .Select(line => string.Format(line, descriptor.Type, descriptor.Name)));
-
-            foreach (var param in descriptor.Parameters)
+            
+            try
             {
-                string pythonType = ConvertToPythonType(param.Type);
-                string defaultValue = ConvertToPythonValue(param.DefaultValue);
-                lines.Add($"    {param.Name}: {pythonType} = {defaultValue}");
+                LogcatTraceHelper.Instance.Log("DEBUG", $"GeneratePythonCode開始: {descriptor.Name}");
+                
+                // ヘッダー
+                LogcatTraceHelper.Instance.Log("DEBUG", "ヘッダー処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["Header"]
+                        .Select(line => {
+                            try
+                            {
+                                return string.Format(line, descriptor.Name, DateTime.Now);
+                            }
+                            catch (FormatException fex)
+                            {
+                                LogcatTraceHelper.Instance.Log("ERROR", $"Headerフォーマットエラー: {fex.Message}, 行: '{line}'");
+                                throw;
+                            }
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"ヘッダー処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // パラメータクラス
+                LogcatTraceHelper.Instance.Log("DEBUG", "パラメータクラス処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["ParametersClass"]
+                        .Select(line => {
+                            try
+                            {
+                                return string.Format(line, descriptor.Type, descriptor.Name);
+                            }
+                            catch (FormatException fex)
+                            {
+                                LogcatTraceHelper.Instance.Log("ERROR", $"ParametersClassフォーマットエラー: {fex.Message}, 行: '{line}'");
+                                throw;
+                            }
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"パラメータクラス処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // パラメータ処理
+                LogcatTraceHelper.Instance.Log("DEBUG", $"パラメータ処理開始 (パラメータ数: {descriptor.Parameters.Count})");
+                foreach (var param in descriptor.Parameters)
+                {
+                    try
+                    {
+                        LogcatTraceHelper.Instance.Log("DEBUG", $"パラメータ処理: {param.Name}, 型: {param.Type}, 値: {param.DefaultValue}");
+                        
+                        string pythonType = ConvertToPythonType(param.Type);
+                        string defaultValue = ConvertToPythonValue(param.DefaultValue);
+                        
+                        LogcatTraceHelper.Instance.Log("DEBUG", $"変換後 - 型: {pythonType}, 値: {defaultValue}");
+                        
+                        lines.Add($"    {param.Name}: {pythonType} = {defaultValue}");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogcatTraceHelper.Instance.Log("ERROR", $"パラメータ '{param.Name}' 処理中にエラー: {ex.Message}");
+                        throw;
+                    }
+                }
+                lines.Add("");
+
+                // メインクラス
+                LogcatTraceHelper.Instance.Log("DEBUG", "メインクラス処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["MainClass"]
+                        .Select(line => {
+                            try
+                            {
+                                return string.Format(line, descriptor.Type, descriptor.Name);
+                            }
+                            catch (FormatException fex)
+                            {
+                                LogcatTraceHelper.Instance.Log("ERROR", $"MainClassフォーマットエラー: {fex.Message}, 行: '{line}'");
+                                throw;
+                            }
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"メインクラス処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // 入力ポート
+                LogcatTraceHelper.Instance.Log("DEBUG", $"入力ポート処理開始 (ポート数: {descriptor.InputPorts.Length})");
+                foreach (var inputPort in descriptor.InputPorts)
+                {
+                    try
+                    {
+                        lines.AddRange(CodeTemplates["InputsSection"]
+                            .Select(line => {
+                                try
+                                {
+                                    return string.Format(line, inputPort);
+                                }
+                                catch (FormatException fex)
+                                {
+                                    LogcatTraceHelper.Instance.Log("ERROR", $"InputsSectionフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{inputPort}'");
+                                    throw;
+                                }
+                            }));
+                    }
+                    catch (Exception ex)
+                    {
+                        LogcatTraceHelper.Instance.Log("ERROR", $"入力ポート '{inputPort}' 処理中にエラー: {ex.Message}");
+                        throw;
+                    }
+                }
+
+                // 出力ポートセクション
+                LogcatTraceHelper.Instance.Log("DEBUG", "出力ポートセクション処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["OutputsSection"]);
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"出力ポートセクション処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // 出力ポート
+                LogcatTraceHelper.Instance.Log("DEBUG", $"出力ポート処理開始 (ポート数: {descriptor.OutputPorts.Length})");
+                foreach (var outputPort in descriptor.OutputPorts)
+                {
+                    try
+                    {
+                        lines.AddRange(CodeTemplates["OutputsLine"]
+                            .Select(line => {
+                                try
+                                {
+                                    return string.Format(line, outputPort);
+                                }
+                                catch (FormatException fex)
+                                {
+                                    LogcatTraceHelper.Instance.Log("ERROR", $"OutputsLineフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{outputPort}'");
+                                    throw;
+                                }
+                            }));
+                    }
+                    catch (Exception ex)
+                    {
+                        LogcatTraceHelper.Instance.Log("ERROR", $"出力ポート '{outputPort}' 処理中にエラー: {ex.Message}");
+                        throw;
+                    }
+                }
+
+                // パラメータセクション
+                LogcatTraceHelper.Instance.Log("DEBUG", "パラメータセクション処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["ParametersSection"]);
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"パラメータセクション処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // パラメータ行
+                LogcatTraceHelper.Instance.Log("DEBUG", "パラメータ行処理開始");
+                foreach (var param in descriptor.Parameters)
+                {
+                    try
+                    {
+                        lines.AddRange(CodeTemplates["ParametersLine"]
+                            .Select(line => {
+                                try
+                                {
+                                    return string.Format(line, param.Name);
+                                }
+                                catch (FormatException fex)
+                                {
+                                    LogcatTraceHelper.Instance.Log("ERROR", $"ParametersLineフォーマットエラー: {fex.Message}, 行: '{line}', パラメータ: '{param.Name}'");
+                                    throw;
+                                }
+                            }));
+                    }
+                    catch (Exception ex)
+                    {
+                        LogcatTraceHelper.Instance.Log("ERROR", $"パラメータ行 '{param.Name}' 処理中にエラー: {ex.Message}");
+                        throw;
+                    }
+                }
+
+                // 内部変数
+                LogcatTraceHelper.Instance.Log("DEBUG", "内部変数処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["InternalVariables"]);
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"内部変数処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // updateメソッド
+                LogcatTraceHelper.Instance.Log("DEBUG", "updateメソッド処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["UpdateMethod"]);
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"updateメソッド処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // update入力
+                LogcatTraceHelper.Instance.Log("DEBUG", "update入力処理開始");
+                foreach (var inputPort in descriptor.InputPorts)
+                {
+                    try
+                    {
+                        lines.AddRange(CodeTemplates["UpdateInputs"]
+                            .Select(line => {
+                                try
+                                {
+                                    return string.Format(line, inputPort);
+                                }
+                                catch (FormatException fex)
+                                {
+                                    LogcatTraceHelper.Instance.Log("ERROR", $"UpdateInputsフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{inputPort}'");
+                                    throw;
+                                }
+                            }));
+                    }
+                    catch (Exception ex)
+                    {
+                        LogcatTraceHelper.Instance.Log("ERROR", $"update入力 '{inputPort}' 処理中にエラー: {ex.Message}");
+                        throw;
+                    }
+                }
+
+                // updateロジック
+                LogcatTraceHelper.Instance.Log("DEBUG", "updateロジック処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["UpdateLogic"]);
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"updateロジック処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // update出力
+                LogcatTraceHelper.Instance.Log("DEBUG", "update出力処理開始");
+                foreach (var outputPort in descriptor.OutputPorts)
+                {
+                    try
+                    {
+                        lines.AddRange(CodeTemplates["UpdateOutputs"]
+                            .Select(line => {
+                                try
+                                {
+                                    return string.Format(line, outputPort);
+                                }
+                                catch (FormatException fex)
+                                {
+                                    LogcatTraceHelper.Instance.Log("ERROR", $"UpdateOutputsフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{outputPort}'");
+                                    throw;
+                                }
+                            }));
+                    }
+                    catch (Exception ex)
+                    {
+                        LogcatTraceHelper.Instance.Log("ERROR", $"update出力 '{outputPort}' 処理中にエラー: {ex.Message}");
+                        throw;
+                    }
+                }
+
+                // update終了
+                LogcatTraceHelper.Instance.Log("DEBUG", "update終了処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["UpdateEnd"]);
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"update終了処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // resetメソッド
+                LogcatTraceHelper.Instance.Log("DEBUG", "resetメソッド処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["ResetMethod"]);
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"resetメソッド処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // 使用例
+                LogcatTraceHelper.Instance.Log("DEBUG", "使用例処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["UsageExample"]
+                        .Select(line => {
+                            try
+                            {
+                                return string.Format(line, descriptor.Name, descriptor.Type, descriptor.Type.ToLower());
+                            }
+                            catch (FormatException fex)
+                            {
+                                LogcatTraceHelper.Instance.Log("ERROR", $"UsageExampleフォーマットエラー: {fex.Message}, 行: '{line}'");
+                                throw;
+                            }
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"使用例処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // 使用入力
+                LogcatTraceHelper.Instance.Log("DEBUG", "使用入力処理開始");
+                foreach (var inputPort in descriptor.InputPorts)
+                {
+                    try
+                    {
+                        lines.AddRange(CodeTemplates["UsageInputs"]
+                            .Select(line => {
+                                try
+                                {
+                                    return string.Format(line, inputPort);
+                                }
+                                catch (FormatException fex)
+                                {
+                                    LogcatTraceHelper.Instance.Log("ERROR", $"UsageInputsフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{inputPort}'");
+                                    throw;
+                                }
+                            }));
+                    }
+                    catch (Exception ex)
+                    {
+                        LogcatTraceHelper.Instance.Log("ERROR", $"使用入力 '{inputPort}' 処理中にエラー: {ex.Message}");
+                        throw;
+                    }
+                }
+
+                // 使用シミュレーション
+                LogcatTraceHelper.Instance.Log("DEBUG", "使用シミュレーション処理開始");
+                try
+                {
+                    lines.AddRange(CodeTemplates["UsageSimulation"]);
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"使用シミュレーション処理中にエラー: {ex.Message}");
+                    throw;
+                }
+
+                // 使用出力
+                LogcatTraceHelper.Instance.Log("DEBUG", "使用出力処理開始");
+                foreach (var outputPort in descriptor.OutputPorts)
+                {
+                    try
+                    {
+                        lines.AddRange(CodeTemplates["UsageOutputs"]
+                            .Select(line => {
+                                try
+                                {
+                                    return string.Format(line, outputPort);
+                                }
+                                catch (FormatException fex)
+                                {
+                                    LogcatTraceHelper.Instance.Log("ERROR", $"UsageOutputsフォーマットエラー: {fex.Message}, 行: '{line}', ポート: '{outputPort}'");
+                                    throw;
+                                }
+                            }));
+                    }
+                    catch (Exception ex)
+                    {
+                        LogcatTraceHelper.Instance.Log("ERROR", $"使用出力 '{outputPort}' 処理中にエラー: {ex.Message}");
+                        throw;
+                    }
+                }
+
+                // ファイルに書き込み
+                LogcatTraceHelper.Instance.Log("DEBUG", "ファイル書き込み開始");
+                try
+                {
+                    File.WriteAllLines(filePath, lines);
+                    LogcatTraceHelper.Instance.Log("DEBUG", "ファイル書き込み完了");
+                }
+                catch (Exception ex)
+                {
+                    LogcatTraceHelper.Instance.Log("ERROR", $"ファイル書き込み中にエラー: {ex.Message}");
+                    throw;
+                }
             }
-            lines.Add("");
-
-            // メインクラス
-            lines.AddRange(CodeTemplates["MainClass"]
-                .Select(line => string.Format(line, descriptor.Type, descriptor.Name)));
-
-            // 入力ポート
-            foreach (var inputPort in descriptor.InputPorts)
+            catch (Exception ex)
             {
-                lines.AddRange(CodeTemplates["InputsSection"]
-                    .Select(line => string.Format(line, inputPort)));
+                LogcatTraceHelper.Instance.Log("ERROR", $"GeneratePythonCode全体でエラー: {ex.Message}");
+                throw;
             }
-
-            // 出力ポート
-            lines.AddRange(CodeTemplates["OutputsSection"]);
-            foreach (var outputPort in descriptor.OutputPorts)
-            {
-                lines.AddRange(CodeTemplates["OutputsLine"]
-                    .Select(line => string.Format(line, outputPort)));
-            }
-
-            // パラメータ
-            lines.AddRange(CodeTemplates["ParametersSection"]);
-            foreach (var param in descriptor.Parameters)
-            {
-                lines.AddRange(CodeTemplates["ParametersLine"]
-                    .Select(line => string.Format(line, param.Name)));
-            }
-
-            // 内部変数
-            lines.AddRange(CodeTemplates["InternalVariables"]);
-
-            // updateメソッド
-            lines.AddRange(CodeTemplates["UpdateMethod"]);
-            foreach (var inputPort in descriptor.InputPorts)
-            {
-                lines.AddRange(CodeTemplates["UpdateInputs"]
-                    .Select(line => string.Format(line, inputPort)));
-            }
-
-            lines.AddRange(CodeTemplates["UpdateLogic"]);
-            foreach (var outputPort in descriptor.OutputPorts)
-            {
-                lines.AddRange(CodeTemplates["UpdateOutputs"]
-                    .Select(line => string.Format(line, outputPort)));
-            }
-
-            lines.AddRange(CodeTemplates["UpdateEnd"]);
-
-            // resetメソッド
-            lines.AddRange(CodeTemplates["ResetMethod"]);
-
-            // 使用例
-            lines.AddRange(CodeTemplates["UsageExample"]
-                .Select(line => string.Format(line, descriptor.Name, descriptor.Type, descriptor.Type.ToLower())));
-
-            foreach (var inputPort in descriptor.InputPorts)
-            {
-                lines.AddRange(CodeTemplates["UsageInputs"]
-                    .Select(line => string.Format(line, inputPort)));
-            }
-
-            lines.AddRange(CodeTemplates["UsageSimulation"]);
-            foreach (var outputPort in descriptor.OutputPorts)
-            {
-                lines.AddRange(CodeTemplates["UsageOutputs"]
-                    .Select(line => string.Format(line, outputPort)));
-            }
-
-            // ファイルに書き込み
-            File.WriteAllLines(filePath, lines);
         }
 
         private string ConvertToPythonType(string csharpType)
         {
-            var typeMapping = new Dictionary<string, string>
+            try
             {
-                  { "int", "int" },
-                  { "double", "float" },
-                  { "string", "str" },
-                  { "bool", "bool" },
-                { "list<string>", "List[str]" },
-                { "dictionary<string, double>", "Dict[str, float]" }
-            };
+                LogcatTraceHelper.Instance.Log("DEBUG", $"ConvertToPythonType: {csharpType}");
+                
+                var typeMapping = new Dictionary<string, string>
+                {
+                    { "int", "int" },
+                    { "double", "float" },
+                    { "string", "str" },
+                    { "bool", "bool" },
+                    { "list<string>", "List[str]" },
+                    { "dictionary<string, double>", "Dict[str, float]" }
+                };
 
-            string lowerType = csharpType.ToLower();
+                string lowerType = csharpType.ToLower();
 
-            if (typeMapping.TryGetValue(lowerType, out string pythonType))
-            {
-                return pythonType;
+                if (typeMapping.TryGetValue(lowerType, out string pythonType))
+                {
+                    LogcatTraceHelper.Instance.Log("DEBUG", $"型マッピング成功: {csharpType} -> {pythonType}");
+                    return pythonType;
+                }
+
+                LogcatTraceHelper.Instance.Log("WARN", $"型マッピングが見つかりません: {csharpType}");
+                return "Any";
             }
-
-            return "Any";
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.Log("ERROR", $"ConvertToPythonTypeでエラー: {ex.Message}");
+                return "Any";
+            }
         }
 
         private string ConvertToPythonValue(object value)
         {
-            if (value is string str)
-                return $"\"{str}\"";
+            try
+            {
+                LogcatTraceHelper.Instance.Log("DEBUG", $"ConvertToPythonValue: {value} (型: {value?.GetType()?.Name})");
+                
+                if (value == null)
+                    return "None";
 
-            if (value is bool b)
-                return b ? "True" : "False";
+                if (value is string str)
+                    return $"\"{str}\"";
 
-            return value.ToString();
+                if (value is bool b)
+                    return b ? "True" : "False";
+
+                // リスト型の処理
+                if (value is System.Collections.IEnumerable enumerable && !(value is string))
+                {
+                    var items = new List<string>();
+                    foreach (var item in enumerable)
+                    {
+                        items.Add(ConvertToPythonValue(item));
+                    }
+                    return $"[{string.Join(", ", items)}]";
+                }
+
+                // 辞書型の処理
+                if (value is System.Collections.IDictionary dictionary)
+                {
+                    var items = new List<string>();
+                    foreach (System.Collections.DictionaryEntry entry in dictionary)
+                    {
+                        items.Add($"{ConvertToPythonValue(entry.Key)}: {ConvertToPythonValue(entry.Value)}");
+                    }
+                    return $"{{{string.Join(", ", items)}}}";
+                }
+
+                // その他の型
+                return value.ToString();
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.Log("ERROR", $"ConvertToPythonValueでエラー: {ex.Message}, 値: {value}");
+                return "None";
+            }
         }
     }
 }

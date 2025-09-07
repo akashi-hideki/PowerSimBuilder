@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 
@@ -45,9 +44,9 @@ namespace PowerSimBuilder
         {
             InitializeComponent();
             InitializeContextMenu();
-            
+
             _filePath = filePath;
-            
+
             // 実行関連のボタンの表示/有効状態を設定
             btnRun.Visible = enableRunButtons;
             btnRun.Enabled = enableRunButtons;
@@ -56,7 +55,7 @@ namespace PowerSimBuilder
             btnOpenFolder.Visible = enableRunButtons;
             btnOpenFolder.Enabled = enableRunButtons;
             lblStatus.Visible = enableRunButtons;
-            
+
             // 実行ボタンのイベントハンドラーを設定
             if (enableRunButtons)
             {
@@ -64,7 +63,7 @@ namespace PowerSimBuilder
                 btnReload.Click += BtnReload_Click;
                 btnOpenFolder.Click += BtnOpenFolder_Click;
             }
-            
+
             LoadFile();
         }
 
@@ -72,7 +71,7 @@ namespace PowerSimBuilder
         private void InitializeContextMenu()
         {
             contextMenu = new ContextMenuStrip();
-            
+
             // メニュー項目の作成
             menuItemForLoop = new ToolStripMenuItem("Forループを挿入");
             menuItemWhileLoop = new ToolStripMenuItem("Whileループを挿入");
@@ -82,7 +81,7 @@ namespace PowerSimBuilder
             menuItemImport = new ToolStripMenuItem("Import文を挿入");
             menuItemTryCatch = new ToolStripMenuItem("Try-Catchブロックを挿入");
             menuItemComment = new ToolStripMenuItem("コメントを挿入");
-            
+
             // イベントハンドラーの設定
             menuItemForLoop.Click += InsertForLoop;
             menuItemWhileLoop.Click += InsertWhileLoop;
@@ -92,7 +91,7 @@ namespace PowerSimBuilder
             menuItemImport.Click += InsertImport;
             menuItemTryCatch.Click += InsertTryCatch;
             menuItemComment.Click += InsertComment;
-            
+
             // メニュー項目をコンテキストメニューに追加
             contextMenu.Items.AddRange(new ToolStripItem[] {
                 menuItemForLoop,
@@ -104,7 +103,7 @@ namespace PowerSimBuilder
                 menuItemTryCatch,
                 menuItemComment
             });
-            
+
             // コンテキストメニューをRichTextBoxに設定
             textEditor.ContextMenuStrip = contextMenu;
         }
@@ -155,7 +154,7 @@ namespace PowerSimBuilder
                 IsModified = false;
                 UpdateTitle();
                 UpdateStatus();
-                
+
                 DialogResult = DialogResult.OK;
                 Close();
             }
@@ -170,17 +169,17 @@ namespace PowerSimBuilder
         {
             if (IsModified)
             {
-                var result = MessageBox.Show("変更内容が保存されていません。閉じますか？", 
+                var result = MessageBox.Show("変更内容が保存されていません。閉じますか？",
                     "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                
+
                 if (result == DialogResult.No)
                     return;
             }
-            
+
             DialogResult = DialogResult.Cancel;
             Close();
         }
-        
+
         // GetPythonCodeメソッド
         public string GetPythonCode()
         {
@@ -198,13 +197,13 @@ namespace PowerSimBuilder
         {
             if (IsModified)
             {
-                var result = MessageBox.Show("変更内容が失われます。よろしいですか？", 
+                var result = MessageBox.Show("変更内容が失われます。よろしいですか？",
                     "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                
+
                 if (result == DialogResult.No)
                     return;
             }
-            
+
             LoadFile();
         }
 
@@ -220,13 +219,13 @@ namespace PowerSimBuilder
                 }
                 else
                 {
-                    MessageBox.Show("フォルダが見つかりません", "エラー", 
+                    MessageBox.Show("フォルダが見つかりません", "エラー",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"フォルダを開けませんでした: {ex.Message}", "エラー", 
+                MessageBox.Show($"フォルダを開けませんでした: {ex.Message}", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -246,21 +245,21 @@ namespace PowerSimBuilder
                     "実行エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
-            
+
             // 変更があれば一時ファイルに保存して実行
             if (IsModified)
             {
-                var result = MessageBox.Show("変更されたコードを一時ファイルに保存して実行しますか？", 
+                var result = MessageBox.Show("変更されたコードを一時ファイルに保存して実行しますか？",
                     "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                
+
                 if (result == DialogResult.No)
                     return false;
-                
+
                 // 一時ファイルを作成
                 string tempFile = Path.Combine(
                     Path.GetDirectoryName(_filePath),
                     $"temp_{DateTime.Now:yyyyMMdd_HHmmss}.py");
-                
+
                 try
                 {
                     File.WriteAllText(tempFile, textEditor.Text);
@@ -268,7 +267,7 @@ namespace PowerSimBuilder
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"一時ファイルの作成に失敗しました: {ex.Message}", "エラー", 
+                    MessageBox.Show($"一時ファイルの作成に失敗しました: {ex.Message}", "エラー",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }

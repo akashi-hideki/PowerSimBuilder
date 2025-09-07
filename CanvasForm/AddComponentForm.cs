@@ -166,14 +166,63 @@ namespace PowerSimBuilder
         /// </summary>
         private void BtnOK_Click(object sender, EventArgs e)
         {
+            GenerateComponentCodeAndOpenEditor();
+        }
+
+        /// <summary>
+        /// コンポーネントコード生成と編集処理
+        /// </summary>
+        private void GenerateComponentCodeAndOpenEditor()
+        {
+            try
+            {
+                // 1. ResultComponentの生成（既存のBtnOK_Clickから流用）
+                if (!ValidateAndCreateComponent())
+                {
+                    DialogResult = DialogResult.None;
+                    return;
+                }
+
+                // 2. ファイル出力先の指定
+                string filePath = ShowSaveFileDialog();
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    DialogResult = DialogResult.None;
+                    return;
+                }
+
+                // 3. Pythonコードの生成とファイル保存、エディタ表示（ComponentCodeGeneratorが行う）
+                var generator = new ComponentCodeGenerator();
+                generator.GeneratePythonCode(ResultComponent, filePath);
+
+                // コード編集フォームの表示
+                using (var editorForm = new PythonEditorForm(filePath, false))
+                {
+                    editorForm.ShowDialog();
+                }
+
+                DialogResult = DialogResult.OK;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"エラーが発生しました: {ex.Message}", "エラー",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DialogResult = DialogResult.None;
+            }
+        }
+
+        /// <summary>
+        /// コンポーネントの検証と生成
+        /// </summary>
+        private bool ValidateAndCreateComponent()
+        {
+            // 既存のBtnOK_Clickの検証ロジックを流用
             if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtType.Text))
             {
                 MessageBox.Show("名前とタイプは必須です");
-                DialogResult = DialogResult.None;
-                return;
+                return false;
             }
 
-            // 入力ポートの処理
             var inputPorts = new List<string>();
             foreach (DataGridViewRow row in inputPortsGrid.Rows)
             {
@@ -183,7 +232,6 @@ namespace PowerSimBuilder
                 }
             }
 
-            // 出力ポートの処理
             var outputPorts = new List<string>();
             foreach (DataGridViewRow row in outputPortsGrid.Rows)
             {
@@ -193,27 +241,23 @@ namespace PowerSimBuilder
                 }
             }
 
-            // ポートのバリデーション
             if (inputPorts.Count == 0 || outputPorts.Count == 0)
             {
                 MessageBox.Show("入力ポートと出力ポートは少なくとも1つ必要です");
-                DialogResult = DialogResult.None;
-                return;
+                return false;
             }
 
             if (inputPorts.Any(string.IsNullOrWhiteSpace) || outputPorts.Any(string.IsNullOrWhiteSpace))
             {
                 MessageBox.Show("ポート名は空にできません");
-                DialogResult = DialogResult.None;
-                return;
+                return false;
             }
 
             if (inputPorts.Count != inputPorts.Distinct().Count() ||
                 outputPorts.Count != outputPorts.Distinct().Count())
             {
                 MessageBox.Show("ポート名は一意である必要があります");
-                DialogResult = DialogResult.None;
-                return;
+                return false;
             }
 
             ResultComponent = new ComponentDescriptor
@@ -227,8 +271,32 @@ namespace PowerSimBuilder
                 InputPorts = inputPorts.ToArray(),
                 OutputPorts = outputPorts.ToArray()
             };
+
+            return true;
         }
 
+        /// <summary>
+        /// 保存ファイルダイアログの表示
+        /// </summary>
+        private string ShowSaveFileDialog()
+        {
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Python Files|*.py";
+                saveFileDialog.Title = "Pythonファイルの保存先を選択";
+                saveFileDialog.FileName = $"{ResultComponent.Type}.py";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    return saveFileDialog.FileName;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// OKボタンクリック - 新しい処理フロー
+        /// </summary>
         /// <summary>
         /// アイコンを生成
         /// 注意点: タイプ名から色を生成
