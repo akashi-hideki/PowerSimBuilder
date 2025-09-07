@@ -5,6 +5,10 @@ using System.Linq;
 
 namespace PowerSimBuilder
 {
+    /// <summary>
+    /// コンポーネントのPythonコード生成を担当するクラス
+    /// </summary>
+
     public class ComponentCodeGenerator
     {
         // コードテンプレートをDictionaryで管理
@@ -223,6 +227,13 @@ namespace PowerSimBuilder
             { "UsageSimulation", 0 },
             { "UsageOutputs", 1 }
         };
+        /// <summary>
+        /// コンポーネント記述子に基づいてPythonコードを生成し、指定されたファイルパスに保存します
+        /// </summary>
+        /// <param name="descriptor">コード生成のためのコンポーネント記述子</param>
+        /// <param name="filePath">生成されたコードを保存するファイルパス</param>
+        /// <exception cref="ArgumentNullException">descriptorがnullの場合</exception>
+        /// <exception cref="ArgumentException">filePathが無効な場合</exception>
 
         public void GeneratePythonCode(ComponentDescriptor descriptor, string filePath)
         {
@@ -359,10 +370,12 @@ namespace PowerSimBuilder
                 throw;
             }
         }
-
-        /// <summary>
-        /// テンプレート行を追加する汎用メソッド
+       /// <summary>
+        /// 指定されたテンプレートキーに対応するフォーマット済みテンプレート行をリストに追加します
         /// </summary>
+        /// <param name="lines">行を追加する対象の文字列リスト</param>
+        /// <param name="templateKey">使用するテンプレートのキー</param>
+        /// <param name="args">テンプレートのフォーマットに使用する引数</param>
         private void AddTemplateLines(List<string> lines, string templateKey, params object[] args)
         {
             if (!CodeTemplates.ContainsKey(templateKey))
@@ -402,7 +415,11 @@ namespace PowerSimBuilder
                 }
             }
         }
-
+        /// <summary>
+        /// C#の型名をPythonの型名に変換します
+        /// </summary>
+        /// <param name="csharpType">変換するC#の型名</param>
+        /// <returns>対応するPythonの型名。マッピングがない場合は"Any"を返します</returns>
         private string ConvertToPythonType(string csharpType)
         {
             try
@@ -436,6 +453,11 @@ namespace PowerSimBuilder
                 return "Any";
             }
         }
+        /// <summary>
+        /// C#のオブジェクト値をPythonのリテラル表現に変換します
+        /// </summary>
+        /// <param name="value">変換するC#オブジェクト値</param>
+        /// <returns>Pythonリテラルとして表現された文字列。変換できない場合は"None"を返します</returns>
 
         private string ConvertToPythonValue(object value)
         {
