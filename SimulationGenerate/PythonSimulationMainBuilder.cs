@@ -338,7 +338,10 @@ namespace PowerSimBuilder
         /// </summary>
         private void GenerateImportsSection()
         {
+            ClearSection("imports");
+
             AddLineToSection("imports", "import numpy as np");
+            AddLineToSection("imports", "import matplotlib.pyplot as plt");
 
             if (NeedsDateTimeImport())
             {
@@ -434,7 +437,7 @@ namespace PowerSimBuilder
         /// <summary>
         /// C#のデフォルト値をPythonのデフォルト値に変換する
         /// </summary>
-        /// <param name="defaultValue">デフォルト値</param>
+        /// <param name>デフォルト値</param>
         /// <param name="type">パラメータタイプ</param>
         /// <returns>Python形式のデフォルト値</returns>
         private string GetPythonDefaultValue(object defaultValue, string type)
@@ -513,7 +516,7 @@ namespace PowerSimBuilder
         /// </summary>
         private void AddSimulationLoopInFunction()
         {
-            // シミュレーションループ開始
+            // シミュレーションルoop開始
             foreach (var line in SimulationLoopStartCodeTable)
             {
                 AddLineToSection("function_def", line);
@@ -622,8 +625,6 @@ namespace PowerSimBuilder
             AddLineToSection("plotting_functions", "    plot_config: dict");
             AddLineToSection("plotting_functions", "        プロット設定");
             AddLineToSection("plotting_functions", "    \"\"\"");
-            AddLineToSection("plotting_functions", "    import matplotlib.pyplot as plt");
-            AddLineToSection("plotting_functions", "    import numpy as np");
             AddLineToSection("plotting_functions", "    ");
             AddLineToSection("plotting_functions", "    # グローバル設定の適用");
             AddLineToSection("plotting_functions", "    settings = plot_config['global_settings']");
@@ -752,9 +753,16 @@ namespace PowerSimBuilder
         {
             var allLines = new List<string>();
 
+            // インポートセクションを最初に追加
+            if (CodeSections.ContainsKey("imports"))
+            {
+                allLines.AddRange(CodeSections["imports"]);
+                allLines.Add("");
+            }
+
+            // その他のセクションを追加
             var sectionsOrder = new[] {
-                "imports", "function_def",
-                "plot_config", "plotting_functions"
+                "function_def", "plot_config", "plotting_functions"
             };
 
             foreach (var section in sectionsOrder)
