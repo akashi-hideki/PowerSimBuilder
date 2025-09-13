@@ -83,6 +83,20 @@ namespace PowerSimBuilder
             this.DoubleClick += (s, e) => DoubleClicked?.Invoke(this, EventArgs.Empty);
         }
 
+        public Rectangle GetInputPortBounds(int index)
+        {
+            float ratio = (index + 1f) / (Descriptor.InputPorts.Length + 1);
+            int yPos = (int)(Height * ratio);
+            return new Rectangle(Left - 5, Top + yPos - 5, 10, 10);
+        }
+
+        public Rectangle GetOutputPortBounds(int index)
+        {
+            float ratio = (index + 1f) / (Descriptor.OutputPorts.Length + 1);
+            int yPos = (int)(Height * ratio);
+            return new Rectangle(Right - 5, Top + yPos - 5, 10, 10);
+        }
+
         /// <summary>
         /// ポート初期化（ダミー）
         /// 注意点: デザイナー互換用

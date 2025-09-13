@@ -427,38 +427,32 @@ namespace PowerSimBuilder
             }
         }
 
+ 
         /// <summary>
         /// 接続の視覚情報を更新
         /// 注意点: コンポーネント位置変更時に呼び出し
         /// </summary>
-
-        // DesignCanvas.cs 内の UpdateConnectionVisual メソッドを修正
         private void UpdateConnectionVisual(Connection connection)
         {
             if (connection.StartComponent == null || connection.EndComponent == null) return;
 
-            // 開始ポートの位置計算
+            // 出力ポート位置の取得
             int startIndex = Array.IndexOf(connection.StartComponent.Descriptor.OutputPorts, connection.StartPort);
             if (startIndex < 0) return;
 
-            int startYPos = ComponentControl.BaseHeight / 2 + (startIndex * ComponentControl.PortSpacing);
-            Point start = new Point(
-                connection.StartComponent.Left + connection.StartComponent.Width,
-                connection.StartComponent.Top + startYPos
-            );
+            Rectangle startPortRect = connection.StartComponent.GetOutputPortBounds(startIndex);
+            Point start = new Point(startPortRect.Right, startPortRect.Top + startPortRect.Height / 2);
 
-            // 終了ポートの位置計算
+            // 入力ポート位置の取得
             int endIndex = Array.IndexOf(connection.EndComponent.Descriptor.InputPorts, connection.EndPort);
             if (endIndex < 0) return;
 
-            int endYPos = ComponentControl.BaseHeight / 2 + (endIndex * ComponentControl.PortSpacing);
-            Point end = new Point(
-                connection.EndComponent.Left,
-                connection.EndComponent.Top + endYPos
-            );
+            Rectangle endPortRect = connection.EndComponent.GetInputPortBounds(endIndex);
+            Point end = new Point(endPortRect.Left, endPortRect.Top + endPortRect.Height / 2);
 
             connection.Visual.PathPoints = new List<Point> { start, end };
         }
+
         /// <summary>
         /// コンポーネント配置
         /// 注意点: 自動レイアウトエンジンを使用
