@@ -35,6 +35,9 @@ namespace PowerSimBuilder
 
             RemoveFromDictionary(_connectionsFrom, connection.StartComponent, connection);
             RemoveFromDictionary(_connectionsTo, connection.EndComponent, connection);
+
+            // 空のリストを削除してメモリリークを防止
+            CleanupEmptyEntries();
         }
 
         /// <summary>
@@ -44,10 +47,10 @@ namespace PowerSimBuilder
         {
             var connections = new List<Connection>();
 
-            if (_connectionsFrom.ContainsKey(component))
+            if (component != null && _connectionsFrom.ContainsKey(component))
                 connections.AddRange(_connectionsFrom[component]);
 
-            if (_connectionsTo.ContainsKey(component))
+            if (component != null && _connectionsTo.ContainsKey(component))
                 connections.AddRange(_connectionsTo[component]);
 
             return connections.Distinct();
@@ -58,8 +61,8 @@ namespace PowerSimBuilder
         /// </summary>
         public IEnumerable<Connection> GetConnectionsFrom(ComponentControl component)
         {
-            return _connectionsFrom.ContainsKey(component)
-                ? _connectionsFrom[component].ToList() // コピーを返す
+            return (component != null && _connectionsFrom.ContainsKey(component))
+                ? _connectionsFrom[component].ToList()
                 : Enumerable.Empty<Connection>();
         }
 
@@ -68,8 +71,8 @@ namespace PowerSimBuilder
         /// </summary>
         public IEnumerable<Connection> GetConnectionsTo(ComponentControl component)
         {
-            return _connectionsTo.ContainsKey(component)
-                ? _connectionsTo[component].ToList() // コピーを返す
+            return (component != null && _connectionsTo.ContainsKey(component))
+                ? _connectionsTo[component].ToList()
                 : Enumerable.Empty<Connection>();
         }
 
@@ -131,6 +134,25 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
+        /// 空のエントリをクリーンアップ
+        /// </summary>
+        private void CleanupEmptyEntries()
+        {
+            // 空のリストを削除
+            var emptyFromKeys = _connectionsFrom.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key).ToList();
+            foreach (var key in emptyFromKeys)
+            {
+                _connectionsFrom.Remove(key);
+            }
+
+            var emptyToKeys = _connectionsTo.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key).ToList();
+            foreach (var key in emptyToKeys)
+            {
+                _connectionsTo.Remove(key);
+            }
+        }
+
+        /// <summary>
         /// コンポーネントに関連するすべての接続を強制的に削除
         /// </summary>
         public void RemoveAllConnections(ComponentControl component)
@@ -145,6 +167,7 @@ namespace PowerSimBuilder
                 {
                     RemoveConnection(conn);
                 }
+                _connectionsFrom.Remove(component); // コンポーネント自体も削除
             }
 
             // コンポーネントへの接続をすべて削除
@@ -155,8 +178,10 @@ namespace PowerSimBuilder
                 {
                     RemoveConnection(conn);
                 }
+                _connectionsTo.Remove(component); // コンポーネント自体も削除
             }
         }
+
         /// <summary>
         /// 接続元のデータを取得（デバッグ用）
         /// </summary>
@@ -173,4 +198,5 @@ namespace PowerSimBuilder
             return _connectionsTo.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList());
         }
     }
+ 
 }

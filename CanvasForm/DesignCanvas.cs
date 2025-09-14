@@ -683,12 +683,20 @@ namespace PowerSimBuilder
         /// コンポーネントを削除
         /// 注意点: 関連接続も同時削除
         /// </summary>
+        /// <summary>
+        /// コンポーネントを削除
+        /// 注意点: 関連接続も同時削除
+        /// </summary>
         public void RemoveComponent(ComponentControl component)
         {
             if (component == null || !Controls.Contains(component)) return;
 
             try
             {
+                // デバッグ: 削除前の状態をダンプ
+                Debug.WriteLine("=== Before RemoveComponent ===");
+                DumpState();
+
                 // 関連接続を強制的に削除
                 ConnectionGraph.RemoveAllConnections(component);
 
@@ -722,15 +730,24 @@ namespace PowerSimBuilder
                 Components.Remove(component);
 
                 ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
+
+                // デバッグ: 削除後の状態をダンプ
+                Debug.WriteLine("=== After RemoveComponent ===");
+                DumpState();
+
                 Invalidate();
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"コンポーネント削除エラー: {ex.Message}");
-                // 必要に応じてエラー処理
+                LogcatTraceHelper.Instance.LogError("Connection", $"コンポーネント削除エラー: {ex.Message}");
             }
         }
 
+
+        /// <summary>
+        /// 接続を削除
+        /// 注意点: 接続グラフからも削除、ヒストリーからも削除
+        /// </summary>
         /// <summary>
         /// 接続を削除
         /// 注意点: 接続グラフからも削除、ヒストリーからも削除
@@ -759,7 +776,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                LogcatTraceHelper.Instance.LogError("Connection",$"接続線削除エラー: {ex.Message}");
+                LogcatTraceHelper.Instance.LogError("Cpnnction", $"接続線削除エラー: {ex.Message}");
             }
         }
 
@@ -1019,6 +1036,49 @@ namespace PowerSimBuilder
             LogcatTraceHelper.Instance.SimpleMessage("Connection", "===============================");
         }
         /// <summary>
+        /// ConnectionGraphの状態を詳細にダンプするメソッド
+        /// </summary>
+        public void DumpConnectionGraphDetails()
+        {
+            LogcatTraceHelper.Instance.SimpleMessage("Connection","=== ConnectionGraph Detailed State Dump ===");
+
+            LogcatTraceHelper.Instance.SimpleMessage("Connection", "Connections From:");
+            foreach (var kvp in ConnectionGraph.GetConnectionsFromData())
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("Connection", $"  Component: {kvp.Key.InstanceName} (Hash: {kvp.Key.GetHashCode()})");
+                foreach (var conn in kvp.Value)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("Connection", $"    -> {conn.EndComponent?.InstanceName}:{conn.EndPort} (Hash: {conn.EndComponent?.GetHashCode()})");
+                }
+            }
+
+            LogcatTraceHelper.Instance.SimpleMessage("Connection", "Connections To:");
+            foreach (var kvp in ConnectionGraph.GetConnectionsToData())
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("Connection", $"  Component: {kvp.Key.InstanceName} (Hash: {kvp.Key.GetHashCode()})");
+                foreach (var conn in kvp.Value)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("Connection", $"    <- {conn.StartComponent?.InstanceName}:{conn.StartPort} (Hash: {conn.StartComponent?.GetHashCode()})");
+                }
+            }
+
+            // 存在しないコンポーネントへの参照をチェック
+            LogcatTraceHelper.Instance.SimpleMessage("Connection", "Orphaned References Check:");
+            var allComponents = new HashSet<ComponentControl>(Components);
+
+            foreach (var comp in ConnectionGraph.GetConnectionsFromData().Keys.Where(c => !allComponents.Contains(c)))
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("Connection", $"  Orphaned From Reference: {comp.InstanceName} (Hash: {comp.GetHashCode()})");
+            }
+
+            foreach (var comp in ConnectionGraph.GetConnectionsToData().Keys.Where(c => !allComponents.Contains(c)))
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("Connection",$"  Orphaned To Reference: {comp.InstanceName} (Hash: {comp.GetHashCode()})");
+            }
+
+            LogcatTraceHelper.Instance.SimpleMessage("Connection", "===============================");
+        }
+        /// <summary>
         /// 現在の状態をダンプするデバッグメソッド
         /// </summary>
         public void DumpState()
@@ -1037,6 +1097,7 @@ namespace PowerSimBuilder
             }
             // 接続グラフの詳細情報も出力
             DumpConnectionGraph();
+            DumpConnectionGraphDetails();
             LogcatTraceHelper.Instance.SimpleMessage("connection", "===============================");
         }
 
