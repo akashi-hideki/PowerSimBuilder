@@ -750,7 +750,7 @@ namespace PowerSimBuilder
                 LogThreadState("RemoveComponent");
 
                 // デバッグ: 削除前の状態をダンプ
-                Debug.WriteLine("=== Before RemoveComponent ===");
+                LogcatTraceHelper.Instance.SimpleMessage("","=== Before RemoveComponent ===");
                 DumpState();
 
                 // 関連接続を強制的に削除
