@@ -28,7 +28,6 @@ namespace PowerSimBuilder
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.canvasPanel = new System.Windows.Forms.Panel();
             this.palettePanel = new System.Windows.Forms.Panel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -36,8 +35,7 @@ namespace PowerSimBuilder
             this.loadButton = new System.Windows.Forms.ToolStripButton();
             this.undoButton = new System.Windows.Forms.ToolStripButton();
             this.redoButton = new System.Windows.Forms.ToolStripButton();
-            this.deleteButton = new System.Windows.Forms.ToolStripButton();
-            this.runButton = new System.Windows.Forms.ToolStripButton();
+            this.createSimButton = new System.Windows.Forms.ToolStripButton();
             this.arrangeButton = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
@@ -79,8 +77,7 @@ namespace PowerSimBuilder
             this.loadButton,
             this.undoButton,
             this.redoButton,
-            this.deleteButton,
-            this.runButton,
+            this.createSimButton,
             this.arrangeButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
@@ -120,23 +117,13 @@ namespace PowerSimBuilder
             this.redoButton.Size = new System.Drawing.Size(61, 28);
             this.redoButton.Text = "やり直し";
             // 
-            // deleteButton
-            // 
-            this.deleteButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.deleteButton.Image = ((System.Drawing.Image)(resources.GetObject("deleteButton.Image")));
-            this.deleteButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.deleteButton.Name = "deleteButton";
-            this.deleteButton.Size = new System.Drawing.Size(121, 28);
-            this.deleteButton.Text = "キャンバスから削除";
-            this.deleteButton.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
-            // 
             // runButton
             // 
-            this.runButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.runButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.runButton.Name = "runButton";
-            this.runButton.Size = new System.Drawing.Size(43, 28);
-            this.runButton.Text = "実行";
+            this.createSimButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.createSimButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.createSimButton.Name = "runButton";
+            this.createSimButton.Size = new System.Drawing.Size(127, 28);
+            this.createSimButton.Text = "シュミレーション生成";
             // 
             // arrangeButton
             // 
@@ -241,13 +228,12 @@ namespace PowerSimBuilder
         private System.Windows.Forms.ToolStripButton loadButton;
         private System.Windows.Forms.ToolStripButton undoButton;
         private System.Windows.Forms.ToolStripButton redoButton;
-        private System.Windows.Forms.ToolStripButton runButton;
+        private System.Windows.Forms.ToolStripButton createSimButton;
         private System.Windows.Forms.ToolStripButton arrangeButton;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.PropertyGrid propertyGrid1;
         private System.Windows.Forms.Button addButton;
         private System.Windows.Forms.Button editButton;
         private System.Windows.Forms.Button removePalletButton;
-        private System.Windows.Forms.ToolStripButton deleteButton;
     }
 }

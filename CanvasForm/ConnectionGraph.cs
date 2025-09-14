@@ -283,5 +283,5 @@ namespace PowerSimBuilder
             return _connectionsTo.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList());
         }
     }
- 
+
 }

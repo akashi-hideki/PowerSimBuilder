@@ -141,8 +141,7 @@ namespace PowerSimBuilder
             loadButton.Click += loadButton_Click;
             undoButton.Click += undoButton_Click;
             redoButton.Click += redoButton_Click;
-            runButton.Click += runButton_Click;
-            deleteButton.Click += deleteButton_Click;
+            createSimButton.Click += createSimButton_Click;
             arrangeButton.Click += arrangeButton_Click;
             editButton.Click += editPaletteButton_Click;
             removePalletButton.Click += deletePaletteButton_Click;
@@ -206,19 +205,9 @@ namespace PowerSimBuilder
             UpdateDeleteButton();
         }
         /// <summary>
-        /// コンポーネント追加ボタンクリック
+        /// コンポーネント編集ボタンクリック
         /// 注意点: パレットで選択中のコンポーネントをキャンバスに追加
         /// </summary>
-        private void addButton_Click(object sender, EventArgs e)
-        {
-            var selectedDescriptor = componentPalette1.SelectedComponent;
-            if (selectedDescriptor != null)
-            {
-                Point center = new Point(designCanvas1.Width / 2, designCanvas1.Height / 2);
-                _canvasManager.AddComponent(selectedDescriptor, center);
-                designCanvas1.ArrangeComponents();
-            }
-        }
 
         private void editPaletteButton_Click(object sender, EventArgs e)
         {
@@ -292,21 +281,6 @@ namespace PowerSimBuilder
 
                 MessageBox.Show("コンポーネントを削除しました", "成功",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-        /// <summary>
-        /// 削除ボタンクリック
-        /// 注意点: 選択中のコンポーネントまたは接続を削除
-        /// </summary>
-        private void deleteButton_Click(object sender, EventArgs e)
-        {
-            if (_canvasManager.SelectedComponent != null)
-            {
-                _canvasManager.RemoveComponent(_canvasManager.SelectedComponent);
-            }
-            else if (_canvasManager.SelectedConnection != null)
-            {
-                _canvasManager.RemoveConnection(_canvasManager.SelectedConnection);
             }
         }
 
@@ -392,7 +366,7 @@ namespace PowerSimBuilder
         /// 実行ボタンクリック
         /// 注意点: Pythonシミュレーションコードを生成・実行
         /// </summary>
-        private void runButton_Click(object sender, EventArgs e)
+        private void createSimButton_Click(object sender, EventArgs e)
         {
             string file_path = BuildPythonSimulationWithFileDialog(_canvasManager);
             if ((!String.IsNullOrEmpty(file_path)) && (File.Exists(file_path)))

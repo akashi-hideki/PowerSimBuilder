@@ -15,7 +15,7 @@ namespace PowerSimBuilder
         /// 接続線を描画する抽象メソッド
         /// </summary>
         public abstract void Render(Graphics g, Connection connection);
-        
+
         /// <summary>
         /// ペンを作成する抽象メソッド
         /// </summary>
@@ -84,7 +84,7 @@ namespace PowerSimBuilder
         {
             Color lineColor = connection.Visual.IsSelected ? Color.Red : Color.Blue;
             int lineWidth = connection.Visual.IsSelected ? 3 : 2;
-            
+
             return new Pen(lineColor, lineWidth)
             {
                 StartCap = LineCap.Round,
@@ -114,12 +114,12 @@ namespace PowerSimBuilder
             // 選択状態に応じた色と太さを使用
             Color lineColor = connection.Visual.IsSelected ? Color.Red : Color.Blue;
             int lineWidth = connection.Visual.IsSelected ? 3 : 2;
-            
+
             using (var pen = new Pen(lineColor, lineWidth))
             {
                 pen.StartCap = LineCap.Round;
                 pen.EndCap = LineCap.ArrowAnchor;
-                
+
                 // ベジエ曲線を描画
                 if (connection.Visual.PathPoints.Count >= 4)
                 {
@@ -128,8 +128,8 @@ namespace PowerSimBuilder
                 else
                 {
                     // ポイント数が足りない場合は直線で描画
-                    g.DrawLine(pen, 
-                        connection.Visual.PathPoints[0], 
+                    g.DrawLine(pen,
+                        connection.Visual.PathPoints[0],
                         connection.Visual.PathPoints[connection.Visual.PathPoints.Count - 1]);
                 }
             }
@@ -161,7 +161,7 @@ namespace PowerSimBuilder
         {
             Color lineColor = connection.Visual.IsSelected ? Color.Red : Color.Blue;
             int lineWidth = connection.Visual.IsSelected ? 3 : 2;
-            
+
             return new Pen(lineColor, lineWidth)
             {
                 StartCap = LineCap.Round,
@@ -224,7 +224,7 @@ namespace PowerSimBuilder
         {
             Color lineColor = connection.Visual.IsSelected ? Color.Red : Color.Green;
             int lineWidth = connection.Visual.IsSelected ? 3 : 2;
-            
+
             return new Pen(lineColor, lineWidth)
             {
                 StartCap = LineCap.Round,
