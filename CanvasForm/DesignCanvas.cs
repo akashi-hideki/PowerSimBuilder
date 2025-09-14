@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -11,7 +12,9 @@ namespace PowerSimBuilder
     /// <summary>
     /// デザインキャンバスコントロール
     /// 作成日: 2025-08-12
+    /// 更新日: 2025-09-13
     /// 注意点: コンポーネントと接続の描画・管理を担当
+    /// 新機能: 接続線ヒストリーに基づくキーボード選択と削除機能を追加
     /// </summary>
     [System.ComponentModel.DesignerCategory("Code")]// デザイナーコード生成を抑制
     [ToolboxItemFilter("PowerSimBuilder", ToolboxItemFilterType.Custom)]
@@ -32,6 +35,13 @@ namespace PowerSimBuilder
         private Point _dragStartPosition;
         private ComponentControl _draggedComponent;
         private bool _isDragging;
+
+        // 接続線ヒストリー管理
+        private readonly List<Connection> _connectionHistory = new List<Connection>();
+        private int _currentHistoryIndex = -1;
+        
+        // キー操作ハンドラーのDictionary
+        private readonly Dictionary<Keys, Action> _keyHandlers;
 
         /// <summary>
         /// キャンバス上のコンポーネントリスト
@@ -84,6 +94,14 @@ namespace PowerSimBuilder
         /// </summary>
         public DesignCanvas()
         {
+            // キーハンドラーの初期化
+            _keyHandlers = new Dictionary<Keys, Action>
+            {
+                { Keys.Up, () => NavigateConnectionHistory(-1) },
+                { Keys.Down, () => NavigateConnectionHistory(1) },
+                { Keys.Delete, DeleteSelectedConnection }
+            };
+
             // デザイン時の基本設定
             if (IsDesignMode)
             {
@@ -92,17 +110,26 @@ namespace PowerSimBuilder
             }
             else
             {
-
                 InitializeComponent();
                 this.AutoScroll = true;
                 // 必要に応じて最小スクロール領域を設定（例: 幅2000, 高さ2000）
                 this.AutoScrollMinSize = new System.Drawing.Size(2000, 2000);
                 DoubleBuffered = true;
                 AllowDrop = true;
+                
+                // キーボード操作を有効化（PanelにはKeyPreviewがないため個別設定）
+                this.TabStop = true; // タブストップを有効化
+                this.SetStyle(ControlStyles.Selectable, true); // 選択可能に設定
+                this.KeyDown += DesignCanvas_KeyDown;
+                
                 this.DragEnter += DesignCanvas_DragEnter;
                 this.DragDrop += DesignCanvas_DragDrop;
+                
+                // コンテキストメニューを設定
+                InitializeContextMenu();
             }
         }
+        
         private bool IsDesignMode
         {
             get
@@ -111,86 +138,25 @@ namespace PowerSimBuilder
                        (Site != null && Site.DesignMode);
             }
         }
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            if (IsDesignMode)
-            {
-                // デザイン時の簡易描画
-                e.Graphics.Clear(BackColor);
-                using (var pen = new Pen(SystemColors.ControlDark))
-                {
-                    e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
-                }
-                TextRenderer.DrawText(e.Graphics, "Design Canvas", Font,
-                    new Point(10, 10), ForeColor);
-                return;
-            }
-
-            // 実行時の描画処理
-            base.OnPaint(e);
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-            // 接続線を描画
-            foreach (var connection in Connections)
-            {
-                ConnectionRenderer.Render(e.Graphics, connection);
-            }
-
-            // 仮接続線を描画
-            if (_currentConnection != null && _currentConnection.EndComponent == null)
-            {
-                DrawTemporaryConnection(e.Graphics);
-            }
-
-            // 接続情報を表示（デバッグ用）
-            using (var font = new Font("Arial", 8))
-            {
-                foreach (var connection in Connections)
-                {
-                    if (connection.Visual.PathPoints.Count >= 2)
-                    {
-                        Point midPoint = new Point(
-                            (connection.Visual.PathPoints[0].X + connection.Visual.PathPoints[1].X) / 2,
-                            (connection.Visual.PathPoints[0].Y + connection.Visual.PathPoints[1].Y) / 2
-                        );
-
-                        string info = $"{connection.StartPort}→{connection.EndPort}";
-                        e.Graphics.DrawString(info, font, Brushes.Red, midPoint);
-                    }
-                }
-            }
-
-        }
+        
         /// <summary>
-        /// キャンバスをクリア
-        /// 注意点: すべてのコンポーネントと接続を削除
+        /// マウスクリック時にフォーカスを取得するようにオーバーライド
+        /// 注意点: Panelはデフォルトでフォーカスを受け取らないため明示的に設定
         /// </summary>
-        public void Clear()
-        {
-            Components.Clear();
-            Connections.Clear();
-            Controls.Clear();
-            ConnectionGraph.Clear();
-            Invalidate();
-        }
-        /// <summary>
-        /// マウスダウンイベント処理
-        /// 注意点: 接続線の選択処理を実装
-        /// </summary>
-
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-
+            if (!this.Focused)
+            {
+                this.Focus();
+            }
+            
             // 接続線の選択チェック
             foreach (var connection in Connections)
             {
                 if (IsPointNearConnection(e.Location, connection))
                 {
-                    ConnectionSelected?.Invoke(this, new ConnectionEventArgs(connection));
-                    SelectedConnection = connection;
-                    connection.Visual.IsSelected = true;
-                    Invalidate();
+                    SelectConnection(connection);
                     return;
                 }
             }
@@ -243,11 +209,338 @@ namespace PowerSimBuilder
             DeselectAllConnections();
             Invalidate();
         }
+        
+        /// <summary>
+        /// コンテキストメニューの初期化
+        /// 注意点: 接続線の削除メニューを追加
+        /// </summary>
+        private void InitializeContextMenu()
+        {
+            var contextMenu = new ContextMenuStrip();
+            
+            var deleteConnectionItem = new ToolStripMenuItem("接続線を削除");
+            deleteConnectionItem.Click += (s, e) => DeleteSelectedConnection();
+            deleteConnectionItem.ShortcutKeys = Keys.Delete;
+            
+            contextMenu.Items.Add(deleteConnectionItem);
+            this.ContextMenuStrip = contextMenu;
+        }
+        
+        /// <summary>
+        /// キーダウンイベント処理
+        /// 注意点: Dictionaryを使用してキー操作を処理
+        /// </summary>
+        private void DesignCanvas_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (_keyHandlers.TryGetValue(e.KeyCode, out Action handler))
+            {
+                handler();
+                e.Handled = true;
+            }
+        }
+        
+        /// <summary>
+        /// 接続線ヒストリー内を移動して接続線を選択します
+        /// </summary>
+        /// <param name="direction">移動方向（-1: 前へ、1: 次へ）</param>
+        /// <remarks>
+        /// 接続線は作成された順にヒストリーに記録され、上下キーで順次選択できます。
+        /// ヒストリーは最大50件まで保持され、それを超えると古いものから削除されます。
+        /// </remarks>
+        private void NavigateConnectionHistory(int direction)
+        {
+            if (_connectionHistory.Count == 0)
+                return;
+                
+            // 現在の選択位置を更新
+            _currentHistoryIndex += direction;
+            
+            // 範囲チェック
+            if (_currentHistoryIndex < 0)
+                _currentHistoryIndex = 0;
+            else if (_currentHistoryIndex >= _connectionHistory.Count)
+                _currentHistoryIndex = _connectionHistory.Count - 1;
+                
+            // 接続線を選択
+            if (_currentHistoryIndex >= 0 && _currentHistoryIndex < _connectionHistory.Count)
+            {
+                SelectConnection(_connectionHistory[_currentHistoryIndex]);
+            }
+        }
+        
+        /// <summary>
+        /// 接続線をヒストリーに追加します
+        /// </summary>
+        /// <param name="connection">追加する接続線</param>
+        /// <remarks>
+        /// 既に存在する接続線はヒストリーから削除されてから先頭に追加されます。
+        /// これにより、最近操作した接続線が常にヒストリーの先頭に来るようになります。
+        /// </remarks>
+        private void AddToConnectionHistory(Connection connection)
+        {
+            // 既存の接続線を削除（重複防止）
+            _connectionHistory.RemoveAll(c => c == connection);
+            
+            // 新しい接続線を先頭に追加
+            _connectionHistory.Insert(0, connection);
+            
+            // ヒストリーサイズ制限（最大50件）
+            if (_connectionHistory.Count > 50)
+            {
+                _connectionHistory.RemoveAt(_connectionHistory.Count - 1);
+            }
+            
+            // 現在の選択位置を先頭にリセット
+            _currentHistoryIndex = 0;
+        }
+
+        /// <summary>
+        /// 接続線をヒストリーから削除します
+        /// </summary>
+        /// <param name="connection">削除する接続線</param>
+        /// <remarks>
+        /// 接続線が削除された場合、ヒストリーからも削除されます。
+        /// 現在選択中の接続線が削除された場合は、選択状態がクリアされます。
+        /// </remarks>
+        /// <summary>
+        /// 接続線をヒストリーから削除します
+        /// </summary>
+        private void RemoveFromConnectionHistory(Connection connection)
+        {
+            try
+            {
+                // nullチェックと存在チェック
+                if (connection == null) return;
+
+                int removeIndex = _connectionHistory.IndexOf(connection);
+
+                if (removeIndex >= 0)
+                {
+                    _connectionHistory.RemoveAt(removeIndex);
+
+                    // 現在の選択位置を調整
+                    if (_currentHistoryIndex > removeIndex)
+                    {
+                        _currentHistoryIndex--;
+                    }
+                    else if (_currentHistoryIndex == removeIndex)
+                    {
+                        // 削除された要素が現在選択中の場合は選択をクリア
+                        _currentHistoryIndex = -1;
+                        if (SelectedConnection == connection)
+                        {
+                            SelectedConnection = null;
+                        }
+                    }
+
+                    // インデックスが範囲外にならないように調整
+                    if (_currentHistoryIndex >= _connectionHistory.Count)
+                    {
+                        _currentHistoryIndex = _connectionHistory.Count - 1;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("Connection", $"ヒストリー削除エラー: {ex.Message}");
+            }
+        }
+     
+        /// <summary>
+        /// ヒストリーの整合性をチェックするメソッド
+        /// </summary>
+        private void ValidateConnectionHistory()
+        {
+            // 存在しない接続線をヒストリーから削除
+            _connectionHistory.RemoveAll(conn =>
+                conn == null ||
+                !Connections.Contains(conn) ||
+                conn.StartComponent == null ||
+                conn.EndComponent == null ||
+                !Controls.Contains(conn.StartComponent) ||
+                !Controls.Contains(conn.EndComponent));
+
+            // 現在のインデックスを調整
+            if (_currentHistoryIndex >= _connectionHistory.Count)
+            {
+                _currentHistoryIndex = _connectionHistory.Count - 1;
+            }
+
+            if (_connectionHistory.Count == 0)
+            {
+                _currentHistoryIndex = -1;
+            }
+        }
+
+        /// <summary>
+        /// 定期的なヒストリー検証を追加
+        /// </summary>
+        protected override void OnLayout(LayoutEventArgs levent)
+        {
+            base.OnLayout(levent);
+
+            // レイアウト時にヒストリーの整合性をチェック
+            if (!IsDesignMode)
+            {
+                ValidateConnectionHistory();
+            }
+        }
+        /// <summary>
+        /// 選択中の接続線を削除します
+        /// </summary>
+        /// <remarks>
+        /// 削除操作はDelキーまたはコンテキストメニューから実行できます。
+        /// 接続線が削除されると、ヒストリーからも削除されます。
+        /// </remarks>
+        private void DeleteSelectedConnection()
+        {
+            if (SelectedConnection != null)
+            {
+                RemoveConnection(SelectedConnection);
+                RemoveFromConnectionHistory(SelectedConnection);
+                SelectedConnection = null;
+                Invalidate();
+            }
+        }
+        
+        /// <summary>
+        /// 指定した接続線を選択状態にします
+        /// </summary>
+        /// <param name="connection">選択する接続線</param>
+        /// <remarks>
+        /// 接続線が選択されると視覚的に強調表示され、ヒストリー内の位置が更新されます。
+        /// 既に選択中の接続線は選択が解除されます。
+        /// </remarks>
+        private void SelectConnection(Connection connection)
+        {
+            // 全ての接続線の選択を解除
+            DeselectAllConnections();
+            
+            // 指定した接続線を選択状態にする
+            connection.Visual.IsSelected = true;
+            SelectedConnection = connection;
+            
+            // ヒストリー内の位置を更新
+            _currentHistoryIndex = _connectionHistory.IndexOf(connection);
+            
+            // 選択イベントを発行
+            ConnectionSelected?.Invoke(this, new ConnectionEventArgs(connection));
+            
+            // 再描画
+            Invalidate();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            if (IsDesignMode)
+            {
+                // デザイン時の簡易描画
+                e.Graphics.Clear(BackColor);
+                using (var pen = new Pen(SystemColors.ControlDark))
+                {
+                    e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+                }
+                TextRenderer.DrawText(e.Graphics, "Design Canvas", Font,
+                    new Point(10, 10), ForeColor);
+                return;
+            }
+
+            // 実行時の描画処理
+            base.OnPaint(e);
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            // 接続線を描画
+            foreach (var connection in Connections)
+            {
+                ConnectionRenderer.Render(e.Graphics, connection);
+            }
+
+            // 仮接続線を描画
+            if (_currentConnection != null && _currentConnection.EndComponent == null)
+            {
+                DrawTemporaryConnection(e.Graphics);
+            }
+
+            // 選択中の接続線を強調表示
+            if (SelectedConnection != null)
+            {
+                using (var highlightPen = new Pen(Color.Yellow, 5))
+                {
+                    highlightPen.DashStyle = DashStyle.Dot;
+                    
+                    if (SelectedConnection.Visual.PathPoints.Count >= 4)
+                    {
+                        e.Graphics.DrawBeziers(highlightPen, SelectedConnection.Visual.PathPoints.ToArray());
+                    }
+                    else if (SelectedConnection.Visual.PathPoints.Count >= 2)
+                    {
+                        e.Graphics.DrawLine(highlightPen, 
+                            SelectedConnection.Visual.PathPoints[0], 
+                            SelectedConnection.Visual.PathPoints[SelectedConnection.Visual.PathPoints.Count - 1]);
+                    }
+                }
+            }
+
+            // 接続情報を表示（デバッグ用）
+            using (var font = new Font("Arial", 8))
+            {
+                foreach (var connection in Connections)
+                {
+                    if (connection.Visual.PathPoints.Count >= 2)
+                    {
+                        Point midPoint = new Point(
+                            (connection.Visual.PathPoints[0].X + connection.Visual.PathPoints[1].X) / 2,
+                            (connection.Visual.PathPoints[0].Y + connection.Visual.PathPoints[1].Y) / 2
+                        );
+
+                        string info = $"{connection.StartPort}→{connection.EndPort}";
+                        e.Graphics.DrawString(info, font, Brushes.Red, midPoint);
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// キャンバスをクリア
+        /// 注意点: すべてのコンポーネントと接続を削除、イベントハンドラもクリーンアップ
+        /// </summary>
+        public void Clear()
+        {
+            try
+            {
+                // すべてのイベントハンドラを解除
+                foreach (ComponentControl component in Components.ToList())
+                {
+                    component.SelectedChanged -= Component_SelectedChanged;
+                    component.PortClicked -= ComponentControl_PortClicked;
+                    component.MouseDown -= ComponentControl_MouseDown;
+                    component.MouseMove -= ComponentControl_MouseMove;
+                    component.MouseUp -= ComponentControl_MouseUp;
+                }
+
+                // すべてのコントロールを削除
+                Controls.Clear();
+                Components.Clear();
+                Connections.Clear();
+                ConnectionGraph.Clear();
+                _connectionHistory.Clear();
+                _currentHistoryIndex = -1;
+
+                // 選択状態をリセット
+                SelectedComponent = null;
+                SelectedConnection = null;
+
+                Invalidate();
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("Delete Error", $"キャンバスクリアエラー: {ex.Message}");
+            }
+        }
         /// <summary>
         /// 仮接続線を描画
         /// 注意点: ドラッグ中の接続作成時に表示
         /// </summary>
-
         private void DrawTemporaryConnection(Graphics g)
         {
             Point start = GetComponentConnectionPoint(_currentConnection.StartComponent, true);
@@ -295,26 +588,68 @@ namespace PowerSimBuilder
         /// </summary>
         private bool IsPointNearConnection(Point point, Connection connection)
         {
-            return connection.Visual.PathPoints.Any(p =>
-                Math.Abs(p.X - point.X) < 10 && Math.Abs(p.Y - point.Y) < 10);
+            if (connection.Visual.PathPoints.Count < 2)
+                return false;
+                
+            // 線分との距離計算を行う改良版
+            for (int i = 0; i < connection.Visual.PathPoints.Count - 1; i++)
+            {
+                Point p1 = connection.Visual.PathPoints[i];
+                Point p2 = connection.Visual.PathPoints[i + 1];
+                
+                // 線分と点の距離を計算
+                double distance = PointToLineDistance(point, p1, p2);
+                if (distance < 10) // 10ピクセル以内なら近接と判定
+                    return true;
+            }
+            
+            return false;
         }
-
+        
+        /// <summary>
+        /// 点と線分の距離を計算
+        /// </summary>
+        private double PointToLineDistance(Point point, Point lineStart, Point lineEnd)
+        {
+            double lineLengthSquared = Math.Pow(lineEnd.X - lineStart.X, 2) + Math.Pow(lineEnd.Y - lineStart.Y, 2);
+            
+            if (lineLengthSquared == 0) // 線分の長さが0の場合
+                return Math.Sqrt(Math.Pow(point.X - lineStart.X, 2) + Math.Pow(point.Y - lineStart.Y, 2));
+                
+            // 点から線分への射影のパラメータを計算
+            double t = Math.Max(0, Math.Min(1, 
+                ((point.X - lineStart.X) * (lineEnd.X - lineStart.X) + 
+                 (point.Y - lineStart.Y) * (lineEnd.Y - lineStart.Y)) / lineLengthSquared));
+                 
+            // 射影点を計算
+            Point projection = new Point(
+                (int)(lineStart.X + t * (lineEnd.X - lineStart.X)),
+                (int)(lineStart.Y + t * (lineEnd.Y - lineStart.Y))
+            );
+            
+            // 点と射影点の距離を返す
+            return Math.Sqrt(Math.Pow(point.X - projection.X, 2) + Math.Pow(point.Y - projection.Y, 2));
+        }
+ 
         /// <summary>
         /// コンポーネントを追加
         /// 注意点: イベントハンドラを設定しキャンバスに追加
         /// </summary>
         public void AddComponent(ComponentControl control)
         {
-            if (!Controls.Contains(control))
-            {
-                // イベントハンドラ設定
-                control.SelectedChanged += (s, e) =>
-                {
-                    SelectedComponent = (ComponentControl)s;
-                    SelectionChanged?.Invoke(this, EventArgs.Empty);
-                    ComponentSelected?.Invoke(this, new ComponentEventArgs((ComponentControl)s));
-                };
+            if (control == null || Controls.Contains(control)) return;
 
+            try
+            {
+                // 既存のイベントハンドラを解除（二重登録防止）
+                control.SelectedChanged -= Component_SelectedChanged;
+                control.PortClicked -= ComponentControl_PortClicked;
+                control.MouseDown -= ComponentControl_MouseDown;
+                control.MouseMove -= ComponentControl_MouseMove;
+                control.MouseUp -= ComponentControl_MouseUp;
+
+                // 新しいイベントハンドラを登録
+                control.SelectedChanged += Component_SelectedChanged;
                 control.PortClicked += ComponentControl_PortClicked;
                 control.MouseDown += ComponentControl_MouseDown;
                 control.MouseMove += ComponentControl_MouseMove;
@@ -326,8 +661,11 @@ namespace PowerSimBuilder
                 ComponentAdded?.Invoke(this, new ComponentEventArgs(control));
                 Invalidate();
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"コンポーネント追加エラー: {ex.Message}");
+            }
         }
-
         /// <summary>
         /// コンポーネントを追加（位置指定）
         /// 注意点: ディスクリプタからコンポーネント生成
@@ -337,28 +675,101 @@ namespace PowerSimBuilder
             var control = new ComponentControl(descriptor) { Location = location };
             AddComponent(control);
         }
-
+        /// <summary>
+        /// コンポーネントを削除
+        /// 注意点: 関連接続も同時削除、イベントハンドラもクリーンアップ
+        /// </summary>
         /// <summary>
         /// コンポーネントを削除
         /// 注意点: 関連接続も同時削除
         /// </summary>
         public void RemoveComponent(ComponentControl component)
         {
-            if (Controls.Contains(component))
+            if (component == null || !Controls.Contains(component)) return;
+
+            try
             {
-                // 関連接続を削除
-                var connectionsToRemove = ConnectionGraph.GetConnections(component).ToList();
+                // 関連接続を強制的に削除
+                ConnectionGraph.RemoveAllConnections(component);
+
+                // 接続リストからも関連する接続を削除
+                var connectionsToRemove = Connections
+                    .Where(c => c.StartComponent == component || c.EndComponent == component)
+                    .ToList();
+
                 foreach (var conn in connectionsToRemove)
                 {
-                    RemoveConnection(conn);
+                    Connections.Remove(conn);
+                    RemoveFromConnectionHistory(conn);
+                }
+
+                // イベントハンドラを解除
+                component.SelectedChanged -= Component_SelectedChanged;
+                component.PortClicked -= ComponentControl_PortClicked;
+                component.MouseDown -= ComponentControl_MouseDown;
+                component.MouseMove -= ComponentControl_MouseMove;
+                component.MouseUp -= ComponentControl_MouseUp;
+
+                // 選択状態の更新
+                if (SelectedComponent == component)
+                {
+                    SelectedComponent = null;
+                    SelectionChanged?.Invoke(this, EventArgs.Empty);
                 }
 
                 // コンポーネント削除
                 Controls.Remove(component);
                 Components.Remove(component);
+
                 ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
                 Invalidate();
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"コンポーネント削除エラー: {ex.Message}");
+                // 必要に応じてエラー処理
+            }
+        }
+
+        /// <summary>
+        /// 接続を削除
+        /// 注意点: 接続グラフからも削除、ヒストリーからも削除
+        /// </summary>
+        public void RemoveConnection(Connection connection)
+        {
+            if (connection == null || !Connections.Contains(connection)) return;
+
+            try
+            {
+                Connections.Remove(connection);
+                ConnectionGraph.RemoveConnection(connection);
+
+                // ヒストリーからも削除
+                RemoveFromConnectionHistory(connection);
+
+                // 選択状態の更新
+                if (SelectedConnection == connection)
+                {
+                    SelectedConnection = null;
+                    ConnectionSelected?.Invoke(this, new ConnectionEventArgs(null));
+                }
+
+                ConnectionRemoved?.Invoke(this, new ConnectionEventArgs(connection));
+                Invalidate();
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("Connection",$"接続線削除エラー: {ex.Message}");
+            }
+        }
+
+        // 専用のイベントハンドラメソッドを追加
+        private void Component_SelectedChanged(object sender, EventArgs e)
+        {
+            var component = (ComponentControl)sender;
+            SelectedComponent = component;
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            ComponentSelected?.Invoke(this, new ComponentEventArgs(component));
         }
 
         /// <summary>
@@ -407,27 +818,14 @@ namespace PowerSimBuilder
                 Connections.Add(connection);
                 ConnectionGraph.AddConnection(connection);
                 UpdateConnectionVisual(connection);
+                
+                // ヒストリーに追加
+                AddToConnectionHistory(connection);
+                
                 ConnectionAdded?.Invoke(this, new ConnectionEventArgs(connection));
                 Invalidate();
             }
         }
-
-        /// <summary>
-        /// 接続を削除
-        /// 注意点: 接続グラフからも削除
-        /// </summary>
-        public void RemoveConnection(Connection connection)
-        {
-            if (Connections.Contains(connection))
-            {
-                Connections.Remove(connection);
-                ConnectionGraph.RemoveConnection(connection);
-                ConnectionRemoved?.Invoke(this, new ConnectionEventArgs(connection));
-                Invalidate();
-            }
-        }
-
- 
         /// <summary>
         /// 接続の視覚情報を更新
         /// 注意点: コンポーネント位置変更時に呼び出し
@@ -476,6 +874,7 @@ namespace PowerSimBuilder
 
             Invalidate();
         }
+        
         /// <summary>
         /// 全接続の視覚情報を更新
         /// 注意点: 配置変更後に呼び出し
@@ -545,8 +944,6 @@ namespace PowerSimBuilder
             _draggedComponent = null;
         }
 
-
-
         /// <summary>
         /// 全接続の選択解除
         /// 注意点: 視覚状態を更新
@@ -557,6 +954,9 @@ namespace PowerSimBuilder
             {
                 connection.Visual.IsSelected = false;
             }
+            SelectedConnection = null;
+            _currentHistoryIndex = -1;
+            Invalidate();
         }
 
         /// <summary>
@@ -574,6 +974,7 @@ namespace PowerSimBuilder
                 e.Effect = DragDropEffects.None;
             }
         }
+        
         /// <summary>
         /// ドロップイベント処理
         /// 注意点: パレットからコンポーネントを追加
@@ -588,7 +989,66 @@ namespace PowerSimBuilder
                 ArrangeComponents();
             }
         }
+        /// <summary>
+        /// 接続グラフの状態をダンプするデバッグメソッド
+        /// </summary>
+        public void DumpConnectionGraph()
+        {
+            LogcatTraceHelper.Instance.SimpleMessage("Connection","=== ConnectionGraph State Dump ===");
 
+            LogcatTraceHelper.Instance.SimpleMessage("Connection", "Connections From:");
+            foreach (var kvp in ConnectionGraph.GetConnectionsFromData())
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("Connection", $"  Component: {kvp.Key.InstanceName}");
+                foreach (var conn in kvp.Value)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("Connection", $"    -> {conn.EndComponent?.InstanceName}:{conn.EndPort}");
+                }
+            }
 
+            LogcatTraceHelper.Instance.SimpleMessage("Connection", "Connections To:");
+            foreach (var kvp in ConnectionGraph.GetConnectionsToData())
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("Connection", $"  Component: {kvp.Key.InstanceName}");
+                foreach (var conn in kvp.Value)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("Connection", $"    <- {conn.StartComponent?.InstanceName}:{conn.StartPort}");
+                }
+            }
+
+            LogcatTraceHelper.Instance.SimpleMessage("Connection", "===============================");
+        }
+        /// <summary>
+        /// 現在の状態をダンプするデバッグメソッド
+        /// </summary>
+        public void DumpState()
+        {
+            LogcatTraceHelper.Instance.SimpleMessage ("connection", "=== DesignCanvas State Dump ===");
+            LogcatTraceHelper.Instance.SimpleMessage("connection",$"Components: {Components.Count}");
+            LogcatTraceHelper.Instance.SimpleMessage("connection", $"Connections: {Connections.Count}");
+            LogcatTraceHelper.Instance.SimpleMessage("connection", $"History: {_connectionHistory.Count}, Index: {_currentHistoryIndex}");
+            LogcatTraceHelper.Instance.SimpleMessage("connection", $"Selected Component: {SelectedComponent?.InstanceName ?? "null"}");
+            LogcatTraceHelper.Instance.SimpleMessage("connection", $"Selected Connection: {SelectedConnection != null}");
+
+            // 接続線の詳細情報
+            foreach (var conn in Connections)
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("connection", $"  Connection: {conn.StartComponent?.InstanceName}:{conn.StartPort} -> {conn.EndComponent?.InstanceName}:{conn.EndPort}");
+            }
+            // 接続グラフの詳細情報も出力
+            DumpConnectionGraph();
+            LogcatTraceHelper.Instance.SimpleMessage("connection", "===============================");
+        }
+
+        // デバッグ用に状態ダンプを呼び出すメソッドを追加
+        protected override void OnInvalidated(InvalidateEventArgs e)
+        {
+            base.OnInvalidated(e);
+
+#if DEBUG
+            // デバッグビルド時のみ状態をダンプ
+            DumpState();
+#endif
+        }
     }
 }

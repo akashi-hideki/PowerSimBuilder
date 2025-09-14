@@ -19,6 +19,9 @@ namespace PowerSimBuilder
         /// </summary>
         public void AddConnection(Connection connection)
         {
+            if (connection == null || connection.StartComponent == null || connection.EndComponent == null)
+                return;
+
             AddToDictionary(_connectionsFrom, connection.StartComponent, connection);
             AddToDictionary(_connectionsTo, connection.EndComponent, connection);
         }
@@ -28,6 +31,8 @@ namespace PowerSimBuilder
         /// </summary>
         public void RemoveConnection(Connection connection)
         {
+            if (connection == null) return;
+
             RemoveFromDictionary(_connectionsFrom, connection.StartComponent, connection);
             RemoveFromDictionary(_connectionsTo, connection.EndComponent, connection);
         }
@@ -37,15 +42,15 @@ namespace PowerSimBuilder
         /// </summary>
         public IEnumerable<Connection> GetConnections(ComponentControl component)
         {
-            var fromList = _connectionsFrom.ContainsKey(component)
-                ? _connectionsFrom[component]
-                : Enumerable.Empty<Connection>();
+            var connections = new List<Connection>();
 
-            var toList = _connectionsTo.ContainsKey(component)
-                ? _connectionsTo[component]
-                : Enumerable.Empty<Connection>();
+            if (_connectionsFrom.ContainsKey(component))
+                connections.AddRange(_connectionsFrom[component]);
 
-            return fromList.Concat(toList).Distinct();
+            if (_connectionsTo.ContainsKey(component))
+                connections.AddRange(_connectionsTo[component]);
+
+            return connections.Distinct();
         }
 
         /// <summary>
@@ -54,7 +59,7 @@ namespace PowerSimBuilder
         public IEnumerable<Connection> GetConnectionsFrom(ComponentControl component)
         {
             return _connectionsFrom.ContainsKey(component)
-                ? _connectionsFrom[component]
+                ? _connectionsFrom[component].ToList() // コピーを返す
                 : Enumerable.Empty<Connection>();
         }
 
@@ -64,7 +69,7 @@ namespace PowerSimBuilder
         public IEnumerable<Connection> GetConnectionsTo(ComponentControl component)
         {
             return _connectionsTo.ContainsKey(component)
-                ? _connectionsTo[component]
+                ? _connectionsTo[component].ToList() // コピーを返す
                 : Enumerable.Empty<Connection>();
         }
 
@@ -73,6 +78,9 @@ namespace PowerSimBuilder
         /// </summary>
         public bool ConnectionExists(Connection connection)
         {
+            if (connection == null || connection.StartComponent == null)
+                return false;
+
             return _connectionsFrom.ContainsKey(connection.StartComponent) &&
                    _connectionsFrom[connection.StartComponent].Contains(connection);
         }
@@ -83,6 +91,9 @@ namespace PowerSimBuilder
         public bool ConnectionExists(ComponentControl start, string startPort,
                                     ComponentControl end, string endPort)
         {
+            if (start == null || end == null)
+                return false;
+
             return _connectionsFrom.ContainsKey(start) &&
                    _connectionsFrom[start].Any(c =>
                        c.StartPort == startPort &&
@@ -102,17 +113,64 @@ namespace PowerSimBuilder
         private void AddToDictionary(Dictionary<ComponentControl, List<Connection>> dict,
                                     ComponentControl key, Connection connection)
         {
+            if (key == null) return;
+
             if (!dict.ContainsKey(key))
                 dict[key] = new List<Connection>();
 
-            dict[key].Add(connection);
+            // 重複チェック
+            if (!dict[key].Contains(connection))
+                dict[key].Add(connection);
         }
 
         private void RemoveFromDictionary(Dictionary<ComponentControl, List<Connection>> dict,
                                          ComponentControl key, Connection connection)
         {
-            if (dict.ContainsKey(key))
+            if (key != null && dict.ContainsKey(key))
                 dict[key].Remove(connection);
+        }
+
+        /// <summary>
+        /// コンポーネントに関連するすべての接続を強制的に削除
+        /// </summary>
+        public void RemoveAllConnections(ComponentControl component)
+        {
+            if (component == null) return;
+
+            // コンポーネントからの接続をすべて削除
+            if (_connectionsFrom.ContainsKey(component))
+            {
+                var connectionsToRemove = _connectionsFrom[component].ToList();
+                foreach (var conn in connectionsToRemove)
+                {
+                    RemoveConnection(conn);
+                }
+            }
+
+            // コンポーネントへの接続をすべて削除
+            if (_connectionsTo.ContainsKey(component))
+            {
+                var connectionsToRemove = _connectionsTo[component].ToList();
+                foreach (var conn in connectionsToRemove)
+                {
+                    RemoveConnection(conn);
+                }
+            }
+        }
+        /// <summary>
+        /// 接続元のデータを取得（デバッグ用）
+        /// </summary>
+        public Dictionary<ComponentControl, List<Connection>> GetConnectionsFromData()
+        {
+            return _connectionsFrom.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList());
+        }
+
+        /// <summary>
+        /// 接続先のデータを取得（デバッグ用）
+        /// </summary>
+        public Dictionary<ComponentControl, List<Connection>> GetConnectionsToData()
+        {
+            return _connectionsTo.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList());
         }
     }
 }
