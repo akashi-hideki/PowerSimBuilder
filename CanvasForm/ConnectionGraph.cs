@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -181,7 +182,91 @@ namespace PowerSimBuilder
                 _connectionsTo.Remove(component); // コンポーネント自体も削除
             }
         }
+        /// <summary>
+        /// 接続グラフと接続リストの同期を確認
+        /// </summary>
+        /// <summary>
+        /// 接続グラフと接続リストの同期を確認
+        /// </summary>
+        public void SynchronizeConnections(List<Connection> currentConnections)
+        {
+            try
+            {
+                // グラフに存在するが現在の接続リストにない接続を削除
+                var allGraphConnections = _connectionsFrom.SelectMany(kvp => kvp.Value)
+                    .Concat(_connectionsTo.SelectMany(kvp => kvp.Value))
+                    .Distinct()
+                    .ToList();
 
+                var orphanedConnections = allGraphConnections
+                    .Where(conn => !currentConnections.Contains(conn))
+                    .ToList();
+
+                foreach (var conn in orphanedConnections)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("ConnectionGraph",
+                        $"Removing orphaned connection: {conn.StartComponent?.InstanceName} -> {conn.EndComponent?.InstanceName}");
+                    RemoveConnection(conn);
+                }
+
+                // 現在の接続リストに存在するがグラフにない接続を追加
+                var missingConnections = currentConnections
+                    .Where(conn => !allGraphConnections.Contains(conn) &&
+                                  conn.StartComponent != null && conn.EndComponent != null)
+                    .ToList();
+
+                foreach (var conn in missingConnections)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("ConnectionGraph",
+                        $"Adding missing connection: {conn.StartComponent?.InstanceName} -> {conn.EndComponent?.InstanceName}");
+                    AddConnection(conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("ConnectionGraph",
+                    $"Error synchronizing connections: {ex.Message}");
+            }
+        }
+        /// <summary>
+        /// グラフの整合性を検証
+        /// </summary>
+        public void ValidateIntegrity(List<ComponentControl> allComponents)
+        {
+            var componentSet = new HashSet<ComponentControl>(allComponents);
+
+            // 存在しないコンポーネントへの参照を削除
+            var invalidFromKeys = _connectionsFrom.Keys.Where(key => !componentSet.Contains(key)).ToList();
+            foreach (var key in invalidFromKeys)
+            {
+                _connectionsFrom.Remove(key);
+            }
+
+            var invalidToKeys = _connectionsTo.Keys.Where(key => !componentSet.Contains(key)).ToList();
+            foreach (var key in invalidToKeys)
+            {
+                _connectionsTo.Remove(key);
+            }
+
+            // 各接続のコンポーネント参照を検証
+            foreach (var connections in _connectionsFrom.Values)
+            {
+                connections.RemoveAll(conn =>
+                    conn.StartComponent == null ||
+                    conn.EndComponent == null ||
+                    !componentSet.Contains(conn.StartComponent) ||
+                    !componentSet.Contains(conn.EndComponent));
+            }
+
+            foreach (var connections in _connectionsTo.Values)
+            {
+                connections.RemoveAll(conn =>
+                    conn.StartComponent == null ||
+                    conn.EndComponent == null ||
+                    !componentSet.Contains(conn.StartComponent) ||
+                    !componentSet.Contains(conn.EndComponent));
+            }
+        }
         /// <summary>
         /// 接続元のデータを取得（デバッグ用）
         /// </summary>

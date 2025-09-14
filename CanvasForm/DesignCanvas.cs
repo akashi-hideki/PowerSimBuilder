@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace PowerSimBuilder
@@ -232,13 +234,35 @@ namespace PowerSimBuilder
         /// </summary>
         private void DesignCanvas_KeyDown(object sender, KeyEventArgs e)
         {
-            if (_keyHandlers.TryGetValue(e.KeyCode, out Action handler))
+            // 追加ログ: キー入力情報
+            LogcatTraceHelper.Instance.SimpleMessage("KeyDown",
+                $"Key pressed: {e.KeyCode}, SelectedConnection: {SelectedConnection != null}, " +
+                $"SelectedComponent: {SelectedComponent != null}");
+            LogThreadState("KeyDown");
+
+            if (e.KeyCode == Keys.Delete)
+            {
+                // 接続線が選択されている場合は接続線を削除
+                if (SelectedConnection != null)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("KeyDown", "Deleting selected connection");
+                    RemoveConnection(SelectedConnection);
+                    e.Handled = true;
+                }
+                // コンポーネントが選択されている場合はコンポーネントを削除
+                else if (SelectedComponent != null)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("KeyDown", "Deleting selected component");
+                    RemoveComponent(SelectedComponent);
+                    e.Handled = true;
+                }
+            }
+            else if (_keyHandlers.TryGetValue(e.KeyCode, out Action handler))
             {
                 handler();
                 e.Handled = true;
             }
         }
-        
         /// <summary>
         /// 接続線ヒストリー内を移動して接続線を選択します
         /// </summary>
@@ -309,8 +333,16 @@ namespace PowerSimBuilder
         {
             try
             {
-                // nullチェックと存在チェック
-                if (connection == null) return;
+                if (connection == null)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("RemoveFromHistory", "Attempted to remove null connection from history");
+                    return;
+                }
+
+                // 追加ログ: ヒストリー操作前
+                LogConnectionState(connection, "Before RemoveFromHistory");
+                LogcatTraceHelper.Instance.SimpleMessage("ConnectionHistory",
+                    $"History count before: {_connectionHistory.Count}, Current index: {_currentHistoryIndex}");
 
                 int removeIndex = _connectionHistory.IndexOf(connection);
 
@@ -339,13 +371,17 @@ namespace PowerSimBuilder
                         _currentHistoryIndex = _connectionHistory.Count - 1;
                     }
                 }
+
+                // 追加ログ: ヒストリー操作後
+                LogcatTraceHelper.Instance.SimpleMessage("ConnectionHistory",
+                    $"History count after: {_connectionHistory.Count}, Current index: {_currentHistoryIndex}");
             }
             catch (Exception ex)
             {
-                LogcatTraceHelper.Instance.LogError("Connection", $"ヒストリー削除エラー: {ex.Message}");
+                LogcatTraceHelper.Instance.LogError("ConnectionHistory",
+                    $"ヒストリー削除エラー: {ex.Message}");
             }
         }
-     
         /// <summary>
         /// ヒストリーの整合性をチェックするメソッド
         /// </summary>
@@ -382,7 +418,11 @@ namespace PowerSimBuilder
             // レイアウト時にヒストリーの整合性をチェック
             if (!IsDesignMode)
             {
+                LogCollectionState("OnLayout");
                 ValidateConnectionHistory();
+
+                // 接続グラフの同期状態を確認
+                ConnectionGraph.SynchronizeConnections(Connections);
             }
         }
         /// <summary>
@@ -689,27 +729,46 @@ namespace PowerSimBuilder
         /// </summary>
         public void RemoveComponent(ComponentControl component)
         {
-            if (component == null || !Controls.Contains(component)) return;
+            if (component == null)
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("RemoveComponent", "Attempted to remove null component");
+                return;
+            }
+
+            if (!Controls.Contains(component))
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("RemoveComponent",
+                    $"Component {component.InstanceName} not found in Controls collection");
+                return;
+            }
 
             try
             {
+                // 追加ログ: 削除前の状態
+                LogComponentState(component, "Before RemoveComponent");
+                LogCollectionState("Before RemoveComponent");
+                LogThreadState("RemoveComponent");
+
                 // デバッグ: 削除前の状態をダンプ
                 Debug.WriteLine("=== Before RemoveComponent ===");
                 DumpState();
 
                 // 関連接続を強制的に削除
-                ConnectionGraph.RemoveAllConnections(component);
-
-                // 接続リストからも関連する接続を削除
                 var connectionsToRemove = Connections
                     .Where(c => c.StartComponent == component || c.EndComponent == component)
                     .ToList();
 
+                LogcatTraceHelper.Instance.SimpleMessage("RemoveComponent",
+                    $"Found {connectionsToRemove.Count} connections to remove");
+
                 foreach (var conn in connectionsToRemove)
                 {
-                    Connections.Remove(conn);
-                    RemoveFromConnectionHistory(conn);
+                    LogConnectionState(conn, "Removing connection");
+                    RemoveConnection(conn);
                 }
+
+                // ConnectionGraphからもコンポーネントに関連する接続を削除
+                ConnectionGraph.RemoveAllConnections(component);
 
                 // イベントハンドラを解除
                 component.SelectedChanged -= Component_SelectedChanged;
@@ -729,6 +788,11 @@ namespace PowerSimBuilder
                 Controls.Remove(component);
                 Components.Remove(component);
 
+                // 追加ログ: 削除後の状態
+                LogComponentState(component, "After RemoveComponent");
+                LogCollectionState("After RemoveComponent");
+                LogObjectLifetime(component, "After RemoveComponent");
+
                 ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
 
                 // デバッグ: 削除後の状態をダンプ
@@ -739,10 +803,10 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                LogcatTraceHelper.Instance.LogError("Connection", $"コンポーネント削除エラー: {ex.Message}");
+                LogcatTraceHelper.Instance.LogError("RemoveComponent",
+                    $"コンポーネント削除エラー: {ex.Message}");
             }
         }
-
 
         /// <summary>
         /// 接続を削除
@@ -758,6 +822,10 @@ namespace PowerSimBuilder
 
             try
             {
+                // 追加ログ: 削除前の状態
+                LogConnectionState(connection, "Before RemoveConnection");
+                LogCollectionState("Before RemoveConnection");
+
                 Connections.Remove(connection);
                 ConnectionGraph.RemoveConnection(connection);
 
@@ -771,15 +839,20 @@ namespace PowerSimBuilder
                     ConnectionSelected?.Invoke(this, new ConnectionEventArgs(null));
                 }
 
+                // 追加ログ: 削除後の状態
+                LogConnectionState(connection, "After RemoveConnection");
+                LogCollectionState("After RemoveConnection");
+
                 ConnectionRemoved?.Invoke(this, new ConnectionEventArgs(connection));
                 Invalidate();
             }
             catch (Exception ex)
             {
-                LogcatTraceHelper.Instance.LogError("Cpnnction", $"接続線削除エラー: {ex.Message}");
+                LogcatTraceHelper.Instance.LogError("RemoveConnection",
+                    $"接続線削除エラー: {ex.Message}");
             }
         }
-
+ 
         // 専用のイベントハンドラメソッドを追加
         private void Component_SelectedChanged(object sender, EventArgs e)
         {
@@ -1007,6 +1080,13 @@ namespace PowerSimBuilder
             }
         }
         /// <summary>
+        /// 接続グラフの整合性を検証
+        /// </summary>
+        public void ValidateConnectionGraph()
+        {
+            ConnectionGraph.ValidateIntegrity(Components);
+        }
+        /// <summary>
         /// 接続グラフの状態をダンプするデバッグメソッド
         /// </summary>
         public void DumpConnectionGraph()
@@ -1079,6 +1159,30 @@ namespace PowerSimBuilder
             LogcatTraceHelper.Instance.SimpleMessage("Connection", "===============================");
         }
         /// <summary>
+        /// オブジェクトの生存状態を確認
+        /// </summary>
+        private void LogObjectLifetime(ComponentControl component, string context)
+        {
+            try
+            {
+                var weakRef = new WeakReference(component);
+                LogcatTraceHelper.Instance.SimpleMessage("ObjectLifetime",
+                    $"{context}: {component.InstanceName}, Alive={weakRef.IsAlive}");
+
+                // 明示的にGCを実行して生存を確認
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                LogcatTraceHelper.Instance.SimpleMessage("ObjectLifetime",
+                    $"{context} after GC: {component.InstanceName}, Alive={weakRef.IsAlive}");
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("ObjectLifetime",
+                    $"Error logging object lifetime: {ex.Message}");
+            }
+        }
+        /// <summary>
         /// 現在の状態をダンプするデバッグメソッド
         /// </summary>
         public void DumpState()
@@ -1100,7 +1204,114 @@ namespace PowerSimBuilder
             DumpConnectionGraphDetails();
             LogcatTraceHelper.Instance.SimpleMessage("connection", "===============================");
         }
+        private void LogConnectionState(Connection connection, string context)
+        {
+            try
+            {
+                if (connection != null)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("ConnectionState",
+                        $"{context}: {connection.StartComponent?.InstanceName}:{connection.StartPort} -> " +
+                        $"{connection.EndComponent?.InstanceName}:{connection.EndPort}, " +
+                        $"Hash: {connection.GetHashCode()}, InConnections: {Connections.Contains(connection)}, " +
+                        $"InHistory: {_connectionHistory.Contains(connection)}");
+                }
+                else
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("ConnectionState",
+                        $"{context}: Connection is null");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("ConnectionState",
+                    $"Error logging connection state: {ex.Message}");
+            }
+        }
 
+        private void LogComponentState(ComponentControl component, string context)
+        {
+            try
+            {
+                if (component != null)
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("ComponentState",
+                        $"{context}: {component.InstanceName}, Hash: {component.GetHashCode()}, " +
+                        $"Selected: {component.IsSelected}, InControls: {Controls.Contains(component)}, " +
+                        $"InComponents: {Components.Contains(component)}");
+                }
+                else
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage("ComponentState",
+                        $"{context}: Component is null");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("ComponentState",
+                    $"Error logging component state: {ex.Message}");
+            }
+        }
+
+        private void LogCollectionState(string context)
+        {
+            try
+            {
+                LogcatTraceHelper.Instance.SimpleMessage("CollectionState",
+                    $"{context}: Controls.Count={Controls.Count}, Components.Count={Components.Count}, " +
+                    $"Connections.Count={Connections.Count}, History.Count={_connectionHistory.Count}");
+
+                // nullチェックを追加
+                foreach (var comp in Components.Where(c => c != null))
+                {
+                    if (!Controls.Contains(comp))
+                    {
+                        LogcatTraceHelper.Instance.SimpleMessage("CollectionState",
+                            $"Component {comp.InstanceName} is in Components but not in Controls!");
+                    }
+                }
+
+                // nullチェックを追加
+                foreach (var conn in Connections.Where(c => c != null))
+                {
+                    if (conn.StartComponent == null || conn.EndComponent == null)
+                    {
+                        LogcatTraceHelper.Instance.SimpleMessage("CollectionState",
+                            $"Connection has null component: {conn.StartPort} -> {conn.EndPort}");
+                    }
+                    else if (!Components.Contains(conn.StartComponent) || !Components.Contains(conn.EndComponent))
+                    {
+                        LogcatTraceHelper.Instance.SimpleMessage("CollectionState",
+                            $"Connection references missing component: {conn.StartComponent.InstanceName} -> {conn.EndComponent.InstanceName}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("CollectionState",
+                    $"Error logging collection state: {ex.Message}");
+            }
+        }
+
+
+ 
+        /// <summary>
+        /// スレッド状態をログ出力
+        /// </summary>
+        private void LogThreadState(string context)
+        {
+            try
+            {
+                bool isOnUiThread = !InvokeRequired;
+                LogcatTraceHelper.Instance.SimpleMessage("ThreadState",
+                    $"{context}: OnUIThread={isOnUiThread}, ThreadID={Thread.CurrentThread.ManagedThreadId}");
+            }
+            catch (Exception ex)
+            {
+                LogcatTraceHelper.Instance.LogError("ThreadState",
+                    $"Error logging thread state: {ex.Message}");
+            }
+        }
         // デバッグ用に状態ダンプを呼び出すメソッドを追加
         protected override void OnInvalidated(InvalidateEventArgs e)
         {
