@@ -266,9 +266,31 @@ namespace PowerSimBuilder
         public void AddComponent(ComponentDescriptor descriptor, Point location)
         {
             var control = new ComponentControl(descriptor) { Location = location };
+            // InstanceNameを設定するコードを追加
+            control.InstanceName = GenerateUniqueInstanceName(descriptor.Name);
             AddComponentInternal(control);
         }
+        /// <summary>
+        /// 一意のインスタンス名を生成
+        /// 機能: 基本名に連番を付加して重複しないインスタンス名を生成
+        /// 注意点: 既存のコンポーネント名と重複しないことを確認
+        /// 例: "Resistor" → "Resistor1", "Resistor2" など
+        /// </summary>
+        /// <param name="baseName">基本名（コンポーネントタイプ名）</param>
+        /// <returns>重複しない一意のインスタンス名</returns>
+        private string GenerateUniqueInstanceName(string baseName)
+        {
+            int counter = 1;
+            string instanceName = baseName;
 
+            while (Components.Any(c => c.InstanceName == instanceName))
+            {
+                instanceName = $"{baseName}{counter++}";
+            }
+
+            return instanceName;
+        }
+ 
         /// <summary>
         /// コンポーネントを削除
         /// 機能: コンポーネントとその関連接続を削除
