@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\source2\\PowerSimBuilder\\PowerSimBuilder.csproj": {}
+    "C:\\Users\\user\\Documents\\GitHub\\PowerSimBuilder\\PowerSimBuilder.csproj": {}
   },
   "projects": {
-    "D:\\source2\\PowerSimBuilder\\PowerSimBuilder.csproj": {
+    "C:\\Users\\user\\Documents\\GitHub\\PowerSimBuilder\\PowerSimBuilder.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\source2\\PowerSimBuilder\\PowerSimBuilder.csproj",
+        "projectUniqueName": "C:\\Users\\user\\Documents\\GitHub\\PowerSimBuilder\\PowerSimBuilder.csproj",
         "projectName": "PowerSimBuilder",
-        "projectPath": "D:\\source2\\PowerSimBuilder\\PowerSimBuilder.csproj",
-        "packagesPath": "C:\\Users\\akash\\.nuget\\packages\\",
-        "outputPath": "D:\\source2\\PowerSimBuilder\\obj\\",
+        "projectPath": "C:\\Users\\user\\Documents\\GitHub\\PowerSimBuilder\\PowerSimBuilder.csproj",
+        "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\user\\Documents\\GitHub\\PowerSimBuilder\\obj\\",
         "projectStyle": "PackageReference",
         "skipContentFileWrite": true,
         "UsingMicrosoftNETSdk": false,
@@ -19,7 +19,7 @@
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\akash\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\user\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
