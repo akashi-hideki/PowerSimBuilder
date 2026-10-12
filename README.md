@@ -84,3 +84,29 @@ Apache-2.0 - see [LICENSE](LICENSE)
 ## Contributing
 
 Issues and pull requests are welcome!
+
+## Python Runtime
+
+PowerSimBuilder includes a pure-Python runtime for time-domain simulation
+of control-board I/O and control logic.
+
+- 8 components: DigitalInput/Output, AnalogInput/Output, PIDController,
+  Timer, Counter, StateMachine
+- 83 unit tests, 96% coverage
+- 3 end-to-end scenarios in `examples/`
+- Hand-verifiable step responses (truth tables, first-order filter, PID)
+
+### Quick start
+
+    python -m pip install -r requirements-dev.txt
+    python -m pip install -e .
+    pytest -v
+    python -m examples.scenario_a
+
+### Documentation
+
+- [Python runtime overview](docs/python_runtime.md)
+- [API reference](docs/python_runtime_api.md)
+- [Scenarios](docs/python_runtime_scenarios.md)
+- [Architecture](docs/python_runtime_architecture.md)
+
