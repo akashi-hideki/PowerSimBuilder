@@ -2127,11 +2127,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\user\\Documents\\GitHub\\PowerSimBuilder\\PowerSimBuilder.csproj",
+      "projectUniqueName": "C:\\Users\\user\\OneDrive\\ドキュメント\\GitHub\\PowerSimBuilder\\PowerSimBuilder.csproj",
       "projectName": "PowerSimBuilder",
-      "projectPath": "C:\\Users\\user\\Documents\\GitHub\\PowerSimBuilder\\PowerSimBuilder.csproj",
+      "projectPath": "C:\\Users\\user\\OneDrive\\ドキュメント\\GitHub\\PowerSimBuilder\\PowerSimBuilder.csproj",
       "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\user\\Documents\\GitHub\\PowerSimBuilder\\obj\\",
+      "outputPath": "C:\\Users\\user\\OneDrive\\ドキュメント\\GitHub\\PowerSimBuilder\\obj\\",
       "projectStyle": "PackageReference",
       "skipContentFileWrite": true,
       "UsingMicrosoftNETSdk": false,

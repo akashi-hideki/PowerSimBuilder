@@ -1,0 +1,207 @@
+{
+  "metadata": {
+    "created": "2025-10-08T21:03:13.0368627+09:00",
+    "totalLibraries": 33,
+    "selectedLibraries": 33
+  },
+  "libraries": [
+    {
+      "importName": "tkinter",
+      "packageName": "tkinter",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "difflib",
+      "packageName": "difflib",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "pandas",
+      "packageName": "pandas",
+      "selected": true,
+      "description": "\u30C7\u30FC\u30BF\u5206\u6790\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "openpyxl",
+      "packageName": "openpyxl",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "tksheet",
+      "packageName": "tksheet",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "chardet",
+      "packageName": "chardet",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "queue",
+      "packageName": "queue",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "PyInstaller",
+      "packageName": "PyInstaller",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "PIL",
+      "packageName": "Pillow",
+      "selected": true,
+      "description": "\u753B\u50CF\u51E6\u7406\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "ast",
+      "packageName": "ast",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "PyQt6",
+      "packageName": "PyQt6",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "core",
+      "packageName": "core",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "schedule",
+      "packageName": "schedule",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "platform",
+      "packageName": "platform",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "ctypes",
+      "packageName": "ctypes",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "gui",
+      "packageName": "gui",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "winreg",
+      "packageName": "winreg",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "requests",
+      "packageName": "requests",
+      "selected": true,
+      "description": "HTTP\u30EA\u30AF\u30A8\u30B9\u30C8\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "win32clipboard",
+      "packageName": "win32clipboard",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "win32con",
+      "packageName": "win32con",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "io",
+      "packageName": "io",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "pygments",
+      "packageName": "pygments",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "tempfile",
+      "packageName": "tempfile",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "importlib",
+      "packageName": "importlib",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "traceback",
+      "packageName": "traceback",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "win32",
+      "packageName": "win32",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "typing",
+      "packageName": "typing",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "abc",
+      "packageName": "abc",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "enum",
+      "packageName": "enum",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "xml",
+      "packageName": "xml",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "dataclasses",
+      "packageName": "dataclasses",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "numpy",
+      "packageName": "numpy",
+      "selected": true,
+      "description": "\u6570\u5024\u8A08\u7B97\u30E9\u30A4\u30D6\u30E9\u30EA"
+    },
+    {
+      "importName": "component_base",
+      "packageName": "component_base",
+      "selected": true,
+      "description": "Python\u30E9\u30A4\u30D6\u30E9\u30EA"
+    }
+  ]
+}
