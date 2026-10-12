@@ -1,0 +1,94 @@
+# ============================================================
+# PowerSimBuilder .gitignore
+# ============================================================
+
+# --- Build outputs ---
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# --- Visual Studio / IDE ---
+.vs/
+*.user
+*.suo
+*.userprefs
+*.cache
+*.pdb
+*.dll
+*.exe
+*.ilk
+*.log
+*.tlog
+*.idb
+*.exp
+*.lib
+*.obj
+
+# --- ReSharper / Rider ---
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+.idea/
+
+# --- VS Code ---
+.vscode/
+
+# --- NuGet ---
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.assets.json
+
+# --- Test results ---
+[Tt]est[Rr]esult*/
+TestResults/
+*.trx
+*.coverage
+coverage.xml
+coverage.*.xml
+
+# --- Runtime artifacts ---
+Pallets/
+Config/
+PowerSimBuilder/
+defines/
+PythonOutput/
+output/
+simulation_results_*.pkl
+simulation_results_*.json
+system.json
+design.json
+Trace_*.log
+crash_report.txt
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Backup files ---
+*.bak
+*.tmp
+*~
+*.orig
+*.rej
+
+# --- OS ---
+Thumbs.db
+ehthumbs.db
+.DS_Store
+desktop.ini
+$RECYCLE.BIN/
+
+# --- TortoiseGit ---
+tgitchangelist
