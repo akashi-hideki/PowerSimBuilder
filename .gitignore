@@ -127,3 +127,5 @@ combined_*
 gitleaks-report*.json
 .secrets.baseline
 all-files-ever.txt
+# --- Temporary bootstrap scripts (superseded by tools/gen_*.py) ---
+bootstrap_phase*.ps1
