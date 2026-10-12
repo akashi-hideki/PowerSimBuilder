@@ -42,9 +42,9 @@ namespace PowerSimBuilder
         private static readonly List<string> ConnectionUpdateCodeTable = new List<string>
         {
             "        for conn in connections:",
-            "            f_c, f_p = conn[\"from\"].split(\".\")",
-            "            t_c, t_p = conn[\"to\"].split(\".\")",
-            "            components[t_c].inputs[t_p] = components[f_c].outputs[f_p]"
+            "            src_id, src_sec, src_port = conn[\"from\"].split(\".\")",
+            "            dst_id, dst_sec, dst_port = conn[\"to\"].split(\".\")",
+            "            components[dst_id].inputs[dst_port] = components[src_id].outputs[src_port]"
         };
 
         /// <summary>コンポーネント更新ループコードの固定テーブル</summary>
@@ -57,7 +57,9 @@ namespace PowerSimBuilder
         /// <summary>シミュレーションループ開始コードの固定テーブル</summary>
         private static readonly List<string> SimulationLoopStartCodeTable = new List<string>
         {
-            "    for t in np.arange(0, t_end, dt):"
+            "    n_steps = int(round(t_end / dt))",
+            "    for i in range(n_steps + 1):",
+            "        t = i * dt"
         };
 
         /// <summary>エラーメッセージの固定テーブル</summary>
@@ -252,6 +254,24 @@ namespace PowerSimBuilder
 
         #region Private Methods
         /// <summary>
+        /// Generate the Python import line for the components used.
+        /// </summary>
+        private string GenerateComponentsImportLine()
+        {
+            if (Components == null || Components.Count == 0)
+                return "from python_runtime import components";
+
+            var types = Components
+                .Where(c => !string.IsNullOrEmpty(c.Type))
+                .Select(c => c.Type)
+                .Distinct()
+                .OrderBy(t => t)
+                .ToList();
+
+            return "from python_runtime.components import " + string.Join(", ", types);
+        }
+
+        /// <summary>
         /// コードセクションを初期化する
         /// </summary>
         private void InitializeCodeSections()
@@ -340,8 +360,13 @@ namespace PowerSimBuilder
         {
             ClearSection("imports");
 
+            AddLineToSection("imports", "from __future__ import annotations");
+            AddLineToSection("imports", "");
             AddLineToSection("imports", "import numpy as np");
             AddLineToSection("imports", "import matplotlib.pyplot as plt");
+            AddLineToSection("imports", "");
+            AddLineToSection("imports", "from python_runtime import SimulationData");
+            AddLineToSection("imports", GenerateComponentsImportLine());
 
             if (NeedsDateTimeImport())
             {
@@ -378,8 +403,8 @@ namespace PowerSimBuilder
             AddLineToSection("function_def", "def main():");
             AddTimeStepDefinition();
             AddSimulationDataDefinition();
-            GenerateComponentParametersInFunction();
             AddComponentDictionaryInFunction();
+            GenerateComponentParametersInFunction();
             AddConnectionsListInFunction();
             AddSimulationLoopInFunction();
 
@@ -405,9 +430,7 @@ namespace PowerSimBuilder
         /// </summary>
         private void AddSimulationDataDefinition()
         {
-            AddLineToSection("function_def", "    sim_data = SimulationData()");
-            AddLineToSection("function_def", "    sim_data.time_step = dt");
-            AddLineToSection("function_def", "    sim_data.logs = []");
+            AddLineToSection("function_def", "    sim_data = SimulationData(time_step=dt)");
         }
 
         /// <summary>
@@ -423,10 +446,11 @@ namespace PowerSimBuilder
                 {
                     AddLineToSection("function_def", $"    # {comp.Name} のパラメータ設定");
 
+                    var compName = comp.Name.ToLower();
                     foreach (var param in comp.Parameters)
                     {
                         var defaultValue = GetPythonDefaultValue(param.DefaultValue, param.Type);
-                        AddLineToSection("function_def", $"    sim_data.add_parameter('{comp.Name}', '{param.Name}', {defaultValue})");
+                        AddLineToSection("function_def", $"    components[\"{compName}\"].parameters[\"{param.Name}\"] = {defaultValue}");
                     }
 
                     AddLineToSection("function_def", "");
@@ -466,7 +490,7 @@ namespace PowerSimBuilder
                         continue;
 
                     var compName = comp.Name.ToLower();
-                    AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\",\"{comp.Type}\"),");
+                    AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\"),");
                 }
                 catch (Exception ex)
                 {
@@ -494,9 +518,9 @@ namespace PowerSimBuilder
                         conn.EndComponent == null || string.IsNullOrEmpty(conn.EndPort))
                         continue;
 
-                    var fromComp = conn.StartComponent.Name.ToLower();
+                    var fromComp = conn.StartComponent.InstanceName.ToLower();
                     var fromPort = conn.StartPort;
-                    var toComp = conn.EndComponent.Name.ToLower();
+                    var toComp = conn.EndComponent.InstanceName.ToLower();
                     var toPort = conn.EndPort;
 
                     AddLineToSection("function_def", $"        {{\"from\":\"{fromComp}.outputs.{fromPort}\",\"to\":\"{toComp}.inputs.{toPort}\"}},");
@@ -571,7 +595,7 @@ namespace PowerSimBuilder
                 {
                     if (conn.StartComponent == null) continue;
 
-                    var fromComp = conn.StartComponent.Name.ToLower();
+                    var fromComp = conn.StartComponent.InstanceName.ToLower();
                     var fromPort = conn.StartPort;
 
                     // 信号名を生成（コンポーネント名_ポート名）
@@ -774,6 +798,11 @@ namespace PowerSimBuilder
                         allLines.Add("");
                 }
             }
+
+            // Entry point: actually invoke main()
+            allLines.Add("");
+            allLines.Add("if __name__ == \"__main__\":");
+            allLines.Add("    main()");
 
             return allLines;
         }

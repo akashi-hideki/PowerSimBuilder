@@ -129,3 +129,9 @@ gitleaks-report*.json
 all-files-ever.txt
 # --- Temporary bootstrap scripts (superseded by tools/gen_*.py) ---
 bootstrap_phase*.ps1
+# --- Generated simulation output ---
+testdata.py
+testdata.out
+testdata.err
+simulation_signals.png
+simulation_signals.*
