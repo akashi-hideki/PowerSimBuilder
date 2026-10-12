@@ -1,8 +1,9 @@
-# Phase 4b: Commit updated ops file
+# Phase 6: Add handoff document for next thread
 # --------------------------------------------------------------------
 
+add docs/HANDOFF.md
 add tools/git_ops.txt
 
-commit chore: update git_ops.txt for Phase 4
+commit docs: add HANDOFF.md for next thread continuation
 
 push origin main
