@@ -92,3 +92,11 @@ $RECYCLE.BIN/
 
 # --- TortoiseGit ---
 tgitchangelist
+# --- Setup backup files ---
+*.bak_stage*
+*.bak_logcat
+*.bak_setup
+
+# --- Dev utilities (not part of product) ---
+setup_project.py
+scripts/
