@@ -1,12 +1,8 @@
-# Phase 3: Reorganize docs and add README/LICENSE/check_actions
+# Phase 4b: Commit updated ops file
 # --------------------------------------------------------------------
 
-add docs/specs/SPEC_POWERSIM.md
-add README.md
-add LICENSE
-add tools/check_actions.ps1
 add tools/git_ops.txt
 
-commit docs: move spec to docs/specs and add README, LICENSE, and Actions checker
+commit chore: update git_ops.txt for Phase 4
 
 push origin main
