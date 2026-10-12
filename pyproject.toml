@@ -14,7 +14,7 @@ dependencies = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests/python"]
-pythonpath = ["src"]
+pythonpath = [".", "src"]
 addopts = "-ra -q"
 
 [tool.ruff]
@@ -23,3 +23,15 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B"]
+
+[tool.setuptools]
+packages = [
+    "python_runtime",
+    "python_runtime.components",
+    "examples",
+]
+
+[tool.setuptools.package-dir]
+python_runtime = "src/python_runtime"
+"python_runtime.components" = "src/python_runtime/components"
+examples = "examples"
