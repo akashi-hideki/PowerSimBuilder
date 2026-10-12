@@ -27,6 +27,7 @@ Safety features:
   - 'push' is skipped if there are no new commits.
   - --dry-run performs no side effects.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,6 +42,7 @@ REPO = TOOLS.parent
 # ---------------------------------------------------------------------------
 # Ops file loading
 # ---------------------------------------------------------------------------
+
 
 def resolve_ops_file(args) -> Path:
     """Return the ops file path based on CLI arguments."""
@@ -82,6 +84,7 @@ def parse_ops(path: Path) -> list[tuple[str, list[str]]]:
 # git helpers
 # ---------------------------------------------------------------------------
 
+
 def run_git(args: list[str], dry_run: bool = False) -> int:
     cmd = ["git"] + args
     print(f"  $ {' '.join(cmd)}")
@@ -120,18 +123,19 @@ def has_unpushed_commits() -> bool:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         description="Execute git operations from a declarative ops file.",
     )
-    parser.add_argument("--list", action="store_true",
-                        help="show planned commands without executing")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="run in dry-run mode (no git side effects)")
-    parser.add_argument("--phase",
-                        help="use git_ops_phase<PHASE>.txt")
-    parser.add_argument("--ops",
-                        help="use a specific ops file (relative to tools/)")
+    parser.add_argument(
+        "--list", action="store_true", help="show planned commands without executing"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="run in dry-run mode (no git side effects)"
+    )
+    parser.add_argument("--phase", help="use git_ops_phase<PHASE>.txt")
+    parser.add_argument("--ops", help="use a specific ops file (relative to tools/)")
     args = parser.parse_args(argv)
 
     ops_path = resolve_ops_file(args)

@@ -1,4 +1,5 @@
 """Unit tests for Timer."""
+
 from python_runtime.components import Timer
 
 

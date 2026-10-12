@@ -1,4 +1,5 @@
 """Generate a PoC of the target Python code that C# should produce."""
+
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent

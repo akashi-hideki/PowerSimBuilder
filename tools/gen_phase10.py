@@ -1,11 +1,14 @@
 """Phase 10 generator: write I/O component files with UTF-8 (no BOM)."""
+
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
 FILES = {}
 
-FILES["src/python_runtime/components/__init__.py"] = '''"""I/O components for PowerSimBuilder runtime.
+FILES[
+    "src/python_runtime/components/__init__.py"
+] = '''"""I/O components for PowerSimBuilder runtime.
 
 Models digital/analog I/O for control-board simulation.
 """
@@ -23,7 +26,9 @@ __all__ = [
 ]
 '''
 
-FILES["src/python_runtime/components/digital_input.py"] = '''"""DigitalInput component: debounce + edge detection."""
+FILES[
+    "src/python_runtime/components/digital_input.py"
+] = '''"""DigitalInput component: debounce + edge detection."""
 from __future__ import annotations
 
 from typing import Any
@@ -92,7 +97,9 @@ class DigitalInput(Component):
         self.outputs["state"] = new_stable
 '''
 
-FILES["src/python_runtime/components/digital_output.py"] = '''"""DigitalOutput component: active_low aware."""
+FILES[
+    "src/python_runtime/components/digital_output.py"
+] = '''"""DigitalOutput component: active_low aware."""
 from __future__ import annotations
 
 from typing import Any
@@ -133,7 +140,9 @@ class DigitalOutput(Component):
         self.outputs["current_draw"] = on_current if cmd == 1 else 0.0
 '''
 
-FILES["src/python_runtime/components/analog_input.py"] = '''"""AnalogInput component: scaling + first-order filter."""
+FILES[
+    "src/python_runtime/components/analog_input.py"
+] = '''"""AnalogInput component: scaling + first-order filter."""
 from __future__ import annotations
 
 from typing import Any
@@ -200,7 +209,9 @@ class AnalogInput(Component):
         self.outputs["filtered"] = self._filtered
 '''
 
-FILES["src/python_runtime/components/analog_output.py"] = '''"""AnalogOutput component: PWM duty conversion."""
+FILES[
+    "src/python_runtime/components/analog_output.py"
+] = '''"""AnalogOutput component: PWM duty conversion."""
 from __future__ import annotations
 
 from typing import Any

@@ -1,0 +1,39 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        files: \.(py|md|yml|yaml|toml|txt|json)$
+        exclude: ^(MD/|pythonlib/|previou_files/|tools/|CanvasForm/確認ファイル\.md$|parts/ListDictionaryConverte\.md$)
+      - id: end-of-file-fixer
+        files: \.(py|md|yml|yaml|toml|txt|json)$
+        exclude: ^(MD/|pythonlib/|previou_files/|tools/|CanvasForm/確認ファイル\.md$|parts/ListDictionaryConverte\.md$)
+      - id: check-yaml
+        files: \.(yml|yaml)$
+      - id: check-toml
+        files: \.toml$
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: mixed-line-ending
+        files: \.(py|md|yml|yaml|toml|txt)$
+        exclude: ^(MD/|pythonlib/|previou_files/|tools/|CanvasForm/確認ファイル\.md$|parts/ListDictionaryConverte\.md$)
+        args: ["--fix=lf"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        files: ^(src/python_runtime|tests/python|examples)/
+      - id: ruff-format
+        files: ^(src/python_runtime|tests/python|examples)/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        files: ^(src/python_runtime|examples)/
+        args: ["--config-file=pyproject.toml"]
+        pass_filenames: false
+        additional_dependencies:
+          - types-setuptools

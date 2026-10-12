@@ -3,6 +3,7 @@
 - Use InstanceName instead of Name for connection endpoints.
 - Same fix in plot_config generation.
 """
+
 from pathlib import Path
 
 TARGET = Path("SimulationGenerate/PythonSimulationMainBuilder.cs")
@@ -33,28 +34,30 @@ def main() -> None:
     if "conn.StartComponent.InstanceName" not in src:
         src = replace_once(
             src,
-            r'''                    var fromComp = conn.StartComponent.Name.ToLower();
+            r"""                    var fromComp = conn.StartComponent.Name.ToLower();
                     var fromPort = conn.StartPort;
                     var toComp = conn.EndComponent.Name.ToLower();
-                    var toPort = conn.EndPort;''',
-            r'''                    var fromComp = conn.StartComponent.InstanceName.ToLower();
+                    var toPort = conn.EndPort;""",
+            r"""                    var fromComp = conn.StartComponent.InstanceName.ToLower();
                     var fromPort = conn.StartPort;
                     var toComp = conn.EndComponent.InstanceName.ToLower();
-                    var toPort = conn.EndPort;''',
+                    var toPort = conn.EndPort;""",
             "AddConnectionsListInFunction",
         )
     else:
         print("  SKIP [AddConnectionsListInFunction]")
 
     # --- 2. GeneratePlotConfigSection ---
-    if "conn.StartComponent.InstanceName.ToLower()" not in src or \
-       "var fromComp = conn.StartComponent.Name.ToLower();" in src:
+    if (
+        "conn.StartComponent.InstanceName.ToLower()" not in src
+        or "var fromComp = conn.StartComponent.Name.ToLower();" in src
+    ):
         src = replace_once(
             src,
-            r'''                    var fromComp = conn.StartComponent.Name.ToLower();
-                    var fromPort = conn.StartPort;''',
-            r'''                    var fromComp = conn.StartComponent.InstanceName.ToLower();
-                    var fromPort = conn.StartPort;''',
+            r"""                    var fromComp = conn.StartComponent.Name.ToLower();
+                    var fromPort = conn.StartPort;""",
+            r"""                    var fromComp = conn.StartComponent.InstanceName.ToLower();
+                    var fromPort = conn.StartPort;""",
             "GeneratePlotConfigSection",
         )
     else:

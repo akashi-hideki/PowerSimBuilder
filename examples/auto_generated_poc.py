@@ -4,6 +4,7 @@
 This file represents the exact shape that
 PythonSimulationMainBuilder.cs should emit.
 """
+
 from __future__ import annotations
 
 from python_runtime import SimulationData

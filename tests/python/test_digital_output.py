@@ -1,4 +1,5 @@
 """Unit tests for DigitalOutput."""
+
 from python_runtime.components import DigitalOutput
 
 

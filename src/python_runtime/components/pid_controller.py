@@ -1,4 +1,5 @@
 """PIDController component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -61,8 +62,8 @@ class PIDController(Component):
 
     def update(self, t: float, dt: float, sim_data: Any) -> None:
         sp_in = self.inputs.get("setpoint")
-        setpoint = float(sp_in) if sp_in is not None else float(
-            self.parameters.get("setpoint", 0.0)
+        setpoint = (
+            float(sp_in) if sp_in is not None else float(self.parameters.get("setpoint", 0.0))
         )
         measured = float(self.inputs.get("measured", 0.0))
         kp = float(self.parameters.get("kp", 1.0))
@@ -84,7 +85,7 @@ class PIDController(Component):
 
         raw = p_term + i_term + d_term
         control = _clamp(raw, out_min, out_max)
-        saturated = (control != raw)
+        saturated = control != raw
 
         if not (anti_windup and saturated):
             self._integral += error * dt

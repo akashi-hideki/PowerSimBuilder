@@ -1,10 +1,11 @@
 """Phase 13 generator: documentation for the Python runtime."""
+
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 F = {}
 
-F["docs/python_runtime.md"] = '''# Python Runtime
+F["docs/python_runtime.md"] = """# Python Runtime
 
 The PowerSimBuilder Python runtime is a lightweight, dependency-free
 time-domain simulator for control-board I/O and control logic.
@@ -75,9 +76,9 @@ time-domain simulator for control-board I/O and control logic.
 - 83 unit tests, coverage 96%.
 - 3 end-to-end scenarios under `examples/`.
 - All tests are hand-verifiable (truth tables, step responses).
-'''
+"""
 
-F["docs/python_runtime_api.md"] = '''# Python Runtime API Reference
+F["docs/python_runtime_api.md"] = """# Python Runtime API Reference
 
 All components share the same interface:
 
@@ -217,9 +218,9 @@ Filter: `y[n] = alpha * x[n] + (1 - alpha) * y[n-1]`
 
     dump_csv(sim_data, "out.csv")
     plot(sim_data, keys=["c1.outputs.y"], output_path="plot.png")
-'''
+"""
 
-F["docs/python_runtime_scenarios.md"] = '''# Python Runtime Scenarios
+F["docs/python_runtime_scenarios.md"] = """# Python Runtime Scenarios
 
 Each scenario is a small end-to-end example that can be verified by hand.
 
@@ -292,9 +293,9 @@ Expected output:
 Or run them all with pytest:
 
     pytest tests/python/test_scenarios.py -v
-'''
+"""
 
-F["docs/python_runtime_architecture.md"] = '''# Python Runtime Architecture
+F["docs/python_runtime_architecture.md"] = """# Python Runtime Architecture
 
 ## High-level overview
 
@@ -381,9 +382,9 @@ sequenceDiagram
 - Integration tests for SimulationRunner.
 - Scenario tests for 3 end-to-end examples.
 - All expected values are hand-computable.
-'''
+"""
 
-F["examples/README.md"] = '''# Example Scenarios
+F["examples/README.md"] = """# Example Scenarios
 
 Three small scenarios demonstrate the Python runtime.
 
@@ -420,9 +421,9 @@ You can import and extend them:
 
     dump_csv(runner.sim_data, "scenario_a.csv")
     plot(runner.sim_data, keys=["led.outputs.state"], output_path="scenario_a.png")
-'''
+"""
 
-F["docs/README.md"] = '''# Documentation Index
+F["docs/README.md"] = """# Documentation Index
 
 - [Python Runtime overview](python_runtime.md)
 - [API reference](python_runtime_api.md)
@@ -440,7 +441,7 @@ F["docs/README.md"] = '''# Documentation Index
 | Coverage | 96% |
 | Dependencies | numpy, matplotlib (optional for I/O) |
 | Python | >= 3.10 |
-'''
+"""
 
 
 def main() -> None:

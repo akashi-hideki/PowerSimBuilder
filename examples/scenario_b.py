@@ -4,6 +4,7 @@ Demonstrates:
     - first-order filter step response
     - proportional control output
 """
+
 from __future__ import annotations
 
 from python_runtime.components import AnalogInput, AnalogOutput, PIDController

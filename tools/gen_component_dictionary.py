@@ -1,10 +1,11 @@
 """Replace ComponentDescriptorDictionary.cs with control-board I/O palette."""
+
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TARGET = ROOT / "SimPartsManege" / "ComponentDescriptorDictionary.cs"
 
-NEW_CONTENT = '''using System.Collections.Generic;
+NEW_CONTENT = """using System.Collections.Generic;
 
 namespace PowerSimBuilder
 {
@@ -227,7 +228,7 @@ namespace PowerSimBuilder
         }
     }
 }
-'''
+"""
 
 if not TARGET.exists():
     print(f"ERROR: {TARGET} not found")

@@ -1,4 +1,5 @@
 """Integration tests for example scenarios."""
+
 from examples import scenario_a, scenario_b, scenario_c
 
 

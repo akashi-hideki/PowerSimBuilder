@@ -2,6 +2,7 @@
 
 BOM なし UTF-8 で追記する。既に同じ行があればスキップ（冪等）。
 """
+
 from pathlib import Path
 
 GITIGNORE = Path(".gitignore")

@@ -1,4 +1,5 @@
 """Unit tests for StateMachine."""
+
 from python_runtime.components import StateMachine
 
 

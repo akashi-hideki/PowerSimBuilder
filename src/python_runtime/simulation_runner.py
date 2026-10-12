@@ -1,4 +1,5 @@
 """SimulationRunner: main loop with connection propagation."""
+
 from __future__ import annotations
 
 from typing import Any

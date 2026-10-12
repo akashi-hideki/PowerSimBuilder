@@ -5,6 +5,7 @@ from python_runtime.simulation_data import SimulationData
 
 # --- 初期化 ---
 
+
 def test_init_defaults():
     sd = SimulationData()
     assert sd.time_step == 0.001
@@ -19,6 +20,7 @@ def test_init_custom_time_step():
 
 
 # --- stimulus (callable) ---
+
 
 def test_set_callable_stimulus_and_get_value():
     sd = SimulationData()
@@ -35,6 +37,7 @@ def test_get_stimulus_value_missing_returns_none():
 
 # --- stimulus (series) ---
 
+
 def test_set_series_stimulus_sorted_and_step_interp():
     sd = SimulationData()
     sd.set_stimulus("din1.inputs.state", [(0.2, 1), (0.0, 0), (0.4, 0)])
@@ -47,6 +50,7 @@ def test_set_series_stimulus_sorted_and_step_interp():
 
 
 # --- apply_stimulus ---
+
 
 def test_apply_stimulus_updates_component_inputs():
     sd = SimulationData()
@@ -74,6 +78,7 @@ def test_apply_stimulus_ignores_non_inputs_section():
 
 
 # --- logging ---
+
 
 def test_log_appends_snapshot():
     sd = SimulationData()

@@ -1,4 +1,5 @@
 """Append 'if __name__ == "__main__": main()' to generated output."""
+
 from pathlib import Path
 
 TARGET = Path("SimulationGenerate/PythonSimulationMainBuilder.cs")
@@ -12,7 +13,7 @@ def main() -> None:
     src = TARGET.read_text(encoding="utf-8")
 
     # Idempotency check
-    if "if __name__ == \\\"__main__\\\":" in src:
+    if 'if __name__ == \\"__main__\\":' in src:
         print("  SKIP: already patched")
         return
 
@@ -21,7 +22,7 @@ def main() -> None:
         backup.write_text(src, encoding="utf-8")
         print(f"  backup: {backup}")
 
-    old = r'''            foreach (var section in sectionsOrder)
+    old = r"""            foreach (var section in sectionsOrder)
             {
                 if (CodeSections.ContainsKey(section))
                 {
@@ -31,9 +32,9 @@ def main() -> None:
                 }
             }
 
-            return allLines;'''
+            return allLines;"""
 
-    new = r'''            foreach (var section in sectionsOrder)
+    new = r"""            foreach (var section in sectionsOrder)
             {
                 if (CodeSections.ContainsKey(section))
                 {
@@ -48,7 +49,7 @@ def main() -> None:
             allLines.Add("if __name__ == \"__main__\":");
             allLines.Add("    main()");
 
-            return allLines;'''
+            return allLines;"""
 
     if old not in src:
         print("ERROR: target block not found in CombineAllSections")
@@ -56,7 +57,7 @@ def main() -> None:
 
     src = src.replace(old, new)
     TARGET.write_text(src, encoding="utf-8")
-    print(f"  OK: appended main entry point")
+    print("  OK: appended main entry point")
     print(f"\nwrote: {TARGET} ({len(src)} chars)")
 
 

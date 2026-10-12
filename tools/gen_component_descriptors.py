@@ -1,4 +1,5 @@
 """Generate new ComponentDescriptors.xml (control-board I/O palette)."""
+
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -7,7 +8,7 @@ TARGETS = [
     ROOT / "Pallets" / "ComponentDescriptors.xml",
 ]
 
-XML = '''<?xml version="1.0"?>
+XML = """<?xml version="1.0"?>
 <ArrayOfComponentDescriptor xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <ComponentDescriptor>
     <Name>Digital Input</Name>
@@ -266,7 +267,7 @@ XML = '''<?xml version="1.0"?>
     </OutputPorts>
   </ComponentDescriptor>
 </ArrayOfComponentDescriptor>
-'''
+"""
 
 # Backup existing
 for target in TARGETS:

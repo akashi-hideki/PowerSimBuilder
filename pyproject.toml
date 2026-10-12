@@ -16,6 +16,9 @@ dependencies = [
 testpaths = ["tests/python"]
 pythonpath = [".", "src"]
 addopts = "-ra -q"
+filterwarnings = [
+    "ignore:FigureCanvasAgg is non-interactive:UserWarning",
+]
 
 [tool.ruff]
 line-length = 100
@@ -35,3 +38,19 @@ packages = [
 python_runtime = "src/python_runtime"
 "python_runtime.components" = "src/python_runtime/components"
 examples = "examples"
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src/python_runtime", "examples"]
+check_untyped_defs = true
+disallow_untyped_defs = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+no_implicit_optional = true
+ignore_missing_imports = true
+exclude = ["tests/"]
+
+[[tool.mypy.overrides]]
+module = ["matplotlib.*", "numpy.*"]
+ignore_missing_imports = true

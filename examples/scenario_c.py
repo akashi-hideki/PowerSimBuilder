@@ -4,6 +4,7 @@ Demonstrates:
     - rising-edge counting
     - state transition after overflow
 """
+
 from __future__ import annotations
 
 from python_runtime.components import Counter, StateMachine

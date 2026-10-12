@@ -1,4 +1,5 @@
 """DigitalOutput component: active_low aware."""
+
 from __future__ import annotations
 
 from typing import Any

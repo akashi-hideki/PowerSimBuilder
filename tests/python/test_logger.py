@@ -1,4 +1,5 @@
 """logger モジュールの単体テスト。"""
+
 import csv
 
 import pytest
@@ -23,6 +24,7 @@ def _make_sim(n=3):
 
 # --- collect_keys ---
 
+
 def test_collect_keys_empty():
     assert collect_keys([]) == []
 
@@ -38,6 +40,7 @@ def test_collect_keys_sorted_and_unique():
 
 
 # --- dump_csv ---
+
 
 def test_dump_csv_empty_logs_creates_header_only(tmp_path):
     sd = SimulationData()
@@ -75,6 +78,7 @@ def test_dump_csv_creates_parent_directory(tmp_path):
 
 
 # --- plot ---
+
 
 def test_plot_raises_on_empty_logs(tmp_path):
     sd = SimulationData()

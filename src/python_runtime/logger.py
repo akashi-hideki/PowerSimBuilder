@@ -1,4 +1,5 @@
 """CSV / matplotlib logger for SimulationData."""
+
 from __future__ import annotations
 
 import csv
@@ -73,7 +74,7 @@ def plot(
         ok = True
         for entry in logs:
             v = entry.get("components", {}).get(cid, {}).get(section, {}).get(port)
-            if not isinstance(v, (int, float, bool)):
+            if not isinstance(v, int | float | bool):
                 ok = False
                 break
             ys.append(float(v))

@@ -6,6 +6,7 @@ Timeline:
     t=0.60: LED turns ON (delay timer = 0.5s)
     t=1.00: button released
 """
+
 from __future__ import annotations
 
 from python_runtime.components import DigitalInput, DigitalOutput, Timer

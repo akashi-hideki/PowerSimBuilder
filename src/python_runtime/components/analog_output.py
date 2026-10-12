@@ -1,4 +1,5 @@
 """AnalogOutput component: PWM duty conversion."""
+
 from __future__ import annotations
 
 from typing import Any

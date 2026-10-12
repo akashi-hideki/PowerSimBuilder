@@ -1,10 +1,13 @@
 """Phase 12 generator: SimulationRunner + examples + tests."""
+
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 F = {}
 
-F["src/python_runtime/simulation_runner.py"] = '''"""SimulationRunner: main loop with connection propagation."""
+F[
+    "src/python_runtime/simulation_runner.py"
+] = '''"""SimulationRunner: main loop with connection propagation."""
 from __future__ import annotations
 
 from typing import Any

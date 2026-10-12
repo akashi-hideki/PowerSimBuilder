@@ -1,4 +1,5 @@
 """Unit tests for Counter."""
+
 from python_runtime.components import Counter
 
 

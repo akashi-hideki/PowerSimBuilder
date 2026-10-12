@@ -1,4 +1,5 @@
 """Unit tests for DigitalInput."""
+
 from python_runtime.components import DigitalInput
 
 

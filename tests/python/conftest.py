@@ -1,4 +1,5 @@
 """pytest 共通設定。"""
+
 import sys
 from pathlib import Path
 

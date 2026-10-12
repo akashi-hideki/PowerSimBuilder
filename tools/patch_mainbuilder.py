@@ -3,6 +3,7 @@
 Idempotent version: uses unique markers to detect already-applied patches.
 Fixes XML comment ordering for GenerateComponentsImportLine.
 """
+
 from pathlib import Path
 
 TARGET = Path("SimulationGenerate/PythonSimulationMainBuilder.cs")
@@ -62,17 +63,17 @@ def main() -> None:
     if "from python_runtime import SimulationData" not in src:
         src = replace_once(
             src,
-            r'''            AddLineToSection("imports", "import numpy as np");
+            r"""            AddLineToSection("imports", "import numpy as np");
             AddLineToSection("imports", "import matplotlib.pyplot as plt");
-''',
-            r'''            AddLineToSection("imports", "from __future__ import annotations");
+""",
+            r"""            AddLineToSection("imports", "from __future__ import annotations");
             AddLineToSection("imports", "");
             AddLineToSection("imports", "import numpy as np");
             AddLineToSection("imports", "import matplotlib.pyplot as plt");
             AddLineToSection("imports", "");
             AddLineToSection("imports", "from python_runtime import SimulationData");
             AddLineToSection("imports", GenerateComponentsImportLine());
-''',
+""",
             "GenerateImportsSection",
         )
     else:
@@ -82,30 +83,30 @@ def main() -> None:
     if "SimulationData(time_step=dt)" not in src:
         src = replace_once(
             src,
-            r'''            AddLineToSection("function_def", "    sim_data = SimulationData()");
+            r"""            AddLineToSection("function_def", "    sim_data = SimulationData()");
             AddLineToSection("function_def", "    sim_data.time_step = dt");
-            AddLineToSection("function_def", "    sim_data.logs = []");''',
-            r'''            AddLineToSection("function_def", "    sim_data = SimulationData(time_step=dt)");''',
+            AddLineToSection("function_def", "    sim_data.logs = []");""",
+            r"""            AddLineToSection("function_def", "    sim_data = SimulationData(time_step=dt)");""",
             "AddSimulationDataDefinition",
         )
     else:
         print("  SKIP [AddSimulationDataDefinition]")
 
     # --- 5. GenerateComponentParametersInFunction ---
-    if "components[\\\"{compName}\\\"].parameters" not in src:
+    if 'components[\\"{compName}\\"].parameters' not in src:
         src = replace_once(
             src,
-            r'''                    foreach (var param in comp.Parameters)
+            r"""                    foreach (var param in comp.Parameters)
                     {
                         var defaultValue = GetPythonDefaultValue(param.DefaultValue, param.Type);
                         AddLineToSection("function_def", $"    sim_data.add_parameter('{comp.Name}', '{param.Name}', {defaultValue})");
-                    }''',
-            r'''                    var compName = comp.Name.ToLower();
+                    }""",
+            r"""                    var compName = comp.Name.ToLower();
                     foreach (var param in comp.Parameters)
                     {
                         var defaultValue = GetPythonDefaultValue(param.DefaultValue, param.Type);
                         AddLineToSection("function_def", $"    components[\"{compName}\"].parameters[\"{param.Name}\"] = {defaultValue}");
-                    }''',
+                    }""",
             "GenerateComponentParametersInFunction",
         )
     else:
@@ -115,25 +116,28 @@ def main() -> None:
     if r'''{comp.Type}(\"{compName}\"),"''' not in src:
         src = replace_once(
             src,
-            r'''                    AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\",\"{comp.Type}\"),");''',
-            r'''                    AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\"),");''',
+            r"""                    AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\",\"{comp.Type}\"),");""",
+            r"""                    AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\"),");""",
             "AddComponentDictionaryInFunction",
         )
     else:
         print("  SKIP [AddComponentDictionaryInFunction]")
 
     # --- 7. GenerateFunctionDefinitionSection order ---
-    if r'''            AddSimulationDataDefinition();
+    if (
+        r"""            AddSimulationDataDefinition();
             AddComponentDictionaryInFunction();
-            GenerateComponentParametersInFunction();''' not in src:
+            GenerateComponentParametersInFunction();"""
+        not in src
+    ):
         src = replace_once(
             src,
-            r'''            AddSimulationDataDefinition();
+            r"""            AddSimulationDataDefinition();
             GenerateComponentParametersInFunction();
-            AddComponentDictionaryInFunction();''',
-            r'''            AddSimulationDataDefinition();
+            AddComponentDictionaryInFunction();""",
+            r"""            AddSimulationDataDefinition();
             AddComponentDictionaryInFunction();
-            GenerateComponentParametersInFunction();''',
+            GenerateComponentParametersInFunction();""",
             "GenerateFunctionDefinitionSection order",
         )
     else:
@@ -143,12 +147,12 @@ def main() -> None:
     if "private string GenerateComponentsImportLine()" not in src:
         # Insert BEFORE the existing XML comment for InitializeCodeSections
         # so that comment stays attached to InitializeCodeSections.
-        anchor = r'''        /// <summary>
+        anchor = r"""        /// <summary>
         /// コードセクションを初期化する
         /// </summary>
-        private void InitializeCodeSections()'''
+        private void InitializeCodeSections()"""
 
-        new_block = r'''        /// <summary>
+        new_block = r"""        /// <summary>
         /// Generate the Python import line for the components used.
         /// </summary>
         private string GenerateComponentsImportLine()
@@ -169,7 +173,7 @@ def main() -> None:
         /// <summary>
         /// コードセクションを初期化する
         /// </summary>
-        private void InitializeCodeSections()'''
+        private void InitializeCodeSections()"""
 
         if anchor in src:
             src = src.replace(anchor, new_block)

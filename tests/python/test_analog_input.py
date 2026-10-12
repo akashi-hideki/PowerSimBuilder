@@ -1,4 +1,5 @@
 """Unit tests for AnalogInput."""
+
 import pytest
 
 from python_runtime.components import AnalogInput

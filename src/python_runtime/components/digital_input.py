@@ -1,4 +1,5 @@
 """DigitalInput component: debounce + edge detection."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -61,7 +62,7 @@ class DigitalInput(Component):
         else:
             new_stable = self._prev_stable
 
-        self.outputs["edge_rising"] = (self._prev_stable == 0 and new_stable == 1)
-        self.outputs["edge_falling"] = (self._prev_stable == 1 and new_stable == 0)
+        self.outputs["edge_rising"] = self._prev_stable == 0 and new_stable == 1
+        self.outputs["edge_falling"] = self._prev_stable == 1 and new_stable == 0
         self._prev_stable = new_stable
         self.outputs["state"] = new_stable

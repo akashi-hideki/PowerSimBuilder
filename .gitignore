@@ -135,3 +135,6 @@ testdata.out
 testdata.err
 simulation_signals.png
 simulation_signals.*
+
+# --- pre-commit cache ---
+.pre-commit/

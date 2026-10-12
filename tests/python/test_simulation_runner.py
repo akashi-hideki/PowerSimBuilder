@@ -1,4 +1,5 @@
 """Unit tests for SimulationRunner."""
+
 from python_runtime.component_base import Component
 from python_runtime.simulation_runner import SimulationRunner
 

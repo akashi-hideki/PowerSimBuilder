@@ -1,4 +1,5 @@
 """Unit tests for PIDController."""
+
 import pytest
 
 from python_runtime.components import PIDController
@@ -63,8 +64,7 @@ def test_no_saturation():
 
 
 def test_anti_windup_blocks_integral():
-    c = _new(kp=10.0, ki=1.0, out_min=-1.0, out_max=1.0,
-             anti_windup=True, setpoint=1.0)
+    c = _new(kp=10.0, ki=1.0, out_min=-1.0, out_max=1.0, anti_windup=True, setpoint=1.0)
     c.inputs["measured"] = 0.0
     c.update(0.0, 0.1, None)
     # saturated, so integral not accumulated
