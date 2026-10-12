@@ -100,3 +100,30 @@ tgitchangelist
 # --- Dev utilities (not part of product) ---
 setup_project.py
 scripts/
+
+# --- Business spec docs (not for public) ---
+MD/
+pythonlib/
+previou_files/
+
+# --- VS Copilot index / IDE caches ---
+*.vsidx
+*.db
+*.db-shm
+*.db-wal
+
+# --- Downloads / partial ---
+*.crdownload
+
+# --- AI-generated scratch files ---
+deepseek_*
+combined_*
+
+# --- Costura compression artifacts ---
+*.costura.*
+*.resources
+
+# --- Security scan outputs ---
+gitleaks-report*.json
+.secrets.baseline
+all-files-ever.txt
