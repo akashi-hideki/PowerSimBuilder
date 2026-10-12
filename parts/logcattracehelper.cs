@@ -288,6 +288,11 @@ namespace PowerSimBuilder
                 return true;
             }
 
+            if (string.IsNullOrEmpty(appNamespace))
+            {
+                return true;
+            }
+
             return declaringType.Namespace.StartsWith(appNamespace);
         }
 

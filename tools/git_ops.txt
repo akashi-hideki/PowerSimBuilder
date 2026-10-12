@@ -1,0 +1,23 @@
+# Phase 1: Build/Test/CI foundation
+# --------------------------------------------------------------------
+# - Add test project (xUnit 2.9.2, 14 tests)
+# - Fix LogcatTraceHelper null-arg bug
+# - Add CI workflow
+# - Update .gitignore
+
+add .gitignore
+add PowerSimBuilder.csproj
+add PowerSimBuilder.sln
+add parts/logcattracehelper.cs
+add PowerSimBuilder.Tests/PowerSimBuilder.Tests.csproj
+add PowerSimBuilder.Tests/Core/PointJsonConverterTests.cs
+add PowerSimBuilder.Tests/Core/ConnectionGraphTests.cs
+add PowerSimBuilder.Tests/Core/LogcatTraceHelperSmokeTests.cs
+add PowerSimBuilder.Tests/CodeGen/PythonSimulationMainBuilderTests.cs
+add .github/workflows/ci.yml
+add tools/git_runner.py
+add tools/git_ops.txt
+
+commit build: add test project, fix logcat bug, and CI workflow
+
+push origin main

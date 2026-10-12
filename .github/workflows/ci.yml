@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  SOLUTION_FILE: 'PowerSimBuilder.sln'
+  TEST_PROJECT: 'PowerSimBuilder.Tests/PowerSimBuilder.Tests.csproj'
+
+jobs:
+  build-and-test:
+    name: Build & Test (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: msbuild ${{ env.SOLUTION_FILE }} -t:restore -v:minimal
+
+      - name: Build (Release)
+        run: msbuild ${{ env.SOLUTION_FILE }} /p:Configuration=Release /m /v:minimal
+
+      - name: Run Tests
+        run: dotnet test ${{ env.TEST_PROJECT }} --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
+
+      - name: Publish Test Report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Test Results
+          path: '**/TestResults/*.trx'
+          reporter: dotnet-trx
+
+  code-quality:
+    name: Code Quality
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Restore
+        run: msbuild ${{ env.SOLUTION_FILE }} -t:restore -v:minimal
+
+      - name: Build with Warnings as Errors
+        run: msbuild ${{ env.SOLUTION_FILE }} /p:Configuration=Release /p:WarningLevel=4 /m /v:minimal
