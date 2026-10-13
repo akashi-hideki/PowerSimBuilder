@@ -1,11 +1,8 @@
-# Phase 15: Add integration tests + pyproject fix
+# Phase 17b: Finalize git_ops after v0.2.1
 # --------------------------------------------------------------------
 
-add pyproject.toml
-add tests/integration/__init__.py
-add tests/integration/test_scenarios.py
-add tests/integration/test_csharp_codegen.py
+add tools/git_ops.txt
 
-commit test(integration): add E2E regression suite for Python runtime
+commit chore: update git_ops.txt after v0.2.1
 
 push origin main
