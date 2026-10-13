@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-13
+
+### Added
+
+- **C# to Python E2E tests** (`PowerSimBuilder.Tests/CodeGen/PythonCodeGenE2ETests.cs`)
+  - Verify generated code imports `python_runtime`
+  - Verify `main()` structure, component names, `plot_signals`
+  - Assert no stale `pythonlib` imports
+
+### Verified
+
+- C# code generation -> Python runtime execution pipeline
+  works end-to-end (`simulation_signals.png` produced)
+- C# test suite: 16 passed (was 14)
+- Python test suite: 112 passed (unchanged)
+
+
 ## [0.2.0] - 2026-10-13
 
 ### Added
@@ -80,3 +97,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
 [0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
+[0.2.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.1
