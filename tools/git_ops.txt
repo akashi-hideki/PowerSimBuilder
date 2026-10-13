@@ -1,11 +1,10 @@
-# Phase 18: Release v0.2.2 (Japanese font fix)
+# Phase 19: Release v0.2.3
 # --------------------------------------------------------------------
 
 add CHANGELOG.md
 add pyproject.toml
 add src/python_runtime/__init__.py
-add src/python_runtime/logger.py
 
-commit release: v0.2.2
+commit release: v0.2.3
 
 push origin main

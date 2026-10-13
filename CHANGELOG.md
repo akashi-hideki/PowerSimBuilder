@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-13
+
+### Added
+
+- **15 new Python components** (`src/python_runtime/components/`)
+  - Signal sources: `SineWave`, `SineWaveSum`, `ThreePhaseSine`
+  - Thermal: `HeaterBlock`, `ThermalMass`
+  - Control: `FirstOrderLag`, `Integrator`, `LowPassFilter`,
+    `Gain`, `Sum`, `Clamp`, `RateLimiter`
+  - Mechanical: `MechanicalInertia`
+  - Power electronics: `PWM3Phase`
+  - Fault: `OverCurrentDetector`
+- **C# palette registration** for all 15 new components
+  (`ComponentDescriptorDictionary.cs`, 8 -> 23 entries)
+- **16 new Python test files** (170 tests total, was 112)
+
+### Changed
+
+- `src/python_runtime/components/__init__.py` exports all 23 components
+- `pyproject.toml`: configure ruff per-file-ignores for physical-quantity
+  variable names (N806) in component/test code
+
+### Fixed
+
+- `test_thermal_mass.py::test_steady_state` uses shorter thermal time
+  constant to allow convergence within test runtime
+
+
 ## [0.2.2] - 2026-10-13
 
 ### Added
@@ -120,3 +148,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
 [0.2.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.1
 [0.2.2]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.2
+[0.2.3]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.3
