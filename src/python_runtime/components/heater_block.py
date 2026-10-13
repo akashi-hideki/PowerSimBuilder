@@ -74,7 +74,7 @@ class HeaterBlock(Component):
 
         V = float(self.inputs.get("voltage", 0.0))
         P = (V * V) / R if R > 0.0 else 0.0
-        I = V / R if R > 0.0 else 0.0
+        current = V / R if R > 0.0 else 0.0
 
         T = float(self.outputs.get("temperature", T_amb))
         dT = (P - (T - T_amb) / R_th) / C_th
@@ -83,4 +83,4 @@ class HeaterBlock(Component):
         self.outputs["power"] = P
         self.outputs["temperature"] = T
         self.outputs["resistance"] = R
-        self.outputs["current"] = I
+        self.outputs["current"] = current

@@ -40,13 +40,17 @@ class PWM3Phase(Component):
         }
         self.inputs: dict[str, float] = {}
         self.outputs = {
-            "da": 0.5, "db": 0.5, "dc": 0.5,
+            "da": 0.5,
+            "db": 0.5,
+            "dc": 0.5,
             "modulation_index": 0.0,
         }
 
     def reset(self) -> None:
         self.outputs = {
-            "da": 0.5, "db": 0.5, "dc": 0.5,
+            "da": 0.5,
+            "db": 0.5,
+            "dc": 0.5,
             "modulation_index": 0.0,
         }
 

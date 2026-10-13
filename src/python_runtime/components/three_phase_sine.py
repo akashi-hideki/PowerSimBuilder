@@ -36,14 +36,20 @@ class ThreePhaseSine(Component):
         }
         self.inputs: dict[str, float] = {}
         self.outputs = {
-            "ua": 0.0, "ub": 0.0, "uc": 0.0,
-            "u_alpha": 0.0, "u_beta": 0.0,
+            "ua": 0.0,
+            "ub": 0.0,
+            "uc": 0.0,
+            "u_alpha": 0.0,
+            "u_beta": 0.0,
         }
 
     def reset(self) -> None:
         self.outputs = {
-            "ua": 0.0, "ub": 0.0, "uc": 0.0,
-            "u_alpha": 0.0, "u_beta": 0.0,
+            "ua": 0.0,
+            "ub": 0.0,
+            "uc": 0.0,
+            "u_alpha": 0.0,
+            "u_beta": 0.0,
         }
 
     def update(self, t: float, dt: float, sim_data: Any) -> None:

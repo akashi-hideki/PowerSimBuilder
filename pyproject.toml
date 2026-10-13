@@ -27,6 +27,12 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B"]
 
+[tool.ruff.lint.per-file-ignores]
+# Physical-quantity variable names (P, V, R, T, A, ...) are conventional
+# in engineering code and tests; disable the "should be lowercase" rule.
+"src/python_runtime/components/*.py" = ["N806"]
+"tests/python/*.py" = ["N806"]
+
 [tool.setuptools]
 packages = [
     "python_runtime",
