@@ -1,9 +1,11 @@
-# Phase 6: Add handoff document for next thread
+# Phase 15: Add integration tests + pyproject fix
 # --------------------------------------------------------------------
 
-add docs/HANDOFF.md
-add tools/git_ops.txt
+add pyproject.toml
+add tests/integration/__init__.py
+add tests/integration/test_scenarios.py
+add tests/integration/test_csharp_codegen.py
 
-commit docs: add HANDOFF.md for next thread continuation
+commit test(integration): add E2E regression suite for Python runtime
 
 push origin main

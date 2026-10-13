@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests/python"]
+testpaths = ["tests/python", "tests/integration"]
 pythonpath = [".", "src"]
 addopts = "-ra -q"
 filterwarnings = [
