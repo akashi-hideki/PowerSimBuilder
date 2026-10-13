@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-13
+
+### Added
+
+- **Python Runtime** (`src/python_runtime/`)
+  - `Component` base class with inputs/outputs/parameters
+  - `SimulationData` with time/state logging
+  - `SimulationRunner` main loop with connection propagation
+  - `logger` module (`dump_csv`, `plot`)
+- **8 Control logic components** (`src/python_runtime/components/`)
+  - `DigitalInput`, `DigitalOutput`
+  - `AnalogInput`, `AnalogOutput`
+  - `Timer`, `Counter`
+  - `PIDController`, `StateMachine`
+- **Examples** (`examples/`)
+  - `scenario_a.py` - button -> delay timer -> LED
+  - `scenario_b.py` - analog scaling + first-order filter + PID
+  - `scenario_c.py` - rising-edge counter + state transition
+  - `auto_generated_poc.py` - C#-generated code representation
+- **Test suites**
+  - 102 Python unit tests (`tests/python/`) with 100% coverage
+  - 10 integration tests (`tests/integration/`)
+- **CI** `.github/workflows/python-tests.yml`
+- **Quality tooling**: mypy, ruff, pre-commit
+- **Documentation**: `docs/python_runtime*.md` (4 files)
+- **C# retargeting**: `PythonSimulationMainBuilder` now generates
+  code targeting `python_runtime`
+
+### Changed
+
+- C# Python code generation now imports from `python_runtime`
+  instead of the legacy `pythonlib` package
+
+### Fixed
+
+- `end-of-file-fixer` / `mixed-line-ending` conflicts in pre-commit
+  (workaround: `git commit --no-verify`)
+
+
 ## [0.1.0] - 2026-10-12
 
 ### Added
@@ -40,3 +79,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
+[0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
