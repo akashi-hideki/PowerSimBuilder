@@ -9,6 +9,82 @@ from typing import Any
 
 _SECTIONS = ("inputs", "outputs", "parameters")
 
+# ---------------------------------------------------------------------------
+# Japanese font configuration
+# ---------------------------------------------------------------------------
+
+_FONT_CONFIGURED = False
+
+
+def configure_japanese_font() -> str:
+    """Configure matplotlib to render Japanese text.
+
+    Tries, in order:
+
+    1. Explicit override via environment variable ``PSB_JP_FONT``.
+    2. Common Japanese fonts on Windows / macOS / Linux.
+    3. Falls back to matplotlib default.
+
+    Idempotent: calling it repeatedly has no extra cost.
+
+    Returns
+    -------
+    str
+        The font family name that was applied.
+    """
+    global _FONT_CONFIGURED
+    if _FONT_CONFIGURED:
+        import matplotlib
+
+        family = matplotlib.rcParams.get("font.family", "sans-serif")
+        if isinstance(family, list):
+            return family[0] if family else "sans-serif"
+        return family
+
+    import os
+
+    import matplotlib
+    from matplotlib import font_manager
+
+    candidates: list[str] = []
+    user_font = os.environ.get("PSB_JP_FONT")
+    if user_font:
+        candidates.append(user_font)
+
+    candidates.extend(
+        [
+            "Yu Gothic",  # Windows 8.1+
+            "Meiryo",  # Windows Vista+
+            "MS Gothic",  # Windows (legacy)
+            "Hiragino Sans",  # macOS
+            "Hiragino Kaku Gothic ProN",  # macOS (older)
+            "Noto Sans CJK JP",  # Linux
+            "Noto Sans JP",  # Linux
+            "IPAGothic",  # Debian/Ubuntu
+            "TakaoGothic",  # Linux
+        ]
+    )
+
+    available = {f.name for f in font_manager.fontManager.ttflist}
+    chosen = next((n for n in candidates if n in available), None)
+
+    if chosen is not None:
+        matplotlib.rcParams["font.family"] = chosen
+    # Always allow minus sign rendering with CJK fonts
+    matplotlib.rcParams["axes.unicode_minus"] = False
+
+    # Silence glyph warnings when Japanese glyphs are missing
+    import warnings
+
+    warnings.filterwarnings(
+        "ignore",
+        message=r"Glyph .* missing from font",
+        category=UserWarning,
+    )
+
+    _FONT_CONFIGURED = True
+    return chosen if chosen is not None else "sans-serif"
+
 
 def collect_keys(logs: Iterable[dict[str, Any]]) -> list[str]:
     """ログ内に現れる全 `comp.section.port` パスを列挙する。"""
@@ -55,6 +131,9 @@ def plot(
     if output_path is not None and not show:
         matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+
+    # Ensure Japanese labels render correctly
+    configure_japanese_font()
 
     logs = getattr(sim_data, "logs", [])
     if not logs:

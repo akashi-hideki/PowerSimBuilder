@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-13
+
+### Added
+
+- **Japanese font auto-configuration** in Python runtime
+  - `configure_japanese_font()` in `logger.py`
+  - Auto-called at `python_runtime` import time (best-effort)
+  - Tries: `PSB_JP_FONT` env -> Yu Gothic / Meiryo / MS Gothic /
+    Hiragino Sans / Noto Sans CJK JP / IPAGothic / TakaoGothic
+  - Suppresses matplotlib `Glyph missing` warnings
+
+### Fixed
+
+- matplotlib UserWarning spam when plotting Japanese labels
+  (time axis, titles, legends)
+
+### Changed
+
+- `python_runtime.__all__` now exports `configure_japanese_font`
+
+
 ## [0.2.1] - 2026-10-13
 
 ### Added
@@ -98,3 +119,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
 [0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
 [0.2.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.1
+[0.2.2]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.2

@@ -1,8 +1,11 @@
-# Phase 17b: Finalize git_ops after v0.2.1
+# Phase 18: Release v0.2.2 (Japanese font fix)
 # --------------------------------------------------------------------
 
-add tools/git_ops.txt
+add CHANGELOG.md
+add pyproject.toml
+add src/python_runtime/__init__.py
+add src/python_runtime/logger.py
 
-commit chore: update git_ops.txt after v0.2.1
+commit release: v0.2.2
 
 push origin main
