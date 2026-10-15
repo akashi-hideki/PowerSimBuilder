@@ -48,6 +48,7 @@
     <Compile Include="Core\PointJsonConverterTests.cs" />
     <Compile Include="CodeGen\PythonSimulationMainBuilderTests.cs" />
     <Compile Include="CodeGen\PythonCodeGenE2ETests.cs" />
+    <Compile Include="CodeGen\PythonCodeGenTheoryTests.cs" />
     <Compile Include="Core\ConnectionGraphTests.cs" />
     <Compile Include="Core\LogcatTraceHelperSmokeTests.cs" />
   </ItemGroup>

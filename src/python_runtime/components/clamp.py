@@ -28,6 +28,10 @@ class Clamp(Component):
         self.inputs = {"input": 0.0}
         self.outputs = {"output": 0.0, "active": 0.0}
 
+    def reset(self) -> None:
+        self.inputs = {"input": 0.0}
+        self.outputs = {"output": 0.0, "active": 0.0}
+
     def update(self, t: float, dt: float, sim_data: Any) -> None:
         lo = float(self.parameters.get("lower", -1.0))
         hi = float(self.parameters.get("upper", 1.0))

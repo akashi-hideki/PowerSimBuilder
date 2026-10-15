@@ -27,6 +27,10 @@ class Gain(Component):
         self.inputs = {"input": 0.0}
         self.outputs = {"output": 0.0}
 
+    def reset(self) -> None:
+        self.inputs = {"input": 0.0}
+        self.outputs = {"output": 0.0}
+
     def update(self, t: float, dt: float, sim_data: Any) -> None:
         k = float(self.parameters.get("gain", 1.0))
         b = float(self.parameters.get("bias", 0.0))
