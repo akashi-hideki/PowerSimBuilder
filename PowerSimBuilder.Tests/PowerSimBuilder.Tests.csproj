@@ -49,6 +49,9 @@
     <Compile Include="CodeGen\PythonSimulationMainBuilderTests.cs" />
     <Compile Include="CodeGen\PythonCodeGenE2ETests.cs" />
     <Compile Include="CodeGen\PythonCodeGenTheoryTests.cs" />
+    <Compile Include="StaTable\StaTableModelTests.cs" />
+    <Compile Include="StaTable\StaTableProjectReaderTests.cs" />
+    <Compile Include="StaTable\StaTableCodeGeneratorTests.cs" />
     <Compile Include="Core\ConnectionGraphTests.cs" />
     <Compile Include="Core\LogcatTraceHelperSmokeTests.cs" />
   </ItemGroup>
