@@ -169,3 +169,8 @@ _diag_3-0_*/
 _inspect_c_rf_*/
 
 _backup_3-0_*/
+
+# Test files (auto-generated)
+generated/_test_*.py
+generated/_smoke_*.py
+_3a2_material_*/

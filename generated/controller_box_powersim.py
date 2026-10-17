@@ -6,7 +6,7 @@ StaTable project: CookingHeaterController
 StaTable generation_style: table_driven
 StaTable os_type: non_rtos
 Tabs: 7 (DriverInput, DriverOutput, MwMicrowave, MwOven, MwGrill, MwSteam, Application)
-Generated: 2026-10-17T13:21:46+09:00
+Generated: 2026-10-17T13:29:23+09:00
 """
 
 from python_runtime.statable import StaTableControllerBase, StaTableRuntime
@@ -232,55 +232,104 @@ class DriverOutputController(StaTableControllerBase):
     # === Role Functions (from StaTable layer-local) ===
     def F_SetHeaterOn(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetHeaterOn
+        # Set heaters ON (full power)
+        self.globals["heater_top_on"] = 1
+        self.globals["heater_middle_on"] = 1
+        self.globals["heater_bottom_on"] = 1
+        self.globals["heater_top_duty"] = 100
+        self.globals["heater_middle_duty"] = 100
+        self.globals["heater_bottom_duty"] = 100
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetHeaterOn
     def F_SetHeaterOff(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetHeaterOff
+        # Set heaters OFF
+        self.globals["heater_top_on"] = 0
+        self.globals["heater_middle_on"] = 0
+        self.globals["heater_bottom_on"] = 0
+        self.globals["heater_top_duty"] = 0
+        self.globals["heater_middle_duty"] = 0
+        self.globals["heater_bottom_duty"] = 0
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetHeaterOff
     def F_SetHeaterPwm(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetHeaterPwm
+        # Set heater PWM duty
+        # Duty values are assumed to be pre-set by caller;
+        # here we just synchronize the *_on flags with duty.
+        for ch in ("top", "middle", "bottom"):
+            d = self.globals.get("heater_" + ch + "_duty", 0)
+            self.globals["heater_" + ch + "_on"] = 1 if d > 0 else 0
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetHeaterPwm
     def F_SetFanOn(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetFanOn
+        # Set fan ON
+        self.globals["fan_on"] = 1
+        self.globals["fan_duty"] = 100
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetFanOn
     def F_SetFanOff(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetFanOff
+        # Set fan OFF
+        self.globals["fan_on"] = 0
+        self.globals["fan_duty"] = 0
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetFanOff
     def F_SetFanPwm(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetFanPwm
+        # Set fan PWM duty
+        d = self.globals.get("fan_duty", 0)
+        self.globals["fan_on"] = 1 if d > 0 else 0
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetFanPwm
     def F_SetPumpOn(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetPumpOn
+        # Set pump ON
+        self.globals["pump_on"] = 1
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetPumpOn
     def F_SetPumpOff(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetPumpOff
+        # Set pump OFF
+        self.globals["pump_on"] = 0
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetPumpOff
     def F_SetMagOn(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetMagOn
+        # Set magnetron ON (full power)
+        self.globals["mag_on"] = 1
+        self.globals["mw_power"] = self.globals.get("mw_target_power", 0)
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetMagOn
     def F_SetMagOff(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetMagOff
+        # Set magnetron OFF
+        self.globals["mag_on"] = 0
+        self.globals["mw_power"] = 0
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetMagOff
     def F_SetMagPwm(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SetMagPwm
+        # Set magnetron PWM power
+        if self.globals.get("mag_on", 0):
+            self.globals["mw_power"] = self.globals.get("mw_target_power", 0)
+        else:
+            self.globals["mw_power"] = 0
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SetMagPwm
     def F_SendStatusMaster(self):
         # STABLE_USER_CODE_START:DriverOutput.F_SendStatusMaster
+        # Send status to panel (simulation: no-op)
+        # 実機では UART 送信等を行うが、シミュレーションでは状態を保持
         return 0
         # STABLE_USER_CODE_END:DriverOutput.F_SendStatusMaster
     def F_CheckAnodeCurrent(self):
         # STABLE_USER_CODE_START:DriverOutput.F_CheckAnodeCurrent
-        return 0
+        # Check magnetron anode current
+        # Returns 1 if anode current exceeds a threshold (500 mA)
+        anode = self.globals.get("mw_anode_current", 0)
+        return 1 if anode > 500 else 0
         # STABLE_USER_CODE_END:DriverOutput.F_CheckAnodeCurrent
 
 
