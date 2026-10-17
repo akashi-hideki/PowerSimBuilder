@@ -40,6 +40,11 @@ jobs:
           pip install -r requirements-dev.txt
           pip install -e .
 
+      - name: Verify python_runtime is importable (diagnostic)
+        run: |
+          python -c "import python_runtime; print('python_runtime:', python_runtime.__file__)"
+          cd /tmp && python -c "import python_runtime; print('from /tmp:', python_runtime.__file__)"
+
       - name: Lint (ruff)
         run: ruff check src/python_runtime tests/python
 
