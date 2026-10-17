@@ -6,10 +6,13 @@ be placed on the Canvas and connected to other components.
 The generated code (``generated/controller_box_powersim.py``) provides a
 ``build_runtime()`` factory. This adapter:
 
-1. Loads that factory (via importlib from a configurable path).
+1. Lazily loads that factory on first update() (via importlib).
 2. Maps ``inputs``  -> shared ``globals`` dict (read by RoleFunctions).
 3. Calls ``runtime.tick(t, dt, sim_data)`` (drives all 7 layers).
 4. Maps shared ``globals`` -> ``outputs`` (for downstream components).
+
+Lazy loading is required because the generated main.py sets
+``components["id"].parameters["generated_path"]`` AFTER construction.
 """
 
 from __future__ import annotations
@@ -20,7 +23,6 @@ from typing import Any
 
 from ..component_base import Component
 
-# Default global variable names that are exposed as ControllerBox ports.
 DEFAULT_INPUT_GLOBALS = [
     "thermistor_top",
     "thermistor_bottom",
@@ -55,13 +57,13 @@ DEFAULT_OUTPUT_GLOBALS = [
 class ControllerBox(Component):
     """StaTable controller wrapper as a single Canvas component.
 
-    Parameters:
-        generated_path (str | None): path to the generated Python module.
-            If None, tries ``<cwd>/generated/controller_box_powersim.py``.
-        input_globals (list[str] | None): global variable names to expose
-            as ``inputs`` (defaults to ``DEFAULT_INPUT_GLOBALS``).
-        output_globals (list[str] | None): global variable names to expose
-            as ``outputs`` (defaults to ``DEFAULT_OUTPUT_GLOBALS``).
+    Parameters (constructor kwargs):
+        generated_path: path to the generated Python module.
+            If empty/None, auto-discovery is attempted on first update().
+        input_globals / output_globals: override the default port lists.
+
+    Runtime parameters (set via ``self.parameters`` after construction):
+        generated_path: same as above; read lazily on first update().
     """
 
     def __init__(
@@ -84,28 +86,47 @@ class ControllerBox(Component):
             list(output_globals) if output_globals else list(DEFAULT_OUTPUT_GLOBALS)
         )
 
-        self._runtime = self._load_runtime(generated_path)
-        self._globals = self._runtime.globals
+        # Lazy loading: runtime is None until _ensure_runtime() is called
+        self._runtime: Any = None
+        self._globals: dict[str, Any] = {}
+        self._layer_names: list[str] = []
 
-        # External ports: initialize from current globals (defaults)
+        # Initialize ports with default 0; refreshed after runtime load
+        self.inputs = {name: 0 for name in self._input_globals}
+        self.outputs = {name: 0 for name in self._output_globals}
+
+    # ------------------------------------------------------------------
+    # Lazy runtime loading
+    # ------------------------------------------------------------------
+
+    def _ensure_runtime(self) -> None:
+        """Load runtime on first access (lazy)."""
+        if self._runtime is not None:
+            return
+        path_str = self.parameters.get("generated_path", "")
+        path = path_str.strip() if path_str else None
+        self._runtime = self._load_runtime(path)
+        assert self._runtime is not None  # for mypy
+        self._globals = self._runtime.globals
+        self._layer_names = [layer.layer_name for layer in self._runtime.layers]
+        # Refresh ports from actual globals
         self.inputs = {name: self._globals.get(name, 0) for name in self._input_globals}
         self.outputs = {name: self._globals.get(name, 0) for name in self._output_globals}
-
-        # Metadata for debugging
-        self._layer_names = [layer.layer_name for layer in self._runtime.layers]
 
     # ------------------------------------------------------------------
     # Public API (Component contract)
     # ------------------------------------------------------------------
 
     def update(self, t: float, dt: float, sim_data: Any) -> None:
+        self._ensure_runtime()
+        assert self._runtime is not None  # for mypy
+
         # 1) Reflect inputs into shared globals
         for name in self._input_globals:
             if name in self.inputs:
                 self._globals[name] = self.inputs[name]
 
         # 2) Derive g_system_tick from simulation time (ms)
-        #    (Users can override via inputs["g_system_tick"] if desired.)
         if "g_system_tick" in self.inputs:
             self._globals["g_system_tick"] = self.inputs["g_system_tick"]
         else:
@@ -120,19 +141,24 @@ class ControllerBox(Component):
 
     def reset(self) -> None:
         super().reset()
-        # Re-initialize external ports from the (reset) globals
-        self.inputs = {name: self._globals.get(name, 0) for name in self._input_globals}
-        self.outputs = {name: self._globals.get(name, 0) for name in self._output_globals}
-        if hasattr(self._runtime, "reset"):
+        if self._runtime is not None and hasattr(self._runtime, "reset"):
             self._runtime.reset()
+        self.inputs = {name: 0 for name in self._input_globals}
+        self.outputs = {name: 0 for name in self._output_globals}
 
     # ------------------------------------------------------------------
-    # Helpers
+    # Debug helpers
     # ------------------------------------------------------------------
 
     def get_layer_states(self) -> dict[str, str]:
         """Return current state of each of the 7 layers (for debugging)."""
+        self._ensure_runtime()
+        assert self._runtime is not None  # for mypy
         return self._runtime.get_layer_states()
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
 
     def _load_runtime(self, generated_path: str | None) -> Any:
         """Load the generated module and return ``build_runtime()``."""
@@ -159,7 +185,6 @@ class ControllerBox(Component):
     def _resolve_generated_path(generated_path: str | None) -> Path:
         if generated_path:
             return Path(generated_path).resolve()
-        # Try a few likely locations
         candidates = [
             Path.cwd() / "generated" / "controller_box_powersim.py",
             Path(__file__).resolve().parents[3] / "generated" / "controller_box_powersim.py",
