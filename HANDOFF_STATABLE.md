@@ -909,3 +909,85 @@ Tests: 31 関数 + 3 層回帰 PASS` | 配列 `@(...)` + `WriteAllText`（pre-co
 ---
 
 **End of Task 3-A**
+
+---
+
+# Task 3-C 完了（2026-10-17 追記）
+
+**HEAD:** `ab403ae` (origin/main)
+
+## 23. Task 3-C 完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| **3-C-1/2** | ControllerBox Component + Palette | `e5d378b` | StaTableRuntime の Component ラップ |
+| **3-C-2補** | Palette UI 調整 | `4c9a4ee` | アイコン/幅/フォント改善 |
+| **3-C-3** | 遅延ロード | `66299d8` | update() 時にランタイムロード |
+| **3-C-4** | E2E デモ | `e2b6a4b` | auto_events + XML action 注入 |
+| **3-C-6** | 動的 Descriptor | `ab403ae` | プロジェクト固有ポート導出 |
+
+## 24. 動作確認済み機能
+
+- StaTable XML 取り込み → パレットにプロジェクト名で自動追加
+- .py から入出力ポートを自動導出（read/write 判定）
+- 複数 XML の共存（別プロジェクトとして独立）
+- 同一プロジェクトの複数配置は自動採番（`_2`, `_3`...）
+- 未取り込み時はパレット非表示（静的エントリ削除）
+- E2E デモ: 過熱検出（T=250.3°C, err=0xE3）+ ドア安全停止
+
+## 25. 既知の制約
+
+### 3-D で対応: sensor 変数の上書き問題
+
+`F_ReadSensorsMovingAvg` が `thermistor_*` を擬似ノイズで上書きするため、
+Canvas で `HeaterBlock.temperature → ControllerBox.thermistor_top` と
+接続しても上書きされる。
+
+対処案: simulation_mode フラグで擬似ノイズを無効化、または書き込み削除。
+
+### 3-C-7 で対応: 保存先の自動提案
+
+保存先が `controller_box.py`（固定）→ `tmp/` に保存される事故。
+初期ファイル名を `<ProjectName>_controller.py`、初期ディレクトリを
+`generated/` に変更。
+
+### 3-C-8 で対応: Canvas 経由の E2E
+
+`createSimButton` → `main.py` 生成 → 実行の完全フローは未検証。
+`PythonSimulationMainBuilder` が `auto_events` を生成しない問題も要対応。
+
+## 26. 残タスク
+
+| # | タスク | 優先度 |
+|:---:|---|:---:|
+| 3-C-7 | 保存先の自動提案 | 🟡 中 |
+| 3-C-8 | Canvas GUI 経由の E2E | 🟡 中 |
+| 3-D | F_ReadSensorsMovingAvg 修正 | 🟡 中 |
+| 3-E | シナリオデータ整備 | 🟡 中 |
+| B'-warn | 別レイヤー参照警告 | 🟢 低 |
+| B'-bare | 裸 RoleFunction 名検出 | 🟢 低 |
+| v0.4.0 | 次期リリース | 🟡 中 |
+
+## 27. 本セッション（3-C）の教訓
+
+### PowerShell
+
+- `Read-LfText` / `Save-LfText` ヘルパーで CRLF/LF を統一
+- 行ベースの状態機械で C# ファイルを編集（複雑な正規表現は括弧を壊す）
+- 編集前に `Copy-Item` でバックアップ
+
+### C# コード生成
+
+- C# では `Console.WriteLine` / `LogcatTraceHelper` を使う（Write-Host 混入禁止）
+- C# の逐語的文字列（ダブルクォート2つ）は PowerShell では扱いが異なる
+- シングルクォート文字列の中にシングルクォートを書かない
+
+### 動的 Descriptor 設計
+
+- α 案（プロジェクト単位）が正解。β 案（単一）は実装・UX で劣る
+- 静的エントリは完全削除（未取り込み時非表示）
+- 自動採番は既存 `DesignCanvas.GenerateUniqueInstanceName` を活用
+
+---
+
+**End of Task 3-C**
