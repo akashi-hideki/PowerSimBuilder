@@ -1896,3 +1896,55 @@ PowerShell 経由で `gh run list --jq '...\\(.field)...'` を渡すと、`\\(` 
 - 品質ゲート: pre-commit（commit 高速）+ pre-push（pytest 9 秒）
 
 **End of v0.5.0 Release**
+
+---
+
+# 3-C-9 完了確認 + v0.5.1 リリース（2026-10-17 追記）
+
+**HEAD:** `449008f` (origin/main, tag: v0.5.1)
+
+## 70. 3-C-9 は既に完了済み（HANDOFF 記述の是正）
+
+| コミット | 内容 | 状態 |
+|---|---|:---:|
+| `54d0344` | feat(canvas): ParametersEditorForm for dictionary parameter editing (Task 3-C-9) | ✅ |
+| `f57ee8e` | refactor(canvas): extract ParameterTypeHelper (Task 3-C-9-a) | ✅ |
+
+HANDOFF `## 30 / ## 36` で「3-C-9 残タスク」としていたが、
+実装は v0.5.0 以前に main へマージ済み。`ParametersEditorForm.cs` は
+PropertyGrid を捨て、TableLayoutPanel + TextBox/CheckBox による
+型自動判別 UI を実装している。
+
+### 3-C-9 で実装済みの機能
+
+- 型ごとの自動エディタ（Boolean→CheckBox / 他→TextBox）
+- 型自動判別（`ParameterTypeHelper.Classify` / `ParseText`）
+- 入力バリデーション（不正値で MessageBox 警告、OK 中断）
+- 一括デフォルトリセット
+
+### 残存する UX enhancement（3-C-9 のスコープ外、別タスク候補）
+
+| # | 内容 | 優先度 |
+|:---:|---|:---:|
+| 1 | パラメータの追加/削除（`ParameterDescriptor` モデル拡張が必要） | 🟡 中 |
+| 2 | 行単位リセット（現在は全行一括） | 🟢 低 |
+| 3 | デフォルト値の表示（`(default: X)` 灰字） | 🟢 低 |
+| 4 | 長い文字列の複数行編集 | 🟢 低 |
+| 5 | 読み取り専用パラメータの視覚化（3-D 連携） | 🟡 中 |
+
+## 71. v0.5.1 リリース内容
+
+| 項目 | 値 |
+|---|---|
+| リリースコミット | `449008f chore: release v0.5.1` |
+| タグ | `v0.5.1`（annotated、push 済み） |
+| 含まれるコミット（v0.5.0 以降） | `b448fe1` docs / `7a3a695` feat(statable) / `c35d2a8` chore(designcanvas) |
+
+## 72. 次のタスク
+
+| 優先 | タスク | 工数 |
+|:---:|---|:---:|
+| 🟢 低 | **B'-warn** 別レイヤー参照の警告 | 30m |
+| 🟢 低 | **B'-bare** 裸の RoleFunction 名検出 | 30m |
+| 🟡 中 | **3-C-9-b** ParametersEditor 拡張（追加/削除、per-row reset 等） | 1-2h |
+| 🟡 中 | **i18n** 英語/中国語リソース化 | 数日 |
