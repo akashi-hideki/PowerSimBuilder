@@ -11,6 +11,22 @@ from typing import Any
 
 from ..component_base import Component
 
+# 条件式 / アクション式の eval() / exec() で利用可能な builtins（サンドボックス）
+_SAFE_BUILTINS = {
+    "abs": abs,
+    "min": min,
+    "max": max,
+    "round": round,
+    "int": int,
+    "float": float,
+    "bool": bool,
+    "str": str,
+    "len": len,
+    "True": True,
+    "False": False,
+    "None": None,
+}
+
 
 class StaTableControllerBase(Component):
     """StaTable の 1 層 (Tab) を表す基底クラス。
@@ -53,6 +69,13 @@ class StaTableControllerBase(Component):
         self.inputs: dict[str, Any] = {}
         self.outputs: dict[str, Any] = {"current_state": initial_state}
 
+        # Phase 2-B-2: 条件式 / アクション式から参照されるグローバル変数
+        # （runtime 未接続時はローカル、_bind_runtime で runtime.globals を共有）
+        self.globals: dict[str, Any] = {}
+
+        # Phase 2-B-2: eval / exec 失敗時の警告蓄積
+        self.warnings: list[str] = []
+
         # StaTableRuntime から _bind_runtime() で設定される
         self._runtime: Any = None
 
@@ -61,8 +84,13 @@ class StaTableControllerBase(Component):
     # ------------------------------------------------------------------
 
     def _bind_runtime(self, runtime: Any) -> None:
-        """StaTableRuntime から呼ばれる。queue_event の配送先解決に使う。"""
+        """StaTableRuntime から呼ばれる。
+
+        queue_event の配送先解決と、グローバル変数の共有に使う。
+        """
         self._runtime = runtime
+        # runtime.globals を参照共有（同じ dict オブジェクト）
+        self.globals = runtime.globals
 
     # ------------------------------------------------------------------
     # Component API
@@ -75,6 +103,7 @@ class StaTableControllerBase(Component):
         self._initialized = False
         self.inputs.clear()
         self.outputs = {"current_state": self._initial_state}
+        self.warnings.clear()
 
     def update(self, t: float, dt: float, sim_data: Any) -> None:
         """1 ステップ分の更新。
@@ -155,21 +184,47 @@ class StaTableControllerBase(Component):
             return True
         return False
 
+    # ------------------------------------------------------------------
+    # Condition / Action evaluation (Phase 2-B-2)
+    # ------------------------------------------------------------------
+
     def _evaluate_condition(self, condition: Any, data: Any) -> bool:
-        """条件を評価。Phase 1 では None / 空文字のみ True。"""
+        """条件式を Python 式として評価する。
+
+        Phase 2-B-2: eval() による評価。サンドボックス化のため
+        builtins を _SAFE_BUILTINS に制限し、self のみ公開する。
+
+        - None / 空文字は True（無条件遷移）
+        - 評価エラー時は False（安全側）で、warning を記録
+        """
         if condition is None:
             return True
         if isinstance(condition, str) and condition.strip() == "":
             return True
-        return True
+
+        scope = {"__builtins__": _SAFE_BUILTINS, "self": self}
+        try:
+            return bool(eval(condition, scope))  # noqa: S307
+        except Exception as exc:  # noqa: BLE001
+            self.warnings.append(f"condition eval failed: {condition!r}: {exc}")
+            return False
 
     def _execute_action(self, action: Any, data: Any) -> None:
-        """アクションを実行。Phase 1 では何もしない。"""
+        """アクション式を Python 文として実行する。
+
+        Phase 2-B-2: exec() による実行。condition と同じサンドボックス。
+        エラー時は warning を記録するが、遷移自体は継続する。
+        """
         if action is None:
             return
         if isinstance(action, str) and action.strip() == "":
             return
-        return
+
+        scope = {"__builtins__": _SAFE_BUILTINS, "self": self}
+        try:
+            exec(action, scope)  # noqa: S102
+        except Exception as exc:  # noqa: BLE001
+            self.warnings.append(f"action exec failed: {action!r}: {exc}")
 
     # ------------------------------------------------------------------
     # Introspection

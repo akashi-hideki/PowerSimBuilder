@@ -61,6 +61,45 @@ class ApplicationController(StaTableControllerBase):
         )
 
 
+class ConditionalController(StaTableControllerBase):
+    """Phase 2-B-2: condition / action 評価用のテスト層。"""
+
+    LAYER_NAME = "Conditional"
+    LAYER_PRIORITY = 3
+    INITIAL_STATE = "Start"
+    TRANSITIONS = [
+        ("Start", "GO", 'self.globals["g_ready"]', None, "Running"),
+        ("Start", "GO_FALLBACK", None, None, "Fallback"),
+        (
+            "Running",
+            "STOP",
+            None,
+            'self.globals["g_count"] = self.globals.get("g_count", 0) + 1',
+            "Start",
+        ),
+    ]
+    EVENTS = {
+        "GO": {"id": 1, "delivery": "direct"},
+        "GO_FALLBACK": {"id": 2, "delivery": "direct"},
+        "STOP": {"id": 3, "delivery": "direct"},
+    }
+
+    def __init__(self, comp_id="conditional"):
+        super().__init__(
+            comp_id=comp_id,
+            comp_type="ConditionalController",
+            layer_name=self.LAYER_NAME,
+            layer_priority=self.LAYER_PRIORITY,
+            initial_state=self.INITIAL_STATE,
+            transitions=self.TRANSITIONS,
+            events=self.EVENTS,
+        )
+        self.f_increment_called = False
+
+    def F_increment(self):  # noqa: N802 - RoleFunction naming convention
+        self.f_increment_called = True
+
+
 # ======================================================================
 # StaTableControllerBase
 # ======================================================================
@@ -312,3 +351,143 @@ class TestStaTableCrossLayerQueue:
         rt.tick(0.0, 0.001, None)
         assert rt.layers_by_name["DriverInput"].state == "InSensing"
         assert rt.layers_by_name["Application"].state == "Idle"
+
+
+# ======================================================================
+# Phase 2-B-2: condition / action eval/exec
+# ======================================================================
+
+
+class TestStaTableConditionActionEval:
+    """condition / action の eval/exec のテスト。"""
+
+    # ------------------------------------------------------------------
+    # condition
+    # ------------------------------------------------------------------
+
+    def test_condition_none_always_true(self):
+        ctrl = ConditionalController()
+        assert ctrl._evaluate_condition(None, None) is True
+
+    def test_condition_empty_string_always_true(self):
+        ctrl = ConditionalController()
+        assert ctrl._evaluate_condition("", None) is True
+        assert ctrl._evaluate_condition("   ", None) is True
+
+    def test_condition_global_var_true(self):
+        ctrl = ConditionalController()
+        ctrl.globals["g_ready"] = True
+        assert ctrl._evaluate_condition('self.globals["g_ready"]', None) is True
+
+    def test_condition_global_var_false(self):
+        ctrl = ConditionalController()
+        ctrl.globals["g_ready"] = False
+        assert ctrl._evaluate_condition('self.globals["g_ready"]', None) is False
+
+    def test_condition_logical_and(self):
+        ctrl = ConditionalController()
+        ctrl.globals["a"] = True
+        ctrl.globals["b"] = False
+        assert ctrl._evaluate_condition('self.globals["a"] and self.globals["b"]', None) is False
+
+    def test_condition_logical_or(self):
+        ctrl = ConditionalController()
+        ctrl.globals["a"] = False
+        ctrl.globals["b"] = True
+        assert ctrl._evaluate_condition('self.globals["a"] or self.globals["b"]', None) is True
+
+    def test_condition_comparison(self):
+        ctrl = ConditionalController()
+        ctrl.globals["g_counter"] = 10
+        assert ctrl._evaluate_condition('self.globals["g_counter"] > 5', None) is True
+        assert ctrl._evaluate_condition('self.globals["g_counter"] < 5', None) is False
+
+    def test_condition_syntax_error_returns_false(self):
+        ctrl = ConditionalController()
+        assert ctrl._evaluate_condition("this is not valid python !!!", None) is False
+        assert len(ctrl.warnings) == 1
+
+    def test_condition_sandbox_blocks_import(self):
+        """__import__ は _SAFE_BUILTINS に無いので NameError。"""
+        ctrl = ConditionalController()
+        assert ctrl._evaluate_condition('__import__("os")', None) is False
+        assert len(ctrl.warnings) == 1
+
+    def test_condition_sandbox_blocks_open(self):
+        """open も _SAFE_BUILTINS に無い。"""
+        ctrl = ConditionalController()
+        assert ctrl._evaluate_condition('open("secret.txt")', None) is False
+        assert len(ctrl.warnings) == 1
+
+    # ------------------------------------------------------------------
+    # action
+    # ------------------------------------------------------------------
+
+    def test_action_none_noop(self):
+        ctrl = ConditionalController()
+        ctrl._execute_action(None, None)
+        assert ctrl.warnings == []
+
+    def test_action_empty_string_noop(self):
+        ctrl = ConditionalController()
+        ctrl._execute_action("", None)
+        ctrl._execute_action("   ", None)
+        assert ctrl.warnings == []
+
+    def test_action_assign_global(self):
+        ctrl = ConditionalController()
+        ctrl.globals["g_count"] = 0
+        ctrl._execute_action('self.globals["g_count"] = 42', None)
+        assert ctrl.globals["g_count"] == 42
+
+    def test_action_calls_role_function(self):
+        ctrl = ConditionalController()
+        ctrl._execute_action("self.F_increment()", None)
+        assert ctrl.f_increment_called is True
+
+    def test_action_syntax_error_warns(self):
+        ctrl = ConditionalController()
+        ctrl._execute_action("def broken(:", None)
+        assert len(ctrl.warnings) == 1
+
+    # ------------------------------------------------------------------
+    # end-to-end
+    # ------------------------------------------------------------------
+
+    def test_transition_blocked_by_condition(self):
+        ctrl = ConditionalController()
+        ctrl.globals["g_ready"] = False
+        ok = ctrl.fire_event("GO")
+        assert ok is False
+        assert ctrl.state == "Start"
+
+    def test_transition_allowed_by_condition(self):
+        ctrl = ConditionalController()
+        ctrl.globals["g_ready"] = True
+        ok = ctrl.fire_event("GO")
+        assert ok is True
+        assert ctrl.state == "Running"
+
+    def test_action_runs_on_transition(self):
+        ctrl = ConditionalController()
+        ctrl.globals["g_ready"] = True
+        ctrl.globals["g_count"] = 0
+        ctrl.fire_event("GO")
+        assert ctrl.state == "Running"
+        ctrl.fire_event("STOP")
+        assert ctrl.state == "Start"
+        assert ctrl.globals["g_count"] == 1
+
+    def test_reset_clears_warnings(self):
+        ctrl = ConditionalController()
+        ctrl._evaluate_condition("bad syntax !!!", None)
+        assert len(ctrl.warnings) == 1
+        ctrl.reset()
+        assert ctrl.warnings == []
+
+    def test_globals_shared_via_runtime(self):
+        """runtime binding 後、self.globals は runtime.globals と同一オブジェクト。"""
+        rt = StaTableRuntime([ConditionalController()], {"g_ready": True})
+        ctrl = rt.layers_by_name["Conditional"]
+        assert ctrl.globals is rt.globals
+        assert ctrl.globals["g_ready"] is True
