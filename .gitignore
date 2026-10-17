@@ -183,3 +183,8 @@ _3c_detail_*/
 generated/_debug_*
 
 debug.log
+
+# Task 3-C-8 E2E test artifacts
+generated/_e2e_*.py
+generated/demo_system.json
+generated/demo_main.py
