@@ -1289,3 +1289,169 @@ MM（staged + unstaged 混在）になる。`git add -A` で統一する。
 - pytest 319+ pass（SKIP なし）
 
 **End of Session Handover**
+
+---
+
+# セッション末ハンドオーバー（2026-10-17 第 4 セッション）
+
+**HEAD:** `0072b0c` (origin/main)
+**次セッションの起点:** `0072b0c`
+
+> **次セッションは ## 40-45（本セクション）を読めば完全なコンテキストを得られる。**
+> 前セッション分は ## 34-39 / ## 28-33 に保持。
+
+## 40. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | **v0.4.1 リリース** | `6f23474` | 3-C-9-a + 3-E のバージョン固定 |
+| 2 | **CI 修正（POC テスト）** | `de09ae6` | PYTHONPATH 伝播 + pyproject に statable 追加 + CI 診断ステップ |
+| 3 | **CI 修正（system.json 追跡）** | `2bc61b2` | motor_drive / heater_overheat の system.json を追跡 |
+| 4 | **CI 修正（gitignore 例外）** | `0d416c4` | `!tests/data/scenarios/**/system.json` を追加 |
+| 5 | **3-F（2/7）** | `0072b0c` | PowerSource + FaultDevice 実装 + 15 tests |
+
+## 41. 現在のテスト状況（`0072b0c` 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|---|
+| C# StaTable | 94 | pass |
+| C# ParameterTypeHelper | 60 | pass |
+| Python 全件 | 355+ | pass（SKIP なし） |
+| Python 新規（3-F） | 15 | pass（PowerSource 8 + FaultDevice 7） |
+| GitHub Actions（python-tests.yml） | 4 matrix | ✅ green（`0d416c4` 以降） |
+
+## 42. 本セッションの CI 失敗と真因（重要）
+
+### 症状
+
+- v0.4.1 タグ（`6f23474`）時点で CI が red。4 matrix すべて失敗。
+- `test_poc_runs_successfully` が `ModuleNotFoundError: No module named 'python_runtime'` で fail。
+- ローカルでは通る（Windows + Python 3.13 + 古い editable install）。
+
+### 真因（2 段階）
+
+**真因 1: subprocess に pythonpath が伝播しない**
+
+- `pyproject.toml` の `[tool.pytest.ini_options] pythonpath = [".", "src"]` は
+  pytest プロセスにしか効かない。
+- `test_csharp_codegen.py` の `subprocess.run([sys.executable, "-m", "examples.auto_generated_poc"])` は
+  別プロセスなので `PYTHONPATH` を明示的に渡す必要がある。
+- ローカルで通っていたのは v0.2.3 時代の editable install（`__editable__.powersimbuilder_runtime-0.2.3.pth`）
+  が `src/` を site-packages 経由で解決していたため。CI は fresh install でこの古い .pth が無い。
+
+**真因 2: `python_runtime.statable` が `packages` に未登録**
+
+- 3-C で追加された `python_runtime/statable/` が pyproject.toml に反映されていなかった（v0.3.0 から未登録）。
+- 3-C までは Python テストが statable を import していなかったため顕在化しなかった。
+
+**真因 3: system.json が .gitignore で除外されていた**
+
+- `.gitignore` line 63 の `system.json` はルート直下用のつもりが、全パスに効いていた。
+- `tests/data/scenarios/*/system.json` が `git add -A` でも追加されず、CI で FileNotFoundError。
+
+### 修正内容
+
+- `tests/integration/test_csharp_codegen.py`: `env["PYTHONPATH"] = src_dir + sep + prev`
+- `pyproject.toml`: `packages` と `package-dir` に `python_runtime.statable` を追加
+- `.github/workflows/python-tests.yml`: `Verify python_runtime is importable (diagnostic)` ステップ追加
+- `2bc61b2` + `0d416c4`: system.json 2 ファイルを `git add -f`、`.gitignore` に `!` 例外ルール
+
+## 43. Task 3-F の進捗と残り
+
+### 完了（2/7）
+
+| # | Class | Parameters | Inputs | Outputs |
+|:---:|---|---|---|---|
+| 1 | `PowerSource` | voltage(RMS), frequency, waveform, phase, resistance | (none) | voltage, current |
+| 2 | `FaultDevice` | fault_type, condition_expr, duration, inrush_current | (none) | short_circuit, open_circuit, inrush_current |
+
+### 残り（5/7）実装順（依存関係順）
+
+| # | Class | Parameters | Inputs | Outputs | 依存 |
+|:---:|---|---|---|---|---|
+| 3 | `Engine` | power, torque_max | (none) | torque | 独立 |
+| 4 | `Generator` | rated_power, efficiency | torque | voltage, current | Engine |
+| 5 | `DiodeBridge` | diode_drop, type | ac_voltage | dc_voltage, ripple | Generator |
+| 6 | `InductionMotor` | rated_power, load_torque | voltage | torque, speed, slip | PowerSource |
+| 7 | `Welder` | welding_current_set, mode, overheat_limit | dc_voltage, short_circuit | arc_current, overheat | DiodeBridge + FaultDevice |
+
+### 3-F 完了条件
+
+- 各コンポーネントに単体テスト（3-8 ケースずつ）
+- `tests/data/scenarios/welder_fault/system.json` 新規シナリオ + pytest
+- `pyproject.toml` の `packages` / `package-dir` は変更不要（既存 `python_runtime.components` に追加）
+
+### 実装パターン（PowerSource / FaultDevice に準拠）
+
+- `__init__`: `super().__init__(comp_id, comp_type)` → `self.parameters = {...}` → `self.inputs = {...}` → `self.outputs = {...}`
+- `reset`: `self.inputs` / `self.outputs` を初期値に戻す
+- `update(t, dt, sim_data)`: 型付きで計算、`self.outputs` に書き戻し
+- 数値変数は `float(self.parameters.get(...))` で明示キャスト（mypy 対策）
+- 可変 state は `self._xxx_state: dict[str, Any] = {...}` と **`__init__` でのみ注釈**
+
+## 44. 次セッション開始時のプロンプト例
+
+    PowerSimBuilder の続きです。
+    HANDOFF_STATABLE.md の ## 40-45（第 4 セッション末ハンドオーバー）を
+    読んで、Task 3-F の残り 5 コンポーネントに着手してください。
+
+    現状:
+    - HEAD: 0072b0c (origin/main)
+    - pytest: 355+ pass（SKIP なし）
+    - CI: python-tests.yml 4 matrix すべて green
+    - 3-F 進捗: 2/7（PowerSource + FaultDevice 完了）
+
+    残り 5 コンポーネント（依存順）:
+    Engine -> Generator -> DiodeBridge -> InductionMotor -> Welder
+
+    ## 43 の実装パターンと ## 41 のテスト状況に従って、
+    まず Engine と Generator から実装してください。
+
+## 45. 次セッション開始前チェックリスト
+
+    cd C:\dev\PowerSimBuilder
+    git --no-pager log --oneline -3         # 0072b0c が HEAD
+    git status --porcelain=v1               # clean
+    python -m pip install -e .              # editable install 確認
+    python -m pytest tests/python tests/integration -q   # 355+ pass
+
+**期待:**
+- HEAD = `0072b0c`
+- work tree clean
+- pytest 355+ pass（SKIP なし）
+- CI green（最新 run）
+
+## 46. 本セッションの教訓（追加）
+
+### mypy `no-redef` の罠
+
+`dict` 属性に型注釈を付ける場合、**`__init__` でのみ注釈**を書く。
+`reset()` などで再代入するときは注釈を書かない（mypy が「既に定義済み」と判定して no-redef エラー）。
+
+    # OK（__init__ 側のみ）
+    def __init__(...):
+        self._state: dict[str, Any] = {"t": None, "ok": False}
+
+    def reset(self):
+        self._state = {"t": None, "ok": False}  # 注釈なし
+
+### pre-commit 失敗時のリカバリ
+
+1. `git diff --stat` で何が修正されたか確認
+2. `git add -A` で再ステージ
+3. `git commit -F <msg-file>` で再コミット
+
+### here-string を使わない
+
+`@(line1, line2, ...) -join "`n"` 方式が安全（連続バッククォート行で here-string が崩れるため）。
+
+## 47. 更新された既知の制約（前回から変化なし）
+
+| # | 制約 | 対応予定 |
+|:---:|---|---|
+| 1 | 3-F 残り 5 コンポーネント（Engine / Generator / DiodeBridge / InductionMotor / Welder） | 次セッション |
+| 2 | `v0.4.1` タグは CI red 時点（`6f23474`）で作成済み | 次の v0.4.2 で green 状態をタグ付け |
+| 3 | i18n（英語/中国語） | 未着手 |
+| 4 | B'-warn / B'-bare | 低優先 |
+
+**End of Session Handover**
