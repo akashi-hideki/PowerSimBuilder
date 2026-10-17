@@ -1997,3 +1997,109 @@ PropertyGrid を捨て、TableLayoutPanel + TextBox/CheckBox による
 - 2 回目実行で `anchor not found` が出ても、1 回目で成功済みなら正常（`$t.Replace` は変化なし）
 
 **End of v0.5.2 Release**
+
+---
+
+# 公開準備 Phase 1 完了（2026-10-17 追記）
+
+**HEAD:** `1749676` (origin/main)
+
+## 76. 公開戦略の決定 + Phase 1 完了
+
+### 戦略決定（ポジショニング A）
+
+| 項目 | 決定 | 根拠 |
+|---|---|---|
+| ポジショニング | **A: StaTable のシミュレーション・コンパニオン** | エコシステム相乗効果 |
+| ライセンス | Apache 2.0 | StaTable と統一 |
+| プラットフォーム | .NET 8 + WinForms（Week 2 で移行） | SDK 無料、CI 容易 |
+| 言語 | EN 主 + JA 副（ZH は後追い） | 195 文字列なら手動翻訳可 |
+| 公開時期 | 1 ヶ月で v1.0.0 | 段階的公開 |
+| 予算 | **0 円**（VS Community + OSS のみ） | 有料ツール不要 |
+
+### Phase 1 完了内容（コミット `1749676`）
+
+- `LICENSE`（Apache 2.0 フルテキスト、既存 `5cfc38b` と同一）
+- `NOTICE`（コピーライト + StaTable コンパニオン明記）
+- `.github/ISSUE_TEMPLATE/{bug_report,feature_request}.md`
+- `.github/PULL_REQUEST_TEMPLATE.md`
+- `.gitignore` 破損修正（`*.pyc` / `__pycache__/` / `*.png` 有効化）
+- `PowerSimBuilder.csproj`: `PackageLicenseExpression=Apache-2.0`, `Copyright`, `Authors`, `RepositoryUrl`, `RepositoryType`
+- `docs/PUBLICATION_AUDIT.md`（現状 + 4 週間ロードマップ）
+
+### 監査結果
+
+| 指標 | 値 |
+|---|---|
+| C# tests ([Fact]/[Theory]) | 143 |
+| Python tests (def test_) | 389 |
+| 日本語文字列リテラル | 約 195 |
+| CI workflows | 2（`ci.yml`=C#、`python-tests.yml`=Python）**C# CI は既存** |
+
+**発見:** `.github/workflows/ci.yml` が既に存在し、C# テストを windows-latest で実行。HANDOFF 旧記述「C# CI 未対応」は誤り。
+
+## 77. 次セッションのタスク（Week 2: .NET 8 移行）
+
+### 事前確認コマンド
+
+```powershell
+cd C:\dev\PowerSimBuilder
+dotnet --list-sdks
+Select-String -Path PowerSimBuilder.csproj,PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj `
+    -Pattern "TargetFramework|LangVersion"
+Get-Content .github\workflows\ci.yml
+```
+
+### 移行手順
+
+1. .NET 8 SDK インストール（未導入なら https://dot.net/download から、無料）
+2. `PowerSimBuilder.csproj`: `<TargetFramework>net472</TargetFramework>` → `net8.0-windows`
+3. `PowerSimBuilder.Tests.csproj`: 同様に `net8.0-windows`
+4. `LangVersion` を `latest` → `12.0`
+5. ビルド + 143 テスト pass 確認
+6. `ci.yml`: `actions/setup-dotnet@v4` + `dotnet-version: 8.0.x`
+7. 単一ファイル publish（`PublishSingleFile=true`, `SelfContained=true`）
+
+### リスク
+
+| リスク | 対処 |
+|---|---|
+| .NET Framework 固有 API | ビルドエラーで検出、代替 API に置換 |
+| WinForms 差異 | .NET 8 は後方互換、原則そのまま |
+| xUnit 2.9.2 | .NET 8 対応済み |
+
+## 78. 本セッションの教訓
+
+- pre-commit `end-of-file-fixer` → `git add -A` で再ステージして再コミット
+- `.gitignore` に here-string 崩れの痕跡が実在（修正済み）
+- 「C# CI 未対応」は HANDOFF の誤記。`ci.yml` は既に存在
+- 予算ゼロでも StaTable 同等品質に到達可能（VS Community + .NET 8 SDK + OSS）
+- **100 行超の here-string は `^C` や貼り付け崩れのリスク大 → `@(...) -join` で行配列化**
+- **`if`/`else` を別行で貼り付けると `else` がコマンド扱いになる → 同一行に書く**
+- **`Get-Content` は `-Encoding UTF8` を付ける（付けないと CP932 で化ける）**
+
+## 79. 次セッション開始時のプロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 76-80 を読んで、
+Week 2: .NET 8 移行に着手してください。
+
+現状:
+- HEAD: 1749676 (origin/main)
+- C# 143 / Python 389 tests pass
+- Phase 1 完了、予算ゼロ
+
+まず ## 77 の事前確認コマンドを実行してください。
+```
+
+## 80. 次セッション開始前チェックリスト
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3
+git status --porcelain=v1
+dotnet --list-sdks
+```
+
+**End of Publication Phase 1**
