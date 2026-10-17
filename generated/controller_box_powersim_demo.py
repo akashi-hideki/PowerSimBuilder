@@ -6,7 +6,7 @@ StaTable project: CookingHeaterController
 StaTable generation_style: table_driven
 StaTable os_type: non_rtos
 Tabs: 7 (DriverInput, DriverOutput, MwMicrowave, MwOven, MwGrill, MwSteam, Application)
-Generated: 2026-10-17T14:56:59+09:00
+Generated: 2026-10-17T15:52:53+09:00
 """
 
 from python_runtime.statable import StaTableControllerBase, StaTableRuntime
@@ -106,24 +106,21 @@ class DriverInputController(StaTableControllerBase):
     def F_ReadSensorsMovingAvg(self):
         # STABLE_USER_CODE_START:DriverInput.F_ReadSensorsMovingAvg
         # Read sensors with moving average (simulation)
-        # Deterministic pseudo-noise from g_system_tick (reproducible)
+        # Task 3-D: thermistor_* are inputs from physical models
+        # (HeaterBlock.temperature -> ControllerBox.inputs.thermistor_top).
+        # Do NOT overwrite them here. Only pseudo-sensors (ir_value, steam_sensor)
+        # which have no physical model are updated with deterministic pseudo-noise.
         _t = self.globals.get("g_system_tick", 0) & 0xFFFFFFFF
         _nA = ((_t * 17) % 101) - 50   # ±50 ADC
         _nB = ((_t * 23) % 41) - 20    # ±20 ADC
-        _nC = ((_t * 29) % 21) - 10    # ±10 degC
 
         _raw_ir     = 1500 + _nA
         _raw_steam  = 500  + _nB
-        _raw_top    = 2000 + _nC
-        _raw_bottom = 2000 + _nC
-        _raw_middle = 2000 + _nC
 
         _alpha = 0.1
-        self.globals["ir_value"]          = int(_alpha * _raw_ir     + (1.0 - _alpha) * self.globals["ir_value"])
-        self.globals["steam_sensor"]      = int(_alpha * _raw_steam  + (1.0 - _alpha) * self.globals["steam_sensor"])
-        self.globals["thermistor_top"]    = int(_alpha * _raw_top    + (1.0 - _alpha) * self.globals["thermistor_top"])
-        self.globals["thermistor_bottom"] = int(_alpha * _raw_bottom + (1.0 - _alpha) * self.globals["thermistor_bottom"])
-        self.globals["thermistor_middle"] = int(_alpha * _raw_middle + (1.0 - _alpha) * self.globals["thermistor_middle"])
+        self.globals["ir_value"]     = int(_alpha * _raw_ir     + (1.0 - _alpha) * self.globals["ir_value"])
+        self.globals["steam_sensor"] = int(_alpha * _raw_steam  + (1.0 - _alpha) * self.globals["steam_sensor"])
+        # thermistor_top/bottom/middle: read-only (driven by external physics)
         return 0
         # STABLE_USER_CODE_END:DriverInput.F_ReadSensorsMovingAvg
     def F_EmitIrReady(self):
