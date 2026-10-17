@@ -138,3 +138,6 @@ simulation_signals.*
 
 # --- pre-commit cache ---
 .pre-commit/
+
+# Local E2E test workspace
+tmp/
