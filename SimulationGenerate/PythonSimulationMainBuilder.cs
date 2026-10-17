@@ -548,6 +548,32 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
+        /// ControllerBox には input_globals / output_globals を明示指定する（Task 3-C-10）。
+        /// それ以外の型は従来通り Type("name") を返す。
+        /// </summary>
+        private static string BuildComponentCtorArgs(ComponentDescriptor desc, string compName)
+        {
+            if (desc != null && desc.Type == "ControllerBox")
+            {
+                var inputs = desc.InputPorts ?? new string[0];
+                var outputs = desc.OutputPorts ?? new string[0];
+                return "ControllerBox(\"" + compName + "\", input_globals=" + FormatPyList(inputs)
+                     + ", output_globals=" + FormatPyList(outputs) + ")";
+            }
+            return (desc?.Type ?? "Component") + "(\"" + compName + "\")";
+        }
+
+        private static string FormatPyList(IEnumerable<string> items)
+        {
+            if (items == null) return "[]";
+            var quoted = items
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Select(s => "\"" + s + "\"");
+            return "[" + string.Join(", ", quoted) + "]";
+        }
+
+
+        /// <summary>
         /// 関数内でコンポーネント辞書を追加する
         /// </summary>
         private void AddComponentDictionaryInFunction()
@@ -568,7 +594,7 @@ namespace PowerSimBuilder
                             continue;
 
                         var compName = comp.InstanceName.ToLower();
-                        AddLineToSection("function_def", $"        \"{compName}\": {comp.Descriptor.Type}(\"{compName}\"),");
+                        AddLineToSection("function_def", $"        \"{compName}\": {BuildComponentCtorArgs(comp.Descriptor, compName)},");
                     }
                     catch (Exception ex)
                     {
@@ -586,7 +612,7 @@ namespace PowerSimBuilder
                         if (string.IsNullOrEmpty(comp.Name) || string.IsNullOrEmpty(comp.Type))
                             continue;
                         var compName = comp.Name.ToLower();
-                        AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\"),");
+                        AddLineToSection("function_def", $"        \"{compName}\": {BuildComponentCtorArgs(comp, compName)},");
                     }
                     catch (Exception ex)
                     {
