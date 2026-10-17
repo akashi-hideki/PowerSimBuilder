@@ -1,0 +1,36 @@
+{
+  "name": "motor_drive",
+  "description": "PWM duty -> torque gain -> rotational inertia speed response",
+  "dt": 0.001,
+  "t_end": 1.0,
+  "components": [
+    {
+      "instanceName": "pwm",
+      "descriptorType": "PWM3Phase",
+      "parameters": {
+        "amplitude": 0.9,
+        "frequency": 50.0,
+        "carrier_frequency": 10000.0,
+        "common_mode": true
+      }
+    },
+    {
+      "instanceName": "gain",
+      "descriptorType": "Gain",
+      "parameters": { "gain": 10.0, "bias": 0.0 }
+    },
+    {
+      "instanceName": "motor",
+      "descriptorType": "MechanicalInertia",
+      "parameters": {
+        "inertia": 0.01,
+        "viscous_friction": 0.1,
+        "initial_speed": 0.0
+      }
+    }
+  ],
+  "connections": [
+    { "from": "pwm.outputs.da", "to": "gain.inputs.input" },
+    { "from": "gain.outputs.output", "to": "motor.inputs.torque_drive" }
+  ]
+}

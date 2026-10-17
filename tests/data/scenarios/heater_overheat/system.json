@@ -1,0 +1,44 @@
+{
+  "name": "heater_overheat",
+  "description": "AC voltage -> heater power -> temperature rise + over-current trip",
+  "dt": 0.001,
+  "t_end": 5.0,
+  "components": [
+    {
+      "instanceName": "tps",
+      "descriptorType": "ThreePhaseSine",
+      "parameters": {
+        "amplitude": 300.0,
+        "frequency": 50.0,
+        "phase": 0.0,
+        "sequence": "positive"
+      }
+    },
+    {
+      "instanceName": "heater",
+      "descriptorType": "HeaterBlock",
+      "parameters": {
+        "rated_power": 1000.0,
+        "rated_voltage": 200.0,
+        "thermal_resistance": 1.0,
+        "thermal_capacity": 100.0,
+        "ambient_temperature": 25.0,
+        "initial_temperature": 25.0
+      }
+    },
+    {
+      "instanceName": "ocd",
+      "descriptorType": "OverCurrentDetector",
+      "parameters": {
+        "threshold": 2.0,
+        "hysteresis": 0.5,
+        "latch": true,
+        "initial_tripped": false
+      }
+    }
+  ],
+  "connections": [
+    { "from": "tps.outputs.ua", "to": "heater.inputs.voltage" },
+    { "from": "heater.outputs.current", "to": "ocd.inputs.current" }
+  ]
+}
