@@ -230,10 +230,12 @@ namespace PowerSimBuilder
             {
                 var condition = string.IsNullOrEmpty(t.Condition)
                     ? "None"
-                    : "\"" + EscapePy(NCalcToPythonConverter.ConvertCondition(t.Condition)) + "\"";
+                    : "\"" + EscapePy(NCalcToPythonConverter.ConvertCondition(
+                        t.Condition, _allRoleFuncNames, layer.LayerName, Warnings)) + "\"";
                 var action = string.IsNullOrEmpty(t.Action)
                     ? "None"
-                    : "\"" + EscapePy(NCalcToPythonConverter.ConvertAction(t.Action)) + "\"";
+                    : "\"" + EscapePy(NCalcToPythonConverter.ConvertAction(
+                        t.Action, _allRoleFuncNames, layer.LayerName, Warnings)) + "\"";
                 var comment = string.IsNullOrEmpty(t.Title) ? "" : "  # " + t.Title;
                 sb.AppendLine("        (\"" + t.Source + "\", \"" + t.Event + "\", "
                     + condition + ", " + action + ", \"" + t.Target + "\")," + comment);
@@ -396,7 +398,10 @@ namespace PowerSimBuilder
         private static void AddRoleFunctionRefs(string expr, HashSet<string> dest)
         {
             if (string.IsNullOrEmpty(expr)) return;
-            foreach (Match m in RoleFunctionRefPattern.Matches(expr))
+
+            // B'-bare: 裸関数呼び出しを F_xxx 形式に正規化してから検出
+            var normalized = NCalcToPythonConverter.NormalizeBareCallsForDetection(expr);
+            foreach (Match m in RoleFunctionRefPattern.Matches(normalized))
                 dest.Add(m.Groups[1].Value);
         }
 

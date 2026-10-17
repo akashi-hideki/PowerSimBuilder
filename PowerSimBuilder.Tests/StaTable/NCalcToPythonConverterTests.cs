@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Xunit;
 using PowerSimBuilder;
 
@@ -246,6 +247,78 @@ namespace PowerSimBuilder.Tests.StaTable
         {
             Assert.Equal("a > 0",
                 NCalcToPythonConverter.ConvertCondition("a > 0"));
+        }
+
+        // ==============================================================
+        // B'-bare: 裸関数呼び出しの自動 F_ 補完
+        // ==============================================================
+
+        [Fact]
+        public void ConvertCondition_BareCallWithContext_PrefixedWithWarning()
+        {
+            var warnings = new List<string>();
+            var known = new HashSet<string>(new[] { "F_HeaterOn" });
+
+            var result = NCalcToPythonConverter.ConvertCondition(
+                "HeaterOn() > 0", known, "DriverOutput", warnings);
+
+            Assert.Contains("self.F_HeaterOn", result);
+            Assert.DoesNotContain("self.HeaterOn", result);
+            Assert.Single(warnings);
+            Assert.Contains("B'-bare", warnings[0]);
+            Assert.Contains("HeaterOn", warnings[0]);
+            Assert.Contains("defined elsewhere", warnings[0]);
+        }
+
+        [Fact]
+        public void ConvertCondition_BareCallUnknown_PrefixedWithWarning()
+        {
+            var warnings = new List<string>();
+            var known = new HashSet<string>();
+
+            var result = NCalcToPythonConverter.ConvertCondition(
+                "UnknownFn() > 0", known, "Layer", warnings);
+
+            Assert.Contains("self.F_UnknownFn", result);
+            Assert.Single(warnings);
+            Assert.Contains("B'-bare", warnings[0]);
+            Assert.Contains("UnknownFn", warnings[0]);
+            Assert.Contains("not defined", warnings[0]);
+        }
+
+        [Fact]
+        public void ConvertCondition_KnownBuiltin_NotPrefixedNoWarning()
+        {
+            var warnings = new List<string>();
+            var known = new HashSet<string>();
+
+            var result = NCalcToPythonConverter.ConvertCondition(
+                "Abs(0) > 0", known, "Layer", warnings);
+
+            Assert.Contains("Abs(", result);
+            Assert.DoesNotContain("F_Abs", result);
+            Assert.Empty(warnings);
+        }
+
+        [Fact]
+        public void ConvertCondition_AlreadyF_NotDoublePrefixed()
+        {
+            var warnings = new List<string>();
+            var known = new HashSet<string>(new[] { "F_HeaterOn" });
+
+            var result = NCalcToPythonConverter.ConvertCondition(
+                "F_HeaterOn() > 0", known, "Layer", warnings);
+
+            Assert.Contains("self.F_HeaterOn", result);
+            Assert.DoesNotContain("F_F_HeaterOn", result);
+        }
+
+        [Fact]
+        public void ConvertCondition_NoContext_BareCallUnchanged()
+        {
+            var result = NCalcToPythonConverter.ConvertCondition("HeaterOn() > 0");
+            Assert.Contains("HeaterOn()", result);
+            Assert.DoesNotContain("F_HeaterOn", result);
         }
     }
 }

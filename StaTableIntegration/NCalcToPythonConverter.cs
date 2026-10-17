@@ -28,6 +28,32 @@ namespace PowerSimBuilder
         private static readonly Regex RoleFuncRegex =
             new Regex(@"\b(F_[A-Za-z0-9_]+)\b", RegexOptions.Compiled);
 
+        // ---- B'-bare: 裸関数呼び出し検出（F_ なし大文字始まり + 直後 ( ） ----
+        private static readonly Regex BareFuncCallRegex =
+            new Regex(@"(?<![A-Za-z0-9_.\]])(?!F_)([A-Z][A-Za-z0-9_]*)(?=\s*\()",
+                      RegexOptions.Compiled);
+
+        /// <summary>
+        /// NCalc 標準関数名（RoleFunction として扱わない大文字始まりの組込）。
+        /// B'-bare の裸名補完でスキップされる。
+        /// </summary>
+        public static readonly IReadOnlyCollection<string> KnownNCalcBuiltins = new[]
+        {
+            "Abs","Acos","Asin","Atan","Ceiling","Cos","Exp","Floor",
+            "IEEERemainder","Ln","Log","Log10","Max","Min","Pow","Round",
+            "Sign","Sin","Sqrt","Tan","Truncate","If","In",
+            "IsNull","IsNaN","IsInfinity","IsNullOrEmpty",
+        };
+
+        private static readonly HashSet<string> _builtinSet =
+            new HashSet<string>(KnownNCalcBuiltins, StringComparer.Ordinal);
+
+        /// <summary>NCalc 標準関数か判定する（B'-bare 用）。</summary>
+        public static bool IsKnownBuiltin(string name)
+        {
+            return !string.IsNullOrEmpty(name) && _builtinSet.Contains(name);
+        }
+
         // 真偽値・null リテラル
         private static readonly Regex BoolNullRegex =
             new Regex(@"\b(true|false|null)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -42,19 +68,52 @@ namespace PowerSimBuilder
 
         public static string ConvertCondition(string ncalcExpr)
         {
-            return ConvertCore(ncalcExpr);
+            return ConvertCore(ncalcExpr, null, null, null);
         }
 
         public static string ConvertAction(string ncalcExpr)
         {
-            return ConvertCore(ncalcExpr);
+            return ConvertCore(ncalcExpr, null, null, null);
+        }
+
+        // ---- B'-bare: context 付き overload（裸名補完 + 警告付き） ----
+
+        public static string ConvertCondition(
+            string ncalcExpr, ISet<string> knownRoleFunctions,
+            string layerName, List<string> warnings)
+        {
+            return ConvertCore(ncalcExpr, knownRoleFunctions, layerName, warnings);
+        }
+
+        public static string ConvertAction(
+            string ncalcExpr, ISet<string> knownRoleFunctions,
+            string layerName, List<string> warnings)
+        {
+            return ConvertCore(ncalcExpr, knownRoleFunctions, layerName, warnings);
+        }
+
+        /// <summary>
+        /// B'-bare: 裸関数呼び出しを F_xxx 形式に正規化する（警告なし）。
+        /// コード生成器が RoleFunctionRefPattern 適用前の前処理に使う。
+        /// </summary>
+        public static string NormalizeBareCallsForDetection(string expr)
+        {
+            if (string.IsNullOrEmpty(expr)) return expr;
+            return BareFuncCallRegex.Replace(expr, m =>
+            {
+                var name = m.Groups[1].Value;
+                if (IsKnownBuiltin(name)) return m.Value;
+                return "F_" + name;
+            });
         }
 
         // ==============================================================
         // Core
         // ==============================================================
 
-        private static string ConvertCore(string expr)
+        private static string ConvertCore(
+            string expr, ISet<string> knownRoleFunctions,
+            string layerName, List<string> warnings)
         {
             if (string.IsNullOrEmpty(expr))
                 return expr;
@@ -87,6 +146,13 @@ namespace PowerSimBuilder
             masked = GlobalVarRegex.Replace(masked,
                 m => "self.globals[\"" + m.Groups[1].Value + "\"]");
 
+            // 5.5. B'-bare: 裸関数呼び出しの F_ 補完（context あり時のみ）
+            if (knownRoleFunctions != null)
+            {
+                masked = NormalizeBareFunctionCalls(
+                    masked, knownRoleFunctions, layerName, warnings);
+            }
+
             // 6. RoleFunction 呼び出し
             masked = RoleFuncRegex.Replace(masked,
                 m => "self." + m.Groups[1].Value);
@@ -101,6 +167,34 @@ namespace PowerSimBuilder
             masked = RestoreStringLiterals(masked, literals);
 
             return masked;
+        }
+
+        /// <summary>
+        /// 裸関数呼び出し (HeaterOn など) を F_ プレフィックス付きに置換する。
+        /// NCalc 標準関数（IsKnownBuiltin）はスキップ。警告を warnings に追加。
+        /// </summary>
+        private static string NormalizeBareFunctionCalls(
+            string s, ISet<string> knownRoleFunctions,
+            string layerName, List<string> warnings)
+        {
+            return BareFuncCallRegex.Replace(s, m =>
+            {
+                var name = m.Groups[1].Value;
+                if (IsKnownBuiltin(name)) return m.Value;
+
+                var fName = "F_" + name;
+                if (warnings != null)
+                {
+                    var where = string.IsNullOrEmpty(layerName) ? "" : ("[" + layerName + "] ");
+                    var inProject = knownRoleFunctions != null && knownRoleFunctions.Contains(fName);
+                    var info = inProject
+                        ? " (defined elsewhere in project)"
+                        : " (not defined; will emit no-op stub)";
+                    warnings.Add(where + "[B'-bare] auto-prefixed bare call '"
+                                 + name + "' -> '" + fName + "'" + info);
+                }
+                return fName;
+            });
         }
 
         // ==============================================================
