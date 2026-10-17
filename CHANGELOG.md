@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `StaTableCodeGeneratorTests`: 5 new tests (cross-layer vs truly-missing)
 - `NCalcToPythonConverterTests`: 5 new tests (bare prefix / builtin exclusion /
   backward compat)
-- C# total: 109 tests pass (was 99; +10)
+- C# total: 104 tests pass (was 94; +10)
 
 ### Docs
 

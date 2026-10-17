@@ -1948,3 +1948,52 @@ PropertyGrid を捨て、TableLayoutPanel + TextBox/CheckBox による
 | 🟢 低 | **B'-bare** 裸の RoleFunction 名検出 | 30m |
 | 🟡 中 | **3-C-9-b** ParametersEditor 拡張（追加/削除、per-row reset 等） | 1-2h |
 | 🟡 中 | **i18n** 英語/中国語リソース化 | 数日 |
+
+---
+
+# v0.5.2 リリース完了（2026-10-17 追記）
+
+**HEAD:** `2035b66` (origin/main, tag: v0.5.2)
+
+## 73. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | **B'-warn** | 880eebc | cross-layer vs truly-missing 分類 + Warnings プロパティ |
+| 2 | **B'-bare** | 5878457 | 裸関数呼び出しの自動 F_ 補完 + KnownNCalcBuiltins |
+| 3 | **v0.5.2 リリース** | `2035b66` | 上記 2 機能のバージョン固定 |
+
+## 74. テスト状況（v0.5.2 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|:---:|
+| C# StaTable 全体 | **104** | ✅ pass |
+| - うち B'-warn 新規 | +5 | ✅ |
+| - うち B'-bare 新規 | +5 | ✅ |
+| Python 全体 | 387+ | ✅ pass |
+| GitHub Actions | 4 matrix | ✅ green |
+
+## 75. 次のタスク（優先度順）
+
+| # | タスク | 内容 | 優先度 | 工数 |
+|:---:|---|---|:---:|:---:|
+| **i18n** | 英語/中国語リソース化 | 数日 | 🟡 中 |
+| **E2E (B'-warn/bare)** | 実 XML で cross-layer + bare 混在確認 | 🟢 低 | 30m |
+| **3-C-9-b** | ParametersEditor UX 拡張（追加/削除等） | 🟢 低 | 1-2h |
+| **v0.6.0** | i18n 完了後のバージョン固定 | 🟡 中 | 30m |
+
+### i18n の事前調査項目
+
+- 対象ファイル: `CanvasForm/*.cs` / `StaTableIntegration/*.cs`
+- 方式案: `.resx` リソース or JSON ベース簡易 i18n
+- 言語: 日本語（既存）/ 英語 / 中国語
+- 法的要件: サイバーセキュリティ法・データローカライズ（中国圏リリース予定）
+
+### 本セッションの教訓
+
+- `Assert.Equal(1, collection.Count)` は xUnit2013 warning → `Assert.Single(collection)` 推奨
+- `[Conditional("NEVER_ACTIVE")]` で呼び出し側を IL から除去できる（DBG 系の無効化に有効）
+- `git push` は直接実行して `$LASTEXITCODE` を取る（パイプ経由だと誤検知）
+- 2 回目実行で `anchor not found` が出ても、1 回目で成功済みなら正常（`$t.Replace` は変化なし）
+
+**End of v0.5.2 Release**
