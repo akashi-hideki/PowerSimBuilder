@@ -1156,3 +1156,136 @@ PowerShell セッションへの貼り付け経路で、``` ``` ``` 連続行を
 **テスト方針:** 各コンポーネントの単体テスト + `tests/data/scenarios/welder_fault/` の新規シナリオ
 
 **End of Task 3-E**
+
+---
+
+# セッション末ハンドオーバー（2026-10-17 第 3 セッション）
+
+**HEAD:** `e1e292e` (origin/main)
+**次セッションの起点:** `e1e292e`
+
+> **次セッションは ## 34-39（本セクション）と ## 28-33（Task 3-E 完了）を読めば完全なコンテキストを得られる。**
+
+## 34. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | **v0.4.0 リリース** | `f77545a` | Phase 3-C 完了のバージョン固定 |
+| 2 | **3-C-9-a: ParameterTypeHelper** | `f57ee8e` | 型判定を独立ヘルパに抽出 + 空/未知 Type の型推論 |
+| 3 | **3-E: シナリオデータ整備** | `e1e292e` | `tests/data/scenarios/` へ外部化 + 新規 2 シナリオ |
+
+## 35. 現在のテスト状況（`e1e292e` 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|---|
+| C# StaTable | 94 | pass |
+| C# ParameterTypeHelper | 60 | pass |
+| Python 全件 | 319+ | pass（SKIP なし） |
+| Python 新規シナリオ | 4 | pass |
+
+## 36. 次セッションの着手推奨手順
+
+### Step 0: 状態確認
+
+    cd C:\dev\PowerSimBuilder
+    git --no-pager log --oneline -3      # e1e292e が HEAD か確認
+    git status --porcelain=v1            # clean か確認
+    python -m pytest tests/python -q     # 319+ pass か確認
+
+### Step 1: v0.4.1 リリース（推奨・約 1h）
+
+**理由:** 3-C-9-a + 3-E の 2 コミットが積み上がっている。
+3-F（4-6h の大タスク）に着手する前にリリースポイントを作る。
+
+1. `pyproject.toml`: 0.4.0 -> 0.4.1
+2. `VERSION`: 0.4.0 -> 0.4.1
+3. `CHANGELOG.md`: `[0.4.1] - 2026-10-17` セクション追加
+4. コミット `chore: release v0.4.1`
+5. annotated タグ `v0.4.1`
+6. push（main + tag）
+
+### Step 2: 3-F SPEC_POWERSIM 実装（4-6h、複数セッション可）
+
+詳細は ## 33 参照。実装順の推奨:
+
+1. **PowerSource**（AC 電圧源、独立）
+2. **FaultDevice**（HANDOFF 付録 A §5 の擬似コードをほぼそのまま）
+3. **Engine + Generator**（ペア、torque -> voltage）
+4. **DiodeBridge**（AC -> DC 整流）
+5. **InductionMotor**（すべり制御）
+6. **Welder**（DiodeBridge 出力 + FaultDevice の short_circuit 入力）
+7. `tests/data/scenarios/welder_fault/` 新規シナリオ
+
+## 37. 本セッションの教訓（重要）
+
+### PowerShell here-string の罠（再発）
+
+貼り付け経路で連続バッククォート行（コードフェンス）を含む
+`@'...'@` / `@"..."@` が崩れることがある。
+
+**対策:** 複数行ファイル作成は `@(line1, line2, ...) -join "`n"` 方式で書く。
+（シングルクォート文字列の配列。バッククォート・ダブルクォートをリテラルで扱える）
+
+### pre-commit ruff E501
+
+`controller_box.py` の長い 1 行が E501（122 > 100）で reject。
+
+**対策:** パス結合式は途中で改行する:
+
+    Path(__file__).resolve().parents[3]
+    / "tests" / "data" / "scenarios" / "cooking_heater" / "controller_box.py",
+
+### auto-discovery の波及
+
+`generated/` からファイルを移動すると、auto-discovery に頼っている
+既存テストが連鎖的に `FileNotFoundError` になる。
+
+**対策:** `_resolve_generated_path` に新パスを候補として追加（後方互換維持）。
+今回の追加候補:
+
+    Path.cwd() / "generated" / "controller_box_powersim.py"
+    Path(__file__).resolve().parents[3] / "generated" / "controller_box_powersim.py"
+    Path(__file__).resolve().parents[3] / "tests" / "data" / "scenarios" / "cooking_heater" / "controller_box.py"  (NEW)
+
+### ControllerBox の auto_events
+
+`controller_box.py`（素の生成物）は XML `<Action>` が空だと duty=0 のまま。
+`controller_box_demo.py` + `parameters["auto_events"] = "demo_oven"` の両方が必要。
+
+### git mv 後のステージ状態
+
+`git mv` 直後は R マークで staged だが、既存テストを書き換えると
+MM（staged + unstaged 混在）になる。`git add -A` で統一する。
+
+## 38. 次セッション開始時のプロンプト例
+
+    PowerSimBuilder の続きです。
+    HANDOFF_STATABLE.md の ## 34-39（セッション末ハンドオーバー）と
+    ## 28-33（Task 3-E 完了）を読んで、次タスクに着手してください。
+
+    現状:
+    - HEAD: e1e292e (origin/main)
+    - pytest: 319+ pass（SKIP なし）
+    - 完了: v0.4.0 / 3-C-9-a / 3-E
+
+    次タスクの候補:
+    - v0.4.1 リリース（1h、推奨）
+    - 3-F SPEC_POWERSIM 7 コンポーネント実装（4-6h）
+    - B''-warn / B''-bare（30m x 2）
+
+    まず v0.4.1 リリースから着手してください。
+
+## 39. 次セッション開始前チェックリスト
+
+    cd C:\dev\PowerSimBuilder
+    git --no-pager log --oneline -3         # e1e292e が HEAD
+    git status --porcelain=v1               # clean
+    python -m pip install -e .              # editable install 確認
+    python -m pytest tests/python -q        # 319+ pass
+
+**期待:**
+- HEAD = `e1e292e`
+- work tree clean
+- pytest 319+ pass（SKIP なし）
+
+**End of Session Handover**
