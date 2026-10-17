@@ -190,3 +190,6 @@ generated/demo_system.json
 generated/demo_main.py
 
 # --- Scenario data (tests/data/scenarios) --- # Track scenario JSON/XML/Python assets; ignore only transient outputs. tests/data/scenarios/**/*.pyc tests/data/scenarios/**/__pycache__/ tests/data/scenarios/**/*.png 
+
+# --- Scenario data: explicitly track system.json ---
+!tests/data/scenarios/**/system.json
