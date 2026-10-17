@@ -84,7 +84,7 @@ class InductionMotor(Component):
         t_break = k_break * t_rated
 
         s_break = 0.2
-        if 0.001 < slip < 0.999:
+        if 0.001 < slip <= 1.0:
             t_em = 2.0 * t_break / (slip / s_break + s_break / slip)
         else:
             t_em = 0.0
