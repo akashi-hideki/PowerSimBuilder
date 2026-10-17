@@ -9,7 +9,7 @@ namespace PowerSimBuilder
     /// StaTable/ncalc 形式の条件式・アクション式を Python 式文字列に変換する。
     ///
     /// Phase 2-B: 論理演算子・単項否定・変数参照・RoleFunction 呼び出しに対応。
-    /// 三項演算子 (a ? b : c) は未対応（Phase 2-B' で対応予定）。
+    /// Phase 2-B'': 三項演算子 (a ? b : c) に対応。
     /// </summary>
     public static class NCalcToPythonConverter
     {
@@ -91,10 +91,13 @@ namespace PowerSimBuilder
             masked = RoleFuncRegex.Replace(masked,
                 m => "self." + m.Groups[1].Value);
 
-            // 7. 連続空白の正規化（文字列リテラルはマスク済みなので安全）
+            // 7. 三項演算子 a ? b : c → (b if a else c)
+            masked = ConvertTernary(masked);
+
+            // 8. 連続空白の正規化（文字列リテラルはマスク済みなので安全）
             masked = WhitespaceRegex.Replace(masked, " ").Trim();
 
-            // 8. 文字列リテラルを復元
+            // 9. 文字列リテラルを復元
             masked = RestoreStringLiterals(masked, literals);
 
             return masked;
@@ -173,6 +176,131 @@ namespace PowerSimBuilder
                 }
             }
             return sb.ToString();
+        }
+
+        // ==============================================================
+        // 三項演算子: a ? b : c → (b if a else c)
+        // 右結合: a ? b : c ? d : e は a ? b : (c ? d : e) と解釈
+        // ==============================================================
+
+        private static string ConvertTernary(string expr)
+        {
+            if (string.IsNullOrEmpty(expr)) return expr;
+            expr = expr.Trim();
+            if (expr.Length == 0) return expr;
+
+            int q = FindTopLevelQuestionMark(expr);
+            if (q < 0)
+            {
+                // トップレベルに三項演算子なし。括弧内を再帰処理
+                return RecurseIntoParens(expr);
+            }
+
+            int c = FindMatchingColon(expr, q + 1);
+            if (c < 0) return expr;  // 対応する : が無い → そのまま返す
+
+            string condRaw = expr.Substring(0, q).Trim();
+            string thenRaw = expr.Substring(q + 1, c - q - 1).Trim();
+            string elseRaw = expr.Substring(c + 1).Trim();
+
+            if (condRaw.Length == 0 || thenRaw.Length == 0 || elseRaw.Length == 0)
+                return expr;  // 空オペランドは構文エラー扱い
+
+            // 各オペランドを再帰変換（右結合）
+            string cond  = ConvertTernary(condRaw);
+            string thenB = ConvertTernary(thenRaw);
+            string elseB = ConvertTernary(elseRaw);
+
+            return "(" + thenB + " if " + cond + " else " + elseB + ")";
+        }
+
+        private static int FindTopLevelQuestionMark(string expr)
+        {
+            int depth = 0;
+            for (int i = 0; i < expr.Length; i++)
+            {
+                char ch = expr[i];
+                if (ch == '(') depth++;
+                else if (ch == ')') depth--;
+                else if (ch == '?' && depth == 0) return i;
+            }
+            return -1;
+        }
+
+        private static int FindMatchingColon(string expr, int start)
+        {
+            int depthParen = 0;
+            int depthTernary = 0;
+            for (int i = start; i < expr.Length; i++)
+            {
+                char ch = expr[i];
+                if (ch == '(') depthParen++;
+                else if (ch == ')') depthParen--;
+                else if (depthParen == 0)
+                {
+                    if (ch == '?') depthTernary++;
+                    else if (ch == ':')
+                    {
+                        if (depthTernary == 0) return i;
+                        depthTernary--;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        private static string RecurseIntoParens(string expr)
+        {
+            var sb = new StringBuilder(expr.Length);
+            int i = 0;
+            while (i < expr.Length)
+            {
+                if (expr[i] == '(')
+                {
+                    int depth = 1;
+                    int j = i + 1;
+                    while (j < expr.Length && depth > 0)
+                    {
+                        if (expr[j] == '(') depth++;
+                        else if (expr[j] == ')') depth--;
+                        j++;
+                    }
+                    if (depth == 0)
+                    {
+                        string inner = expr.Substring(i + 1, j - i - 2);
+                        string converted = ConvertTernary(inner);
+                        if (IsBalancedParens(converted))
+                            sb.Append(converted);
+                        else
+                        {
+                            sb.Append('(');
+                            sb.Append(converted);
+                            sb.Append(')');
+                        }
+                        i = j;
+                        continue;
+                    }
+                }
+                sb.Append(expr[i]);
+                i++;
+            }
+            return sb.ToString();
+        }
+
+        private static bool IsBalancedParens(string s)
+        {
+            if (s.Length < 2 || s[0] != '(' || s[s.Length - 1] != ')') return false;
+            int depth = 0;
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (s[i] == '(') depth++;
+                else if (s[i] == ')')
+                {
+                    depth--;
+                    if (depth == 0 && i < s.Length - 1) return false;
+                }
+            }
+            return depth == 0;
         }
     }
 }

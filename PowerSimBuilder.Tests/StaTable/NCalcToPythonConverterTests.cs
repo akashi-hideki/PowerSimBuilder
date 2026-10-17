@@ -185,5 +185,67 @@ namespace PowerSimBuilder.Tests.StaTable
         {
             Assert.Null(NCalcToPythonConverter.ConvertAction(null));
         }
+
+        // ==============================================================
+        // 三項演算子 (Phase 2-B'')
+        // ==============================================================
+
+        [Fact]
+        public void ConvertCondition_SimpleTernary()
+        {
+            Assert.Equal("(1 if a > 0 else 0)",
+                NCalcToPythonConverter.ConvertCondition("a > 0 ? 1 : 0"));
+        }
+
+        [Fact]
+        public void ConvertCondition_NestedTernaryElse()
+        {
+            // a ? b : (c ? d : e) — 右結合
+            Assert.Equal("(b if a else (d if c else e))",
+                NCalcToPythonConverter.ConvertCondition("a ? b : c ? d : e"));
+        }
+
+        [Fact]
+        public void ConvertCondition_NestedTernaryThen()
+        {
+            // (a ? (b ? c : d) : e) — 条件部に三項演算子
+            Assert.Equal("((c if b else d) if a else e)",
+                NCalcToPythonConverter.ConvertCondition("a ? b ? c : d : e"));
+        }
+
+        [Fact]
+        public void ConvertCondition_TernaryWithLogical()
+        {
+            Assert.Equal("(self.F_a() if x and y else self.F_b())",
+                NCalcToPythonConverter.ConvertCondition("x && y ? F_a() : F_b()"));
+        }
+
+        [Fact]
+        public void ConvertCondition_TernaryWithArithmetic()
+        {
+            Assert.Equal("(b + 1 if a > 0 else c * 2)",
+                NCalcToPythonConverter.ConvertCondition("a > 0 ? b + 1 : c * 2"));
+        }
+
+        [Fact]
+        public void ConvertCondition_TernaryInParen()
+        {
+            Assert.Equal("(b if a else c) > 0",
+                NCalcToPythonConverter.ConvertCondition("(a ? b : c) > 0"));
+        }
+
+        [Fact]
+        public void ConvertCondition_TernaryInString_NotConverted()
+        {
+            Assert.Equal("\"a?b:c\"",
+                NCalcToPythonConverter.ConvertCondition("\"a?b:c\""));
+        }
+
+        [Fact]
+        public void ConvertCondition_NoTernary_Unchanged()
+        {
+            Assert.Equal("a > 0",
+                NCalcToPythonConverter.ConvertCondition("a > 0"));
+        }
     }
 }
