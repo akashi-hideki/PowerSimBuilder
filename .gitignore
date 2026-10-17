@@ -152,3 +152,11 @@ _backup_2bpp_*/
 # Task B''-prefix 作業用 (2026-10-17)
 _backup_bprefix_*/
 _e2e_bprefix_*/
+
+# 作業用フォルダ (2026-10-17)
+_backup_c_*/
+_backup_dialogs_*/
+_backup_handoff_*/
+_inspect_load_*/
+_mainform_sections_*/
+_menu_extract_*/
