@@ -197,3 +197,11 @@ tests/data/scenarios/**/*.png
 
 # --- Scenario data: explicitly track system.json ---
 !tests/data/scenarios/**/system.json
+
+# Task 3-C-13 GUI/executor debugging artifacts
+generated/_diag.py
+generated/demo_main_dbg.py
+generated/demo_dbg_*.txt
+generated/out.txt
+generated/err.txt
+executor_trace.log
