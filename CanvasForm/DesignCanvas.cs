@@ -391,7 +391,9 @@ namespace PowerSimBuilder
         private void HandleMouseDown(Point location)
         {
             if (TrySelectConnection(location)) return;
-            if (TryHandlePortClick(location)) return;
+            // [Fix 3-C-7c] Duplicate fire prevention
+
+            // if (TryHandlePortClick(location)) return;
 
             ConnectionSelected?.Invoke(this, new ConnectionEventArgs(null));
             DeselectAllConnections();
@@ -718,12 +720,16 @@ namespace PowerSimBuilder
 
             for (int i = 0; i < ports.Length; i++)
             {
+                // Port coordinate fix: match OnPaint (circular hit test with PortRadius)
                 float ratio = (i + 1f) / (ports.Length + 1);
                 int yPos = (int)(component.Height * ratio);
-                int xPos = isInput ? 5 : component.Width - 15;
-                var portRect = new Rectangle(xPos, yPos - 5, 10, 10);
+                int xCenter = isInput
+                    ? ComponentControl.PortRadius
+                    : component.Width - ComponentControl.PortRadius;
 
-                if (portRect.Contains(clientPos))
+                int dx = clientPos.X - xCenter;
+                int dy = clientPos.Y - yPos;
+                if (dx * dx + dy * dy <= ComponentControl.HitTestRadius * ComponentControl.HitTestRadius)
                 {
                     ComponentControl_PortClicked(component, new PortEventArgs(ports[i]));
                     return true;

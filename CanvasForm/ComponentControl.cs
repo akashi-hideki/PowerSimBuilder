@@ -13,8 +13,8 @@ namespace PowerSimBuilder
     public partial class ComponentControl : UserControl
     {
         // ポート描画サイズとヒットエリアの拡大
-        private const int PortRadius = 8; // 描画半径
-        private const int HitTestRadius = 12; // ヒットテスト半径
+        public const int PortRadius = 8; // 描画半径
+        public const int HitTestRadius = 12; // ヒットテスト半径
 
         // コンポーネントの基本サイズ（推奨サイズ）
         public const int BaseWidth = 180;
@@ -85,16 +85,18 @@ namespace PowerSimBuilder
 
         public Rectangle GetInputPortBounds(int index)
         {
+            // Port coordinate fix: X matches OnPaint (client PortRadius from left)
             float ratio = (index + 1f) / (Descriptor.InputPorts.Length + 1);
             int yPos = (int)(Height * ratio);
-            return new Rectangle(Left - 5, Top + yPos - 5, 10, 10);
+            return new Rectangle(Left + PortRadius - 5, Top + yPos - 5, 10, 10);
         }
 
         public Rectangle GetOutputPortBounds(int index)
         {
+            // Port coordinate fix: X matches OnPaint (client Width - PortRadius from right)
             float ratio = (index + 1f) / (Descriptor.OutputPorts.Length + 1);
             int yPos = (int)(Height * ratio);
-            return new Rectangle(Right - 5, Top + yPos - 5, 10, 10);
+            return new Rectangle(Left + Width - PortRadius - 5, Top + yPos - 5, 10, 10);
         }
 
         /// <summary>
@@ -178,7 +180,9 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    // Port coordinate fix
+                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
                     var portCenter = new Point(PortRadius, yPos);
 
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
@@ -195,7 +199,9 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
-                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    // Port coordinate fix
+                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
                     var portCenter = new Point(Width - PortRadius * 2, yPos);
 
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
@@ -227,7 +233,9 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    // Port coordinate fix
+                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
                     var portCenter = new Point(PortRadius, yPos);
 
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
@@ -246,7 +254,9 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
-                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    // Port coordinate fix
+                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
                     var portCenter = new Point(Width - PortRadius * 2, yPos);
 
                     if (IsPointInCircle(e.Location, portCenter, HitTestRadius))
@@ -304,7 +314,9 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.InputPorts.Length; i++)
                 {
-                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    // Port coordinate fix: ratio formula (consistent with CheckPortClick)
+                    float ratio = (i + 1f) / (Descriptor.InputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
                     var portCenter = new Point(PortRadius, yPos);
 
                     bool isHovered = (_hoveredPort == Descriptor.InputPorts[i] && _isInputPortHovered);
@@ -337,7 +349,9 @@ namespace PowerSimBuilder
             {
                 for (int i = 0; i < Descriptor.OutputPorts.Length; i++)
                 {
-                    int yPos = BaseHeight / 2 + (i * PortSpacing);
+                    // Port coordinate fix
+                    float ratio = (i + 1f) / (Descriptor.OutputPorts.Length + 1);
+                    int yPos = (int)(Height * ratio);
                     var portCenter = new Point(Width - PortRadius * 2, yPos);
 
                     bool isHovered = (_hoveredPort == Descriptor.OutputPorts[i] && !_isInputPortHovered);
