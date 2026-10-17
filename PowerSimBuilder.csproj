@@ -17,7 +17,12 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   
     <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>Copyright 2026 Hideki Akashi</Copyright>
+    <Authors>Hideki Akashi</Authors>
+    <RepositoryUrl>https://github.com/akashi-hideki/PowerSimBuilder</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>

@@ -1,0 +1,12 @@
+PowerSimBuilder
+Copyright 2026 Hideki Akashi
+
+This product includes software developed by the PowerSimBuilder
+project contributors (https://github.com/akashi-hideki/PowerSimBuilder).
+
+Companion to StaTable (https://github.com/akashi-hideki/StaTable),
+which is also licensed under the Apache License, Version 2.0.
+
+Third-party dependencies:
+- .NET Framework / .NET (MIT, Microsoft)
+- (others to be listed as dependencies are added)
