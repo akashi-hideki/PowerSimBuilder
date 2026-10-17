@@ -673,3 +673,116 @@ StaTable (独立) → design.xml → PowerSimBuilder → controller_box.py
 ---
 
 **End of HANDOFF**
+
+
+---
+
+# Phase 2 拡張 + Phase 3 準備（2026-10-17 追記）
+
+**HEAD:** `963ee8a` (origin/main)
+
+## 11. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| **B'** | RoleFunction 動的スタブ | `1f39047` | 未定義 `F_xxx` を no-op スタブ自動生成（B'） |
+| **2-B''** | 三項演算子対応 | `52ba7a6` | `a ? b : c` → `(b if a else c)` |
+| **B''-prefix** | `F_` プレフィックス正規化 | `9f2b73a` | `RoleFunctions.Name` に `F_` を自動付与 |
+| **C** | MainForm 統合 | `d4913c4` | ツールバーに「StaTable取込」ボタン追加 |
+| **案 A** | ファイルダイアログ | `963ee8a` | 読み込み/保存に `OpenFileDialog` / `SaveFileDialog` |
+
+## 12. テスト状況
+
+| スコープ | 件数 | 状態 |
+|---|---:|---|
+| C# `StaTable` 全体 | **94** | ✅ pass |
+| C# `NCalcToPythonConverter` | 29 | ✅ pass |
+| C# `StaTableCodeGenerator` | 32 | ✅ pass |
+| Python 全体 | 315 | ✅ pass |
+| Python `StaTable` | 50 | ✅ pass |
+
+## 13. E2E 検証結果
+
+| タスク | 検証内容 | 結果 |
+|---|---|:---:|
+| B' | 実 XML に `F_undefined_test()` を注入 → スタブ生成確認 | ✅ |
+| 2-B'' | 三項演算子 + 未定義 `F_xxx` の連携確認 | ✅ |
+| B''-prefix | 実 XML の RoleFunction を `F_` 付きで参照 → 定義と参照の一致確認 | ✅ |
+
+## 14. 実装の追加ポイント
+
+### 三項演算子変換（`NCalcToPythonConverter.cs`）
+
+| ncalc | Python |
+|---|---|
+| `a ? b : c` | `(b if a else c)` |
+| `a ? b : c ? d : e` | `(b if a else (d if c else e))`（右結合） |
+| `(a ? b : c) > 0` | `(b if a else c) > 0` |
+
+- 実装: `ConvertTernary` / `FindTopLevelQuestionMark` / `FindMatchingColon` / `RecurseIntoParens` / `IsBalancedParens`
+- `ConvertCore` のステップ 7 に挿入
+
+### `F_` プレフィックス正規化（`StaTableCodeGenerator.cs`）
+
+- `NormalizeRoleFunctionName(string)`: `F_` が無ければ付与、既に付いていれば二重付与しない
+- `WriteRoleFunction`: 正規化名で `def F_xxx(self):` を出力
+- `CollectMissingRoleFunctions`: `defined` 集合も正規化して比較（B' のスタブ二重生成防止）
+
+### B' のスタブ生成（`StaTableCodeGenerator.cs`）
+
+- 未定義 `F_xxx` を Ordinal 昇順で no-op スタブ化
+- シグネチャ: `(self, *args, **kwargs)`（引数不一致による `TypeError` 防止）
+- 戻り値: `return 0`（`None` 比較による `TypeError` 防止）
+- `STABLE_USER_CODE_START/END` で再生成時のユーザー実装保護
+
+## 15. 既知の制約（更新版）
+
+### Phase 3 以降
+
+| # | 制約 | 対応予定 |
+|:---:|---|---|
+| 1 | **RoleFunction は no-op スタブ** | Phase 3-A でユーザー実装（`STABLE_USER_CODE` 内） |
+| 2 | **別レイヤーの `F_xxx` 参照は no-op** | `B''-warn`（警告追加、優先度 🟢 低） |
+| 3 | **裸の RoleFunction 名（`F_` なし）は変換されない** | `B''-bare`（自動変換/警告、優先度 🟢 低） |
+| 4 | **queue イベントの action 自動送信** | action 内で `self.queue_event(...)` を自動化 |
+| 5 | **v0.3.0 リリース** | Phase 2 をバージョン固定 |
+
+## 16. 次のタスク（優先度順）
+
+| # | タスク | 内容 | 優先度 | 工数 |
+|:---:|---|---|:---:|:---:|
+| **3-A** | RoleFunction 本体実装 | `STABLE_USER_CODE` 展開（120 関数） | 🔴 高 | 数日 |
+| **B''-warn** | 別レイヤー参照の警告 | レイヤー跨ぎの `F_xxx` を警告 | 🟢 低 | 30m |
+| **B''-bare** | 裸の RoleFunction 名の検出 | `F_` なし参照の自動変換/警告 | 🟢 低 | 30m |
+| **v0.3.0** | リリース | Phase 2 のバージョン固定 | 🟡 中 | 1h |
+
+## 17. 本セッションの教訓
+
+### PowerShell の罠
+
+| やること | やらないこと |
+|---|---|
+| `Write-Host ("..." -f $x) -ForegroundColor Green` のように `-f` を括弧で囲む | `Write-Host "..." -f $x -ForegroundColor Green`（`-ForegroundColor` が `-f` に吸い込まれる） |
+| `[regex]::Escape()` でリテラル化してから `-match` | 生の `()` を `-match` に埋め込む（メタ文字事故） |
+| 複数行スクリプトは `function` でラップ | 一括貼り付けで `throw` に頼る（後続行が実行される） |
+| 生成コード内の文字列は `Contains()` でリテラル比較 | エスケープ済み/未エスケープの混同（`\"` vs `"`） |
+| E2E はファイル可視性リトライ（最大 5 秒）を入れる | CLI 直後の `Test-Path` 1 回で判断（false negative あり） |
+
+### WinForms の罠
+
+| やること | やらないこと |
+|---|---|
+| `ToolStripButton` の `new` は `toolStrip1.Items.AddRange` の**前** | プロパティ設定エリアで `new`（AddRange 時に null でクラッシュ） |
+| EXE ロック時はプロセス終了 → 解放待ち（リトライ） | ロックしたままビルド（`MSB3026`/`MSB3027`） |
+
+### 設計上の知見
+
+| 知見 | 内容 |
+|---|---|
+| **StaTable の RoleFunction はレイヤー単位** | 別レイヤーの `F_xxx` は同一クラスから呼べない → B' が no-op スタブで安全に吸収 |
+| **`F_` プレフィックスは呼び出し規約** | XML の `RoleFunctions.Name` は `F_` なしでも、生成コード側で正規化する |
+| **ファイルダイアログの導入** | 固定パス `system.json` はユーザビリティが低い。標準ダイアログで任意パス対応 |
+
+---
+
+**End of Session Append**
