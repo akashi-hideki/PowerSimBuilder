@@ -476,34 +476,6 @@ namespace PowerSimBuilder
                         InputPorts = new[] { "current", "reset" },
                         OutputPorts = new[] { "tripped", "peak" }
                     }
-                },
-                // ============================================================
-                // StaTable Controller (Task 3-C-2)
-                // ============================================================
-                {
-                    "Controller Box", new ComponentDescriptor
-                    {
-                        Name = "Controller Box",
-                        Type = "ControllerBox",
-                        Category = "Control",
-                        Parameters = new List<ParameterDescriptor>
-                        {
-                            new ParameterDescriptor { Name = "generated_path", Type = "string", DefaultValue = "" }
-                        },
-                        InputPorts = new[]
-                        {
-                            "thermistor_top", "thermistor_bottom", "thermistor_middle",
-                            "ir_value", "steam_sensor", "door_open", "mw_anode_current",
-                            "rx_buf", "seq_total", "stage_duration",
-                            "steam_target_temp", "mw_target_power", "oven_target_temp"
-                        },
-                        OutputPorts = new[]
-                        {
-                            "heater_top_duty", "heater_middle_duty", "heater_bottom_duty",
-                            "fan_duty", "pump_on", "mag_on", "mw_power",
-                            "error_code", "seq_step", "stage_mode", "boiler_temp"
-                        }
-                    }
                 }
             };
         }

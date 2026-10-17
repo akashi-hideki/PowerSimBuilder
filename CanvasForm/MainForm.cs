@@ -402,7 +402,50 @@ namespace PowerSimBuilder
         {
             using (var form = new StaTableImportForm())
             {
-                form.ShowDialog(this);
+                if (form.ShowDialog(this) != DialogResult.OK) return;
+
+                // Task 3-C-6: 生成された .py からプロジェクト固有の Descriptor を構築
+                try
+                {
+                    var project = form.ImportedProject;
+                    var genPath = form.ImportedGeneratedPath;
+                    var srcXml = form.ImportedSourceXmlPath;
+                    if (project == null || string.IsNullOrEmpty(genPath)) return;
+
+                    var descriptor = ControllerBoxDescriptorBuilder.Build(
+                        project.Name, genPath, srcXml);
+
+                    // 既存チェック（同じプロジェクト名があれば上書き）
+                    var existing = componentPalette1.AvailableComponents
+                        .FirstOrDefault(d => d.Name == descriptor.Name
+                                          && d.Type == "ControllerBox");
+                    if (existing != null)
+                    {
+                        // パレット上の Descriptor を更新（ポート構成を最新化）
+                        componentPalette1.UpdateComponent(existing, descriptor);
+                        Console.WriteLine($"[ControllerBox] Updated descriptor: {descriptor.Name}");
+                    }
+                    else
+                    {
+                        componentPalette1.AddComponent(descriptor);
+                        _components.Add(descriptor);
+                        Console.WriteLine($"[ControllerBox] Added descriptor: {descriptor.Name}");
+                    }
+
+                    ComponentPaletteStorage.SaveDescriptors(
+                        componentPalette1.AvailableComponents);
+
+                    MessageBox.Show(this,
+                        $"パレットに '{project.Name}' を追加しました。\n\n" +
+                        $"入力: {descriptor.InputPorts.Length} / 出力: {descriptor.OutputPorts.Length}",
+                        "ControllerBox", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this,
+                        $"Descriptor の生成に失敗しました:\n{ex.Message}",
+                        "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

@@ -24,6 +24,15 @@ namespace PowerSimBuilder
         /// <summary>テスト用: 生成された Python コード (最後のプレビュー内容)</summary>
         public string GeneratedCode { get; private set; }
 
+        /// <summary>取り込み成功時の StaTableProject (Task 3-C-6)</summary>
+        public StaTableProject ImportedProject { get; private set; }
+
+        /// <summary>生成された .py ファイルの絶対パス (Task 3-C-6)</summary>
+        public string ImportedGeneratedPath { get; private set; }
+
+        /// <summary>取り込み元 XML の絶対パス (Task 3-C-6)</summary>
+        public string ImportedSourceXmlPath { get; private set; }
+
         // ==============================================================
         // Browse
         // ==============================================================
@@ -136,6 +145,10 @@ namespace PowerSimBuilder
                 try
                 {
                     _generator.GenerateToFile(_currentProject, dlg.FileName);
+                    // Task 3-C-6: MainForm が Descriptor を生成できるように公開
+                    ImportedProject = _currentProject;
+                    ImportedGeneratedPath = System.IO.Path.GetFullPath(dlg.FileName);
+                    ImportedSourceXmlPath = _currentProject.SourceFilePath;
                     MessageBox.Show(this,
                         "生成しました:\n" + dlg.FileName,
                         "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
