@@ -32,6 +32,11 @@ namespace PowerSimBuilder
         /// <summary>Python ソースコードを文字列として返す</summary>
         public string Generate(StaTableProject project)
         {
+            return GenerateInternal(project, null);
+        }
+
+        private string GenerateInternal(StaTableProject project, Dictionary<string, string> preservedUserCode)
+        {
             if (project == null)
                 throw new ArgumentNullException("project");
 
@@ -39,7 +44,7 @@ namespace PowerSimBuilder
             WriteHeader(sb, project);
             WriteImports(sb);
             WriteGlobalVariables(sb, project);
-            WriteLayerClasses(sb, project);
+            WriteLayerClasses(sb, project, preservedUserCode);
             WriteRuntimeBuilder(sb, project);
             WriteEntryPoint(sb);
             return sb.ToString();
@@ -48,7 +53,21 @@ namespace PowerSimBuilder
         /// <summary>指定パスに Python ファイルを書き出す</summary>
         public void GenerateToFile(StaTableProject project, string filePath)
         {
-            var code = Generate(project);
+            Dictionary<string, string> preservedUserCode = null;
+            try
+            {
+                if (File.Exists(filePath))
+                {
+                    var existing = File.ReadAllText(filePath, Encoding.UTF8);
+                    preservedUserCode = ExtractUserCodeBlocks(existing);
+                }
+            }
+            catch
+            {
+                preservedUserCode = null;
+            }
+
+            var code = GenerateInternal(project, preservedUserCode);
             File.WriteAllText(filePath, code, new UTF8Encoding(false));
         }
 
@@ -138,15 +157,15 @@ namespace PowerSimBuilder
         // Layer classes
         // ==============================================================
 
-        private void WriteLayerClasses(StringBuilder sb, StaTableProject project)
+        private void WriteLayerClasses(StringBuilder sb, StaTableProject project, Dictionary<string, string> preservedUserCode)
         {
             foreach (var layer in project.Tabs)
             {
-                WriteLayerClass(sb, layer);
+                WriteLayerClass(sb, layer, preservedUserCode);
             }
         }
 
-        private void WriteLayerClass(StringBuilder sb, StaTableStateMachine layer)
+        private void WriteLayerClass(StringBuilder sb, StaTableStateMachine layer, Dictionary<string, string> preservedUserCode)
         {
             var className = MakeClassName(layer.LayerName);
 
@@ -219,7 +238,7 @@ namespace PowerSimBuilder
                 sb.AppendLine("    # === Role Functions (from StaTable layer-local) ===");
                 foreach (var rf in layer.RoleFunctions)
                 {
-                    WriteRoleFunction(sb, layer.LayerName, rf);
+                    WriteRoleFunction(sb, layer.LayerName, rf, preservedUserCode);
                 }
             }
 
@@ -231,7 +250,7 @@ namespace PowerSimBuilder
                 sb.AppendLine("    # === Auto-generated no-op stubs for undefined RoleFunctions ===");
                 foreach (var name in missing)
                 {
-                    WriteRoleFunctionStub(sb, layer.LayerName, name);
+                    WriteRoleFunctionStub(sb, layer.LayerName, name, preservedUserCode);
                 }
             }
             // ▲▲▲ タスク B' ここまで ▲▲▲
@@ -240,13 +259,13 @@ namespace PowerSimBuilder
             sb.AppendLine();
         }
 
-        private void WriteRoleFunction(StringBuilder sb, string layerName, StaTableRoleFunction rf)
+        private void WriteRoleFunction(StringBuilder sb, string layerName, StaTableRoleFunction rf, Dictionary<string, string> preservedUserCode)
         {
             var pythonName = NormalizeRoleFunctionName(rf.Name);
             var marker = layerName + "." + pythonName;
             sb.AppendLine("    def " + pythonName + "(self):");
             sb.AppendLine("        # STABLE_USER_CODE_START:" + marker);
-            sb.AppendLine("        return 0");
+            AppendUserBody(sb, preservedUserCode, marker, "        return 0");
             sb.AppendLine("        # STABLE_USER_CODE_END:" + marker);
         }
 
@@ -292,13 +311,77 @@ namespace PowerSimBuilder
         /// シグネチャを (*args, **kwargs) にして引数個数不一致による TypeError も防ぐ。
         /// STABLE_USER_CODE_START/END で囲むことで再生成時にユーザー実装が保護される。
         /// </summary>
-        private void WriteRoleFunctionStub(StringBuilder sb, string layerName, string name)
+        private void WriteRoleFunctionStub(StringBuilder sb, string layerName, string name, Dictionary<string, string> preservedUserCode)
         {
             var marker = layerName + "." + name;
             sb.AppendLine("    def " + name + "(self, *args, **kwargs):");
             sb.AppendLine("        # STABLE_USER_CODE_START:" + marker);
-            sb.AppendLine("        return 0  # TODO: implement " + name);
+            AppendUserBody(sb, preservedUserCode, marker, "        return 0  # TODO: implement " + name);
             sb.AppendLine("        # STABLE_USER_CODE_END:" + marker);
+        }
+
+        // ==============================================================
+        // タスク 3-0: STABLE_USER_CODE 保存機構
+        // 既存生成コードからマーカー内のユーザー実装を抽出し、
+        // 再生成時に同じマーカーへ差し戻す。
+        // ==============================================================
+
+        private static void AppendUserBody(StringBuilder sb, Dictionary<string, string> preservedUserCode, string marker, string defaultBody)
+        {
+            string userBody;
+            if (preservedUserCode != null
+                && preservedUserCode.TryGetValue(marker, out userBody)
+                && !string.IsNullOrWhiteSpace(userBody))
+            {
+                sb.Append(userBody);
+                if (!userBody.EndsWith("\n"))
+                    sb.AppendLine();
+            }
+            else
+            {
+                sb.AppendLine(defaultBody);
+            }
+        }
+
+        private static Dictionary<string, string> ExtractUserCodeBlocks(string source)
+        {
+            var result = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (string.IsNullOrEmpty(source)) return result;
+
+            var normalized = source.Replace("\r\n", "\n");
+            var lines = normalized.Split('\n');
+            string currentKey = null;
+            var currentBody = new StringBuilder();
+
+            var startRegex = new Regex(@"^\s*# STABLE_USER_CODE_START:(.+?)\s*$");
+            var endRegex = new Regex(@"^\s*# STABLE_USER_CODE_END:(.+?)\s*$");
+
+            foreach (var line in lines)
+            {
+                var startMatch = startRegex.Match(line);
+                if (startMatch.Success)
+                {
+                    currentKey = startMatch.Groups[1].Value;
+                    currentBody.Clear();
+                    continue;
+                }
+                var endMatch = endRegex.Match(line);
+                if (endMatch.Success)
+                {
+                    if (currentKey != null && endMatch.Groups[1].Value == currentKey)
+                    {
+                        var body = currentBody.ToString();
+                        if (!string.IsNullOrWhiteSpace(body))
+                            result[currentKey] = body;
+                    }
+                    currentKey = null;
+                    currentBody.Clear();
+                    continue;
+                }
+                if (currentKey != null)
+                    currentBody.AppendLine(line);
+            }
+            return result;
         }
 
         // ==============================================================
