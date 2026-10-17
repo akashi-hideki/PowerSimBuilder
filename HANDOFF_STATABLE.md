@@ -1068,3 +1068,91 @@ Canvas で `HeaterBlock.temperature → ControllerBox.thermistor_top` と
 ---
 
 **End of Task 3-C (Complete)**
+
+---
+
+# Task 3-E 完了（2026-10-17 追記）
+
+**HEAD:** f57ee8e + 3-E 作業コミット
+
+## 28. 3-E 完了タスク
+
+| # | タスク | 内容 |
+|:---:|---|---|
+| **3-E-1** | scenarios 組織化 | cooking_heater の 3 ファイルを `tests/data/scenarios/` へ `git mv` |
+| **3-E-2** | 新規シナリオ 2 本 | `motor_drive`（PWM3Phase+Inertia）/ `heater_overheat`（TPS+Heater+OCD） |
+| **3-E-3** | pytest E2E 4 本 | 各シナリオの system.json と cooking_heater の design.xml を実行検証 |
+| **3-E-4** | auto-discovery 拡張 | `_resolve_generated_path` に scenarios 候補追加 |
+
+## 29. ディレクトリ構造
+
+```
+tests/data/scenarios/
+├── README.md
+├── cooking_heater/
+│   ├── design.xml                   (← generated/cooking_heater_demo.xml)
+│   ├── controller_box.py            (← generated/controller_box_powersim.py)
+│   ├── controller_box_demo.py       (← generated/controller_box_powersim_demo.py)
+│   └── README.md
+├── motor_drive/
+│   ├── system.json                  (新規)
+│   └── README.md
+└── heater_overheat/
+    ├── system.json                  (新規)
+    └── README.md
+```
+
+## 30. テスト状況
+
+| スコープ | 件数 | 状態 |
+|---|---:|---|
+| pytest 全件 | 319+ | ✅ pass（SKIP なし） |
+| 新規シナリオテスト | 4 | ✅ pass |
+| controller_box 系 | 13 | ✅ pass（SKIP → pass 復活） |
+
+## 31. 教訓
+
+### here-string の貼り付け罠
+
+PowerShell セッションへの貼り付け経路で、``` ``` ``` 連続行を含む `@"..."@` / `@'@` が崩れることがある。
+**対策:** 複数行ファイル作成は `@(line1, line2, ...) -join "`n"` 方式で書く（バッククォート不使用）。
+
+### auto-discovery の波及
+
+`generated/` からファイルを移動すると、auto-discovery に頼っている既存テストが連鎖的に `FileNotFoundError` になる。
+**対策:** `_resolve_generated_path` に新パスを候補として追加し、後方互換を維持。
+
+### ControllerBox の auto_events
+
+`controller_box.py`（素の生成物）は XML `<Action>` が空だと duty=0 のまま。
+**対策:** `controller_box_demo.py` + `parameters["auto_events"]="demo_oven"` の両方が必要。
+
+## 32. 次のタスク
+
+| # | タスク | 優先度 |
+|:---:|---|:---:|
+| **3-F** | SPEC_POWERSIM 7 コンポーネント実装（PowerSource/Generator/DiodeBridge/Welder/Engine/InductionMotor/FaultDevice） | 🟡 中 |
+| **i18n** | 英語/中国語対応（リソースファイル化） | 🟢 低 |
+| **v0.4.1** | 3-E のバージョン固定 | 🟡 中 |
+| **B'-warn / B'-bare** | 低優先 | 🟢 低 |
+
+## 33. Task 3-F の概要（新規）
+
+**目的:** SPEC_POWERSIM §3 の 7 コンポーネントを Python に実装する。
+
+**入力:** 各コンポーネントのパラメータ・IO 仕様（HANDOFF 付録 A §3）
+
+**実装対象:**
+- PowerSource（AC 電圧源）
+- Generator（発電機、Engine からトルク入力）
+- DiodeBridge（整流器）
+- Welder（溶接機、短絡/定電流モード）
+- Engine（エンジン、トルク出力）
+- InductionMotor（誘導電動機、すべり制御）
+- FaultDevice（故障装置、condition_expr + duration）
+
+**工数:** 4-6h
+
+**テスト方針:** 各コンポーネントの単体テスト + `tests/data/scenarios/welder_fault/` の新規シナリオ
+
+**End of Task 3-E**

@@ -242,6 +242,12 @@ class ControllerBox(Component):
         candidates = [
             Path.cwd() / "generated" / "controller_box_powersim.py",
             Path(__file__).resolve().parents[3] / "generated" / "controller_box_powersim.py",
+            Path(__file__).resolve().parents[3]
+            / "tests"
+            / "data"
+            / "scenarios"
+            / "cooking_heater"
+            / "controller_box.py",
         ]
         for p in candidates:
             if p.is_file():

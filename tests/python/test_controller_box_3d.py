@@ -12,7 +12,14 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-GENERATED = ROOT / "generated" / "controller_box_powersim.py"
+_GENERATED_CANDIDATES = [
+    ROOT / "generated" / "controller_box_powersim.py",
+    ROOT / "tests" / "data" / "scenarios" / "cooking_heater" / "controller_box.py",
+]
+GENERATED = next(
+    (p for p in _GENERATED_CANDIDATES if p.is_file()),
+    _GENERATED_CANDIDATES[0],
+)
 
 pytestmark = pytest.mark.skipif(
     not GENERATED.is_file(),
