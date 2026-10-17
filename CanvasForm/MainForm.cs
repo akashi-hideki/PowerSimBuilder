@@ -585,6 +585,7 @@ namespace PowerSimBuilder
         public string BuildPythonSimulationWithFileDialog(CanvasManager manager)
         {
             List<ComponentDescriptor> components = manager.UsedComponentDescriptors;
+            List<ComponentControl> componentInstances = manager.GetAllComponents();  // Task 3-C-8
             List<Connection> connections = manager.Connections;
             string pyfile = string.Empty;
             try
@@ -613,6 +614,7 @@ namespace PowerSimBuilder
 
                     // コンポーネントと接続を引数から設定
                     builder.Components = components;
+                    builder.ComponentInstances = componentInstances;  // Task 3-C-8
                     builder.Connections = connections;
 
                     // エラーハンドラーを設定（オプション）

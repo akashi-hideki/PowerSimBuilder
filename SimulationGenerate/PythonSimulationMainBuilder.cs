@@ -101,6 +101,9 @@ namespace PowerSimBuilder
         /// <summary>コンポーネント記述子リスト</summary>
         public List<ComponentDescriptor> Components { get; set; }
 
+        /// <summary>Task 3-C-8: ComponentControl instances (InstanceName + runtime Parameters).</summary>
+        public List<ComponentControl> ComponentInstances { get; set; }
+
         /// <summary>接続リスト</summary>
         public List<Connection> Connections { get; set; }
 
@@ -438,24 +441,94 @@ namespace PowerSimBuilder
         /// </summary>
         private void GenerateComponentParametersInFunction()
         {
-            if (Components == null) return;
+            // Task 3-C-8: use ComponentInstances (runtime Parameters Dictionary)
+            if (ComponentInstances != null && ComponentInstances.Count > 0)
+            {
+                foreach (var comp in ComponentInstances)
+                {
+                    if (comp == null || string.IsNullOrEmpty(comp.InstanceName)) continue;
+                    if (comp.Parameters == null || comp.Parameters.Count == 0) continue;
 
+                    AddLineToSection("function_def", $"    # {comp.InstanceName} のパラメータ設定");
+                    var compName = comp.InstanceName.ToLower();
+                    foreach (var kvp in comp.Parameters)
+                    {
+                        // Task 3-C-8: skip null parameters (keep __init__ defaults)
+                        if (kvp.Value == null) continue;
+                        if (kvp.Value is System.Text.Json.JsonElement je2 &&
+                            (je2.ValueKind == System.Text.Json.JsonValueKind.Null ||
+                             je2.ValueKind == System.Text.Json.JsonValueKind.Undefined))
+                            continue;
+
+                        var pyValue = GetPythonValueFromObject(kvp.Value);
+                        AddLineToSection("function_def", $"    components[\"{compName}\"].parameters[\"{kvp.Key}\"] = {pyValue}");
+                    }
+                    AddLineToSection("function_def", "");
+                }
+                return;
+            }
+
+            // Fallback: legacy path
+            if (Components == null) return;
             foreach (var comp in Components)
             {
                 if (comp.Parameters != null && comp.Parameters.Any())
                 {
                     AddLineToSection("function_def", $"    # {comp.Name} のパラメータ設定");
-
                     var compName = comp.Name.ToLower();
                     foreach (var param in comp.Parameters)
                     {
                         var defaultValue = GetPythonDefaultValue(param.DefaultValue, param.Type);
                         AddLineToSection("function_def", $"    components[\"{compName}\"].parameters[\"{param.Name}\"] = {defaultValue}");
                     }
-
                     AddLineToSection("function_def", "");
                 }
             }
+        }
+
+        /// <summary>Task 3-C-8: convert runtime object to Python literal.
+        /// Handles System.Text.Json.JsonElement (from system.json) and
+        /// numeric-string coercion (e.g. "50" -> 50.0).</summary>
+        private static string GetPythonValueFromObject(object value)
+        {
+            if (value == null) return "None";
+
+            // System.Text.Json deserializes object as JsonElement
+            if (value is System.Text.Json.JsonElement je)
+            {
+                switch (je.ValueKind)
+                {
+                    case System.Text.Json.JsonValueKind.Null:
+                    case System.Text.Json.JsonValueKind.Undefined:
+                        return "None";
+                    case System.Text.Json.JsonValueKind.True:  return "True";
+                    case System.Text.Json.JsonValueKind.False: return "False";
+                    case System.Text.Json.JsonValueKind.Number:
+                        return je.GetDouble().ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    case System.Text.Json.JsonValueKind.String:
+                        var s = je.GetString() ?? "";
+                        // numeric-string coercion
+                        if (double.TryParse(s, System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out double d))
+                            return d.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                        return "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+                }
+                return "None";
+            }
+
+            if (value is string sv)
+            {
+                if (double.TryParse(sv, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out double sd))
+                    return sd.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                return "\"" + sv.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+            }
+            if (value is bool bv) return bv ? "True" : "False";
+            if (value is double dv) return dv.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            if (value is float fv) return fv.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            if (value is int iv) return iv.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            if (value is long lv) return lv.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return "\"" + value.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
         }
 
         /// <summary>
@@ -482,19 +555,43 @@ namespace PowerSimBuilder
             AddLineToSection("function_def", "    # コンポーネント辞書の定義");
             AddLineToSection("function_def", "    components = {");
 
-            foreach (var comp in Components)
+            // Task 3-C-8: prefer ComponentInstances (InstanceName + runtime)
+            if (ComponentInstances != null && ComponentInstances.Count > 0)
             {
-                try
+                foreach (var comp in ComponentInstances)
                 {
-                    if (string.IsNullOrEmpty(comp.Name) || string.IsNullOrEmpty(comp.Type))
-                        continue;
+                    try
+                    {
+                        if (comp == null || comp.Descriptor == null ||
+                            string.IsNullOrEmpty(comp.InstanceName) ||
+                            string.IsNullOrEmpty(comp.Descriptor.Type))
+                            continue;
 
-                    var compName = comp.Name.ToLower();
-                    AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\"),");
+                        var compName = comp.InstanceName.ToLower();
+                        AddLineToSection("function_def", $"        \"{compName}\": {comp.Descriptor.Type}(\"{compName}\"),");
+                    }
+                    catch (Exception ex)
+                    {
+                        HandleError(ErrorCategory.ComponentError, comp?.InstanceName ?? "?", ex.Message);
+                    }
                 }
-                catch (Exception ex)
+            }
+            else
+            {
+                // Fallback: legacy path (descriptor only)
+                foreach (var comp in Components)
                 {
-                    HandleError(ErrorCategory.ComponentError, comp.Name, ex.Message);
+                    try
+                    {
+                        if (string.IsNullOrEmpty(comp.Name) || string.IsNullOrEmpty(comp.Type))
+                            continue;
+                        var compName = comp.Name.ToLower();
+                        AddLineToSection("function_def", $"        \"{compName}\": {comp.Type}(\"{compName}\"),");
+                    }
+                    catch (Exception ex)
+                    {
+                        HandleError(ErrorCategory.ComponentError, comp?.Name ?? "?", ex.Message);
+                    }
                 }
             }
 
