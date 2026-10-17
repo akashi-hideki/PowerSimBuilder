@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.3.0] - 2026-10-17
+
+### Added (Phase 3-A: RoleFunction implementation)
+
+- **3-0**: Preserve user code across regeneration via STABLE_USER_CODE markers
+- **3-A-1**: DriverInput 6 RoleFunctions (sensors, events, door safety)
+- **3-A-2-A**: DriverOutput 13 RoleFunctions (heater/fan/pump/magnetron control)
+- **3-A-2-B**: Application 10 RoleFunctions (sequence control, error management)
+- **3-A-3**: Mw* 4 layers 31 RoleFunctions
+  - MwMicrowave (6): magnetron control + anode current monitoring
+  - MwGrill (6): grill heater control + overheat detection
+  - MwOven (10): PID bit control + 3 heater duty + fan + thermistor + overheat
+  - MwSteam (9): boiler heater + pump pulse + temperature + P-control PID + overheat
+- `generated/` directory for formally managed generated code
+
+### Added (Phase 2 extensions)
+
+- **B'**: Auto-generate no-op stubs for undefined F_xxx RoleFunctions
+- **2-B''**: Ternary operator (a ? b : c) support in NCalcToPythonConverter
+- **B'-prefix**: F_ prefix normalization for RoleFunction names
+- **C**: MainForm toolbar with "StaTableImport" button
+- File dialogs (OpenFileDialog / SaveFileDialog) for project load/save
+
+### Fixed
+
+- Mixed line endings (CRLF -> LF) in generated Python code
+- MainForm ToolStripButton null reference on AddRange
+
+### Tests
+
+- C# (xUnit): 94 StaTable tests pass
+- Python (pytest): 315 tests pass
+- RoleFunction direct-call tests: 60 functions + 3 regression pass
+
 ## [0.2.3] - 2026-10-13
 
 ### Added

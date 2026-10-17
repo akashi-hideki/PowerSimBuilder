@@ -1,4 +1,4 @@
-﻿# Auto-detect text files, normalize to LF in repo
+# Auto-detect text files, normalize to LF in repo
 * text=auto
 
 # Python: LF only
@@ -6,6 +6,7 @@
 *.sh text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+*.md text eol=lf
 
 # C# on Windows: CRLF is fine
 *.cs text
