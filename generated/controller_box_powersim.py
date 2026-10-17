@@ -6,7 +6,7 @@ StaTable project: CookingHeaterController
 StaTable generation_style: table_driven
 StaTable os_type: non_rtos
 Tabs: 7 (DriverInput, DriverOutput, MwMicrowave, MwOven, MwGrill, MwSteam, Application)
-Generated: 2026-10-17T13:29:23+09:00
+Generated: 2026-10-17T13:32:14+09:00
 """
 
 from python_runtime.statable import StaTableControllerBase, StaTableRuntime
@@ -689,42 +689,74 @@ class ApplicationController(StaTableControllerBase):
     # === Role Functions (from StaTable layer-local) ===
     def F_ReceiveSequence(self):
         # STABLE_USER_CODE_START:Application.F_ReceiveSequence
+        # Receive sequence from panel (simulation)
+        self.globals["seq_step"] = 0
+        self.globals["stage_elapsed"] = 0
         return 0
         # STABLE_USER_CODE_END:Application.F_ReceiveSequence
     def F_ParseSequence(self):
         # STABLE_USER_CODE_START:Application.F_ParseSequence
-        return 0
+        # Parse sequence data. Returns 1 if valid (seq_total > 0).
+        return 1 if self.globals.get("seq_total", 0) > 0 else 0
         # STABLE_USER_CODE_END:Application.F_ParseSequence
     def F_StartStage(self):
         # STABLE_USER_CODE_START:Application.F_StartStage
+        # Start current stage
+        self.globals["stage_elapsed"] = 0
         return 0
         # STABLE_USER_CODE_END:Application.F_StartStage
     def F_StopStage(self):
         # STABLE_USER_CODE_START:Application.F_StopStage
+        # Stop current stage (safe shutdown of all actuators)
+        self.globals["heater_top_on"] = 0
+        self.globals["heater_middle_on"] = 0
+        self.globals["heater_bottom_on"] = 0
+        self.globals["heater_top_duty"] = 0
+        self.globals["heater_middle_duty"] = 0
+        self.globals["heater_bottom_duty"] = 0
+        self.globals["fan_on"] = 0
+        self.globals["fan_duty"] = 0
+        self.globals["pump_on"] = 0
+        self.globals["mag_on"] = 0
+        self.globals["mw_power"] = 0
         return 0
         # STABLE_USER_CODE_END:Application.F_StopStage
     def F_CheckStageDone(self):
         # STABLE_USER_CODE_START:Application.F_CheckStageDone
-        return 0
+        # Check if stage complete
+        elapsed = self.globals.get("stage_elapsed", 0)
+        duration = self.globals.get("stage_duration", 0)
+        return 1 if (duration > 0 and elapsed >= duration) else 0
         # STABLE_USER_CODE_END:Application.F_CheckStageDone
     def F_NextStage(self):
         # STABLE_USER_CODE_START:Application.F_NextStage
+        # Advance to next stage
+        self.globals["seq_step"] = self.globals.get("seq_step", 0) + 1
+        self.globals["stage_elapsed"] = 0
         return 0
         # STABLE_USER_CODE_END:Application.F_NextStage
     def F_ReportStatus(self):
         # STABLE_USER_CODE_START:Application.F_ReportStatus
+        # Report status to panel (simulation: no-op)
         return 0
         # STABLE_USER_CODE_END:Application.F_ReportStatus
     def F_ReportComplete(self):
         # STABLE_USER_CODE_START:Application.F_ReportComplete
+        # Report completion (simulation: no-op)
         return 0
         # STABLE_USER_CODE_END:Application.F_ReportComplete
     def F_LogAppError(self):
         # STABLE_USER_CODE_START:Application.F_LogAppError
+        # Log application error (preserve existing)
+        cur = self.globals.get("error_code", 0)
+        if cur == 0:
+            self.globals["error_code"] = 0xE0
         return 0
         # STABLE_USER_CODE_END:Application.F_LogAppError
     def F_ClearAppError(self):
         # STABLE_USER_CODE_START:Application.F_ClearAppError
+        # Clear application error
+        self.globals["error_code"] = 0
         return 0
         # STABLE_USER_CODE_END:Application.F_ClearAppError
 
