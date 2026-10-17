@@ -10,12 +10,14 @@ from .clamp import Clamp
 from .counter import Counter
 from .digital_input import DigitalInput
 from .digital_output import DigitalOutput
+from .diode_bridge import DiodeBridge
 from .engine import Engine
 from .fault_device import FaultDevice
 from .first_order_lag import FirstOrderLag
 from .gain import Gain
 from .generator import Generator
 from .heater_block import HeaterBlock
+from .induction_motor import InductionMotor
 from .integrator import Integrator
 from .low_pass_filter import LowPassFilter
 from .mechanical_inertia import MechanicalInertia
@@ -39,12 +41,14 @@ __all__ = [
     "Counter",
     "DigitalInput",
     "DigitalOutput",
+    "DiodeBridge",
     "FaultDevice",
     "Engine",
     "FirstOrderLag",
     "Gain",
     "Generator",
     "HeaterBlock",
+    "InductionMotor",
     "Integrator",
     "LowPassFilter",
     "MechanicalInertia",
