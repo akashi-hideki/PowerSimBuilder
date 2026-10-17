@@ -991,3 +991,80 @@ Canvas で `HeaterBlock.temperature → ControllerBox.thermistor_top` と
 ---
 
 **End of Task 3-C**
+
+---
+
+# Task 3-C 完全完了（2026-10-17 追記）
+
+**HEAD:** `0c57d57` (origin/main)
+
+## 28. 本セッション完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| **3-C-7c** | ポート座標統一 + 二重発火修正 | `853079b` | 3箇所の座標式を統一 |
+| **3-C-8** | GUI 経由 main.py 生成修正 | `c15fe08` | ComponentInstances + 実パラメータ |
+| **chore** | Program.DBG + debug.log ignore | `6e932b8` | ファイルベースデバッグログ |
+| **chore** | E2E テスト用ファイル ignore | `0c57d57` | generated/ の E2E 残骸除外 |
+| **3-D** | thermistor 上書き修正 | `011893e` | sensor 変数の read-only 化 |
+
+## 29. 動作確認済み（E2E）
+
+### GUI 経由フルパイプライン
+
+1. Canvas で 3 コンポーネント配置（CookingHeaterController + HeaterBlock + Gain）
+2. 3 接続（heater_top_duty → gain → voltage → temperature → thermistor_top）
+3. 保存 → demo_system.json
+4. createSimButton → PythonSimulationMainBuilder → demo_main.py 生成
+5. main.py 実行
+
+| シナリオ | 結果 |
+|---|---|
+| t_end=5.0s | T=120.15°C, duty=100, err=0x00  PASS |
+| t_end=20.0s | T=354.67°C, duty=100, err=0xE3  PASS（過熱検出） |
+
+### 主要バグ修正
+
+- ポート座標が 3 箇所で不一致（描画 vs クリック判定 vs 線端点）
+- 1 クリックで PortClicked が 2 回発火（MouseDown + OnMouseDown）
+- main.py のコンポーネント ID が Descriptor.Name（Connection の InstanceName と不一致）
+- main.py のパラメータが Descriptor.Parameters の DefaultValue（system.json の実値が無視）
+- 数値パラメータが文字列化（"50"）、None パラメータも出力
+
+## 30. 残タスク
+
+| # | タスク | 内容 | 優先度 |
+|:---:|---|---|:---:|
+| **3-C-9** | ParametersEditorForm | PropertyGrid で Dictionary 編集不可の UX 改善 | 🟡 中 |
+| **3-E** | シナリオデータ整備 | 実機仕様ベースのシナリオ | 🟡 中 |
+| **v0.4.0** | リリース | 3-C 完了をバージョン固定 | 🟡 中 |
+| B'-warn | 別レイヤー参照警告 | 低優先 | 🟢 低 |
+| B'-bare | 裸 RoleFunction 名検出 | 低優先 | 🟢 低 |
+
+## 31. 本セッションの教訓
+
+### PowerShell
+
+- **`\"` は無効**: PowerShell のダブルクォート内でバックスラッシュエスケープ不可。
+  メッセージ作成は必ず `@'...'@` (シングルクォート here-string) で行う
+- `.Replace(anchor, @'...'@ -replace ...)` は 3 引数と誤解される。
+  必ず `$old = @'...'@; $new = @'...'@; $s.Replace($old, $new)` の 3 行形式
+- `$LASTEXITCODE` チェックは「既にコミット済み」でも誤発火するため、
+  `git log` で結果確認するのが安全
+
+### C# 生成コード
+
+- `System.Text.Json` の `object` は `JsonElement` になる。
+  `is double` / `is string` ではマッチしない。`JsonElement.ValueKind` で分岐
+- `null` パラメータは出力しない（`__init__` デフォルト保持）
+- numeric-string（"50"）は数値に強制変換
+
+### 設計
+
+- `Components`（List<ComponentDescriptor>）は型情報用に残し、
+  実行時情報は `ComponentInstances`（List<ComponentControl>）で別管理
+- これにより既存メソッド（NeedsDateTimeImport 等）を壊さず段階的に移行可能
+
+---
+
+**End of Task 3-C (Complete)**
