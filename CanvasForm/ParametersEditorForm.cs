@@ -160,7 +160,8 @@ namespace PowerSimBuilder
                 ForeColor = Color.Gray,
             };
 
-            Control editor = BuildEditor(type, value);
+            var category = ParameterTypeHelper.Classify(type, value);
+            Control editor = BuildEditor(category, value);
 
             table.Controls.Add(lblName, 0, rowIndex);
             table.Controls.Add(lblType, 1, rowIndex);
@@ -171,14 +172,14 @@ namespace PowerSimBuilder
             {
                 Name = name,
                 Type = type,
+                Category = category,
                 Editor = editor,
             });
         }
 
-        private static Control BuildEditor(string type, object value)
+        private static Control BuildEditor(ParameterTypeCategory category, object value)
         {
-            var lowerType = (type ?? "").ToLowerInvariant();
-            if (lowerType.Contains("bool"))
+            if (category == ParameterTypeCategory.Boolean)
             {
                 return new CheckBox
                 {
@@ -251,31 +252,7 @@ namespace PowerSimBuilder
             if (row.Editor is CheckBox chk)
                 return chk.Checked;
             if (row.Editor is TextBox tb)
-            {
-                string text = tb.Text ?? "";
-                var lowerType = (row.Type ?? "").ToLowerInvariant();
-                if (lowerType.Contains("int") || lowerType.Contains("long"))
-                {
-                    long lv;
-                    if (long.TryParse(text,
-                        System.Globalization.NumberStyles.Integer,
-                        System.Globalization.CultureInfo.InvariantCulture, out lv))
-                        return lv;
-                    throw new FormatException("整数として解釈できません: '" + text + "'");
-                }
-                if (lowerType.Contains("double") || lowerType.Contains("float"))
-                {
-                    double dv;
-                    if (double.TryParse(text,
-                        System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out dv))
-                        return dv;
-                    if (double.TryParse(text, out dv))
-                        return dv;
-                    throw new FormatException("小数として解釈できません: '" + text + "'");
-                }
-                return text;
-            }
+                return ParameterTypeHelper.ParseText(tb.Text ?? "", row.Category);
             return null;
         }
 
@@ -292,6 +269,7 @@ namespace PowerSimBuilder
         {
             public string Name;
             public string Type;
+            public ParameterTypeCategory Category;
             public Control Editor;
         }
     }
