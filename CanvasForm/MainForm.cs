@@ -291,18 +291,36 @@ namespace PowerSimBuilder
         /// </summary>
         private void saveButton_Click(object sender, EventArgs e)
         {
-            var model = _canvasManager.SaveModel();
-            var options = new JsonSerializerOptions
+            using (var dialog = new SaveFileDialog())
             {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new PointJsonConverter() }
-            };
+                dialog.Title = "プロジェクトファイルを保存";
+                dialog.Filter = "シミュレーションプロジェクト|*.json|すべてのファイル|*.*";
+                dialog.DefaultExt = ".json";
+                dialog.FileName = "system.json";
+                dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
-            var json = JsonSerializer.Serialize(model, options);
-            File.WriteAllText("system.json", json);
-            _canvasManager.IsModified = false;
-            UpdateSaveStatus();
+                try
+                {
+                    var model = _canvasManager.SaveModel();
+                    var options = new JsonSerializerOptions
+                    {
+                        WriteIndented = true,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        Converters = { new PointJsonConverter() }
+                    };
+
+                    var json = JsonSerializer.Serialize(model, options);
+                    File.WriteAllText(dialog.FileName, json);
+                    _canvasManager.IsModified = false;
+                    UpdateSaveStatus();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"ファイルの保存に失敗しました: {ex.Message}", "エラー",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         /// <summary>
@@ -311,26 +329,35 @@ namespace PowerSimBuilder
         /// </summary>
         private void loadButton_Click(object sender, EventArgs e)
         {
-            try
+            using (var dialog = new OpenFileDialog())
             {
-                var json = File.ReadAllText("system.json");
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new PointJsonConverter() }
-                };
+                dialog.Title = "プロジェクトファイルを開く";
+                dialog.Filter = "シミュレーションプロジェクト|*.json|すべてのファイル|*.*";
+                dialog.DefaultExt = ".json";
+                dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
-                var model = JsonSerializer.Deserialize<CanvasModel>(json, options);
-                _canvasManager.LoadModel(model);
-                designCanvas1.ArrangeComponents();
-                UpdateSaveStatus();
-                UpdateUndoRedoButtons();
-                UpdateDeleteButton();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                try
+                {
+                    var json = File.ReadAllText(dialog.FileName);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters = { new PointJsonConverter() }
+                    };
+
+                    var model = JsonSerializer.Deserialize<CanvasModel>(json, options);
+                    _canvasManager.LoadModel(model);
+                    designCanvas1.ArrangeComponents();
+                    UpdateSaveStatus();
+                    UpdateUndoRedoButtons();
+                    UpdateDeleteButton();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
