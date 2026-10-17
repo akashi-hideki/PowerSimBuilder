@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Xunit;
 using PowerSimBuilder;
 
@@ -393,6 +394,129 @@ namespace PowerSimBuilder.Tests.StaTable
 
             var code = MakeGenerator().Generate(project);
             Assert.Contains("/home/user/path/file.xml", code);
+        }
+
+        // ==============================================================
+        // タスク B': 未定義 RoleFunction の no-op スタブ生成
+        // ==============================================================
+
+        [Fact]
+        public void Generate_UndefinedRoleFunctionInCondition_EmitsNoOpStub()
+        {
+            var project = MakeMinimalProject();
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "F_missing() > 0", Action = "", Target = "InSensing",
+            });
+
+            var code = MakeGenerator().Generate(project);
+
+            Assert.Contains("def F_missing(self, *args, **kwargs):", code);
+            Assert.Contains("# STABLE_USER_CODE_START:DriverInput.F_missing", code);
+            Assert.Contains("# STABLE_USER_CODE_END:DriverInput.F_missing", code);
+        }
+
+        [Fact]
+        public void Generate_UndefinedRoleFunctionInAction_EmitsNoOpStub()
+        {
+            var project = MakeMinimalProject();
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "", Action = "F_do_something()", Target = "InSensing",
+            });
+
+            var code = MakeGenerator().Generate(project);
+            Assert.Contains("def F_do_something(self, *args, **kwargs):", code);
+        }
+
+        [Fact]
+        public void Generate_DefinedRoleFunction_IsNotDuplicated()
+        {
+            var project = MakeMinimalProject();
+            project.Tabs[0].RoleFunctions.Clear();
+            project.Tabs[0].RoleFunctions.Add(new StaTableRoleFunction
+            {
+                Name = "F_ReadSensorsMovingAvg", Namespace = "DriverInput",
+            });
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "F_ReadSensorsMovingAvg() > 0", Action = "", Target = "InSensing",
+            });
+
+            var code = MakeGenerator().Generate(project);
+
+            var count = Regex.Matches(code, @"def\s+F_ReadSensorsMovingAvg\s*\(").Count;
+            Assert.Equal(1, count);
+        }
+
+        [Fact]
+        public void Generate_MultipleMissingFunctions_AllEmitted()
+        {
+            var project = MakeMinimalProject();
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "F_a() > 0 && F_b() < 10", Action = "F_c()", Target = "InSensing",
+            });
+
+            var code = MakeGenerator().Generate(project);
+
+            Assert.Contains("def F_a(self, *args, **kwargs):", code);
+            Assert.Contains("def F_b(self, *args, **kwargs):", code);
+            Assert.Contains("def F_c(self, *args, **kwargs):", code);
+        }
+
+        [Fact]
+        public void Generate_SameMissingFunctionAcrossTransitions_SingleStub()
+        {
+            var project = MakeMinimalProject();
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "F_dup() > 0", Action = "", Target = "InSensing",
+            });
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InSensing", Event = "ADC_DONE",
+                Condition = "", Action = "F_dup()", Target = "InIdle",
+            });
+
+            var code = MakeGenerator().Generate(project);
+
+            var count = Regex.Matches(code, @"def\s+F_dup\s*\(").Count;
+            Assert.Equal(1, count);
+        }
+
+        [Fact]
+        public void Generate_NoMissingFunctions_NoStubSection()
+        {
+            var code = MakeGenerator().Generate(MakeMinimalProject());
+
+            Assert.DoesNotContain("Auto-generated no-op stubs", code);
+        }
+
+        [Fact]
+        public void Generate_StubOrderIsDeterministic()
+        {
+            var project = MakeMinimalProject();
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "F_z() && F_a() && F_m()", Action = "", Target = "InSensing",
+            });
+
+            var code = MakeGenerator().Generate(project);
+
+            int idxA = code.IndexOf("def F_a(");
+            int idxM = code.IndexOf("def F_m(");
+            int idxZ = code.IndexOf("def F_z(");
+
+            Assert.True(idxA > 0 && idxM > 0 && idxZ > 0);
+            Assert.True(idxA < idxM && idxM < idxZ,
+                "スタブは名前の Ordinal 昇順で出力されるべき");
         }
     }
 }

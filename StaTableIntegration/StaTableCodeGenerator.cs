@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace PowerSimBuilder
 {
@@ -14,6 +15,10 @@ namespace PowerSimBuilder
     {
         /// <summary>生成時刻（テスト時に固定可能）</summary>
         public DateTime GeneratedAt { get; set; }
+
+        /// <summary>condition / action 中の RoleFunction 参照 (F_xxx) を検出するパターン</summary>
+        private static readonly Regex RoleFunctionRefPattern =
+            new Regex(@"\b(F_[A-Za-z_][A-Za-z0-9_]*)\b", RegexOptions.Compiled);
 
         public StaTableCodeGenerator()
         {
@@ -218,6 +223,19 @@ namespace PowerSimBuilder
                 }
             }
 
+            // ▼▼▼ タスク B': 未定義 F_xxx の no-op スタブ生成 ▼▼▼
+            var missing = CollectMissingRoleFunctions(layer);
+            if (missing.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("    # === Auto-generated no-op stubs for undefined RoleFunctions ===");
+                foreach (var name in missing)
+                {
+                    WriteRoleFunctionStub(sb, layer.LayerName, name);
+                }
+            }
+            // ▲▲▲ タスク B' ここまで ▲▲▲
+
             sb.AppendLine();
             sb.AppendLine();
         }
@@ -228,6 +246,57 @@ namespace PowerSimBuilder
             sb.AppendLine("    def " + rf.Name + "(self):");
             sb.AppendLine("        # STABLE_USER_CODE_START:" + marker);
             sb.AppendLine("        return 0");
+            sb.AppendLine("        # STABLE_USER_CODE_END:" + marker);
+        }
+
+        // ==============================================================
+        // タスク B': 未定義 RoleFunction の検出 & スタブ生成
+        // ==============================================================
+
+        /// <summary>
+        /// condition / action 中で参照されている F_xxx のうち、
+        /// layer.RoleFunctions に未定義のものを決定論的順序で返す。
+        /// </summary>
+        private static IList<string> CollectMissingRoleFunctions(StaTableStateMachine layer)
+        {
+            var defined = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var rf in layer.RoleFunctions)
+            {
+                if (!string.IsNullOrEmpty(rf.Name))
+                    defined.Add(rf.Name);
+            }
+
+            var referenced = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var t in layer.Transitions)
+            {
+                AddRoleFunctionRefs(t.Condition, referenced);
+                AddRoleFunctionRefs(t.Action, referenced);
+            }
+
+            return referenced
+                .Except(defined)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        private static void AddRoleFunctionRefs(string expr, HashSet<string> dest)
+        {
+            if (string.IsNullOrEmpty(expr)) return;
+            foreach (Match m in RoleFunctionRefPattern.Matches(expr))
+                dest.Add(m.Groups[1].Value);
+        }
+
+        /// <summary>
+        /// 未定義 RoleFunction の no-op スタブを書き出す。
+        /// シグネチャを (*args, **kwargs) にして引数個数不一致による TypeError も防ぐ。
+        /// STABLE_USER_CODE_START/END で囲むことで再生成時にユーザー実装が保護される。
+        /// </summary>
+        private void WriteRoleFunctionStub(StringBuilder sb, string layerName, string name)
+        {
+            var marker = layerName + "." + name;
+            sb.AppendLine("    def " + name + "(self, *args, **kwargs):");
+            sb.AppendLine("        # STABLE_USER_CODE_START:" + marker);
+            sb.AppendLine("        return 0  # TODO: implement " + name);
             sb.AppendLine("        # STABLE_USER_CODE_END:" + marker);
         }
 
