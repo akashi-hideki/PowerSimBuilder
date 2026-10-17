@@ -1587,3 +1587,174 @@ Welder は除外対象であり、その記述は後続の `4b1d3d7` で上書�
 - CI: `417b74c` の run が green（`4b1d3d7` の run は red の可能性）
 
 **End of Task 3-F**
+
+---
+
+# v0.4.2 リリース完了（2026-10-17 第 6 セッション）
+
+**HEAD:** `94f7bfd` (origin/main, tag: v0.4.2)
+**次セッションの起点:** `94f7bfd`
+
+> **v0.4.2 リリース済み、CI 4 matrix 全 green。次は 3-G（E2E シナリオ）or i18n。**
+
+## 55. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | **pre-push hook 追加** | `032c2eb` | `.pre-commit-config.yaml` に pytest gate（3.7s） |
+| 2 | **v0.4.2 リリース** | `94f7bfd` | 3-F（6/7）+ CI hardening のバージョン固定、annotated tag |
+
+## 56. 現在のテスト・CI 状況（`94f7bfd` 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|---|
+| C# StaTable | 94 | pass |
+| C# ParameterTypeHelper | 60 | pass |
+| Python 全件 | 382+ | pass（SKIP なし） |
+| 3-F 新規 | 42 | pass |
+| **CI (python-tests.yml)** | **4 matrix** | ✅ **全 green** |
+
+### CI 履歴（直近）
+
+| commit | run ID | 結果 | 備考 |
+|---|---|:---:|---|
+| `94f7bfd`（v0.4.2） | 39028532047 | ✓ | 最新、全 matrix green |
+| `417b74c`（IM fix） | 39028027300 | ✓ | 3-F 修正 |
+| `4b1d3d7`（IM 追加） | 39027913374 | ✗ | pytest fail（`417b74c` で修正済み） |
+| `cfa1749`（E+G） | 39027889587 | ✓ | |
+| `0072b0c`（PS+FD） | 39027129639 | ✓ | |
+| `2bc61b2`（system.json） | 39026698433 | ✓ | |
+
+**注:** `f907335`（docs）と `032c2eb`（pre-commit）は `paths` トリガー外（`.md` / `.yaml` のみ）のため CI 未実行。設計通り。
+
+## 57. pre-push hook の運用
+
+`.pre-commit-config.yaml` に追加された hook:
+
+    - repo: local
+      hooks:
+        - id: pytest-fast
+          name: pytest (tests/python, pre-push)
+          entry: python -m pytest tests/python -q
+          language: system
+          pass_filenames: false
+          always_run: true
+          stages: [pre-push]
+
+### 挙動
+
+- `git commit` : ruff / ruff-format / mypy / check-* のみ（高速）
+- `git push`   : 上記 + pytest tests/python（3.7s 追加）
+- 失敗時     : push がブロックされる
+
+### 他マシンでの有効化
+
+    pre-commit install --hook-type pre-push
+
+### 設計判断
+
+- `tests/integration` は C# ビルド成果物（`bin/Debug/*.dll`）に依存するケースがあるため除外
+- coverage は CI 側で計測（ローカル gate は速度優先）
+
+## 58. 教訓（追加、重要）
+
+### git push の exit code 誤検知（PowerShell）
+
+**症状:** `git push origin main 2>&1 | ForEach-Object {...}` の後 `$LASTEXITCODE -ne 0` が真になる。
+しかし実際は push は成功している。
+
+**原因:** git は進捗を **stderr** に書き、PowerShell の `$ErrorActionPreference = 'Stop'` 下で
+`2>&1 |` を介すと `NativeCommandError` として扱われる。
+
+**対策:** `git push` は直接実行して `$LASTEXITCODE` を取る。
+
+    # 悪い例（誤検知）
+    git push origin main 2>&1 | ForEach-Object { Write-Host $_ }
+    if ($LASTEXITCODE -ne 0) { ... }   # false positive
+
+    # 良い例（正確）
+    git push origin main
+    if ($LASTEXITCODE -ne 0) { ... }
+
+### gh run list の jq エスケープ
+
+PowerShell 経由で `gh run list --jq '...\\(.field)...'` を渡すと、`\\(` がコマンドパーサーと衝突する。
+
+**対策:** `--json` + `ConvertFrom-Json` 方式に統一。
+
+    $latest = (gh run list --workflow=X --limit 1 --json databaseId | ConvertFrom-Json)[0].databaseId
+
+### pre-push hook の所要時間
+
+- pytest tests/python（382 件）: 3.7 秒（ローカル Windows）
+- pre-commit framework overhead: 約 5 秒
+- 合計: **push 1 回あたり約 9 秒**（許容範囲）
+
+## 59. 次セッションのタスク
+
+| 優先 | タスク | 内容 | 工数 |
+|:---:|---|---|:---:|
+| 🟡 中 | **3-G** | 3-F コンポーネントの E2E シナリオ（generator_load / rectifier_motor / fault_short_circuit） | 2-4h |
+| 🟡 中 | **i18n** | 英語/中国語リソース化 | 数日 |
+| 🟢 低 | **B'-warn / B'-bare** | 別レイヤー参照警告、裸 RoleFunction 名検出 | 30m x 2 |
+| 🟢 低 | **v0.5.0** | 3-G / i18n 完了後のバージョン固定 | 1h |
+
+### 3-G の具体的なシナリオ（HANDOFF `## 52` から再掲）
+
+`tests/data/scenarios/` 配下に新規追加：
+
+- `generator_load/system.json` : Engine -> Generator -> (負荷) の電圧・電流波形
+- `rectifier_motor/system.json` : Generator -> DiodeBridge -> InductionMotor の連鎖
+- `fault_short_circuit/system.json` : FaultDevice による短絡 -> Generator 保護動作
+
+各シナリオは `tests/python/test_scenario_*.py` で検証。既存の `test_scenario_motor_drive.py` と
+`test_scenario_heater_overheat.py` を参考に、`scenarios_dir` fixture + `_load()` パターンで実装。
+
+## 60. 次セッション開始時のプロンプト例
+
+    PowerSimBuilder の続きです。
+    HANDOFF_STATABLE.md の ## 55-60（v0.4.2 リリース完了セクション）を読んで、
+    次タスクに着手してください。
+
+    現状:
+    - HEAD: 94f7bfd (origin/main, tag: v0.4.2)
+    - pytest: 382+ pass（SKIP なし）
+    - CI: python-tests.yml 4 matrix 全 green
+    - 3-F: 6/7 完了（Welder は設計上除外）
+
+    次タスクの候補:
+    - 3-G（3-F コンポーネントの E2E シナリオ）
+    - i18n（英語/中国語リソース化）
+
+    まず 3-G から始めてください。
+
+## 61. 次セッション開始前チェックリスト
+
+    cd C:\dev\PowerSimBuilder
+    git --no-pager log --oneline -3         # 94f7bfd が HEAD
+    git status --porcelain=v1               # clean
+    python -m pytest tests/python tests/integration -q   # 382+ pass
+    pre-commit run --hook-stage pre-push --all-files     # hook の動作確認
+    gh run list --workflow=python-tests.yml --limit 3    # 最新 CI 状態
+
+**期待:**
+- HEAD = `94f7bfd`（tag: v0.4.2）
+- work tree clean
+- pytest 382+ pass（SKIP なし）
+- CI: 最新 3 run が ✓（`4b1d3d7` の red は歴史的）
+
+## 62. 本セッション全体の成果サマリ
+
+| セッション | 主な成果 |
+|---|---|
+| 第 5 セッション | 3-F（2/7）PowerSource + FaultDevice、v0.4.1 リリース、CI 修正 3 件 |
+| **第 6 セッション（本）** | 3-F 残り 4 件（6/7 完了）、InductionMotor 起動バグ修正、pre-push hook、v0.4.2 リリース |
+
+**v0.4.2 のハイライト:**
+
+- SPEC_POWERSIM §3 の 7 コンポーネントのうち 6 つを実装（Welder は IP 配慮で除外）
+- 42 の新規 pytest テスト
+- CI が 4 matrix 全 green（安定化）
+- pre-push hook で「pytest fail のまま main に混入」を防止
+
+**End of v0.4.2 Release**
