@@ -8,6 +8,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.4.0] - 2026-10-17
+
+### Added (Phase 3-C: ControllerBox Canvas integration)
+
+- **3-C-1/2**: ControllerBox component wrapper for StaTableRuntime on Canvas
+- **3-C-3**: Lazy loading of runtime on first update()
+- **3-C-4**: End-to-end demo with auto_events + XML action injection
+- **3-C-6**: Dynamic ControllerBox descriptors per project (per-project ports)
+- **3-C-9**: ParametersEditorForm for Dictionary<string, object> editing
+  - Type-aware editors (bool CheckBox / int-double TextBox / string fallback)
+  - Reset-to-default button
+  - MainForm toolbar integration ("パラメータ編集")
+
+### Fixed (Phase 3-C / 3-D)
+
+- **3-C-7**: Delete-reimport bug + auto-suggest save destination
+- **3-C-7c**: Unify port coordinates (drawing / hit-test / line endpoint) and
+  prevent double-fire of PortClicked (MouseDown + OnMouseDown)
+- **3-C-8**: Component IDs and runtime parameters in generated main.py
+  - JsonElement handling (ValueKind instead of `is double` / `is string`)
+  - Null parameters no longer output
+  - Numeric-string coercion ("50" -> 50)
+- **3-D**: Stop overwriting thermistor_* sensor variables in F_ReadSensorsMovingAvg
+  (sensor reads are now read-only)
+
+### Tests
+
+- C# (xUnit): 94 StaTable tests pass
+- Python (pytest): 315 tests pass
+- E2E: GUI -> createSimButton -> main.py -> execution with overheat detection
+  (T=354.67 degC, err=0xE3 at t_end=20s)
+
 ## [0.3.0] - 2026-10-17
 
 ### Added (Phase 3-A: RoleFunction implementation)
@@ -178,9 +210,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.4.0...HEAD
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
 [0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
 [0.2.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.1
 [0.2.2]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.2
 [0.2.3]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.3
+[0.3.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.3.0
+[0.4.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.4.0
