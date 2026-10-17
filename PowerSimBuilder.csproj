@@ -116,6 +116,9 @@
     <Compile Include="CanvasForm\FaultConditionEditorForm.Designer.cs">
       <DependentUpon>FaultConditionEditorForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CanvasForm\ParametersEditorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="CanvasForm\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

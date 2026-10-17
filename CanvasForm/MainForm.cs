@@ -151,6 +151,16 @@ namespace PowerSimBuilder
             editButton.Click += editPaletteButton_Click;
             removePalletButton.Click += deletePaletteButton_Click;
             propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
+
+            // Task 3-C-9: パラメータ編集ボタン（動的追加）
+            var paramsEditButton = new ToolStripButton
+            {
+                Name = "paramsEditButton",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Text = "パラメータ編集",
+            };
+            paramsEditButton.Click += paramsEditButton_Click;
+            toolStrip1.Items.Add(paramsEditButton);
         }
         /// <summary>
         /// イベント購読を設定
@@ -398,6 +408,30 @@ namespace PowerSimBuilder
         /// 実行ボタンクリック
         /// 注意点: Pythonシミュレーションコードを生成・実行
         /// </summary>
+        // ============================================================
+        // Task 3-C-9: パラメータ編集ハンドラ
+        // ============================================================
+        private void paramsEditButton_Click(object sender, EventArgs e)
+        {
+            var selected = _canvasManager.SelectedComponent;
+            if (selected == null)
+            {
+                MessageBox.Show(this,
+                    "パラメータを編集するコンポーネントをキャンバス上で選択してください。",
+                    "情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            using (var form = new ParametersEditorForm(selected))
+            {
+                if (form.ShowDialog(this) == DialogResult.OK)
+                {
+                    _canvasManager.IsModified = true;
+                    designCanvas1.Invalidate();
+                    propertyGrid1.Refresh();
+                }
+            }
+        }
         private void staTableImportButton_Click(object sender, EventArgs e)
         {
             using (var form = new StaTableImportForm())
