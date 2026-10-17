@@ -143,6 +143,7 @@ namespace PowerSimBuilder
             redoButton.Click += redoButton_Click;
             createSimButton.Click += createSimButton_Click;
             arrangeButton.Click += arrangeButton_Click;
+            staTableImportButton.Click += staTableImportButton_Click;
             editButton.Click += editPaletteButton_Click;
             removePalletButton.Click += deletePaletteButton_Click;
             propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
@@ -366,6 +367,14 @@ namespace PowerSimBuilder
         /// 実行ボタンクリック
         /// 注意点: Pythonシミュレーションコードを生成・実行
         /// </summary>
+        private void staTableImportButton_Click(object sender, EventArgs e)
+        {
+            using (var form = new StaTableImportForm())
+            {
+                form.ShowDialog(this);
+            }
+        }
+
         private void createSimButton_Click(object sender, EventArgs e)
         {
             string file_path = BuildPythonSimulationWithFileDialog(_canvasManager);

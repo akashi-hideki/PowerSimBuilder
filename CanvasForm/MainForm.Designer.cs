@@ -72,13 +72,15 @@ namespace PowerSimBuilder
             // toolStrip1
             // 
             this.toolStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.staTableImportButton = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveButton,
             this.loadButton,
             this.undoButton,
             this.redoButton,
             this.createSimButton,
-            this.arrangeButton});
+            this.arrangeButton,
+            this.staTableImportButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1500, 31);
@@ -132,6 +134,15 @@ namespace PowerSimBuilder
             this.arrangeButton.Name = "arrangeButton";
             this.arrangeButton.Size = new System.Drawing.Size(73, 28);
             this.arrangeButton.Text = "配置整理";
+            //
+            // staTableImportButton
+            //
+            // NOTE: instantiated earlier, before toolStrip1.Items.AddRange
+            this.staTableImportButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.staTableImportButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.staTableImportButton.Name = "staTableImportButton";
+            this.staTableImportButton.Size = new System.Drawing.Size(89, 28);
+            this.staTableImportButton.Text = "StaTable取込";
             // 
             // splitContainer1
             // 
@@ -230,6 +241,7 @@ namespace PowerSimBuilder
         private System.Windows.Forms.ToolStripButton redoButton;
         private System.Windows.Forms.ToolStripButton createSimButton;
         private System.Windows.Forms.ToolStripButton arrangeButton;
+        private System.Windows.Forms.ToolStripButton staTableImportButton;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.PropertyGrid propertyGrid1;
         private System.Windows.Forms.Button addButton;
