@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-10-17
+
+### Added (RoleFunction static analysis)
+
+- **B'-warn**: classify cross-layer vs truly-missing RoleFunctions
+  - `StaTableCodeGenerator.Warnings` property (generation-time warnings,
+    separate from `StaTableParseResult.Warnings`)
+  - Emit `# === Cross-layer RoleFunction stubs` header for functions
+    defined in another layer
+  - Emit one warning per cross-layer / truly-missing reference
+- **B'-bare**: auto-prefix bare RoleFunction calls
+  - `NCalcToPythonConverter`: new overloads with
+    `(expr, knownRoleFuncs, layerName, warnings)` context
+  - `BareFuncCallRegex` + `KnownNCalcBuiltins` for safe prefixing
+  - Old 1-arg API preserved (no auto-prefix, backward compatible)
+  - `NormalizeBareCallsForDetection` helper for stub classification
+
+### Tests
+
+- `StaTableCodeGeneratorTests`: 5 new tests (cross-layer vs truly-missing)
+- `NCalcToPythonConverterTests`: 5 new tests (bare prefix / builtin exclusion /
+  backward compat)
+- C# total: 109 tests pass (was 99; +10)
+
+### Docs
+
+- `HANDOFF_STATABLE.md ## 70`: Task 3-C-9 is already complete
+  (implemented in v0.5.0; HANDOFF record corrected)
+
 ## [0.5.1] - 2026-10-17
 
 ### Added
@@ -327,7 +356,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.0...v0.5.1
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
 [0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
