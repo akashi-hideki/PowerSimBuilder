@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-17
+
+### Added
+- feat(statable): auto-derive ControllerBox ports from the generated
+  `.py` (A+C+α). The port list is now derived per-project instead
+  of being hard-coded.
+
+### Changed
+- chore(designcanvas): gate scroll/port diagnostics behind
+  `[Conditional("NEVER_ACTIVE")]`. DBG output is no longer emitted;
+  the diagnostic overlay itself is kept for future reference.
+
+### Docs
+- docs: append v0.5.0 release session handover (## 63-69)
 
 ## [0.5.0] - 2026-10-17
 
@@ -313,7 +327,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.0...v0.5.1
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
 [0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
 [0.2.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.1
