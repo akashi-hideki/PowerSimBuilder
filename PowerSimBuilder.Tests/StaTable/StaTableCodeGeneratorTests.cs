@@ -518,5 +518,115 @@ namespace PowerSimBuilder.Tests.StaTable
             Assert.True(idxA < idxM && idxM < idxZ,
                 "スタブは名前の Ordinal 昇順で出力されるべき");
         }
+
+        // ==============================================================
+        // B'-warn: cross-layer vs truly-missing の分類
+        // ==============================================================
+
+        [Fact]
+        public void Generate_CrossLayerRoleFunction_EmitsWarning()
+        {
+            var project = MakeMinimalProject();
+
+            var layerB = new StaTableStateMachine
+            {
+                LayerName = "LayerB",
+                LayerPriority = 99,
+                InitialState = "BInit",
+            };
+            layerB.States.Add(new StaTableState { Name = "BInit", Type = "initial" });
+            layerB.RoleFunctions.Add(new StaTableRoleFunction { Name = "F_OtherLayer" });
+            project.Tabs.Add(layerB);
+
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "F_OtherLayer() > 0", Action = "", Target = "InSensing",
+            });
+
+            var gen = MakeGenerator();
+            gen.Generate(project);
+
+            Assert.Single(gen.Warnings);
+            Assert.Contains("F_OtherLayer", gen.Warnings[0]);
+            Assert.Contains("defined in another layer", gen.Warnings[0]);
+        }
+
+        [Fact]
+        public void Generate_TrulyMissingRoleFunction_EmitsWarning()
+        {
+            var project = MakeMinimalProject();
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "F_NotAnywhere() > 0", Action = "", Target = "InSensing",
+            });
+
+            var gen = MakeGenerator();
+            gen.Generate(project);
+
+            Assert.Single(gen.Warnings);
+            Assert.Contains("F_NotAnywhere", gen.Warnings[0]);
+            Assert.Contains("undefined", gen.Warnings[0]);
+        }
+
+        [Fact]
+        public void Generate_NoMissingRoleFunctions_NoWarnings()
+        {
+            var project = MakeMinimalProject();
+            var gen = MakeGenerator();
+            gen.Generate(project);
+            Assert.Empty(gen.Warnings);
+        }
+
+        [Fact]
+        public void Generate_CrossLayerAndTrulyMissing_BothClassified()
+        {
+            var project = MakeMinimalProject();
+
+            var layerB = new StaTableStateMachine
+            {
+                LayerName = "LayerB",
+                LayerPriority = 99,
+                InitialState = "BInit",
+            };
+            layerB.States.Add(new StaTableState { Name = "BInit", Type = "initial" });
+            layerB.RoleFunctions.Add(new StaTableRoleFunction { Name = "F_Cross" });
+            project.Tabs.Add(layerB);
+
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "F_Cross() > 0 && F_Missing() > 0", Action = "", Target = "InSensing",
+            });
+
+            var gen = MakeGenerator();
+            var code = gen.Generate(project);
+
+            Assert.Equal(2, gen.Warnings.Count);
+            Assert.Single(gen.Warnings, w => w.Contains("F_Cross") && w.Contains("defined in another layer"));
+            Assert.Single(gen.Warnings, w => w.Contains("F_Missing") && w.Contains("undefined"));
+            Assert.Contains("Cross-layer RoleFunction stubs", code);
+            Assert.Contains("Auto-generated no-op stubs", code);
+        }
+
+        [Fact]
+        public void Warnings_ClearedBetweenGenerateCalls()
+        {
+            var project = MakeMinimalProject();
+            project.Tabs[0].Transitions.Add(new StaTableTransition
+            {
+                Source = "InIdle", Event = "SENSOR_TICK",
+                Condition = "F_NotAnywhere() > 0", Action = "", Target = "InSensing",
+            });
+
+            var gen = MakeGenerator();
+            gen.Generate(project);
+            Assert.Single(gen.Warnings);
+
+            var cleanProject = MakeMinimalProject();
+            gen.Generate(cleanProject);
+            Assert.Empty(gen.Warnings);
+        }
     }
 }

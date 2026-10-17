@@ -20,6 +20,15 @@ namespace PowerSimBuilder
         private static readonly Regex RoleFunctionRefPattern =
             new Regex(@"\b(F_[A-Za-z_][A-Za-z0-9_]*)\b", RegexOptions.Compiled);
 
+        // ---- B'-warn / B'-bare: 全層 RoleFunction 名と生成時警告 ----
+        private HashSet<string> _allRoleFuncNames;
+
+        /// <summary>
+        /// 直近の Generate 呼び出しで発生した警告（B'-warn 等）。
+        /// パース警告（StaTableParseResult.Warnings）とは別管理。
+        /// </summary>
+        public List<string> Warnings { get; } = new List<string>();
+
         public StaTableCodeGenerator()
         {
             GeneratedAt = DateTime.Now;
@@ -39,6 +48,10 @@ namespace PowerSimBuilder
         {
             if (project == null)
                 throw new ArgumentNullException("project");
+
+            // B'-warn / B'-bare: 全層 RoleFunction 名と生成時警告を事前準備
+            Warnings.Clear();
+            _allRoleFuncNames = CollectAllRoleFunctionNames(project.Tabs);
 
             var sb = new StringBuilder();
             WriteHeader(sb, project);
@@ -267,18 +280,37 @@ namespace PowerSimBuilder
                 }
             }
 
-            // ▼▼▼ タスク B': 未定義 F_xxx の no-op スタブ生成 ▼▼▼
-            var missing = CollectMissingRoleFunctions(layer);
-            if (missing.Count > 0)
+            // ▼▼▼ B'-warn: cross-layer / truly-missing の分類 + スタブ生成 ▼▼▼
+            List<string> crossLayer, trulyMissing;
+            ClassifyMissingRoleFunctions(layer, _allRoleFuncNames, out crossLayer, out trulyMissing);
+
+            if (crossLayer.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("    # === Cross-layer RoleFunction stubs (defined in other layers) ===");
+                foreach (var name in crossLayer)
+                {
+                    sb.AppendLine("    # [B'-warn] " + name + " is defined in another layer; stub provided here.");
+                    WriteRoleFunctionStub(sb, layer.LayerName, name, preservedUserCode);
+                    Warnings.Add(
+                        "[B'-warn] layer '" + layer.LayerName + "' references RoleFunction '" + name +
+                        "' defined in another layer; no-op stub generated");
+                }
+            }
+
+            if (trulyMissing.Count > 0)
             {
                 sb.AppendLine();
                 sb.AppendLine("    # === Auto-generated no-op stubs for undefined RoleFunctions ===");
-                foreach (var name in missing)
+                foreach (var name in trulyMissing)
                 {
                     WriteRoleFunctionStub(sb, layer.LayerName, name, preservedUserCode);
+                    Warnings.Add(
+                        "[B'-warn] layer '" + layer.LayerName + "' references undefined RoleFunction '" +
+                        name + "'; no-op stub generated");
                 }
             }
-            // ▲▲▲ タスク B' ここまで ▲▲▲
+            // ▲▲▲ B'-warn ここまで ▲▲▲
 
             sb.AppendLine();
             sb.AppendLine();
@@ -299,29 +331,66 @@ namespace PowerSimBuilder
         // ==============================================================
 
         /// <summary>
+        /// 全層の RoleFunction 名を正規化して集計する（B'-warn 用）。
+        /// </summary>
+        private static HashSet<string> CollectAllRoleFunctionNames(IEnumerable<StaTableStateMachine> layers)
+        {
+            var all = new HashSet<string>(StringComparer.Ordinal);
+            if (layers == null) return all;
+            foreach (var layer in layers)
+            {
+                if (layer == null || layer.RoleFunctions == null) continue;
+                foreach (var rf in layer.RoleFunctions)
+                {
+                    if (rf != null && !string.IsNullOrEmpty(rf.Name))
+                        all.Add(NormalizeRoleFunctionName(rf.Name));
+                }
+            }
+            return all;
+        }
+
+        /// <summary>
+        /// missing を crossLayer / trulyMissing に分類する（B'-warn）。
         /// condition / action 中で参照されている F_xxx のうち、
         /// layer.RoleFunctions に未定義のものを決定論的順序で返す。
         /// </summary>
-        private static IList<string> CollectMissingRoleFunctions(StaTableStateMachine layer)
+        private static void ClassifyMissingRoleFunctions(
+            StaTableStateMachine layer,
+            HashSet<string> allDefinedAnywhere,
+            out List<string> crossLayer,
+            out List<string> trulyMissing)
         {
-            var defined = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var rf in layer.RoleFunctions)
+            crossLayer = new List<string>();
+            trulyMissing = new List<string>();
+            if (layer == null) return;
+
+            var definedHere = new HashSet<string>(StringComparer.Ordinal);
+            if (layer.RoleFunctions != null)
             {
-                if (!string.IsNullOrEmpty(rf.Name))
-                    defined.Add(NormalizeRoleFunctionName(rf.Name));
+                foreach (var rf in layer.RoleFunctions)
+                {
+                    if (rf != null && !string.IsNullOrEmpty(rf.Name))
+                        definedHere.Add(NormalizeRoleFunctionName(rf.Name));
+                }
             }
 
             var referenced = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var t in layer.Transitions)
+            if (layer.Transitions != null)
             {
-                AddRoleFunctionRefs(t.Condition, referenced);
-                AddRoleFunctionRefs(t.Action, referenced);
+                foreach (var t in layer.Transitions)
+                {
+                    if (t == null) continue;
+                    AddRoleFunctionRefs(t.Condition, referenced);
+                    AddRoleFunctionRefs(t.Action, referenced);
+                }
             }
 
-            return referenced
-                .Except(defined)
-                .OrderBy(x => x, StringComparer.Ordinal)
-                .ToList();
+            var all = allDefinedAnywhere ?? new HashSet<string>(StringComparer.Ordinal);
+            foreach (var m in referenced.Except(definedHere).OrderBy(x => x, StringComparer.Ordinal))
+            {
+                if (all.Contains(m)) crossLayer.Add(m);
+                else trulyMissing.Add(m);
+            }
         }
 
         private static void AddRoleFunctionRefs(string expr, HashSet<string> dest)
