@@ -52,6 +52,7 @@
     <Compile Include="StaTable\StaTableModelTests.cs" />
     <Compile Include="StaTable\StaTableProjectReaderTests.cs" />
     <Compile Include="StaTable\StaTableCodeGeneratorTests.cs" />
+    <Compile Include="StaTable\NCalcToPythonConverterTests.cs" />
     <Compile Include="Core\ConnectionGraphTests.cs" />
     <Compile Include="Core\LogcatTraceHelperSmokeTests.cs" />
   </ItemGroup>

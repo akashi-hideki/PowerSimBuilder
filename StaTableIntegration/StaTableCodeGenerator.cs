@@ -166,8 +166,12 @@ namespace PowerSimBuilder
             sb.AppendLine("        # (source, event, condition, action, target)");
             foreach (var t in layer.Transitions)
             {
-                var condition = string.IsNullOrEmpty(t.Condition) ? "None" : "\"" + EscapePy(t.Condition) + "\"";
-                var action = string.IsNullOrEmpty(t.Action) ? "None" : "\"" + EscapePy(t.Action) + "\"";
+                var condition = string.IsNullOrEmpty(t.Condition)
+                    ? "None"
+                    : "\"" + EscapePy(NCalcToPythonConverter.ConvertCondition(t.Condition)) + "\"";
+                var action = string.IsNullOrEmpty(t.Action)
+                    ? "None"
+                    : "\"" + EscapePy(NCalcToPythonConverter.ConvertAction(t.Action)) + "\"";
                 var comment = string.IsNullOrEmpty(t.Title) ? "" : "  # " + t.Title;
                 sb.AppendLine("        (\"" + t.Source + "\", \"" + t.Event + "\", "
                     + condition + ", " + action + ", \"" + t.Target + "\")," + comment);

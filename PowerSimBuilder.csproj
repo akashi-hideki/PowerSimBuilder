@@ -32,6 +32,7 @@
     <Compile Include="StaTableIntegration\StaTableModel.cs" />
     <Compile Include="StaTableIntegration\StaTableProjectReader.cs" />
     <Compile Include="StaTableIntegration\StaTableCodeGenerator.cs" />
+    <Compile Include="StaTableIntegration\NCalcToPythonConverter.cs" />
     <Compile Include="StaTableIntegration\StaTableImportForm.cs">
       <SubType>Form</SubType>
     </Compile>
