@@ -1455,3 +1455,135 @@ MM（staged + unstaged 混在）になる。`git add -A` で統一する。
 | 4 | B'-warn / B'-bare | 低優先 |
 
 **End of Session Handover**
+
+---
+
+# Task 3-F 完了（2026-10-17 第 5 セッション）
+
+**HEAD:** `417b74c` (origin/main)
+**次セッションの起点:** `417b74c`
+
+> **3-F は 6/7 完了（Welder は設計上除外）。次は CI 確認 → v0.4.2 リリース → 3-G 以降。**
+
+## 48. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | **3-F 3-4/7** | `cfa1749` | Engine + Generator 実装 + 13 tests |
+| 2 | **3-F 5-6/7** | `4b1d3d7` | DiodeBridge + InductionMotor 実装 + 14 tests |
+| 3 | **InductionMotor fix** | `417b74c` | 停動時にトルク 0 になる起動不能バグ修正 |
+
+## 49. 現在のテスト状況（`417b74c` 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|---|
+| C# StaTable | 94 | pass |
+| C# ParameterTypeHelper | 60 | pass |
+| Python 全件 | 382+ | pass（SKIP なし） |
+| Python 3-F 新規 | 42 | pass（PowerSource 8 / FaultDevice 7 / Engine 6 / Generator 7 / DiodeBridge 8 / InductionMotor 6） |
+
+## 50. 3-F の完了状況（6/7）
+
+| # | Class | 状態 | Parameters | IO | テスト数 |
+|:---:|---|:---:|---|---|:---:|
+| 1 | PowerSource | ✅ | voltage(RMS), frequency, waveform, phase, resistance | out: voltage, current | 8 |
+| 2 | FaultDevice | ✅ | fault_type, condition_expr, duration, inrush_current | out: short_circuit, open_circuit, inrush_current | 7 |
+| 3 | Engine | ✅ | power, torque_max, ramp_time, idle_ratio | out: torque | 6 |
+| 4 | Generator | ✅ | rated_power, rated_voltage, efficiency, voltage_per_torque, load_resistance | in: torque / out: voltage, current, power | 7 |
+| 5 | DiodeBridge | ✅ | diode_drop, type, smoothing_capacitance, load_resistance | in: ac_voltage / out: dc_voltage, ripple | 8 |
+| 6 | InductionMotor | ✅ | rated_power, rated_speed, load_torque, poles, frequency, breakdown_torque_ratio, initial_speed, inertia, rated_voltage | in: voltage / out: torque, speed, slip | 6 |
+| 7 | ~~Welder~~ | **除外** | — | — | — |
+
+### Welder 除外理由
+
+**ユーザーが溶接機製品を担当しているため、PowerSimBuilder のランタイムに溶接機モデルを実装しない。**
+これにより、社内製品 IP やサードパーティ製品 IP との重複リスクを回避する。
+溶接機制御のモデル化が必要になった場合は、別リポジトリ・別プロジェクトとして分離する。
+
+### 特許・著作権回避設計
+
+各コンポーネントは以下の方針で実装（ISO や特定メーカー制御方式の模倣を避ける）：
+
+- **物理法則ベース**：線形ランプ（Engine）、V ∝ τ（Generator）、ダイオード導通（DiodeBridge）、Kloss 式（InductionMotor）
+- **特定の制御シーケンスを含まない**：d-q 変換、センサーレス制御、特定の PWM 変調方式は実装しない
+- **依存ライブラリ**：numpy (BSD), matplotlib (PSF) のみ。GPL 系は不使用
+- **AI 生成物の関与**：設計方針の決定・コードの選択・編集は人間が実施
+
+## 51. 重大なプロセス教訓（必読）
+
+### コミット `4b1d3d7` は pytest 失敗のまま通過した
+
+**症状：** DiodeBridge + InductionMotor のコミット時、mypy は pass したが InductionMotor の 2 テストが fail していた。
+pre-commit hooks（ruff / ruff-format / mypy）はすべて pass したため、コミット自体は成功。
+そのまま push され、main ブランチに「テスト fail する commit」が混入した。
+
+**原因：** pre-commit に pytest hook が無い。mypy は型エラーを検出するが、ロジックの誤り（slip 境界条件）は検出できない。
+
+**修正：** 次 commit `417b74c` で修正済み（1 行変更）。
+
+**再発防止策（未実施、次セッションで検討）：**
+
+1. **手動チェックの徹底**：`git push` 前に必ず `python -m pytest tests/python tests/integration -q` を実行
+2. **pre-push hook 追加**：`.pre-commit-config.yaml` の `repos` に `stages: [push]` の pytest hook を追加
+   （コミットは高速のまま、push 時のみ検証）
+3. **CI の速報性**：`python-tests.yml` は既に `src/python_runtime/**` をトリガーに含む
+
+### コミットメッセージに「Task 3-F 3-4/7」と書いたが 4b1d3d7 は 5-6/7
+
+`cfa1749` のメッセージ末尾に「Remaining 3-F: DiodeBridge, InductionMotor, Welder」と書いたが、
+Welder は除外対象であり、その記述は後続の `4b1d3d7` で上書きされた。誤りではないが、正確性向上の余地あり。
+
+## 52. 次セッションのタスク
+
+| 優先 | タスク | 内容 | 工数 |
+|:---:|---|---|:---:|
+| 🔴 高 | **CI 確認** | `417b74c` の CI が green か確認（`4b1d3d7` の CI は red のはず） | 5m |
+| 🟡 中 | **pre-push hook 追加** | pytest を push 前に実行（教訓 51 の再発防止） | 30m |
+| 🟡 中 | **v0.4.2 リリース** | 3-F 完了をバージョン固定 | 1h |
+| 🟢 低 | **3-G 検討** | `tests/data/scenarios/` に 3-F 新規コンポーネントを使ったシナリオ追加 | 2-4h |
+| 🟢 低 | **i18n** | 英語/中国語リソース化 | 数日 |
+
+### 3-G 案（次々セッション以降）
+
+3-F で追加したコンポーネントを活用した E2E シナリオ：
+
+- `generator_load/` : Engine -> Generator -> (Load) の電圧・電流波形
+- `rectifier_motor/` : Generator -> DiodeBridge -> InductionMotor の連鎖
+- `fault_short_circuit/` : FaultDevice による短絡 → Generator 保護動作
+
+`tests/data/scenarios/` 配下に system.json を追加し、`tests/python/test_scenario_*.py` で検証。
+
+## 53. 次セッション開始時のプロンプト例
+
+    PowerSimBuilder の続きです。
+    HANDOFF_STATABLE.md の ## 48-53（Task 3-F 完了セクション）を読んで、
+    次タスクに着手してください。
+
+    現状:
+    - HEAD: 417b74c (origin/main)
+    - pytest: 382+ pass（SKIP なし）
+    - 3-F: 6/7 完了（Welder は設計上除外）
+
+    次タスクの候補:
+    - CI 確認（417b74c が green か）
+    - pre-push hook 追加（pytest を push 前に実行）
+    - v0.4.2 リリース
+    - 3-G（3-F 新規コンポーネントの E2E シナリオ）
+
+    まず CI 確認と pre-push hook 追加から始めてください。
+
+## 54. 次セッション開始前チェックリスト
+
+    cd C:\dev\PowerSimBuilder
+    git --no-pager log --oneline -3         # 417b74c が HEAD
+    git status --porcelain=v1               # clean
+    python -m pytest tests/python tests/integration -q   # 382+ pass
+    gh run list --workflow=python-tests.yml --limit 3    # 最新 CI 状態
+
+**期待:**
+- HEAD = `417b74c`
+- work tree clean
+- pytest 382+ pass（SKIP なし）
+- CI: `417b74c` の run が green（`4b1d3d7` の run は red の可能性）
+
+**End of Task 3-F**
