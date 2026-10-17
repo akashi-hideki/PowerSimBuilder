@@ -362,6 +362,7 @@ namespace PowerSimBuilder
 
                     var model = JsonSerializer.Deserialize<CanvasModel>(json, options);
                     _canvasManager.LoadModel(model);
+                    RepairGeneratedPaths(_canvasManager);  // Task 3-C-10: データ汚染自動修復
                     designCanvas1.ArrangeComponents();
                     UpdateSaveStatus();
                     UpdateUndoRedoButtons();
@@ -373,6 +374,60 @@ namespace PowerSimBuilder
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        // ============================================================
+        // Task 3-C-10: generated_path 自動修復（データ汚染対策）
+        // ============================================================
+
+        /// <summary>
+        /// ロード時に ControllerBox の generated_path を検証し、
+        /// 無効なら Descriptor.DefaultValue にフォールバックする。
+        /// 過去バージョンで誤って保存された汚染データを自動修復する。
+        /// </summary>
+        private static void RepairGeneratedPaths(CanvasManager manager)
+        {
+            if (manager == null) return;
+            var components = manager.GetAllComponents();
+            if (components == null) return;
+            foreach (var comp in components)
+            {
+                if (comp?.Descriptor == null) continue;
+                if (comp.Descriptor.Type != "ControllerBox") continue;
+                if (comp.Parameters == null) continue;
+                if (!comp.Parameters.ContainsKey("generated_path")) continue;
+
+                var path = comp.Parameters["generated_path"]?.ToString();
+                if (IsValidControllerModule(path)) continue;
+
+                var defVal = comp.Descriptor.Parameters?
+                    .FirstOrDefault(p => p.Name == "generated_path")?
+                    .DefaultValue?.ToString();
+                var fallback = IsValidControllerModule(defVal) ? defVal : "";
+                comp.Parameters["generated_path"] = fallback;
+                try
+                {
+                    LogcatTraceHelper.Instance.SimpleMessage(
+                        "Load",
+                        $"{comp.InstanceName}: generated_path repaired ({path} -> {fallback})");
+                }
+                catch { /* logging is best-effort */ }
+            }
+        }
+
+        /// <summary>
+        /// 指定パスが有効な ControllerBox モジュール（build_runtime() を持つ .py）か判定。
+        /// </summary>
+        private static bool IsValidControllerModule(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            try
+            {
+                if (!System.IO.File.Exists(path)) return false;
+                var content = System.IO.File.ReadAllText(path, System.Text.Encoding.UTF8);
+                return content.Contains("def build_runtime");
+            }
+            catch { return false; }
         }
 
         /// <summary>
@@ -661,8 +716,7 @@ namespace PowerSimBuilder
                     // ファイルをビルド
                     builder.BuildPythonSimulationFile();
 
-                    MessageBox.Show($"ファイルが正常に生成されました:\n{saveFileDialog.FileName}",
-                                  "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // Task 3-C-11: 「生成成功」MessageBox は削除（PythonEditorForm がすぐ開く）
                 }
             }
             catch (Exception ex)

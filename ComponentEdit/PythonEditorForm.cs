@@ -56,13 +56,8 @@ namespace PowerSimBuilder
             btnOpenFolder.Enabled = enableRunButtons;
             lblStatus.Visible = enableRunButtons;
 
-            // 実行ボタンのイベントハンドラーを設定
-            if (enableRunButtons)
-            {
-                btnRun.Click += BtnRun_Click;
-                btnReload.Click += BtnReload_Click;
-                btnOpenFolder.Click += BtnOpenFolder_Click;
-            }
+            // Task 3-C-13: イベント購読は Designer.cs で実施済み（二重購読防止）
+            // if (enableRunButtons) { btnRun.Click += ...; btnReload.Click += ...; btnOpenFolder.Click += ...; }
 
             LoadFile();
         }

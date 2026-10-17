@@ -2103,3 +2103,63 @@ dotnet --list-sdks
 ```
 
 **End of Publication Phase 1**
+
+---
+
+# .NET 10 移行 + L1/L2 パッチ（2026-10-18 セッション）
+
+**ブランチ:** feat/dotnet10-migration（PR #1 継続中、未マージ）
+**HEAD:** 81701dd fix(mainform)
+
+## 81. 完了サマリ
+
+| # | 内容 | コミット |
+|:---:|---|---|
+| 1 | .NET Framework 4.7.2 -> .NET 10 LTS 移行 | 45ae2ca |
+| 2 | L1: ControllerBox に input_globals/output_globals 明示 | 84f776d |
+| 3 | L2: ロード時 generated_path 自動修復 | 81701dd |
+| 4 | CLI シミュレーション完走（グラフ保存 + 完了メッセージ） | 確認済み |
+
+**テスト:** dotnet build 0 warnings / dotnet test 227 pass
+
+## 82. 未解決（次セッション）
+
+**GUI の「実行 -> メッセージ -> OK -> 再実行」無限ループ**
+
+- CLI 実行（python demo_main.py）は 1 回で正常終了
+- GUI 経由では完了メッセージの OK で再びシミュレーションが走る
+- .NET 10 移行・L1/L2 とは独立した既存 UX バグ
+- 調査対象: ComponentEdit/PythonEditorForm.cs / SimulationGenerate/PythonExecutor.cs / CanvasForm/MainForm.cs の createSimButton_Click
+
+## 83. 次セッションの選択肢
+
+| # | 内容 | 優先度 |
+|:---:|---|:---:|
+| A | GUI ループを修正してから PR #1 マージ | 中 |
+| B | PR #1 をマージ -> v0.6.0 リリース -> GUI ループは別 Issue | 推奨 |
+| C | GUI ループ調査だけ先行 | 低 |
+
+### PR #1 マージ手順（選択 B の場合）
+
+gh pr checks 1  (green 確認)
+gh pr merge 1 --merge --delete-branch
+git checkout main
+git pull origin main
+
+その後 v0.6.0: VERSION / pyproject.toml / CHANGELOG 更新 -> tag -> push
+
+### GUI ループ調査コマンド
+
+Select-String -Path ComponentEdit\PythonEditorForm.cs -Pattern "Executor|Execute|ShowDialog|MessageBox|DialogResult" -Encoding UTF8 -Context 2,4
+Select-String -Path SimulationGenerate\PythonExecutor.cs -Pattern "MessageBox|Completed|OnComplete" -Encoding UTF8 -Context 2,3
+Select-String -Path CanvasForm\MainForm.cs -Pattern "createSimButton_Click|ShowDialog" -Encoding UTF8 -Context 2,4
+
+## 84. 本セッションの教訓
+
+- SDK-style glob は _backup_* / previou_files / サブプロジェクトを拾う -> <Compile Remove> で除外必須
+- WFO1000 は .NET 9+ でデフォルト error -> <NoWarn> で抑制
+- PowerShell で "" を含む長文は @() -join 方式（here-string は崩れる）
+- パースエラー後の変数は前回値保持 -> 古いコミットメッセージ混入事故に注意
+- feature ブランチ push では CI 走らない -> PR 作成が必要
+
+**End of Session (2026-10-18)**
