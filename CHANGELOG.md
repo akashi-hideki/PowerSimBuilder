@@ -8,6 +8,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.5.0] - 2026-10-17
+
+### Added (Task 3-G: E2E scenario coverage)
+
+- 3 new external scenarios under `tests/data/scenarios/`:
+  - `generator_load/`: Engine -> Generator (V=180 V, I=18 A, P=3240 W)
+  - `rectifier_motor/`: PowerSource -> DiodeBridge -> InductionMotor
+  - `fault_short_circuit/`: FaultDevice (latched) alongside a
+    running Engine+Generator (orthogonal)
+- 5 new pytest tests (382 -> 387+)
+
+### Milestone
+
+- SPEC_POWERSIM §3 components: **6/7 implemented**
+  - PowerSource, FaultDevice, Engine, Generator,
+    DiodeBridge, InductionMotor
+  - Welder excluded by design (maintainer's commercial product;
+    IP overlap avoidance)
+- E2E scenario coverage: **6 scenarios total**
+  - cooking_heater, motor_drive, heater_overheat,
+    generator_load, rectifier_motor, fault_short_circuit
+
+### Tests
+
+- C# StaTable: 94 pass
+- C# ParameterTypeHelper: 60 pass
+- Python: 387+ pass (no SKIPs)
+- CI (python-tests.yml): 4 matrix (3.10-3.13) all green
+
 ## [0.4.2] - 2026-10-17
 
 ### Added (Task 3-F: SPEC_POWERSIM components)
@@ -284,7 +313,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.0...HEAD
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
 [0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
 [0.2.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.1
@@ -294,3 +323,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.4.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.4.0
 [0.4.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.4.1
 [0.4.2]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.4.2
+[0.5.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.5.0
