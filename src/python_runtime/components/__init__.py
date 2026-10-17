@@ -10,9 +10,11 @@ from .clamp import Clamp
 from .counter import Counter
 from .digital_input import DigitalInput
 from .digital_output import DigitalOutput
+from .engine import Engine
 from .fault_device import FaultDevice
 from .first_order_lag import FirstOrderLag
 from .gain import Gain
+from .generator import Generator
 from .heater_block import HeaterBlock
 from .integrator import Integrator
 from .low_pass_filter import LowPassFilter
@@ -38,8 +40,10 @@ __all__ = [
     "DigitalInput",
     "DigitalOutput",
     "FaultDevice",
+    "Engine",
     "FirstOrderLag",
     "Gain",
+    "Generator",
     "HeaterBlock",
     "Integrator",
     "LowPassFilter",
