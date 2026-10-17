@@ -6,6 +6,30 @@ namespace PowerSimBuilder
 {
     static class Program
     {
+
+        // ============================================================
+        // デバッグログ（ファイル出力）
+        // ============================================================
+        private static readonly object _dbgLock = new object();
+        private static readonly string _dbgLogPath =
+            System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory, "..", "..", "debug.log");
+
+        public static void DBG(string message)
+        {
+            try
+            {
+                lock (_dbgLock)
+                {
+                    string path = System.IO.Path.GetFullPath(_dbgLogPath);
+                    string line = string.Format(
+                        "[{0:HH:mm:ss.fff}] {1}{2}",
+                        DateTime.Now, message, Environment.NewLine);
+                    System.IO.File.AppendAllText(path, line, System.Text.Encoding.UTF8);
+                }
+            }
+            catch { /* ログ失敗は無視 */ }
+        }
         [STAThread]
         static void Main(string[] args)
         {
