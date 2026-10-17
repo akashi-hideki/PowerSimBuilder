@@ -8,6 +8,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.4.2] - 2026-10-17
+
+### Added (Task 3-F: SPEC_POWERSIM components)
+
+- `PowerSource`: single-phase AC source (sine / square / triangle)
+- `FaultDevice`: scenario-driven fault injector with restricted eval
+- `Engine`: prime mover with startup ramp (idle_ratio -> torque_max)
+- `Generator`: torque-driven AC source (efficiency + saturation)
+- `DiodeBridge`: AC-to-DC rectifier (half / full / three-phase)
+- `InductionMotor`: slip-based induction motor (Kloss formula)
+- 42 new pytest tests across the six components
+
+### Fixed
+
+- `InductionMotor` could not start: slip=1.0 was excluded by a boundary
+  condition (`0.001 < slip < 0.999`), forcing torque to 0 at standstill
+  (`417b74c`)
+
+### Changed (CI / dev experience)
+
+- `.pre-commit-config.yaml`: added a `pre-push` hook that runs
+  `python -m pytest tests/python -q` so that logic errors like
+  `4b1d3d7` cannot reach `main` again
+- `pyproject.toml`: added `python_runtime.statable` to `packages` /
+  `package-dir` (was missing since v0.3.0, surfaced by CI's fresh install)
+- `tests/integration/test_csharp_codegen.py`: propagate `PYTHONPATH` to
+  the subprocess (defense-in-depth for editable install differences)
+- `.gitignore`: added `!tests/data/scenarios/**/system.json` so scenario
+  data under `tests/data/` is tracked automatically
+
+### Excluded by design
+
+- `Welder`: the maintainer is responsible for a commercial welder
+  product, so the welder model is intentionally excluded from the
+  PowerSimBuilder runtime to avoid IP overlap.
+
+### Tests
+
+- C# StaTable: 94 pass
+- C# ParameterTypeHelper: 60 pass
+- Python: 382+ pass (no SKIPs)
+
 ## [0.4.1] - 2026-10-17
 
 ### Added (Task 3-C-9-a: ParameterTypeHelper)
@@ -242,7 +284,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.4.2...HEAD
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
 [0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
 [0.2.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.1
@@ -251,3 +293,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.3.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.3.0
 [0.4.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.4.0
 [0.4.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.4.1
+[0.4.2]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.4.2
