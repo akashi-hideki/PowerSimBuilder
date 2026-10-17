@@ -180,3 +180,4 @@ _backup_palette_*/
 _3c_diag_*/
 _3c_detail_*/
 *.bak_*
+generated/_debug_*

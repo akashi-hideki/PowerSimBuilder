@@ -79,6 +79,12 @@ class ControllerBox(Component):
 
         self.parameters = {
             "generated_path": str(generated_path or ""),
+            "auto_events": "",  # "" = disabled; "demo_oven" = enable demo driver
+        }
+        self._demo_state: dict[str, bool] = {
+            "startup_fired": False,
+            "overheat_fired": False,
+            "door_fired": False,
         }
 
         self._input_globals = list(input_globals) if input_globals else list(DEFAULT_INPUT_GLOBALS)
@@ -132,6 +138,9 @@ class ControllerBox(Component):
         else:
             self._globals["g_system_tick"] = int(round(t * 1000.0))
 
+        # 2.5) Auto-fire events (demo driver) BEFORE tick, so transitions run this tick
+        self._fire_auto_events()
+
         # 3) Tick the StaTable runtime (drives all 7 layers)
         self._runtime.tick(t, dt, sim_data)
 
@@ -145,6 +154,11 @@ class ControllerBox(Component):
             self._runtime.reset()
         self.inputs = {name: 0 for name in self._input_globals}
         self.outputs = {name: 0 for name in self._output_globals}
+        self._demo_state = {
+            "startup_fired": False,
+            "overheat_fired": False,
+            "door_fired": False,
+        }
 
     # ------------------------------------------------------------------
     # Debug helpers
@@ -155,6 +169,46 @@ class ControllerBox(Component):
         self._ensure_runtime()
         assert self._runtime is not None  # for mypy
         return self._runtime.get_layer_states()
+
+    def fire_event(self, layer_name: str, event_name: str, data: Any = None) -> bool:
+        """Fire a direct event to a specific layer (passthrough to runtime)."""
+        self._ensure_runtime()
+        assert self._runtime is not None  # for mypy
+        return self._runtime.fire_event(layer_name, event_name, data)
+
+    # ------------------------------------------------------------------
+    # Auto-events driver (demo)
+    # ------------------------------------------------------------------
+
+    def _fire_auto_events(self) -> None:
+        """Fire events based on ``auto_events`` parameter."""
+        mode = self.parameters.get("auto_events", "").strip()
+        if mode == "demo_oven":
+            self._demo_oven_events()
+
+    def _demo_oven_events(self) -> None:
+        """Cooking heater demo driver.
+
+        Triggers:
+        - Startup: HEAT_START (DriverOutput) + OV_START (MwOven)
+        - Overheat: thermistor_top > 250 -> OV_OVERHEAT (MwOven)
+        - Door safety: door_open == 1 -> DOOR_OPEN (DriverInput)
+        """
+        s = self._demo_state
+        g = self._globals
+
+        if not s["startup_fired"]:
+            self.fire_event("DriverOutput", "HEAT_START")
+            self.fire_event("MwOven", "OV_START")
+            s["startup_fired"] = True
+
+        if not s["overheat_fired"] and g.get("thermistor_top", 0) > 250:
+            self.fire_event("MwOven", "OV_OVERHEAT")
+            s["overheat_fired"] = True
+
+        if not s["door_fired"] and g.get("door_open", 0) == 1:
+            self.fire_event("DriverInput", "DOOR_OPEN")
+            s["door_fired"] = True
 
     # ------------------------------------------------------------------
     # Helpers
