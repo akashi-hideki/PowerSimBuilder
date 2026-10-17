@@ -716,8 +716,7 @@ namespace PowerSimBuilder
                     // ファイルをビルド
                     builder.BuildPythonSimulationFile();
 
-                    MessageBox.Show($"ファイルが正常に生成されました:\n{saveFileDialog.FileName}",
-                                  "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // Task 3-C-11: 「生成成功」MessageBox は削除（PythonEditorForm がすぐ開く）
                 }
             }
             catch (Exception ex)
