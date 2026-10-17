@@ -6,7 +6,7 @@ StaTable project: CookingHeaterController
 StaTable generation_style: table_driven
 StaTable os_type: non_rtos
 Tabs: 7 (DriverInput, DriverOutput, MwMicrowave, MwOven, MwGrill, MwSteam, Application)
-Generated: 2026-10-17T13:32:14+09:00
+Generated: 2026-10-17T13:39:00+09:00
 """
 
 from python_runtime.statable import StaTableControllerBase, StaTableRuntime
@@ -381,26 +381,44 @@ class MwMicrowaveController(StaTableControllerBase):
     # === Role Functions (from StaTable layer-local) ===
     def F_StartMagnetron(self):
         # STABLE_USER_CODE_START:MwMicrowave.F_StartMagnetron
+        # Start magnetron with soft-start
+        self.globals["mag_on"] = 1
+        self.globals["mw_power"] = self.globals.get("mw_target_power", 0)
         return 0
         # STABLE_USER_CODE_END:MwMicrowave.F_StartMagnetron
     def F_StopMagnetron(self):
         # STABLE_USER_CODE_START:MwMicrowave.F_StopMagnetron
+        # Stop magnetron
+        self.globals["mag_on"] = 0
+        self.globals["mw_power"] = 0
         return 0
         # STABLE_USER_CODE_END:MwMicrowave.F_StopMagnetron
     def F_SetMwPower(self):
         # STABLE_USER_CODE_START:MwMicrowave.F_SetMwPower
+        # Set microwave power level (sync mw_power with target if mag_on)
+        if self.globals.get("mag_on", 0):
+            self.globals["mw_power"] = self.globals.get("mw_target_power", 0)
+        else:
+            self.globals["mw_power"] = 0
         return 0
         # STABLE_USER_CODE_END:MwMicrowave.F_SetMwPower
     def F_CheckAnodeCurrent(self):
         # STABLE_USER_CODE_START:MwMicrowave.F_CheckAnodeCurrent
-        return 0
+        # Monitor anode current (>500mA => fault)
+        return 1 if self.globals.get("mw_anode_current", 0) > 500 else 0
         # STABLE_USER_CODE_END:MwMicrowave.F_CheckAnodeCurrent
     def F_LogMwFault(self):
         # STABLE_USER_CODE_START:MwMicrowave.F_LogMwFault
+        # Log microwave fault (preserve existing)
+        if self.globals.get("error_code", 0) == 0:
+            self.globals["error_code"] = 0xE1
         return 0
         # STABLE_USER_CODE_END:MwMicrowave.F_LogMwFault
     def F_ClearMwFault(self):
         # STABLE_USER_CODE_START:MwMicrowave.F_ClearMwFault
+        # Clear microwave fault (only if current is 0xE1)
+        if self.globals.get("error_code", 0) == 0xE1:
+            self.globals["error_code"] = 0
         return 0
         # STABLE_USER_CODE_END:MwMicrowave.F_ClearMwFault
 
@@ -448,42 +466,71 @@ class MwOvenController(StaTableControllerBase):
     # === Role Functions (from StaTable layer-local) ===
     def F_StartOvenPid(self):
         # STABLE_USER_CODE_START:MwOven.F_StartOvenPid
+        # Start oven PID (set flag bit 0 in stage_mode)
+        self.globals["stage_mode"] = self.globals.get("stage_mode", 0) | 0x01
         return 0
         # STABLE_USER_CODE_END:MwOven.F_StartOvenPid
     def F_StopOvenPid(self):
         # STABLE_USER_CODE_START:MwOven.F_StopOvenPid
+        # Stop oven PID (clear bit 0)
+        self.globals["stage_mode"] = self.globals.get("stage_mode", 0) & 0xFE
         return 0
         # STABLE_USER_CODE_END:MwOven.F_StopOvenPid
     def F_SetTopHeaterDuty(self):
         # STABLE_USER_CODE_START:MwOven.F_SetTopHeaterDuty
+        # Set top heater duty (sync on/off)
+        d = self.globals.get("heater_top_duty", 0)
+        self.globals["heater_top_on"] = 1 if d > 0 else 0
         return 0
         # STABLE_USER_CODE_END:MwOven.F_SetTopHeaterDuty
     def F_SetBottomHeaterDuty(self):
         # STABLE_USER_CODE_START:MwOven.F_SetBottomHeaterDuty
+        # Set bottom heater duty (sync on/off)
+        d = self.globals.get("heater_bottom_duty", 0)
+        self.globals["heater_bottom_on"] = 1 if d > 0 else 0
         return 0
         # STABLE_USER_CODE_END:MwOven.F_SetBottomHeaterDuty
     def F_SetBackHeaterDuty(self):
         # STABLE_USER_CODE_START:MwOven.F_SetBackHeaterDuty
+        # Set back heater duty (use middle heater as back proxy)
+        d = self.globals.get("heater_middle_duty", 0)
+        self.globals["heater_middle_on"] = 1 if d > 0 else 0
         return 0
         # STABLE_USER_CODE_END:MwOven.F_SetBackHeaterDuty
     def F_SetConvectionFan(self):
         # STABLE_USER_CODE_START:MwOven.F_SetConvectionFan
+        # Set convection fan duty (sync on/off)
+        d = self.globals.get("fan_duty", 0)
+        self.globals["fan_on"] = 1 if d > 0 else 0
         return 0
         # STABLE_USER_CODE_END:MwOven.F_SetConvectionFan
     def F_ReadThermistors(self):
         # STABLE_USER_CODE_START:MwOven.F_ReadThermistors
+        # Read all thermistors (deterministic noise based on g_system_tick)
+        _t = self.globals.get("g_system_tick", 0) & 0xFFFFFFFF
+        _n = ((_t * 11) % 21) - 10  # -10..+10
+        for name in ("thermistor_top", "thermistor_bottom", "thermistor_middle"):
+            base = self.globals.get(name, 25)
+            self.globals[name] = int(base + _n * 0.05)
         return 0
         # STABLE_USER_CODE_END:MwOven.F_ReadThermistors
     def F_CheckOvenOverheat(self):
         # STABLE_USER_CODE_START:MwOven.F_CheckOvenOverheat
-        return 0
+        # Check oven overheat (>250 degC)
+        return 1 if self.globals.get("thermistor_top", 0) > 250 else 0
         # STABLE_USER_CODE_END:MwOven.F_CheckOvenOverheat
     def F_LogOvFault(self):
         # STABLE_USER_CODE_START:MwOven.F_LogOvFault
+        # Log oven fault (preserve existing)
+        if self.globals.get("error_code", 0) == 0:
+            self.globals["error_code"] = 0xE3
         return 0
         # STABLE_USER_CODE_END:MwOven.F_LogOvFault
     def F_ClearOvFault(self):
         # STABLE_USER_CODE_START:MwOven.F_ClearOvFault
+        # Clear oven fault (only if 0xE3)
+        if self.globals.get("error_code", 0) == 0xE3:
+            self.globals["error_code"] = 0
         return 0
         # STABLE_USER_CODE_END:MwOven.F_ClearOvFault
 
@@ -528,26 +575,42 @@ class MwGrillController(StaTableControllerBase):
     # === Role Functions (from StaTable layer-local) ===
     def F_StartGrill(self):
         # STABLE_USER_CODE_START:MwGrill.F_StartGrill
+        # Start grill heater (use top heater as grill proxy)
+        self.globals["heater_top_on"] = 1
+        self.globals["heater_top_duty"] = 100
         return 0
         # STABLE_USER_CODE_END:MwGrill.F_StartGrill
     def F_StopGrill(self):
         # STABLE_USER_CODE_START:MwGrill.F_StopGrill
+        # Stop grill heater
+        self.globals["heater_top_on"] = 0
+        self.globals["heater_top_duty"] = 0
         return 0
         # STABLE_USER_CODE_END:MwGrill.F_StopGrill
     def F_SetGrillDuty(self):
         # STABLE_USER_CODE_START:MwGrill.F_SetGrillDuty
+        # Set grill heater duty (sync on/off with duty)
+        d = self.globals.get("heater_top_duty", 0)
+        self.globals["heater_top_on"] = 1 if d > 0 else 0
         return 0
         # STABLE_USER_CODE_END:MwGrill.F_SetGrillDuty
     def F_CheckGrillOverheat(self):
         # STABLE_USER_CODE_START:MwGrill.F_CheckGrillOverheat
-        return 0
+        # Check grill overheat (>250 degC)
+        return 1 if self.globals.get("thermistor_top", 0) > 250 else 0
         # STABLE_USER_CODE_END:MwGrill.F_CheckGrillOverheat
     def F_LogGrFault(self):
         # STABLE_USER_CODE_START:MwGrill.F_LogGrFault
+        # Log grill fault (preserve existing)
+        if self.globals.get("error_code", 0) == 0:
+            self.globals["error_code"] = 0xE2
         return 0
         # STABLE_USER_CODE_END:MwGrill.F_LogGrFault
     def F_ClearGrFault(self):
         # STABLE_USER_CODE_START:MwGrill.F_ClearGrFault
+        # Clear grill fault (only if 0xE2)
+        if self.globals.get("error_code", 0) == 0xE2:
+            self.globals["error_code"] = 0
         return 0
         # STABLE_USER_CODE_END:MwGrill.F_ClearGrFault
 
@@ -601,38 +664,67 @@ class MwSteamController(StaTableControllerBase):
     # === Role Functions (from StaTable layer-local) ===
     def F_StartBoilerHeater(self):
         # STABLE_USER_CODE_START:MwSteam.F_StartBoilerHeater
+        # Start boiler heater (use bottom heater as boiler proxy)
+        self.globals["heater_bottom_on"] = 1
+        self.globals["heater_bottom_duty"] = 100
         return 0
         # STABLE_USER_CODE_END:MwSteam.F_StartBoilerHeater
     def F_StopBoilerHeater(self):
         # STABLE_USER_CODE_START:MwSteam.F_StopBoilerHeater
+        # Stop boiler heater
+        self.globals["heater_bottom_on"] = 0
+        self.globals["heater_bottom_duty"] = 0
         return 0
         # STABLE_USER_CODE_END:MwSteam.F_StopBoilerHeater
     def F_PulsePump(self):
         # STABLE_USER_CODE_START:MwSteam.F_PulsePump
+        # Pulse boiler pump (one pulse: pump_on + increment counter)
+        self.globals["pump_on"] = 1
+        self.globals["pump_pulse_count"] = self.globals.get("pump_pulse_count", 0) + 1
         return 0
         # STABLE_USER_CODE_END:MwSteam.F_PulsePump
     def F_SetPumpDuty(self):
         # STABLE_USER_CODE_START:MwSteam.F_SetPumpDuty
+        # Set pump duty (no dedicated global; pulse-based control)
+        # No-op in simulation: caller should use PulsePump() instead.
         return 0
         # STABLE_USER_CODE_END:MwSteam.F_SetPumpDuty
     def F_ReadBoilerTemp(self):
         # STABLE_USER_CODE_START:MwSteam.F_ReadBoilerTemp
+        # Read boiler temperature (deterministic, 95..105 degC)
+        _t = self.globals.get("g_system_tick", 0) & 0xFFFFFFFF
+        _n = ((_t * 7) % 11) - 5  # -5..+5
+        self.globals["boiler_temp"] = int(100 + _n)
         return 0
         # STABLE_USER_CODE_END:MwSteam.F_ReadBoilerTemp
     def F_CalculateSteamPID(self):
         # STABLE_USER_CODE_START:MwSteam.F_CalculateSteamPID
+        # Compute steam PID output (simple P control)
+        target = self.globals.get("steam_target_temp", 0)
+        current = self.globals.get("boiler_temp", 0)
+        error = target - current
+        output = max(0, min(100, error))  # P gain = 1, clamp 0..100
+        if self.globals.get("heater_bottom_on", 0):
+            self.globals["heater_bottom_duty"] = output
         return 0
         # STABLE_USER_CODE_END:MwSteam.F_CalculateSteamPID
     def F_CheckSteamOverheat(self):
         # STABLE_USER_CODE_START:MwSteam.F_CheckSteamOverheat
-        return 0
+        # Check steam overheat (>130 degC)
+        return 1 if self.globals.get("boiler_temp", 0) > 130 else 0
         # STABLE_USER_CODE_END:MwSteam.F_CheckSteamOverheat
     def F_LogStFault(self):
         # STABLE_USER_CODE_START:MwSteam.F_LogStFault
+        # Log steam fault (preserve existing)
+        if self.globals.get("error_code", 0) == 0:
+            self.globals["error_code"] = 0xE4
         return 0
         # STABLE_USER_CODE_END:MwSteam.F_LogStFault
     def F_ClearStFault(self):
         # STABLE_USER_CODE_START:MwSteam.F_ClearStFault
+        # Clear steam fault (only if 0xE4)
+        if self.globals.get("error_code", 0) == 0xE4:
+            self.globals["error_code"] = 0
         return 0
         # STABLE_USER_CODE_END:MwSteam.F_ClearStFault
 
