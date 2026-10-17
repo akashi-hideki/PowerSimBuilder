@@ -46,6 +46,20 @@ namespace PowerSimBuilder
 
         // ポート関連定数
         private const int PortHitTestRadius = 10;
+
+        // ---- Diagnostic logging (temporary) ----
+        private static readonly string _dbgLogPath =
+            System.IO.Path.Combine(System.IO.Path.GetTempPath(), "powersimbuilder_scroll_debug.log");
+        [System.Diagnostics.Conditional("NEVER_ACTIVE")]
+        private static void DBG(string msg)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(_dbgLogPath,
+                    $"{DateTime.Now:HH:mm:ss.fff} {msg}\r\n");
+            }
+            catch { }
+        }
         private const int PortDisplayRadius = 5;
 
         /// <summary>
@@ -121,7 +135,12 @@ namespace PowerSimBuilder
                 AllowDrop = true;
 
                 this.TabStop = true;
-                this.SetStyle(ControlStyles.Selectable, true);
+                this.SetStyle(
+                    ControlStyles.Selectable |
+                    ControlStyles.OptimizedDoubleBuffer |
+                    ControlStyles.AllPaintingInWmPaint,
+                    true);
+                this.UpdateStyles();
                 this.KeyDown += DesignCanvas_KeyDown;
 
                 this.DragEnter += DesignCanvas_DragEnter;
@@ -704,6 +723,7 @@ namespace PowerSimBuilder
                     if (CheckPortClick(component, clientPos, false)) return true;
                 }
             }
+            DBG($"CheckPortClick MISS viewportLoc=({location.X},{location.Y})");
             return false;
         }
 
@@ -729,8 +749,11 @@ namespace PowerSimBuilder
 
                 int dx = clientPos.X - xCenter;
                 int dy = clientPos.Y - yPos;
-                if (dx * dx + dy * dy <= ComponentControl.HitTestRadius * ComponentControl.HitTestRadius)
+                int d2 = dx * dx + dy * dy;
+                int r2 = ComponentControl.HitTestRadius * ComponentControl.HitTestRadius;
+                if (d2 <= r2)
                 {
+                    DBG($"CheckPortClick HIT comp={component.InstanceName} {(isInput ? "in" : "out")}[{i}] port={ports[i]} center=({xCenter},{yPos}) mouse=({clientPos.X},{clientPos.Y}) d2={d2}");
                     ComponentControl_PortClicked(component, new PortEventArgs(ports[i]));
                     return true;
                 }
@@ -1162,10 +1185,15 @@ private void ClearCanvas()
                 component.GetOutputPortBounds(portIndex) : 
                 component.GetInputPortBounds(portIndex);
 
-            return new Point(
+            // component.Left/Top は AutoScroll で変化する（= viewport 座標）。
+            // portRect も既に viewport 座標なので、AutoScrollPosition を足すと
+            // ダブルカウントになり、スクロール時に線がずれる（根本原因）。
+            var pt = new Point(
                 isOutput ? portRect.Right : portRect.Left,
                 portRect.Top + portRect.Height / 2
             );
+            DBG($"GetPortPoint {component.InstanceName}:{portName} out={isOutput} rect={portRect} -> ({pt.X},{pt.Y}) AutoScroll={AutoScrollPosition}");
+            return pt;
         }
 
         /// <summary>
@@ -1201,6 +1229,27 @@ private void ClearCanvas()
         /// 機能: キャンバスの描画
         /// 注意點: デザイン時と実行時で処理を分岐
         /// </summary>
+        protected override void OnScroll(ScrollEventArgs se)
+        {
+            base.OnScroll(se);
+            DBG($"OnScroll type={se.Type} old={se.OldValue} new={se.NewValue} AutoScrollPosition={AutoScrollPosition}");
+            Invalidate();
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+            DBG($"OnMouseWheel delta={e.Delta} AutoScrollPosition={AutoScrollPosition}");
+            Invalidate();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            DBG($"OnResize ClientSize={ClientSize.Width}x{ClientSize.Height}");
+            Invalidate();
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             if (IsDesignMode)
@@ -1212,10 +1261,49 @@ private void ClearCanvas()
             base.OnPaint(e);
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
+            DBG($"OnPaint ClientSize={ClientSize.Width}x{ClientSize.Height} AutoScrollPosition={AutoScrollPosition} Connections={Connections.Count}");
+
+            // OnScroll が発火しないスクロール経路 (AutoScroll 内部処理) があるため、
+            // 毎フレーム PathPoints を現在の AutoScrollPosition で再計算する。
+            // 接続数は高々数十本なのでコストは無視できる。
+            if (Connections.Count > 0)
+            {
+                UpdateAllConnectionVisuals();
+            }
+
             DrawConnections(e.Graphics);
             DrawTemporaryConnection(e.Graphics);
             DrawSelectedConnectionHighlight(e.Graphics);
             DrawConnectionInfo(e.Graphics);
+
+            // === DIAGNOSTIC (temporary) ===
+            try
+            {
+                if (Connections.Count > 0 && Connections[0].StartComponent != null)
+                {
+                    var comp = Connections[0].StartComponent;
+                    var startPortName = Connections[0].StartPort;
+                    var outPorts = comp.Descriptor.OutputPorts ?? new string[0];
+                    var realIdx = System.Array.IndexOf(outPorts, startPortName);
+                    var portRect = realIdx >= 0 ? comp.GetOutputPortBounds(realIdx)
+                                                : new Rectangle(0, 0, 0, 0);
+                    DBG($"DIAG idx={realIdx} portName={startPortName}");
+                    // 参照1: マゼンタの矩形（portRect をそのまま描画）
+                    using (var mag = new Pen(Color.Magenta, 1))
+                        e.Graphics.DrawRectangle(mag, portRect);
+                    // 参照2: シアンの小円（PathPoints[0]）
+                    var p0 = Connections[0].Visual.PathPoints[0];
+                    using (var cyan = new Pen(Color.Cyan, 2))
+                        e.Graphics.DrawEllipse(cyan, p0.X - 4, p0.Y - 4, 8, 8);
+                    // 参照3: グラフィクスの変換行列
+                    var m = e.Graphics.Transform;
+                    DBG($"DIAG comp.Left={comp.Left} comp.Top={comp.Top} " +
+                        $"AutoScroll={AutoScrollPosition} " +
+                        $"Transform=[{m.Elements[0]:F1},{m.Elements[1]:F1},{m.Elements[2]:F1},{m.Elements[3]:F1},{m.OffsetX:F1},{m.OffsetY:F1}] " +
+                        $"portRect={portRect} PathPoints[0]=({p0.X},{p0.Y})");
+                }
+            }
+            catch (Exception ex) { DBG($"DIAG err: {ex.Message}"); }
         }
 
         /// <summary>
@@ -1242,6 +1330,13 @@ private void ClearCanvas()
         {
             foreach (var connection in Connections)
             {
+                if (connection.Visual?.PathPoints != null && connection.Visual.PathPoints.Count >= 2)
+                {
+                    DBG($"Draw {connection.StartComponent?.InstanceName}:{connection.StartPort} -> " +
+                        $"({connection.Visual.PathPoints[0].X},{connection.Visual.PathPoints[0].Y}) -> " +
+                        $"({connection.Visual.PathPoints[connection.Visual.PathPoints.Count-1].X},{connection.Visual.PathPoints[connection.Visual.PathPoints.Count-1].Y}) " +
+                        $"count={connection.Visual.PathPoints.Count}");
+                }
                 ConnectionRenderer.Render(g, connection);
             }
         }
@@ -1256,7 +1351,9 @@ private void ClearCanvas()
             if (_currentConnection != null && _currentConnection.EndComponent == null)
             {
                 Point start = GetComponentConnectionPoint(_currentConnection.StartComponent, true);
-                Point end = PointToClient(Cursor.Position);
+                Point viewportEnd = PointToClient(Cursor.Position);
+                // start は viewport 座標、end も viewport に統一
+                Point end = viewportEnd;
 
                 Color lineColor = Color.LightBlue;
                 DashStyle dashStyle = DashStyle.Dash;
@@ -1340,6 +1437,7 @@ private void ClearCanvas()
         private Point GetComponentConnectionPoint(ComponentControl component, bool isOutput)
         {
             int x = isOutput ? component.Right : component.Left;
+            // component.Left/Top は AutoScroll 適用済み（viewport 座標）
             return new Point(x, component.Top + component.Height / 2);
         }
 
