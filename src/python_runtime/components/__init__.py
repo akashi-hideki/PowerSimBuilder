@@ -53,3 +53,6 @@ __all__ = [
     "ThreePhaseSine",
     "Timer",
 ]
+from .controller_box import ControllerBox  # noqa: E402,F401
+
+__all__.append("ControllerBox")

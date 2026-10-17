@@ -174,3 +174,9 @@ _backup_3-0_*/
 generated/_test_*.py
 generated/_smoke_*.py
 _3a2_material_*/
+
+# Task 3-C work dirs
+_backup_palette_*/
+_3c_diag_*/
+_3c_detail_*/
+*.bak_*
