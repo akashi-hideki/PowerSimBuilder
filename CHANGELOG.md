@@ -8,6 +8,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.4.1] - 2026-10-17
+
+### Added (Task 3-C-9-a: ParameterTypeHelper)
+
+- `ParameterTypeHelper`: type classification for dictionary parameter editing
+  - Integer / Number / Boolean / String categories
+  - Empty or unknown `Type` falls back to `.NET` type / `JsonElement.ValueKind` inference
+- `ParameterTypeHelperTests`: 60 test cases
+
+### Added (Task 3-E: scenario data externalization)
+
+- `tests/data/scenarios/` with README and schema documentation
+  - `cooking_heater/` (moved from `generated/`): design.xml + controller_box.py + controller_box_demo.py
+  - `motor_drive/`    (new): PWM3Phase + Gain + MechanicalInertia
+  - `heater_overheat/` (new): ThreePhaseSine + HeaterBlock + OverCurrentDetector
+- `tests/python/test_scenario_cooking_heater.py`
+- `tests/python/test_scenario_motor_drive.py`
+- `tests/python/test_scenario_heater_overheat.py`
+- `conftest.py`: `scenarios_dir` fixture
+
+### Changed
+
+- `controller_box._resolve_generated_path`: added `tests/data/scenarios/cooking_heater/`
+  as a fallback candidate (auto-discovery compatibility)
+- `test_controller_box.py` / `test_controller_box_3d.py`: candidate-based `GENERATED` path resolution
+
+### Tests
+
+- C# ParameterTypeHelper: 60 pass
+- C# StaTable: 94 pass (no regression)
+- Python: 319+ pass (no SKIPs)
+
 ## [0.4.0] - 2026-10-17
 
 ### Added (Phase 3-C: ControllerBox Canvas integration)
@@ -210,7 +242,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.4.1...HEAD
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
 [0.2.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.0
 [0.2.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.1
@@ -218,3 +250,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.2.3]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.2.3
 [0.3.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.3.0
 [0.4.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.4.0
+[0.4.1]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.4.1
