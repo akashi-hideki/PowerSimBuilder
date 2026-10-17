@@ -786,3 +786,126 @@ StaTable (独立) → design.xml → PowerSimBuilder → controller_box.py
 ---
 
 **End of Session Append**
+
+---
+
+# Task 3-A 完了（2026-10-17 追記）
+
+**HEAD:** `7c96489` (origin/main)
+
+## 18. 3-A で完了したタスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| **3-0** | STABLE_USER_CODE 保存機構 | `20e0b41` | マーカー内ユーザー実装を再生成時に保持 |
+| **3-A-1** | DriverInput 6 関数 | `ba99ae1` | センサー EMA / queue_event / ドア安全停止 |
+| **3-A-2-A** | DriverOutput 13 関数 | `a7f974c` | ヒータ / ファン / ポンプ / マグネトロン制御 |
+| **3-A-2-B** | Application 10 関数 | `0198bdd` | シーケンス制御 / エラー管理 |
+| **3-A-3** | Mw* 4 層 31 関数 | `7c96489` | MwMicrowave / MwGrill / MwOven / MwSteam |
+
+**合計: 60 / 60 関数実装完了**
+
+## 19. 実装内容の要点
+
+### グローバル変数マッピング
+
+| 変数 | 用途 | 使用層 |
+|---|---|---|
+| `g_system_tick` | 決定的疑似ノイズ生成 | DriverInput, MwOven, MwSteam |
+| `error_code` | エラーコード（0xE1=MW, 0xE2=GR, 0xE3=OV, 0xE4=ST） | 全層 |
+| `heater_*_on/duty` | ヒータ制御 | DriverOutput, MwGrill, MwOven, MwSteam |
+| `fan_on/duty` | ファン制御 | DriverOutput, MwOven |
+| `pump_on/pulse_count` | ポンプ制御 | DriverOutput, MwSteam |
+| `mag_on/mw_power/mw_target_power` | マグネトロン | DriverOutput, MwMicrowave |
+| `seq_step/seq_total/stage_*` | シーケンス制御 | Application |
+| `door_open` | 安全フラグ | DriverInput |
+
+### 設計パターン
+
+- **決定的シミュレーション**: `g_system_tick` からノイズを生成（乱数不使用、再現性確保）
+- **エラーコード方式**: `LogXxxFault` は既存 `error_code` を保持、`ClearXxxFault` は該当コードのみクリア
+- **`_on` と `_duty` の同期**: `SetXxxPwm` は `duty > 0` → `on = 1` の規則
+- **PID 制御**: `CalculateSteamPID` は P 制御（gain=1、clamp 0..100）
+
+### エラーコード
+
+| コード | 層 | 意味 |
+|---|---|---|
+| `0xE1` | MwMicrowave | マグネトロン故障 |
+| `0xE2` | MwGrill | グリル故障 |
+| `0xE3` | MwOven | オーブン故障 |
+| `0xE4` | MwSteam | スチーム故障 |
+
+## 20. テスト状況
+
+| スコープ | 件数 | 状態 |
+|---|---:|---|
+| C# StaTable 全体 | 94 | ✅ pass |
+| DriverInput 直接呼び出し | 6 | ✅ pass |
+| DriverOutput 直接呼び出し | 13 | ✅ pass |
+| Application 直接呼び出し | 10 | ✅ pass |
+| Mw* 4 層直接呼び出し | 31 | ✅ pass |
+| 回帰（3 層連携） | 3 | ✅ pass |
+
+## 21. 残タスク
+
+| # | タスク | 内容 | 優先度 |
+|:---:|---|---|:---:|
+| **3-B** | 統合動作確認 | 7 層 tick ベースのシナリオテスト | 🟡 中 |
+| **v0.3.0** | リリース | Phase 2 + 3-A のバージョン固定 | 🟡 中 |
+| **B''-warn** | 別レイヤー参照警告 | レイヤー跨ぎ `F_xxx` の警告 | 🟢 低 |
+| **B''-bare** | 裸 RoleFunction 名検出 | `F_` なし参照の自動変換 | 🟢 低 |
+
+## 22. 本セッション（3-A）の教訓
+
+### pre-commit `mixed-line-ending` 対策
+
+**問題**: 生成コードが CRLF を含むため、コミットのたびに `mixed-line-ending` が発動し、2 回コミットが必要。
+
+**対策**:
+- コミット前に `.Replace("
+", "
+")` で LF 正規化
+- 次回以降は `StaTableCodeGenerator.GenerateToFile` で `\n` 出力に統一するか、`.gitattributes` で `generated/*.py text eol=lf` を指定
+
+### PowerShell の罠
+
+| やること | やらないこと |
+|---|---|
+| `git commit -m "..."` を直接使う（短いメッセージ） | ヒアドキュメント `@'...'@`（Ctrl+C で中断リスク） |
+| 長いメッセージは `feat(statable): implement Mw* RoleFunctions (Task 3-A-3)
+
+MwMicrowave (6) / MwGrill (6) / MwOven (10) / MwSteam (9) = 31 関数を実装。
+
+実装:
+- MwMicrowave: magnetron 制御 + anode 電流監視
+- MwGrill: グリルヒーター制御 + 過熱判定
+- MwOven: PID bit 制御 + 3 ヒータ duty + ファン + サーミスタ読み取り + 過熱判定
+- MwSteam: ボイラーヒーター + ポンプパルス + 温度読み取り + P 制御 PID + 過熱判定
+
+エラーコード: 0xE1 (MW) / 0xE2 (GR) / 0xE3 (OV) / 0xE4 (ST)
+
+Tests: 31 関数 + 3 層回帰 PASS = "..."` + `git commit -m feat(statable): implement Mw* RoleFunctions (Task 3-A-3)
+
+MwMicrowave (6) / MwGrill (6) / MwOven (10) / MwSteam (9) = 31 関数を実装。
+
+実装:
+- MwMicrowave: magnetron 制御 + anode 電流監視
+- MwGrill: グリルヒーター制御 + 過熱判定
+- MwOven: PID bit 制御 + 3 ヒータ duty + ファン + サーミスタ読み取り + 過熱判定
+- MwSteam: ボイラーヒーター + ポンプパルス + 温度読み取り + P 制御 PID + 過熱判定
+
+エラーコード: 0xE1 (MW) / 0xE2 (GR) / 0xE3 (OV) / 0xE4 (ST)
+
+Tests: 31 関数 + 3 層回帰 PASS` | 配列 `@(...)` + `WriteAllText`（pre-commit 修正で再実行が必要） |
+| `function` 定義 + 実行行をセットで貼る | 説明文・期待結果の例を混ぜて貼る |
+
+### 実装上の知見
+
+- **層ごとの独立性**: DriverOutput / Mw* は機械的、Application はシーケンス制御
+- **エラーコード方式**: 既存保持 + 該当コードのみクリアで、層間の独立性を確保
+- **決定的シミュレーション**: `g_system_tick` ベースの擬似ノイズで再現性確保
+
+---
+
+**End of Task 3-A**
