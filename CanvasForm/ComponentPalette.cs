@@ -220,19 +220,33 @@ namespace PowerSimBuilder
         /// </summary>
         private void CreateComponentButton(ComponentDescriptor component)
         {
+            // ===== Task 3-C-2 fix: ボタン文字を明示的に描画 =====
+            // アイコンオーバーレイ問題を回避するため、
+            // ControllerBox など特殊コンポーネントにはアイコンなしのテキストのみで表示
             var button = new Button
             {
                 Text = component.Name,
-                Image = CreateIcon(component, GetColorByType(component.Type)),
-                ImageAlign = ContentAlignment.MiddleLeft,
-                TextAlign = ContentAlignment.MiddleRight,
+                TextAlign = ContentAlignment.MiddleCenter,
+                ForeColor = Color.Black,
+                BackColor = Color.WhiteSmoke,
+                Font = new Font("Yu Gothic UI", 9F, FontStyle.Regular),
                 Tag = component,
                 Height = 40,
-                Width = 180,
+                Width = 260,
                 Margin = new Padding(5),
                 FlatStyle = FlatStyle.Flat,
-                BackColor = Color.WhiteSmoke
+                AutoEllipsis = true
             };
+
+            // 全コンポーネントにアイコンを付ける（ControllerBox も含む）
+            button.Image = CreateIcon(component, GetColorByType(component.Type));
+            button.ImageAlign = ContentAlignment.MiddleLeft;
+            button.TextAlign = ContentAlignment.MiddleRight;
+            button.TextImageRelation = TextImageRelation.ImageBeforeText;
+
+            // ツールチップ（文字が切れてもフル名を確認可能）
+            var tooltip = new ToolTip();
+            tooltip.SetToolTip(button, component.Name + " (" + component.Type + ")");
 
             button.FlatAppearance.BorderSize = 1;
             button.FlatAppearance.BorderColor = Color.LightGray;
@@ -259,6 +273,7 @@ namespace PowerSimBuilder
                 case "InductionMotor": return Color.Blue;
                 case "MechanicalLoad": return Color.Green;
                 case "FaultMonitor": return Color.Orange;
+                case "ControllerBox": return Color.MediumPurple;   // Task 3-C-2: 制御ボックス識別色
                 default: return Color.Gray;
             }
         }
@@ -288,6 +303,9 @@ namespace PowerSimBuilder
                         break;
                     case "FaultMonitor":
                         symbol = "F";
+                        break;
+                    case "ControllerBox":
+                        symbol = "★";   // Task 3-C-2: 制御ボックス専用シンボル
                         break;
                     default:
                         symbol = "C";

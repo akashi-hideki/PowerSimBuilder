@@ -53,6 +53,10 @@ namespace PowerSimBuilder
             ReplaceControl(canvasPanel, designCanvas1);
             ReplaceControl(palettePanel, componentPalette1);
 
+            // パレット下端にボタン（追加/編集/削除）用の余白を確保
+            // これにより末尾コンポーネントがボタンに隠れず、スクロールで表示可能
+            componentPalette1.Padding = new Padding(0, 0, 0, 40);
+
             InitializeRuntimeComponents();
 
             // 境界線の設定
