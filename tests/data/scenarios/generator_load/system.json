@@ -1,0 +1,32 @@
+{
+  "name": "generator_load",
+  "description": "Engine torque drives Generator: verify V, I, P outputs",
+  "dt": 0.001,
+  "t_end": 0.5,
+  "components": [
+    {
+      "instanceName": "engine",
+      "descriptorType": "Engine",
+      "parameters": {
+        "torque_max": 20.0,
+        "ramp_time": 0.1,
+        "idle_ratio": 0.0,
+        "power": 4000.0
+      }
+    },
+    {
+      "instanceName": "gen",
+      "descriptorType": "Generator",
+      "parameters": {
+        "efficiency": 0.9,
+        "voltage_per_torque": 10.0,
+        "rated_voltage": 200.0,
+        "rated_power": 5000.0,
+        "load_resistance": 10.0
+      }
+    }
+  ],
+  "connections": [
+    { "from": "engine.outputs.torque", "to": "gen.inputs.torque" }
+  ]
+}

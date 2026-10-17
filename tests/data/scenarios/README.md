@@ -37,3 +37,11 @@ Each scenario directory contains:
         { "from": "src_id.outputs.port", "to": "dst_id.inputs.port" }
       ]
     }
+
+## 3-F Scenarios (SPEC_POWERSIM components)
+
+| Directory            | Components                                  | Verifies |
+|----------------------|---------------------------------------------|----------|
+| generator_load       | Engine + Generator                          | torque -> voltage/current/power |
+| rectifier_motor      | PowerSource + DiodeBridge + InductionMotor  | AC -> DC -> motor acceleration |
+| fault_short_circuit  | Engine + Generator + FaultDevice            | fault trigger + power chain coexistence |

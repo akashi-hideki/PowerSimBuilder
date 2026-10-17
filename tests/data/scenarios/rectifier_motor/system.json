@@ -1,0 +1,44 @@
+{
+  "name": "rectifier_motor",
+  "description": "PowerSource AC -> DiodeBridge DC -> InductionMotor acceleration",
+  "dt": 0.001,
+  "t_end": 1.0,
+  "components": [
+    {
+      "instanceName": "ac",
+      "descriptorType": "PowerSource",
+      "parameters": {
+        "voltage": 200.0,
+        "frequency": 50.0,
+        "waveform": "sine",
+        "phase": 0.0,
+        "resistance": 10.0
+      }
+    },
+    {
+      "instanceName": "rect",
+      "descriptorType": "DiodeBridge",
+      "parameters": {
+        "diode_drop": 0.7,
+        "type": "full",
+        "smoothing_capacitance": 0.0,
+        "load_resistance": 10.0
+      }
+    },
+    {
+      "instanceName": "motor",
+      "descriptorType": "InductionMotor",
+      "parameters": {
+        "rated_voltage": 200.0,
+        "rated_power": 1500.0,
+        "rated_speed": 1450.0,
+        "load_torque": 2.0,
+        "inertia": 0.01
+      }
+    }
+  ],
+  "connections": [
+    { "from": "ac.outputs.voltage", "to": "rect.inputs.ac_voltage" },
+    { "from": "rect.outputs.dc_voltage", "to": "motor.inputs.voltage" }
+  ]
+}

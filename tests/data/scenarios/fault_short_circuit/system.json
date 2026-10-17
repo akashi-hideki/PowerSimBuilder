@@ -1,0 +1,40 @@
+{
+  "name": "fault_short_circuit",
+  "description": "FaultDevice triggers while Engine+Generator run normally (orthogonal)",
+  "dt": 0.001,
+  "t_end": 1.0,
+  "components": [
+    {
+      "instanceName": "engine",
+      "descriptorType": "Engine",
+      "parameters": {
+        "torque_max": 20.0,
+        "ramp_time": 0.1,
+        "idle_ratio": 0.0
+      }
+    },
+    {
+      "instanceName": "gen",
+      "descriptorType": "Generator",
+      "parameters": {
+        "efficiency": 0.9,
+        "voltage_per_torque": 10.0,
+        "rated_voltage": 200.0,
+        "load_resistance": 10.0
+      }
+    },
+    {
+      "instanceName": "fault",
+      "descriptorType": "FaultDevice",
+      "parameters": {
+        "fault_type": "short",
+        "condition_expr": "t >= 0.3 and t < 0.4",
+        "duration": 0.05,
+        "inrush_current": 0.0
+      }
+    }
+  ],
+  "connections": [
+    { "from": "engine.outputs.torque", "to": "gen.inputs.torque" }
+  ]
+}
