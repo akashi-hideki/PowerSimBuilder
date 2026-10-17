@@ -124,7 +124,32 @@ namespace PowerSimBuilder
             }
 
             sb.AppendLine("}");
-            sb.AppendLine();
+
+            // α (Task 3-C-6+): I/O port hints for ControllerBoxDescriptorBuilder.
+            // All variable names are emitted as one comma-separated list.
+            // Classification (input vs output) is delegated to
+            // ControllerBoxDescriptorBuilder using DEFAULT_INPUT_GLOBALS /
+            // DEFAULT_OUTPUT_GLOBALS from python_runtime/components/controller_box.py.
+            if (project.GlobalDefinitions != null && project.GlobalDefinitions.SystemVariables != null)
+            {
+                var hintBuilder = new StringBuilder();
+                bool firstHint = true;
+                foreach (var v in project.GlobalDefinitions.SystemVariables)
+                {
+                    if (string.IsNullOrEmpty(v.Name)) continue;
+                    if (!firstHint) hintBuilder.Append(", ");
+                    hintBuilder.Append(v.Name);
+                    firstHint = false;
+                }
+                if (hintBuilder.Length > 0)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("# --- PowerSimBuilder port hints (auto-generated) ---");
+                    sb.AppendLine("# @variables: " + hintBuilder.ToString());
+                    sb.AppendLine();
+                }
+            }
+
             sb.AppendLine();
         }
 

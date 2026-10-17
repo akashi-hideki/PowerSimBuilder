@@ -39,6 +39,57 @@ namespace PowerSimBuilder
             "g_system_tick",
         };
 
+        // A+C (Task 3-C-6+): 変数分類の既定リスト。
+        // python_runtime/components/controller_box.py の
+        // DEFAULT_INPUT_GLOBALS / DEFAULT_OUTPUT_GLOBALS と同期させること。
+        private static readonly HashSet<string> DefaultInputGlobals =
+            new HashSet<string>(StringComparer.Ordinal)
+        {
+            "thermistor_top",
+            "thermistor_bottom",
+            "thermistor_middle",
+            "ir_value",
+            "steam_sensor",
+            "door_open",
+            "mw_anode_current",
+            "rx_buf",
+            "seq_total",
+            "stage_duration",
+            "steam_target_temp",
+            "mw_target_power",
+            "oven_target_temp",
+        };
+
+        private static readonly HashSet<string> DefaultOutputGlobals =
+            new HashSet<string>(StringComparer.Ordinal)
+        {
+            "heater_top_duty",
+            "heater_middle_duty",
+            "heater_bottom_duty",
+            "fan_duty",
+            "pump_on",
+            "mag_on",
+            "mw_power",
+            "error_code",
+            "seq_step",
+            "stage_mode",
+            "boiler_temp",
+        };
+
+        // α: "# @variables: name1, name2, ..." 行（Generator が出力）
+        private static readonly Regex PortHintRegex =
+            new Regex(@"^#\s*@variables\s*:\s*(.+)$",
+                RegexOptions.Compiled | RegexOptions.Multiline);
+
+        // Stage 3: GLOBAL_VARIABLES = { ... } ブロック
+        private static readonly Regex GlobalVarBlockRegex =
+            new Regex(@"^GLOBAL_VARIABLES\s*=\s*\{(?<body>.*?)^\}",
+                RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.Singleline);
+
+        private static readonly Regex GlobalVarKeyRegex =
+            new Regex(@"""([A-Za-z_]\w*)""\s*:",
+                RegexOptions.Compiled);
+
         public static ComponentDescriptor Build(
             string projectName,
             string generatedPyPath,
@@ -83,6 +134,20 @@ namespace PowerSimBuilder
 
         private static (List<string> inputs, List<string> outputs) ExtractPorts(string pySource)
         {
+            // Stage 1: self.globals[...] を直接解析（完成済み .py 用）
+            var (in1, out1) = ExtractFromGlobalsAccess(pySource);
+            if (in1.Count + out1.Count > 0) return (in1, out1);
+
+            // Stage 2: "# @variables: ..." マーカー（Generator α で追加）
+            var (in2, out2) = ExtractFromPortHints(pySource);
+            if (in2.Count + out2.Count > 0) return (in2, out2);
+
+            // Stage 3: GLOBAL_VARIABLES = { ... } + DEFAULT_*_GLOBALS（安全側）
+            return ExtractFromGlobalVariables(pySource);
+        }
+
+        private static (List<string> inputs, List<string> outputs) ExtractFromGlobalsAccess(string pySource)
+        {
             var readVars = new HashSet<string>(StringComparer.Ordinal);
             var writtenVars = new HashSet<string>(StringComparer.Ordinal);
 
@@ -93,7 +158,6 @@ namespace PowerSimBuilder
             foreach (Match m in WriteRegex.Matches(pySource))
                 AddIfValid(m.Groups[1].Value, writtenVars);
 
-            // Read-only -> inputs, Write -> outputs
             var inputs = readVars
                 .Where(v => !writtenVars.Contains(v))
                 .OrderBy(v => v, StringComparer.Ordinal)
@@ -102,6 +166,55 @@ namespace PowerSimBuilder
                 .OrderBy(v => v, StringComparer.Ordinal)
                 .ToList();
 
+            return (inputs, outputs);
+        }
+
+        private static (List<string> inputs, List<string> outputs) ExtractFromPortHints(string pySource)
+        {
+            var allNames = new HashSet<string>(StringComparer.Ordinal);
+            foreach (Match m in PortHintRegex.Matches(pySource))
+            {
+                foreach (var raw in m.Groups[1].Value.Split(','))
+                {
+                    var name = raw.Trim();
+                    if (!string.IsNullOrEmpty(name))
+                        AddIfValid(name, allNames);
+                }
+            }
+            return ClassifyVariables(allNames);
+        }
+
+        private static (List<string> inputs, List<string> outputs) ExtractFromGlobalVariables(string pySource)
+        {
+            var allNames = new HashSet<string>(StringComparer.Ordinal);
+            var block = GlobalVarBlockRegex.Match(pySource);
+            if (block.Success)
+            {
+                foreach (Match m in GlobalVarKeyRegex.Matches(block.Groups["body"].Value))
+                    AddIfValid(m.Groups[1].Value, allNames);
+            }
+            return ClassifyVariables(allNames);
+        }
+
+        private static (List<string> inputs, List<string> outputs) ClassifyVariables(HashSet<string> allNames)
+        {
+            var inputs = new List<string>();
+            var outputs = new List<string>();
+
+            foreach (var name in allNames.OrderBy(v => v, StringComparer.Ordinal))
+            {
+                bool isInput = DefaultInputGlobals.Contains(name);
+                bool isOutput = DefaultOutputGlobals.Contains(name);
+
+                if (isInput && !isOutput) inputs.Add(name);
+                else if (isOutput && !isInput) outputs.Add(name);
+                else
+                {
+                    // 不明 or 両方 → 両側に追加（安全側）
+                    inputs.Add(name);
+                    outputs.Add(name);
+                }
+            }
             return (inputs, outputs);
         }
 
