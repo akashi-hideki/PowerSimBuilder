@@ -242,8 +242,9 @@ namespace PowerSimBuilder
 
         private void WriteRoleFunction(StringBuilder sb, string layerName, StaTableRoleFunction rf)
         {
-            var marker = layerName + "." + rf.Name;
-            sb.AppendLine("    def " + rf.Name + "(self):");
+            var pythonName = NormalizeRoleFunctionName(rf.Name);
+            var marker = layerName + "." + pythonName;
+            sb.AppendLine("    def " + pythonName + "(self):");
             sb.AppendLine("        # STABLE_USER_CODE_START:" + marker);
             sb.AppendLine("        return 0");
             sb.AppendLine("        # STABLE_USER_CODE_END:" + marker);
@@ -263,7 +264,7 @@ namespace PowerSimBuilder
             foreach (var rf in layer.RoleFunctions)
             {
                 if (!string.IsNullOrEmpty(rf.Name))
-                    defined.Add(rf.Name);
+                    defined.Add(NormalizeRoleFunctionName(rf.Name));
             }
 
             var referenced = new HashSet<string>(StringComparer.Ordinal);
@@ -355,6 +356,19 @@ namespace PowerSimBuilder
             if (string.IsNullOrEmpty(layerName))
                 return "unknown";
             return layerName.ToLower();
+        }
+
+        /// <summary>
+        /// RoleFunction 名を Python メソッド名に正規化する。
+        /// StaTable の規約では RoleFunction 呼び出しは F_xxx() 形式なので、
+        /// 定義側も F_ プレフィックスを付与して一致させる。
+        /// 既に F_ で始まる場合は二重付与しない。
+        /// </summary>
+        private static string NormalizeRoleFunctionName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return name;
+            if (name.StartsWith("F_", StringComparison.Ordinal)) return name;
+            return "F_" + name;
         }
 
         private static string EscapePy(string s)

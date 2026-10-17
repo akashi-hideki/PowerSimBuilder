@@ -261,15 +261,15 @@ namespace PowerSimBuilder.Tests.StaTable
         {
             var code = MakeGenerator().Generate(MakeMinimalProject());
 
-            Assert.Contains("# STABLE_USER_CODE_START:DriverInput.ReadSensorsMovingAvg", code);
-            Assert.Contains("# STABLE_USER_CODE_END:DriverInput.ReadSensorsMovingAvg", code);
+            Assert.Contains("# STABLE_USER_CODE_START:DriverInput.F_ReadSensorsMovingAvg", code);
+            Assert.Contains("# STABLE_USER_CODE_END:DriverInput.F_ReadSensorsMovingAvg", code);
         }
 
         [Fact]
         public void Generate_RoleFunction_IsMethodOnLayerClass()
         {
             var code = MakeGenerator().Generate(MakeMinimalProject());
-            Assert.Contains("def ReadSensorsMovingAvg(self):", code);
+            Assert.Contains("def F_ReadSensorsMovingAvg(self):", code);
         }
 
         // ==============================================================
