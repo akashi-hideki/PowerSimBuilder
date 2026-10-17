@@ -10,6 +10,7 @@ from .clamp import Clamp
 from .counter import Counter
 from .digital_input import DigitalInput
 from .digital_output import DigitalOutput
+from .fault_device import FaultDevice
 from .first_order_lag import FirstOrderLag
 from .gain import Gain
 from .heater_block import HeaterBlock
@@ -18,6 +19,7 @@ from .low_pass_filter import LowPassFilter
 from .mechanical_inertia import MechanicalInertia
 from .over_current_detector import OverCurrentDetector
 from .pid_controller import PIDController
+from .power_source import PowerSource
 from .pwm_3phase import PWM3Phase
 from .rate_limiter import RateLimiter
 from .sine_wave import SineWave
@@ -35,6 +37,7 @@ __all__ = [
     "Counter",
     "DigitalInput",
     "DigitalOutput",
+    "FaultDevice",
     "FirstOrderLag",
     "Gain",
     "HeaterBlock",
@@ -43,6 +46,7 @@ __all__ = [
     "MechanicalInertia",
     "OverCurrentDetector",
     "PIDController",
+    "PowerSource",
     "PWM3Phase",
     "RateLimiter",
     "SineWave",
