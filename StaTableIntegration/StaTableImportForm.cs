@@ -135,11 +135,34 @@ namespace PowerSimBuilder
 
             using (var dlg = new SaveFileDialog())
             {
-                dlg.Title = "controller_box.py の保存先";
+                dlg.Title = "controller_box.py の保存先（推奨: generated/ 配下）";
                 dlg.Filter = "Python ファイル|*.py|すべてのファイル|*.*";
                 dlg.DefaultExt = ".py";
                 dlg.AddExtension = true;
-                dlg.FileName = "controller_box.py";
+
+                // Task 3-C-7: プロジェクトルートの generated/ を初期ディレクトリに
+                string genDir = GetGeneratedDirectory();
+                if (!string.IsNullOrEmpty(genDir))
+                {
+                    dlg.InitialDirectory = genDir;
+                }
+
+                // Task 3-C-7: 既存の標準ファイルがあれば優先（STABLE_USER_CODE 保持）
+                string standardPath = Path.Combine(
+                    string.IsNullOrEmpty(genDir) ? "" : genDir,
+                    "controller_box_powersim.py");
+                if (File.Exists(standardPath))
+                {
+                    dlg.FileName = "controller_box_powersim.py";
+                }
+                else
+                {
+                    string projectName = _currentProject != null && !string.IsNullOrEmpty(_currentProject.Name)
+                        ? _currentProject.Name
+                        : "controller";
+                    dlg.FileName = SanitizeFileName(projectName) + "_powersim.py";
+                }
+
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
                 try
@@ -162,6 +185,66 @@ namespace PowerSimBuilder
                         "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        // ==============================================================
+        // Task 3-C-7: 保存先の自動提案ヘルパー
+        // ==============================================================
+
+        /// <summary>
+        /// プロジェクトルートの generated/ ディレクトリを探す。
+        /// EXE の BaseDirectory から .sln を目印に遡り、見つかった
+        /// プロジェクトルートの generated/ を返す。
+        /// 見つからなければ EXE フォルダ配下の generated/ を返す。
+        /// </summary>
+        private static string GetGeneratedDirectory()
+        {
+            try
+            {
+                var dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+                while (dir != null)
+                {
+                    if (File.Exists(Path.Combine(dir.FullName, "PowerSimBuilder.sln")))
+                    {
+                        var gen = Path.Combine(dir.FullName, "generated");
+                        if (!Directory.Exists(gen))
+                            Directory.CreateDirectory(gen);
+                        return gen;
+                    }
+                    dir = dir.Parent;
+                }
+            }
+            catch
+            {
+                // 権限等で失敗したらフォールバック
+            }
+
+            var fallback = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "generated");
+            try
+            {
+                if (!Directory.Exists(fallback))
+                    Directory.CreateDirectory(fallback);
+            }
+            catch
+            {
+                // 作成できなくてもパスだけ返す
+            }
+            return fallback;
+        }
+
+        /// <summary>
+        /// ファイル名に使えない文字を '_' に置換する。
+        /// </summary>
+        private static string SanitizeFileName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "controller";
+            var invalid = Path.GetInvalidFileNameChars();
+            var sb = new StringBuilder(name.Length);
+            foreach (char c in name)
+            {
+                sb.Append(Array.IndexOf(invalid, c) >= 0 ? '_' : c);
+            }
+            return sb.ToString();
         }
     }
 }

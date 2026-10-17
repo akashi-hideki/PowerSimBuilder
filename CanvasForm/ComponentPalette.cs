@@ -450,13 +450,18 @@ namespace PowerSimBuilder
                 _componentNames.Remove(original.Name);
                 _componentNames.Add(updated.Name);
 
-                // 対応するボタンを更新
+                // 対応するボタンを更新（無ければ再作成: Fix 3-C-7b）
                 var button = Controls.OfType<Button>().FirstOrDefault(b => b.Tag == original);
                 if (button != null)
                 {
                     button.Text = updated.Name;
                     button.Tag = updated;
                     button.Image = CreateIcon(updated, GetColorByType(updated.Type));
+                }
+                else
+                {
+                    // 削除後に再取り込みされたケース: ボタンを作り直す
+                    CreateComponentButton(updated);
                 }
 
                 // 選択中のコンポーネントを更新

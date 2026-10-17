@@ -428,7 +428,8 @@ namespace PowerSimBuilder
                     else
                     {
                         componentPalette1.AddComponent(descriptor);
-                        _components.Add(descriptor);
+                        // NOTE: _components は componentPalette1.AvailableComponents と
+                        // 同一リストなので、ここで追加すると二重追加になる（Fix 3-C-7b）
                         Console.WriteLine($"[ControllerBox] Added descriptor: {descriptor.Name}");
                     }
 
