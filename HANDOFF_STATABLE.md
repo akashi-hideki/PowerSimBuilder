@@ -1758,3 +1758,141 @@ PowerShell 経由で `gh run list --jq '...\\(.field)...'` を渡すと、`\\(` 
 - pre-push hook で「pytest fail のまま main に混入」を防止
 
 **End of v0.4.2 Release**
+
+---
+
+# v0.5.0 リリース完了（2026-10-17 第 7 セッション）
+
+**HEAD:** `430457b` (origin/main, tag: v0.5.0)
+**次セッションの起点:** `430457b`
+
+> **v0.5.0 リリース済み、CI 4 matrix 全 green。3-F + 3-G 完了。次は i18n / 小タスク / v0.6.0 検討。**
+
+## 63. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | **3-G: E2E シナリオ 3 本** | `d88e855` | generator_load / rectifier_motor / fault_short_circuit（5 テスト） |
+| 2 | **v0.5.0 リリース** | `430457b` | 3-F + 3-G のマイナーバージョン固定、annotated tag |
+
+## 64. 現在のテスト・CI 状況（`430457b` 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|---|
+| C# StaTable | 94 | pass |
+| C# ParameterTypeHelper | 60 | pass |
+| Python 全件 | 387+ | pass（SKIP なし） |
+| 3-G 新規 | 5 | pass |
+| **CI (python-tests.yml)** | **4 matrix** | ✅ **全 green** |
+
+### CI 履歴（直近）
+
+| commit | run ID | 結果 | 備考 |
+|---|---|:---:|---|
+| `430457b`（v0.5.0） | 39029561252 | ✓ | 最新、全 matrix green |
+| `d88e855`（3-G） | 39029387829 | ✓ | E2E シナリオ |
+| `94f7bfd`（v0.4.2） | 39028532047 | ✓ | |
+
+## 65. v0.5.0 のマイルストーン
+
+### SPEC_POWERSIM §3 コンポーネント（6/7 実装）
+
+| # | Class | 状態 |
+|:---:|---|:---:|
+| 1 | PowerSource | ✅ |
+| 2 | FaultDevice | ✅ |
+| 3 | Engine | ✅ |
+| 4 | Generator | ✅ |
+| 5 | DiodeBridge | ✅ |
+| 6 | InductionMotor | ✅ |
+| 7 | ~~Welder~~ | 除外（製品担当、IP 配慮） |
+
+### E2E シナリオ（6 本）
+
+| # | シナリオ | 検証内容 |
+|:---:|---|---|
+| 1 | cooking_heater | StaTable 7 層 + HeaterBlock |
+| 2 | motor_drive | PWM3Phase -> Gain -> MechanicalInertia |
+| 3 | heater_overheat | ThreePhaseSine -> HeaterBlock -> OCD |
+| 4 | generator_load | Engine -> Generator（V/I/P） |
+| 5 | rectifier_motor | PowerSource -> DiodeBridge -> InductionMotor |
+| 6 | fault_short_circuit | FaultDevice ラッチ + 電力系独立 |
+
+### タグ履歴
+
+`v0.1.0` → `v0.2.0` → `v0.2.1` → `v0.2.2` → `v0.2.3` → `v0.3.0` → `v0.4.0` → `v0.4.1` → `v0.4.2` → **`v0.5.0`**
+
+## 66. 次セッションのタスク
+
+| 優先 | タスク | 内容 | 工数 |
+|:---:|---|---|:---:|
+| 🟡 中 | **i18n** | 英語/中国語リソース化（英語圏・中国圏リリース予定） | 数日 |
+| 🟢 低 | **B'-warn / B'-bare** | 別レイヤー参照警告、裸 RoleFunction 名検出 | 30m x 2 |
+| 🟢 低 | **v0.6.0 検討** | i18n 完了後のバージョン固定 | 1h |
+
+### i18n のスコープ（`## 66` より詳細化）
+
+**対象ファイル（日本語文字列を含む）:**
+
+- `CanvasForm/MainForm.cs`: ツールバー「パラメータ編集」等
+- `CanvasForm/ParametersEditorForm.cs`: タイトル・ボタン・エラーメッセージ
+- `CanvasForm/AddComponentForm.cs` 等の既存フォーム
+- `StaTableIntegration/StaTableImportForm.cs`
+
+**方針案:**
+
+- リソースファイル化: `Resources/Strings.resx`（英語）+ `.ja.resx` + `.zh.resx`
+- または JSON ベースの簡易 i18n（`Resources/i18n/{en,ja,zh}.json`）
+- 英語圏・中国圏リリースの法的要件（サイバーセキュリティ法・データローカライズ）は別途確認
+
+## 67. 次セッション開始時のプロンプト例
+
+    PowerSimBuilder の続きです。
+    HANDOFF_STATABLE.md の ## 63-67（v0.5.0 リリース完了セクション）を読んで、
+    次タスクに着手してください。
+
+    現状:
+    - HEAD: 430457b (origin/main, tag: v0.5.0)
+    - pytest: 387+ pass（SKIP なし）
+    - CI: python-tests.yml 4 matrix 全 green
+    - 3-F: 6/7 完了（Welder は設計上除外）
+    - 3-G: 6 シナリオ完了
+
+    次タスクの候補:
+    - i18n（英語/中国語リソース化、数日規模）
+    - B''-warn / B''-bare（30m x 2、低優先）
+    - v0.6.0 検討
+
+    i18n の事前調査（対象ファイル・リソース化方針）から始めてください。
+
+## 68. 次セッション開始前チェックリスト
+
+    cd C:\dev\PowerSimBuilder
+    git --no-pager log --oneline -3         # 430457b が HEAD
+    git status --porcelain=v1               # clean
+    python -m pytest tests/python tests/integration -q   # 387+ pass
+    pre-commit run --hook-stage pre-push --all-files     # hook 動作確認
+    gh run list --workflow=python-tests.yml --limit 3    # 最新 CI 状態
+
+**期待:**
+- HEAD = `430457b`（tag: v0.5.0）
+- work tree clean
+- pytest 387+ pass（SKIP なし）
+- CI: 最新 3 run が ✓
+
+## 69. 本セッション全体の成果サマリ
+
+| セッション | 主な成果 |
+|---|---|
+| 第 5 セッション | 3-F（2/7）、v0.4.1、CI 修正 3 件 |
+| 第 6 セッション | 3-F 残り 4 件（6/7）、InductionMotor 修正、pre-push hook、v0.4.2 |
+| **第 7 セッション（本）** | 3-G（E2E 3 本）、v0.5.0 リリース |
+
+**v0.5.0 のハイライト:**
+
+- SPEC_POWERSIM §3: 6/7 コンポーネント実装完了
+- E2E シナリオ: 6 本（生成・整流・故障・加熱・モーター・StaTable）
+- 387+ Python テスト、全 CI green
+- 品質ゲート: pre-commit（commit 高速）+ pre-push（pytest 9 秒）
+
+**End of v0.5.0 Release**
