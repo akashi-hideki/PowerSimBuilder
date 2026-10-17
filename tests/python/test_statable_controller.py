@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from python_runtime.statable import StaTableControllerBase, StaTableRuntime
 
 # ======================================================================
@@ -103,25 +105,39 @@ class TestStaTableControllerBase:
         assert ctrl.outputs["current_state"] == "InIdle"
         assert ctrl.pending_events == []
 
-    def test_update_initializes_state(self):
+    def test_update_marks_initialized(self):
+        """初回 update() で初期化フラグが立ち、outputs が整う。
+
+        Phase 2-A: update() は state を強制リセットしない。
+        （queue 配送で遷移した state を保持するため）
+        """
         ctrl = DriverInputController()
         ctrl._initialized = False
-        ctrl.state = "WRONG"
         ctrl.update(0.0, 0.001, None)
+        assert ctrl._initialized is True
         assert ctrl.state == "InIdle"
+        assert ctrl.outputs["current_state"] == "InIdle"
 
     def test_queue_event_does_not_immediately_transition(self):
+        """runtime 未接続時のフォールバック（自分自身のみ）。"""
         ctrl = DriverInputController()
         ctrl.queue_event("SENSOR_TICK")
         assert ctrl.state == "InIdle"
         assert len(ctrl.pending_events) == 1
 
     def test_update_processes_pending_events(self):
+        """runtime 未接続時のフォールバック更新。"""
         ctrl = DriverInputController()
         ctrl.queue_event("SENSOR_TICK")
         ctrl.update(0.0, 0.001, None)
         assert ctrl.state == "InSensing"
         assert ctrl.pending_events == []
+
+    def test_queue_event_cross_layer_without_runtime_raises(self):
+        """runtime 未接続で層間配送を要求すると RuntimeError。"""
+        ctrl = DriverInputController()
+        with pytest.raises(RuntimeError):
+            ctrl.queue_event("START", target_layer="Application")
 
     def test_get_state(self):
         ctrl = DriverInputController()
@@ -192,11 +208,16 @@ class TestStaTableRuntime:
         assert ok is False
 
     def test_queue_event(self):
+        """runtime.queue_event は配送キューに積み、次 tick で配送される。"""
         rt = StaTableRuntime([DriverInputController()], {})
         ok = rt.queue_event("DriverInput", "SENSOR_TICK")
         assert ok is True
-        layer = rt.layers_by_name["DriverInput"]
-        assert len(layer.pending_events) == 1
+        assert rt.pending_event_count == 1
+        assert rt.layers_by_name["DriverInput"].pending_events == []
+        assert rt.layers_by_name["DriverInput"].state == "InIdle"
+        rt.tick(0.0, 0.001, None)
+        assert rt.layers_by_name["DriverInput"].state == "InSensing"
+        assert rt.pending_event_count == 0
 
     def test_reset_all_layers(self):
         rt = StaTableRuntime(
@@ -209,7 +230,85 @@ class TestStaTableRuntime:
         assert rt.layers_by_name["DriverInput"].state == "InIdle"
         assert rt.layers_by_name["Application"].state == "Idle"
 
+    def test_reset_clears_event_queue(self):
+        rt = StaTableRuntime([DriverInputController()], {})
+        rt.queue_event("DriverInput", "SENSOR_TICK")
+        assert rt.pending_event_count == 1
+        rt.reset()
+        assert rt.pending_event_count == 0
+
     def test_get_layer_states(self):
         rt = StaTableRuntime([DriverInputController()], {})
         states = rt.get_layer_states()
         assert states == {"DriverInput": "InIdle"}
+
+
+# ======================================================================
+# Phase 2-A: queue イベント層間配送
+# ======================================================================
+
+
+class TestStaTableCrossLayerQueue:
+    def test_self_queue_via_runtime(self):
+        """runtime 接続時は自分自身への queue も runtime 経由。"""
+        rt = StaTableRuntime([DriverInputController()], {})
+        driver = rt.layers_by_name["DriverInput"]
+        driver.queue_event("SENSOR_TICK")
+        assert driver.pending_events == []
+        assert rt.pending_event_count == 1
+        assert driver.state == "InIdle"
+        rt.tick(0.0, 0.001, None)
+        assert driver.state == "InSensing"
+
+    def test_cross_layer_delivery(self):
+        """DriverInput から Application へ queue 配送。"""
+        rt = StaTableRuntime(
+            [DriverInputController(), ApplicationController()],
+            {},
+        )
+        driver = rt.layers_by_name["DriverInput"]
+        app = rt.layers_by_name["Application"]
+
+        driver.queue_event("START", target_layer="Application")
+        assert app.state == "Idle"
+        assert rt.pending_event_count == 1
+
+        rt.tick(0.0, 0.001, None)
+        assert app.state == "Executing"
+
+    def test_broadcast_delivery(self):
+        """target_layer="*" で送信元以外の全層へ配送。"""
+        rt = StaTableRuntime(
+            [DriverInputController(), ApplicationController()],
+            {},
+        )
+        driver = rt.layers_by_name["DriverInput"]
+        app = rt.layers_by_name["Application"]
+
+        driver.queue_event("START", target_layer="*")
+        rt.tick(0.0, 0.001, None)
+        assert app.state == "Executing"
+        assert driver.state == "InIdle"
+
+    def test_cross_layer_delivery_via_runtime_queue_event(self):
+        """runtime.queue_event 経由の層間配送。"""
+        rt = StaTableRuntime(
+            [DriverInputController(), ApplicationController()],
+            {},
+        )
+        rt.enqueue("DriverInput", "START", None, "Application")
+        rt.tick(0.0, 0.001, None)
+        assert rt.layers_by_name["Application"].state == "Executing"
+
+    def test_delivery_priority_order(self):
+        """送信元 priority 昇順で配送される。"""
+        rt = StaTableRuntime(
+            [ApplicationController(), DriverInputController()],
+            {},
+        )
+        rt.enqueue("Application", "DONE", None, "Application")
+        rt.enqueue("DriverInput", "SENSOR_TICK", None, "DriverInput")
+
+        rt.tick(0.0, 0.001, None)
+        assert rt.layers_by_name["DriverInput"].state == "InSensing"
+        assert rt.layers_by_name["Application"].state == "Idle"

@@ -53,6 +53,17 @@ class StaTableControllerBase(Component):
         self.inputs: dict[str, Any] = {}
         self.outputs: dict[str, Any] = {"current_state": initial_state}
 
+        # StaTableRuntime から _bind_runtime() で設定される
+        self._runtime: Any = None
+
+    # ------------------------------------------------------------------
+    # Runtime binding
+    # ------------------------------------------------------------------
+
+    def _bind_runtime(self, runtime: Any) -> None:
+        """StaTableRuntime から呼ばれる。queue_event の配送先解決に使う。"""
+        self._runtime = runtime
+
     # ------------------------------------------------------------------
     # Component API
     # ------------------------------------------------------------------
@@ -68,15 +79,15 @@ class StaTableControllerBase(Component):
     def update(self, t: float, dt: float, sim_data: Any) -> None:
         """1 ステップ分の更新。
 
-        Phase 1: 初期化のみ。イベントは外部から fire_event() で駆動。
-        Phase 2 で pending_events の処理を追加予定。
+        初回のみ初期化フラグを立てる。state は __init__ で初期化済みのため
+        ここでは変更しない（queue 配送で遷移した state を保持するため）。
+        runtime 未接続時のフォールバックとして pending_events を処理する。
         """
         if not self._initialized:
-            self.state = self._initial_state
             self.outputs["current_state"] = self.state
             self._initialized = True
 
-        # Phase 2 (将来): pending_events を処理
+        # runtime 未接続時のフォールバック処理
         if self.pending_events:
             pending = self.pending_events
             self.pending_events = []
@@ -95,9 +106,38 @@ class StaTableControllerBase(Component):
         """
         return self._dispatch(event_name, data)
 
-    def queue_event(self, event_name: str, data: Any = None) -> None:
-        """queue イベントを次ステップに持ち越す。"""
-        self.pending_events.append((event_name, data))
+    def queue_event(
+        self,
+        event_name: str,
+        data: Any = None,
+        target_layer: str | None = None,
+    ) -> None:
+        """queue イベントを配送キューに積む。
+
+        Args:
+            event_name: イベント名。
+            data: イベントデータ。
+            target_layer: 配送先層名。
+                None          : 自分自身（runtime 未接続時は pending_events）。
+                "*"           : 送信元以外の全層にブロードキャスト。
+                その他の文字列 : その層のみ。
+
+        Raises:
+            RuntimeError: runtime 未接続で target_layer が自分以外の場合。
+        """
+        if target_layer is None:
+            target_layer = self.layer_name
+
+        if self._runtime is None:
+            if target_layer == self.layer_name:
+                self.pending_events.append((event_name, data))
+                return
+            raise RuntimeError(
+                f"queue_event(target_layer={target_layer!r}) requires runtime binding "
+                "(StaTableRuntime)"
+            )
+
+        self._runtime.enqueue(self.layer_name, event_name, data, target_layer)
 
     def _dispatch(self, event_name: str, data: Any = None) -> bool:
         """現在の状態で event_name に一致する遷移を探して実行。"""
@@ -107,12 +147,9 @@ class StaTableControllerBase(Component):
                 continue
             if evt != event_name:
                 continue
-            # 条件評価 (Phase 1: 空のみ対応)
             if not self._evaluate_condition(condition, data):
                 continue
-            # アクション実行
             self._execute_action(action, data)
-            # 遷移
             self.state = target
             self.outputs["current_state"] = target
             return True
@@ -124,7 +161,6 @@ class StaTableControllerBase(Component):
             return True
         if isinstance(condition, str) and condition.strip() == "":
             return True
-        # Phase 2 (将来): eval で評価
         return True
 
     def _execute_action(self, action: Any, data: Any) -> None:
@@ -133,7 +169,6 @@ class StaTableControllerBase(Component):
             return
         if isinstance(action, str) and action.strip() == "":
             return
-        # Phase 2 (将来): eval で実行
         return
 
     # ------------------------------------------------------------------
@@ -153,4 +188,4 @@ class StaTableControllerBase(Component):
         return result
 
     def __repr__(self) -> str:  # pragma: no cover
-        return f"{self.type}(id={self.id!r}, " f"layer={self.layer_name!r}, state={self.state!r})"
+        return f"{self.type}(id={self.id!r}, layer={self.layer_name!r}, state={self.state!r})"
