@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-10-18
+
+### Fixed (HIGH severity)
+
+- **Canvas connection validation** (`CanvasForm/DesignCanvas.cs` `CompleteConnection`)
+  - Self-connection (same component out -> in) is now rejected (BUG-004)
+  - Invalid direction (out->out, in->in, in->out) is now rejected (BUG-005)
+  - Duplicate connection detection now uses value-based comparison
+    (`ConnectionExists(start, startPort, end, endPort)`) instead of
+    reference equality (BUG-006)
+
+### Added (test infrastructure)
+
+- `DesignCanvasConnectionTests` (7 tests): Phase 3 connection scenarios
+
+### Notes
+
+- BUG-004/005/006 were discovered by the headless GUI test suite
+  introduced in v0.7.2. Each had potential for invalid simulation graphs
+  (self-feedback loops, semantically meaningless wires, duplicate events).
+
 ## [0.7.2] - 2026-10-18
 
 ### Fixed
@@ -448,7 +469,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.2...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.3...HEAD
+[0.7.3]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.6.0...v0.7.0

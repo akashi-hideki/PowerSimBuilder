@@ -584,10 +584,33 @@ namespace PowerSimBuilder
         /// </summary>
         private void CompleteConnection(ComponentControl component, string portName)
         {
+            // FIX 5: validate self-connection, direction, and duplicates
+            if (_currentConnection == null) return;
+
+            if (_currentConnection.StartComponent == component)
+            {
+                _currentConnection = null;
+                return;
+            }
+
+            var startPorts = _currentConnection.StartComponent.Descriptor.OutputPorts;
+            var endPorts = component.Descriptor.InputPorts;
+            bool startIsOutput = startPorts != null &&
+                System.Linq.Enumerable.Contains(startPorts, _currentConnection.StartPort);
+            bool endIsInput = endPorts != null &&
+                System.Linq.Enumerable.Contains(endPorts, portName);
+            if (!startIsOutput || !endIsInput)
+            {
+                _currentConnection = null;
+                return;
+            }
+
             _currentConnection.EndComponent = component;
             _currentConnection.EndPort = portName;
 
-            if (!ConnectionGraph.ConnectionExists(_currentConnection))
+            if (!ConnectionGraph.ConnectionExists(
+                _currentConnection.StartComponent, _currentConnection.StartPort,
+                _currentConnection.EndComponent, _currentConnection.EndPort))
             {
                 AddConnection(_currentConnection);
             }
