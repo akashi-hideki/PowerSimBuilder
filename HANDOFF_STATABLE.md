@@ -3030,3 +3030,102 @@ HANDOFF_STATABLE.md の ## 93 を読んで、次タスクに着手してくだ�
 | `if/elseif/else` の multi-line 貼り付け | `if` を独立ブロックで並べる |
 
 **End of Save/Load テスト完了**
+---
+
+# A-2 完了 + v1.0.0 公開可能（2026-10-18 第 14 セッション）
+
+**HEAD:** `81f905f` (origin/main, tag: v0.7.3)
+**次セッションの起点:** `81f905f`
+
+> **次セッションは ## 94 と ## 93 を読めば完全なコンテキストを得られる。**
+
+## 94. 本セッションの完了タスク（A-2: GitHub Release 整備）
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | GitHub Releases v0.7.1/v0.7.2/v0.7.3 作成 | (gh) | CHANGELOG から本文を抽出、v0.7.3 を Latest に |
+| 2 | README バッジ + What's New 更新 | `81f905f` | Tests 265 → 279、What's New v0.7.3 追加 |
+
+### GitHub Releases 状態（v0.7.3 時点）
+
+| Tag | Title | Latest |
+|:---:|---|:---:|
+| v0.7.3 | Connection validation (HIGH severity fixes) | ✅ Latest |
+| v0.7.2 | Selection consistency + headless GUI test suite | |
+| v0.7.1 | Canvas right-click fixes | |
+| v0.7.0 | English-only UI (i18n Phase 1 complete) | |
+
+※ v0.3.0〜v0.6.0 の Release は意図的に未作成（タグは存在、CHANGELOG で履歴を辿れる）。
+
+### v1.0.0 公開ブロッカーの状況
+
+| # | ブロッカー | 状態 |
+|:---:|---|:---:|
+| A-1 | Save/Load 異常系テスト | ✅ **完了**（## 93） |
+| A-2 | GitHub Release 整備 | ✅ **完了**（本セッション） |
+
+**→ v1.0.0 公開可能（英語のみ）**
+
+### v1.0.0 までの残作業（リリース手順）
+
+| # | タスク | 工数 |
+|:---:|---|:---:|
+| 1 | `VERSION` / `pyproject.toml` を `1.0.0` に更新 | 5m |
+| 2 | `CHANGELOG.md` に `[1.0.0] - 2026-XX-XX` セクション追加 | 15m |
+| 3 | README のバッジを `v1.0.0` に | 5m |
+| 4 | コミット `chore: release v1.0.0` | 5m |
+| 5 | annotated tag `v1.0.0` | 5m |
+| 6 | GitHub Release v1.0.0 作成 | 5m |
+| **合計** | | **約 40 分** |
+
+### v1.0.0 後の品質向上候補（任意）
+
+| 優先 | タスク | 工数 |
+|:---:|---|:---:|
+| 🟡 | B-1: Keyboard テスト（Ctrl+Z/Y/S、Escape） | 1h |
+| 🟢 | B-2: Drag/Undo テスト | 1h |
+| 🟢 | B-4: TRX パース改善（テスト名表示） | 15m |
+| 🟢 | C-1: pythonlib / previou_files untrack | 30m |
+| ⏸️ | D-1: 中国語 UI（v1.1.0） | 数日 |
+
+### 次セッション開始時のチェックリスト
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3        # 81f905f が HEAD
+git status --porcelain=v1              # clean
+dotnet build PowerSimBuilder.sln       # 0 warnings / 0 errors
+dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build   # 280 tests
+python -m pytest tests/python -q       # 400 pass
+gh release list --limit 5              # v0.7.3 = Latest
+```
+
+### 次セッション開始プロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 94 を読んで、次タスクに着手してください。
+
+現状:
+- HEAD: 81f905f (origin/main, tag: v0.7.3)
+- C# 280 pass / Python 400 pass / coverage 99% / CI green
+- GitHub Releases v0.7.1/v0.7.2/v0.7.3 作成済み（v0.7.3 = Latest）
+- A-1 / A-2 両ブロッカー完了 → v1.0.0 公開可能
+
+次タスク: v1.0.0 リリース
+- VERSION / pyproject.toml を 1.0.0 に
+- CHANGELOG [1.0.0] セクション追加
+- README バッジ v1.0.0
+- annotated tag v1.0.0 + GitHub Release
+
+約 40 分で v1.0.0 公開まで完了します。
+```
+
+### 本セッションの教訓（PowerShell、追記）
+
+| 罠 | 対処 |
+|---|---|
+| `gh release view` が未作成時に stderr 出力 → `$ErrorActionPreference=Stop` で中断 | `gh release list --json tagName` で一括取得し、ローカル比較 |
+| `gh release create` を直接呼ぶと stderr がエラー扱い | `cmd /c "gh release create ... 2>&1"` で吸収 |
+
+**End of A-2 + v1.0.0 公開可能**
