@@ -119,7 +119,7 @@ namespace PowerSimBuilder
                 // デザイン時はメッセージボックスを表示しない
                 if (!IsDesignMode)
                 {
-                    MessageBox.Show("利用可能なコンポーネントがありません", "警告",
+                    MessageBox.Show(I18n.T("Palette.MsgNoComponents"), I18n.T("Common.MsgTitleWarning"),
                                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 return;
@@ -184,7 +184,7 @@ namespace PowerSimBuilder
             if (!IsValidComponent(component))
             {
                 LogcatTraceHelper.Instance.LogError(component.Name, $"追加をスキップ: 無効なコンポーネント - {component.Name}");
-                MessageBox.Show("コンポーネント情報が不完全です", "追加エラー",
+                MessageBox.Show(I18n.T("Palette.MsgIncomplete"), I18n.T("Common.MsgTitleError"),
                                MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -192,7 +192,7 @@ namespace PowerSimBuilder
             if (_componentNames.Contains(component.Name))
             {
                 LogcatTraceHelper.Instance.LogError(component.Name, $"追加をスキップ: 重複コンポーネント - {component.Name}");
-                MessageBox.Show("同じ名前のコンポーネントが既に存在します", "追加エラー",
+                MessageBox.Show(I18n.T("Palette.MsgDuplicate"), I18n.T("Common.MsgTitleError"),
                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -210,8 +210,8 @@ namespace PowerSimBuilder
             catch (Exception ex)
             {
                 LogcatTraceHelper.Instance.LogError("AddComponent", ex.Message);
-                MessageBox.Show($"コンポーネント追加中にエラーが発生しました: {ex.Message}",
-                               "システムエラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(I18n.T("Palette.MsgError", ex.Message),
+                               I18n.T("Common.MsgTitleSystemError"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -435,7 +435,7 @@ namespace PowerSimBuilder
             // 名前が変更された場合の重複チェック
             if (original.Name != updated.Name && _componentNames.Contains(updated.Name))
             {
-                MessageBox.Show("この名前は既に使用されています", "エラー",
+                MessageBox.Show(I18n.T("Palette.MsgNameInUse"), I18n.T("Common.MsgTitleError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }

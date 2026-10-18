@@ -138,6 +138,16 @@ namespace PowerSimBuilder
         /// 注意点: ツールバーボタンとプロパティグリッドのイベントを登録
         /// </summary>
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.Shift | Keys.D))
+            {
+                I18nDumpUi.DumpAllForms();
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         private void InitializeEventHandlers()
         {
             addButton.Click += addComponentButton_Click; // 追加: イベントハンドラ登録
@@ -157,7 +167,7 @@ namespace PowerSimBuilder
             {
                 Name = "paramsEditButton",
                 DisplayStyle = ToolStripItemDisplayStyle.Text,
-                Text = "パラメータ編集",
+                Text = I18n.T("MainForm.BtnParametersEdit"),
             };
             paramsEditButton.Click += paramsEditButton_Click;
             toolStrip1.Items.Add(paramsEditButton);
@@ -228,7 +238,7 @@ namespace PowerSimBuilder
         {
             if (componentPalette1.SelectedComponent == null)
             {
-                MessageBox.Show("編集するコンポーネントを選択してください", "情報",
+                MessageBox.Show(I18n.T("MainForm.MsgSelectToEdit"), I18n.T("Common.MsgTitleInfo"),
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -239,7 +249,7 @@ namespace PowerSimBuilder
 
             if (isUsedInCanvas)
             {
-                MessageBox.Show("このコンポーネントはキャンバス上で使用されているため編集できません", "エラー",
+                MessageBox.Show(I18n.T("MainForm.MsgInUseEdit"), I18n.T("Common.MsgTitleError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -254,7 +264,7 @@ namespace PowerSimBuilder
                     // 変更を保存
                     ComponentPaletteStorage.SaveDescriptors(componentPalette1.AvailableComponents);
 
-                    MessageBox.Show("コンポーネントを更新しました", "成功",
+                    MessageBox.Show(I18n.T("MainForm.MsgUpdated"), I18n.T("Common.MsgTitleSuccess"),
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -265,7 +275,7 @@ namespace PowerSimBuilder
         {
             if (componentPalette1.SelectedComponent == null)
             {
-                MessageBox.Show("削除するコンポーネントを選択してください", "情報",
+                MessageBox.Show(I18n.T("MainForm.MsgSelectToDelete"), I18n.T("Common.MsgTitleInfo"),
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -276,14 +286,14 @@ namespace PowerSimBuilder
 
             if (isUsedInCanvas)
             {
-                MessageBox.Show("このコンポーネントはキャンバス上で使用されているため削除できません", "エラー",
+                MessageBox.Show(I18n.T("MainForm.MsgInUseDelete"), I18n.T("Common.MsgTitleError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             var result = MessageBox.Show(
-                $"コンポーネント '{componentPalette1.SelectedComponent.Name}' を削除しますか？",
-                "確認",
+                I18n.T("MainForm.MsgDeleteConfirm", componentPalette1.SelectedComponent.Name),
+                I18n.T("Common.MsgTitleConfirm"),
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
@@ -294,7 +304,7 @@ namespace PowerSimBuilder
                 // 変更を保存
                 ComponentPaletteStorage.SaveDescriptors(componentPalette1.AvailableComponents);
 
-                MessageBox.Show("コンポーネントを削除しました", "成功",
+                MessageBox.Show(I18n.T("MainForm.MsgDeleted"), I18n.T("Common.MsgTitleSuccess"),
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
@@ -307,8 +317,8 @@ namespace PowerSimBuilder
         {
             using (var dialog = new SaveFileDialog())
             {
-                dialog.Title = "プロジェクトファイルを保存";
-                dialog.Filter = "シミュレーションプロジェクト|*.json|すべてのファイル|*.*";
+                dialog.Title = I18n.T("MainForm.SaveDialogTitle");
+                dialog.Filter = I18n.T("Common.FilterSimProject");
                 dialog.DefaultExt = ".json";
                 dialog.FileName = "system.json";
                 dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -331,7 +341,7 @@ namespace PowerSimBuilder
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"ファイルの保存に失敗しました: {ex.Message}", "エラー",
+                    MessageBox.Show(I18n.T("MainForm.MsgSaveFail", ex.Message), I18n.T("Common.MsgTitleError"),
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -345,8 +355,8 @@ namespace PowerSimBuilder
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Title = "プロジェクトファイルを開く";
-                dialog.Filter = "シミュレーションプロジェクト|*.json|すべてのファイル|*.*";
+                dialog.Title = I18n.T("MainForm.LoadDialogTitle");
+                dialog.Filter = I18n.T("Common.FilterSimProject");
                 dialog.DefaultExt = ".json";
                 dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
@@ -370,7 +380,7 @@ namespace PowerSimBuilder
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー",
+                    MessageBox.Show(I18n.T("MainForm.MsgLoadFail", ex.Message), I18n.T("Common.MsgTitleError"),
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -472,8 +482,8 @@ namespace PowerSimBuilder
             if (selected == null)
             {
                 MessageBox.Show(this,
-                    "パラメータを編集するコンポーネントをキャンバス上で選択してください。",
-                    "情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    I18n.T("MainForm.MsgParamSelectFirst"),
+                    I18n.T("Common.MsgTitleInfo"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -526,15 +536,14 @@ namespace PowerSimBuilder
                         componentPalette1.AvailableComponents);
 
                     MessageBox.Show(this,
-                        $"パレットに '{project.Name}' を追加しました。\n\n" +
-                        $"入力: {descriptor.InputPorts.Length} / 出力: {descriptor.OutputPorts.Length}",
+                        I18n.T("MainForm.MsgPaletteAdded", project.Name, descriptor.InputPorts.Length, descriptor.OutputPorts.Length),
                         "ControllerBox", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(this,
-                        $"Descriptor の生成に失敗しました:\n{ex.Message}",
-                        "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        I18n.T("MainForm.MsgDescriptorFail", ex.Message),
+                        I18n.T("Common.MsgTitleError"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -683,8 +692,8 @@ namespace PowerSimBuilder
                 SaveFileDialog saveFileDialog = new SaveFileDialog();
 
                 // ダイアログの設定
-                saveFileDialog.Title = "Pythonシミュレーションファイルの保存先を選択";
-                saveFileDialog.Filter = "Pythonファイル|*.py|すべてのファイル|*.*";
+                saveFileDialog.Title = I18n.T("MainForm.SimSaveTitle");
+                saveFileDialog.Filter = I18n.T("Common.FilterPython");
                 saveFileDialog.DefaultExt = ".py";
                 saveFileDialog.AddExtension = true;
 
@@ -709,7 +718,7 @@ namespace PowerSimBuilder
                     // エラーハンドラーを設定（オプション）
                     builder.ErrorHandler = (category, message) =>
                     {
-                        MessageBox.Show($"エラー ({category}): {message}", "エラー",
+                        MessageBox.Show(I18n.T("MainForm.MsgErrCategory", category, message), I18n.T("Common.MsgTitleError"),
                                       MessageBoxButtons.OK, MessageBoxIcon.Error);
                     };
 
@@ -721,8 +730,8 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ファイル生成中にエラーが発生しました:\n{ex.Message}",
-                              "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(I18n.T("MainForm.MsgGenerateFail", ex.Message),
+                              I18n.T("Common.MsgTitleError"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return pyfile;
         }

@@ -45,7 +45,7 @@ namespace PowerSimBuilder
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(107, 23);
             this.lblName.TabIndex = 0;
-            this.lblName.Text = "名前:";
+            this.lblName.Text = I18n.T("Common.LblName");
             // 
             // txtName
             // 
@@ -62,7 +62,7 @@ namespace PowerSimBuilder
             this.lblType.Name = "lblType";
             this.lblType.Size = new System.Drawing.Size(107, 23);
             this.lblType.TabIndex = 2;
-            this.lblType.Text = "タイプ:";
+            this.lblType.Text = I18n.T("Common.LblType");
             // 
             // cmbType
             // 
@@ -86,7 +86,7 @@ namespace PowerSimBuilder
             this.lblDefault.Name = "lblDefault";
             this.lblDefault.Size = new System.Drawing.Size(107, 23);
             this.lblDefault.TabIndex = 4;
-            this.lblDefault.Text = "デフォルト値:";
+            this.lblDefault.Text = I18n.T("AddParameterForm.LblDefault");
             // 
             // txtDefaultValue
             // 
@@ -116,7 +116,7 @@ namespace PowerSimBuilder
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(107, 35);
             this.btnCancel.TabIndex = 7;
-            this.btnCancel.Text = "キャンセル";
+            this.btnCancel.Text = I18n.T("Common.BtnCancel");
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // AddParameterForm
@@ -138,7 +138,7 @@ namespace PowerSimBuilder
             this.MinimizeBox = false;
             this.Name = "AddParameterForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "パラメータの追加";
+            this.Text = I18n.T("AddParameterForm.TitleNew");
             this.ResumeLayout(false);
             this.PerformLayout();
 

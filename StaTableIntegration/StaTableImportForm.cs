@@ -41,8 +41,8 @@ namespace PowerSimBuilder
         {
             using (var dlg = new OpenFileDialog())
             {
-                dlg.Title = "StaTable XML ファイルを選択";
-                dlg.Filter = "StaTable XML|*.xml|すべてのファイル|*.*";
+                dlg.Title = I18n.T("StaTableImport.BrowseXmlTitle");
+                dlg.Filter = I18n.T("Common.FilterXml");
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
                 txtFilePath.Text = dlg.FileName;
@@ -128,15 +128,15 @@ namespace PowerSimBuilder
         {
             if (_currentProject == null)
             {
-                MessageBox.Show(this, "先に XML を読み込んでください。",
-                    "情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, I18n.T("StaTableImport.MsgLoadXmlFirst"),
+                    I18n.T("Common.MsgTitleInfo"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             using (var dlg = new SaveFileDialog())
             {
-                dlg.Title = "controller_box.py の保存先（推奨: generated/ 配下）";
-                dlg.Filter = "Python ファイル|*.py|すべてのファイル|*.*";
+                dlg.Title = I18n.T("StaTableImport.SavePyTitle");
+                dlg.Filter = I18n.T("Common.FilterPython");
                 dlg.DefaultExt = ".py";
                 dlg.AddExtension = true;
 
@@ -173,16 +173,16 @@ namespace PowerSimBuilder
                     ImportedGeneratedPath = System.IO.Path.GetFullPath(dlg.FileName);
                     ImportedSourceXmlPath = _currentProject.SourceFilePath;
                     MessageBox.Show(this,
-                        "生成しました:\n" + dlg.FileName,
-                        "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        I18n.T("StaTableImport.MsgGenerated", dlg.FileName),
+                        I18n.T("Common.MsgTitleSuccess"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     DialogResult = DialogResult.OK;
                     Close();
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(this,
-                        "生成に失敗しました:\n" + ex.Message,
-                        "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        I18n.T("StaTableImport.MsgGenerateFail", ex.Message),
+                        I18n.T("Common.MsgTitleError"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

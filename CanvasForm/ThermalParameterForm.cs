@@ -17,12 +17,12 @@ namespace PowerSimBuilder
         private void InitializeForm()
         {
             // 基本レイアウト設定
-            this.Text = "熱パラメータ設定";
+            this.Text = I18n.T("ThermalParameterForm.Title");
             this.Size = new Size(300, 180);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
 
             // 熱抵抗
-            var lblResistance = new Label { Text = "熱抵抗 [K/W]:", Location = new Point(20, 20) };
+            var lblResistance = new Label { Text = I18n.T("ThermalParameterForm.LblResistance"), Location = new Point(20, 20) };
             var numResistance = new NumericUpDown
             {
                 Value = (decimal)ThermalResistance,
@@ -33,7 +33,7 @@ namespace PowerSimBuilder
             };
 
             // 熱容量
-            var lblCapacity = new Label { Text = "熱容量 [J/K]:", Location = new Point(20, 50) };
+            var lblCapacity = new Label { Text = I18n.T("ThermalParameterForm.LblCapacity"), Location = new Point(20, 50) };
             var numCapacity = new NumericUpDown
             {
                 Value = (decimal)ThermalCapacity,
@@ -45,7 +45,7 @@ namespace PowerSimBuilder
 
             // OK/キャンセルボタン
             var btnOK = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(80, 90) };
-            var btnCancel = new Button { Text = "キャンセル", DialogResult = DialogResult.Cancel, Location = new Point(160, 90) };
+            var btnCancel = new Button { Text = I18n.T("Common.BtnCancel"), DialogResult = DialogResult.Cancel, Location = new Point(160, 90) };
 
             // コントロール追加
             this.Controls.AddRange(new Control[] {

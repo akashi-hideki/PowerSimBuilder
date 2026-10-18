@@ -29,8 +29,8 @@ namespace PowerSimBuilder
         {
             InitializeComponent();
             InitializePortGrids();
-            Text = "新規コンポーネント追加";
-            btnOK.Text = "追加";
+            Text = I18n.T("AddComponentForm.TitleNew");
+            btnOK.Text = I18n.T("Common.BtnAdd");
             btnDeleteParam.Visible = false; // 新規追加時は削除ボタンを非表示
         }
 
@@ -39,8 +39,8 @@ namespace PowerSimBuilder
         {
             _isEditMode = true;
             _originalComponent = component;
-            Text = "コンポーネント編集";
-            btnOK.Text = "更新";
+            Text = I18n.T("AddComponentForm.TitleEdit");
+            btnOK.Text = I18n.T("Common.BtnUpdate");
             btnDeleteParam.Visible = true; // 編集時は削除ボタンを表示
 
             // 既存データをフォームに設定
@@ -70,14 +70,14 @@ namespace PowerSimBuilder
         {
             // 入力ポートグリッド
             inputPortsGrid.Columns.Clear();
-            inputPortsGrid.Columns.Add("PortName", "ポート名");
+            inputPortsGrid.Columns.Add("PortName", I18n.T("Common.PortName"));
             inputPortsGrid.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             inputPortsGrid.AllowUserToAddRows = false;
             inputPortsGrid.RowHeadersVisible = false;
 
             // 出力ポートグリッド
             outputPortsGrid.Columns.Clear();
-            outputPortsGrid.Columns.Add("PortName", "ポート名");
+            outputPortsGrid.Columns.Add("PortName", I18n.T("Common.PortName"));
             outputPortsGrid.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             outputPortsGrid.AllowUserToAddRows = false;
             outputPortsGrid.RowHeadersVisible = false;
@@ -118,7 +118,7 @@ namespace PowerSimBuilder
         {
             if (paramListBox.SelectedIndex == -1)
             {
-                MessageBox.Show("編集するパラメータを選択してください", "情報",
+                MessageBox.Show(I18n.T("AddComponentForm.MsgSelectParameterToEdit"), I18n.T("Common.MsgTitleInfo"),
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -145,7 +145,7 @@ namespace PowerSimBuilder
         {
             if (paramListBox.SelectedIndex == -1)
             {
-                MessageBox.Show("削除するパラメータを選択してください", "情報",
+                MessageBox.Show(I18n.T("AddComponentForm.MsgSelectParameterToDelete"), I18n.T("Common.MsgTitleInfo"),
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -205,7 +205,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"エラーが発生しました: {ex.Message}", "エラー",
+                MessageBox.Show(I18n.T("AddComponentForm.MsgError", ex.Message), I18n.T("Common.MsgTitleError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.None;
             }
@@ -219,7 +219,7 @@ namespace PowerSimBuilder
             // 既存のBtnOK_Clickの検証ロジックを流用
             if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtType.Text))
             {
-                MessageBox.Show("名前とタイプは必須です");
+                MessageBox.Show(I18n.T("AddComponentForm.MsgNameAndTypeRequired"));
                 return false;
             }
 
@@ -243,20 +243,20 @@ namespace PowerSimBuilder
 
             if (inputPorts.Count == 0 || outputPorts.Count == 0)
             {
-                MessageBox.Show("入力ポートと出力ポートは少なくとも1つ必要です");
+                MessageBox.Show(I18n.T("AddComponentForm.MsgPortsRequired"));
                 return false;
             }
 
             if (inputPorts.Any(string.IsNullOrWhiteSpace) || outputPorts.Any(string.IsNullOrWhiteSpace))
             {
-                MessageBox.Show("ポート名は空にできません");
+                MessageBox.Show(I18n.T("AddComponentForm.MsgPortNameRequired"));
                 return false;
             }
 
             if (inputPorts.Count != inputPorts.Distinct().Count() ||
                 outputPorts.Count != outputPorts.Distinct().Count())
             {
-                MessageBox.Show("ポート名は一意である必要があります");
+                MessageBox.Show(I18n.T("AddComponentForm.MsgPortNameUnique"));
                 return false;
             }
 
@@ -283,7 +283,7 @@ namespace PowerSimBuilder
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
                 saveFileDialog.Filter = "Python Files|*.py";
-                saveFileDialog.Title = "Pythonファイルの保存先を選択";
+                saveFileDialog.Title = I18n.T("AddComponentForm.SaveFileTitle");
                 saveFileDialog.FileName = $"{ResultComponent.Type}.py";
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)

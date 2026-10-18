@@ -43,7 +43,7 @@ namespace PowerSimBuilder
             {
                 if (!File.Exists(scriptPath))
                 {
-                    MessageBox.Show($"スクリプトファイルが見つかりません: {scriptPath}", "エラー",
+                    MessageBox.Show(I18n.T("PythonExecutor.MsgScriptNotFound", scriptPath), I18n.T("Common.MsgTitleError"),
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
@@ -99,8 +99,7 @@ namespace PowerSimBuilder
                         lock (stderrSb) { errTail = stderrSb.ToString(); }
 
                         var msg = exitCode == 0
-                            ? "Pythonスクリプトが完了しました。"
-                            : $"Pythonスクリプトが終了コード {exitCode} で終了しました。\n\n" +
+                            ? I18n.T("PythonExecutor.MsgCompleted") : I18n.T("PythonExecutor.MsgExitedWithCode", exitCode) + "" +
                               (string.IsNullOrEmpty(errTail)
                                   ? ""
                                   : errTail.Substring(0, Math.Min(500, errTail.Length)));
@@ -109,7 +108,7 @@ namespace PowerSimBuilder
                         {
                             var form = Application.OpenForms[0];
                             form.BeginInvoke((Action)(() =>
-                                MessageBox.Show(msg, "情報",
+                                MessageBox.Show(msg, I18n.T("Common.MsgTitleInfo"),
                                     MessageBoxButtons.OK,
                                     exitCode == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning)));
                         }
@@ -125,9 +124,8 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Pythonスクリプトの実行に失敗しました: {ex.Message}\n\n" +
-                               "Pythonがインストールされているか確認してください。",
-                    "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(I18n.T("PythonExecutor.MsgExecFail", ex.Message),
+                    I18n.T("Common.MsgTitleError"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
@@ -148,9 +146,8 @@ namespace PowerSimBuilder
                 if (alive)
                 {
                     MessageBox.Show(
-                        "Python スクリプトがまだ実行中です。\n" +
-                        "グラフのウィンドウを閉じるか、完了メッセージが出るまでお待ちください。",
-                        "情報", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        I18n.T("PythonExecutor.MsgStillRunning"),
+                        I18n.T("Common.MsgTitleInfo"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
             }

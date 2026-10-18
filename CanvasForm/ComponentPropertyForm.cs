@@ -31,13 +31,13 @@ namespace PowerSimBuilder
         private void InitializeForm()
         {
             // 基本設定
-            this.Text = "コンポーネントプロパティ";
+            this.Text = I18n.T("ComponentPropertyForm.Title");
             this.Size = new Size(400, 300);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.StartPosition = FormStartPosition.CenterParent;
 
             // 名前入力
-            var lblName = new Label { Text = "名前:", Location = new Point(20, 20), Size = new Size(80, 20) };
+            var lblName = new Label { Text = I18n.T("ComponentPropertyForm.LblName"), Location = new Point(20, 20), Size = new Size(80, 20) };
             var txtName = new TextBox
             {
                 Text = _component.InstanceName,
@@ -46,7 +46,7 @@ namespace PowerSimBuilder
             };
 
             // 位置設定
-            var lblX = new Label { Text = "X位置:", Location = new Point(20, 50), Size = new Size(80, 20) };
+            var lblX = new Label { Text = I18n.T("ComponentPropertyForm.LblX"), Location = new Point(20, 50), Size = new Size(80, 20) };
             var numX = new NumericUpDown
             {
                 Value = _component.Location.X,
@@ -54,7 +54,7 @@ namespace PowerSimBuilder
                 Size = new Size(80, 20)
             };
 
-            var lblY = new Label { Text = "Y位置:", Location = new Point(190, 50), Size = new Size(80, 20) };
+            var lblY = new Label { Text = I18n.T("ComponentPropertyForm.LblY"), Location = new Point(190, 50), Size = new Size(80, 20) };
             var numY = new NumericUpDown
             {
                 Value = _component.Location.Y,
@@ -63,7 +63,7 @@ namespace PowerSimBuilder
             };
 
             // ポート設定
-            var lblInputPorts = new Label { Text = "入力ポート:", Location = new Point(20, 80), Size = new Size(80, 20) };
+            var lblInputPorts = new Label { Text = I18n.T("ComponentPropertyForm.LblInputPorts"), Location = new Point(20, 80), Size = new Size(80, 20) };
             var txtInputPorts = new TextBox
             {
                 Text = string.Join(",", _component.Descriptor.InputPorts ?? Array.Empty<string>()),
@@ -71,7 +71,7 @@ namespace PowerSimBuilder
                 Size = new Size(200, 20)
             };
 
-            var lblOutputPorts = new Label { Text = "出力ポート:", Location = new Point(20, 110), Size = new Size(80, 20) };
+            var lblOutputPorts = new Label { Text = I18n.T("ComponentPropertyForm.LblOutputPorts"), Location = new Point(20, 110), Size = new Size(80, 20) };
             var txtOutputPorts = new TextBox
             {
                 Text = string.Join(",", _component.Descriptor.OutputPorts ?? Array.Empty<string>()),
@@ -82,14 +82,14 @@ namespace PowerSimBuilder
             // 特殊設定ボタン
             var btnThermal = new Button
             {
-                Text = "熱パラメータ設定",
+                Text = I18n.T("ComponentPropertyForm.BtnThermalParams"),
                 Location = new Point(20, 150),
                 Visible = false
             };
 
             var btnFault = new Button
             {
-                Text = "故障条件設定",
+                Text = I18n.T("ComponentPropertyForm.BtnFaultConditions"),
                 Location = new Point(150, 150),
                 Visible = false
             };
@@ -114,7 +114,7 @@ namespace PowerSimBuilder
 
             var btnCancel = new Button
             {
-                Text = "キャンセル",
+                Text = I18n.T("Common.BtnCancel"),
                 DialogResult = DialogResult.Cancel,
                 Location = new Point(220, 220)
             };

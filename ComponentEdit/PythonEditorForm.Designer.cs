@@ -73,7 +73,7 @@ namespace PowerSimBuilder
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
-            this.btnCancel.Text = "キャンセル";
+            this.btnCancel.Text = I18n.T("Common.BtnCancel");
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
@@ -84,7 +84,7 @@ namespace PowerSimBuilder
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 0;
-            this.btnSave.Text = "保存";
+            this.btnSave.Text = I18n.T("Common.BtnSave");
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
@@ -106,7 +106,7 @@ namespace PowerSimBuilder
             this.btnRun.Name = "btnRun";
             this.btnRun.Size = new System.Drawing.Size(75, 23);
             this.btnRun.TabIndex = 0;
-            this.btnRun.Text = "実行";
+            this.btnRun.Text = I18n.T("PythonEditor.BtnRun");
             this.btnRun.UseVisualStyleBackColor = true;
             this.btnRun.Click += new System.EventHandler(this.BtnRun_Click);
             // 
@@ -116,7 +116,7 @@ namespace PowerSimBuilder
             this.btnReload.Name = "btnReload";
             this.btnReload.Size = new System.Drawing.Size(101, 23);
             this.btnReload.TabIndex = 1;
-            this.btnReload.Text = "再読み込み";
+            this.btnReload.Text = I18n.T("Common.BtnReload");
             this.btnReload.UseVisualStyleBackColor = true;
             this.btnReload.Click += new System.EventHandler(this.BtnReload_Click);
             // 
@@ -126,7 +126,7 @@ namespace PowerSimBuilder
             this.btnOpenFolder.Name = "btnOpenFolder";
             this.btnOpenFolder.Size = new System.Drawing.Size(100, 23);
             this.btnOpenFolder.TabIndex = 2;
-            this.btnOpenFolder.Text = "フォルダを開く";
+            this.btnOpenFolder.Text = I18n.T("Common.BtnOpenFolder");
             this.btnOpenFolder.UseVisualStyleBackColor = true;
             this.btnOpenFolder.Click += new System.EventHandler(this.BtnOpenFolder_Click);
             // 
@@ -137,7 +137,7 @@ namespace PowerSimBuilder
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(45, 15);
             this.lblStatus.TabIndex = 3;
-            this.lblStatus.Text = "状態: ";
+            this.lblStatus.Text = I18n.T("PythonEditor.LblStatus");
             // 
             // PythonPartsEditorForm
             // 
@@ -146,7 +146,7 @@ namespace PowerSimBuilder
             this.Controls.Add(this.panelTop);
             this.Controls.Add(this.panel1);
             this.Name = "PythonPartsEditorForm";
-            this.Text = "Pythonコードエディタ";
+            this.Text = I18n.T("PythonEditor.Title");
             this.panel1.ResumeLayout(false);
             this.panelTop.ResumeLayout(false);
             this.panelTop.PerformLayout();

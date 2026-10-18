@@ -48,11 +48,11 @@ namespace PowerSimBuilder
                     return;
                 }
                 // 引数なし → GUI 起動（従来動作）
-                Application.Run(new StaTableImportForm());
+                I18n.Initialize(); I18nDumpUi.InstallAutoDump(); Application.Run(new StaTableImportForm());
             }
             else
             {
-                Application.Run(new MainForm());
+                I18n.Initialize(); Application.Run(new MainForm());
             }
         }
 

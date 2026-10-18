@@ -27,7 +27,7 @@ namespace PowerSimBuilder
             if (component == null) throw new ArgumentNullException("component");
             _component = component;
 
-            Text = "パラメータ編集 - " + component.InstanceName + " (" + component.Descriptor.Name + ")";
+            Text = I18n.T("ParametersEditorForm.TitleTemplate", component.InstanceName, component.Descriptor.Name);
             Width = 640;
             Height = 520;
             MinimumSize = new Size(480, 320);
@@ -47,9 +47,7 @@ namespace PowerSimBuilder
                 Dock = DockStyle.Top,
                 Height = 60,
                 Padding = new Padding(10, 8, 10, 4),
-                Text = "コンポーネント: " + _component.InstanceName
-                     + " (" + _component.Descriptor.Type + ")\n"
-                     + "パラメータの型は自動判別されます（数値 / 真偽値 / 文字列）",
+                Text = I18n.T("ParametersEditorForm.ComponentHeader", _component.InstanceName, _component.Descriptor.Type),
                 AutoSize = false,
             };
 
@@ -72,9 +70,9 @@ namespace PowerSimBuilder
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-            table.Controls.Add(CreateHeaderLabel("パラメータ名"), 0, 0);
-            table.Controls.Add(CreateHeaderLabel("型"), 1, 0);
-            table.Controls.Add(CreateHeaderLabel("値"), 2, 0);
+            table.Controls.Add(CreateHeaderLabel(I18n.T("ParametersEditorForm.ColName")), 0, 0);
+            table.Controls.Add(CreateHeaderLabel(I18n.T("ParametersEditorForm.ColType")), 1, 0);
+            table.Controls.Add(CreateHeaderLabel(I18n.T("ParametersEditorForm.ColValue")), 2, 0);
             table.RowCount = 1;
             table.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
 
@@ -95,7 +93,7 @@ namespace PowerSimBuilder
                     Dock = DockStyle.Top,
                     Height = 60,
                     TextAlign = ContentAlignment.MiddleCenter,
-                    Text = "このコンポーネントには編集可能なパラメータがありません",
+                    Text = I18n.T("ParametersEditorForm.MsgNoParams"),
                 };
                 scroll.Controls.Add(lblEmpty);
             }
@@ -112,8 +110,8 @@ namespace PowerSimBuilder
             };
             _btnOK = new Button { Text = "OK", Width = 100, Dock = DockStyle.Right };
             _btnOK.Click += BtnOK_Click;
-            _btnCancel = new Button { Text = "キャンセル", Width = 100, Dock = DockStyle.Right, DialogResult = DialogResult.Cancel };
-            _btnReset = new Button { Text = "デフォルトに戻す", Width = 140, Dock = DockStyle.Left };
+            _btnCancel = new Button { Text = I18n.T("ParametersEditorForm.BtnCancel"), Width = 100, Dock = DockStyle.Right, DialogResult = DialogResult.Cancel };
+            _btnReset = new Button { Text = I18n.T("ParametersEditorForm.BtnReset"), Width = 140, Dock = DockStyle.Left };
             _btnReset.Click += BtnReset_Click;
 
             btnPanel.Controls.Add(_btnOK);
@@ -206,8 +204,8 @@ namespace PowerSimBuilder
                 catch (FormatException fex)
                 {
                     MessageBox.Show(this,
-                        "パラメータ '" + row.Name + "' の値が不正です:\n" + fex.Message,
-                        "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        I18n.T("ParametersEditorForm.MsgInvalidValue", row.Name, fex.Message),
+                        I18n.T("ParametersEditorForm.MsgInputError"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
             }
@@ -224,9 +222,7 @@ namespace PowerSimBuilder
         private void BtnReset_Click(object sender, EventArgs e)
         {
             var result = MessageBox.Show(this,
-                "すべてのパラメータをコンポーネント定義のデフォルト値に戻しますか？\n"
-                + "（この操作は「OK」を押すまで確定しません）",
-                "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                I18n.T("ParametersEditorForm.MsgResetConfirm"), I18n.T("Common.MsgTitleConfirm"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result != DialogResult.Yes) return;
 
             var descriptors = _component.Descriptor.Parameters

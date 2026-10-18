@@ -9,7 +9,7 @@ namespace PowerSimBuilder
         {
             if (descriptor == null)
             {
-                MessageBox.Show("コンポーネントが選択されていません。", "エラー",
+                MessageBox.Show(I18n.T("Manager.MsgNoSelection"), I18n.T("Common.MsgTitleError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -17,8 +17,8 @@ namespace PowerSimBuilder
             // ファイル保存ダイアログを表示
             using (var saveFileDialog = new SaveFileDialog())
             {
-                saveFileDialog.Filter = "Pythonファイル|*.py|すべてのファイル|*.*";
-                saveFileDialog.Title = "Pythonファイルを保存";
+                saveFileDialog.Filter = I18n.T("Common.FilterPython");
+                saveFileDialog.Title = I18n.T("Manager.SaveDialogTitle");
                 saveFileDialog.FileName = $"{descriptor.Type}.py";
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
@@ -37,14 +37,14 @@ namespace PowerSimBuilder
                         {
                             // 変更があればファイルに保存
                             File.WriteAllText(filePath, editorForm.GetPythonCode());
-                            MessageBox.Show("Pythonファイルを生成しました。", "成功",
+                            MessageBox.Show(I18n.T("Manager.MsgGenerated"), I18n.T("Common.MsgTitleSuccess"),
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else
                         {
                             // 変更がなければファイルを削除（オプション）
                             // File.Delete(filePath);
-                            MessageBox.Show("変更はありませんでした。", "情報",
+                            MessageBox.Show(I18n.T("Manager.MsgNoChange"), I18n.T("Common.MsgTitleInfo"),
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
@@ -70,7 +70,7 @@ namespace PowerSimBuilder
 
         private void InitializeComponent()
         {
-            this.Text = "コンポーネント選択";
+            this.Text = I18n.T("Manager.Title");
             this.Size = new System.Drawing.Size(400, 300);
             this.StartPosition = FormStartPosition.CenterScreen;
 
@@ -89,7 +89,7 @@ namespace PowerSimBuilder
 
             btnCancel = new Button
             {
-                Text = "キャンセル",
+                Text = I18n.T("Common.BtnCancel"),
                 Dock = DockStyle.Right,
                 Width = 80
             };

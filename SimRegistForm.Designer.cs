@@ -65,7 +65,7 @@ namespace PowerSimBuilder
             this.userGroupMultiRegist_TabPage.Name = "userGroupMultiRegist_TabPage";
             this.userGroupMultiRegist_TabPage.Size = new System.Drawing.Size(1505, 440);
             this.userGroupMultiRegist_TabPage.TabIndex = 0;
-            this.userGroupMultiRegist_TabPage.Text = "シュミレーション一覧";
+            this.userGroupMultiRegist_TabPage.Text = I18n.T("SimRegistForm.TabSimList");
             // 
             // userGroupMultiRegist
             // 
@@ -85,7 +85,7 @@ namespace PowerSimBuilder
             this.userGroupMultiRegParts_TabPage.Name = "userGroupMultiRegParts_TabPage";
             this.userGroupMultiRegParts_TabPage.Size = new System.Drawing.Size(1505, 440);
             this.userGroupMultiRegParts_TabPage.TabIndex = 1;
-            this.userGroupMultiRegParts_TabPage.Text = "パーツ一覧";
+            this.userGroupMultiRegParts_TabPage.Text = I18n.T("SimRegistForm.TabPartsList");
             // 
             // userGroupMultiRegParts
             // 

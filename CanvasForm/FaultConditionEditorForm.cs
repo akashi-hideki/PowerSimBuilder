@@ -18,21 +18,21 @@ namespace PowerSimBuilder
         private void InitializeForm(IEnumerable<ComponentControl> components)
         {
             // 基本レイアウト設定
-            this.Text = "故障条件エディタ";
+            this.Text = I18n.T("FaultConditionEditorForm.Title");
             this.Size = new Size(600, 400);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
 
             // コンポーネント選択
-            var lblComponent = new Label { Text = "対象コンポーネント:", Location = new Point(20, 20) };
+            var lblComponent = new Label { Text = I18n.T("FaultConditionEditorForm.LblComponent"), Location = new Point(20, 20) };
             var cmbComponent = new ComboBox { Location = new Point(150, 20), Width = 200 };
             cmbComponent.Items.AddRange(components.Select(c => c.InstanceName).ToArray());
 
             // 状態変数選択
-            var lblState = new Label { Text = "監視状態:", Location = new Point(20, 50) };
+            var lblState = new Label { Text = I18n.T("FaultConditionEditorForm.LblState"), Location = new Point(20, 50) };
             var cmbState = new ComboBox { Location = new Point(150, 50), Width = 200 };
 
             // 条件タイプ
-            var lblType = new Label { Text = "条件タイプ:", Location = new Point(20, 80) };
+            var lblType = new Label { Text = I18n.T("FaultConditionEditorForm.LblType"), Location = new Point(20, 80) };
             var cmbType = new ComboBox { Location = new Point(150, 80), Width = 200 };
             cmbType.Items.AddRange(new[] { "Threshold", "RateOfChange", "TimeAboveThreshold", "Oscillation" });
 
@@ -43,8 +43,8 @@ namespace PowerSimBuilder
             var conditionList = new ListBox { Location = new Point(20, 270), Size = new Size(550, 100) };
 
             // 操作ボタン
-            var btnAdd = new Button { Text = "追加", Location = new Point(400, 80) };
-            var btnRemove = new Button { Text = "削除", Location = new Point(480, 80) };
+            var btnAdd = new Button { Text = I18n.T("Common.BtnAdd"), Location = new Point(400, 80) };
+            var btnRemove = new Button { Text = I18n.T("Common.BtnDelete"), Location = new Point(480, 80) };
             var btnOK = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(400, 370) };
 
             // コントロール追加
@@ -61,7 +61,7 @@ namespace PowerSimBuilder
             {
                 if (cmbComponent.SelectedItem == null || cmbState.SelectedItem == null || cmbType.SelectedItem == null)
                 {
-                    MessageBox.Show("すべてのフィールドを選択してください");
+                    MessageBox.Show(I18n.T("FaultConditionEditorForm.MsgSelectAll"));
                     return;
                 }
 

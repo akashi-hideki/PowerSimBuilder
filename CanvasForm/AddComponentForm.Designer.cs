@@ -58,7 +58,7 @@ namespace PowerSimBuilder
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(80, 20);
             this.lblName.TabIndex = 0;
-            this.lblName.Text = "名前:";
+            this.lblName.Text = I18n.T("Common.LblName");
             // 
             // txtName
             // 
@@ -73,7 +73,7 @@ namespace PowerSimBuilder
             this.lblType.Name = "lblType";
             this.lblType.Size = new System.Drawing.Size(80, 20);
             this.lblType.TabIndex = 2;
-            this.lblType.Text = "タイプ:";
+            this.lblType.Text = I18n.T("Common.LblType");
             // 
             // txtType
             // 
@@ -88,7 +88,7 @@ namespace PowerSimBuilder
             this.lblCategory.Name = "lblCategory";
             this.lblCategory.Size = new System.Drawing.Size(80, 20);
             this.lblCategory.TabIndex = 4;
-            this.lblCategory.Text = "カテゴリ:";
+            this.lblCategory.Text = I18n.T("AddComponentForm.LblCategory");
             // 
             // txtCategory
             // 
@@ -103,7 +103,7 @@ namespace PowerSimBuilder
             this.btnAddParam.Name = "btnAddParam";
             this.btnAddParam.Size = new System.Drawing.Size(100, 30);
             this.btnAddParam.TabIndex = 6;
-            this.btnAddParam.Text = "追加";
+            this.btnAddParam.Text = I18n.T("Common.BtnAdd");
             this.btnAddParam.UseVisualStyleBackColor = true;
             this.btnAddParam.Click += new System.EventHandler(this.BtnAddParam_Click);
             // 
@@ -123,7 +123,7 @@ namespace PowerSimBuilder
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(80, 30);
             this.btnOK.TabIndex = 8;
-            this.btnOK.Text = "追加";
+            this.btnOK.Text = I18n.T("Common.BtnAdd");
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.BtnOK_Click);
             // 
@@ -134,7 +134,7 @@ namespace PowerSimBuilder
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(80, 30);
             this.btnCancel.TabIndex = 9;
-            this.btnCancel.Text = "キャンセル";
+            this.btnCancel.Text = I18n.T("Common.BtnCancel");
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnEditParam
@@ -143,7 +143,7 @@ namespace PowerSimBuilder
             this.btnEditParam.Name = "btnEditParam";
             this.btnEditParam.Size = new System.Drawing.Size(100, 30);
             this.btnEditParam.TabIndex = 14;
-            this.btnEditParam.Text = "編集";
+            this.btnEditParam.Text = I18n.T("Common.BtnEdit");
             this.btnEditParam.UseVisualStyleBackColor = true;
             this.btnEditParam.Click += new System.EventHandler(this.BtnEditParam_Click);
             // 
@@ -153,7 +153,7 @@ namespace PowerSimBuilder
             this.btnDeleteParam.Name = "btnDeleteParam";
             this.btnDeleteParam.Size = new System.Drawing.Size(100, 30);
             this.btnDeleteParam.TabIndex = 15;
-            this.btnDeleteParam.Text = "削除";
+            this.btnDeleteParam.Text = I18n.T("Common.BtnDelete");
             this.btnDeleteParam.UseVisualStyleBackColor = true;
             this.btnDeleteParam.Click += new System.EventHandler(this.BtnDeleteParam_Click);
             // 
@@ -163,7 +163,7 @@ namespace PowerSimBuilder
             this.lblInputPorts.Name = "lblInputPorts";
             this.lblInputPorts.Size = new System.Drawing.Size(80, 20);
             this.lblInputPorts.TabIndex = 10;
-            this.lblInputPorts.Text = "入力ポート:";
+            this.lblInputPorts.Text = I18n.T("ComponentPropertyForm.LblInputPorts");
             // 
             // inputPortsGrid
             // 
@@ -181,7 +181,7 @@ namespace PowerSimBuilder
             this.lblOutputPorts.Name = "lblOutputPorts";
             this.lblOutputPorts.Size = new System.Drawing.Size(80, 20);
             this.lblOutputPorts.TabIndex = 12;
-            this.lblOutputPorts.Text = "出力ポート:";
+            this.lblOutputPorts.Text = I18n.T("ComponentPropertyForm.LblOutputPorts");
             // 
             // outputPortsGrid
             // 
@@ -263,7 +263,7 @@ namespace PowerSimBuilder
             this.MinimizeBox = false;
             this.Name = "AddComponentForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "コンポーネントの追加";
+            this.Text = I18n.T("AddComponentForm.TitleNew");
             ((System.ComponentModel.ISupportInitialize)(this.inputPortsGrid)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.outputPortsGrid)).EndInit();
             this.ResumeLayout(false);

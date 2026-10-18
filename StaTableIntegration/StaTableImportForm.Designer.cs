@@ -39,7 +39,7 @@ namespace PowerSimBuilder
             this.lblFilePath.Name = "lblFilePath";
             this.lblFilePath.Size = new System.Drawing.Size(70, 15);
             this.lblFilePath.TabIndex = 0;
-            this.lblFilePath.Text = "XML ファイル:";
+            this.lblFilePath.Text = I18n.T("StaTableImport.LblFilePath");
             //
             // txtFilePath
             //
@@ -58,7 +58,7 @@ namespace PowerSimBuilder
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.Size = new System.Drawing.Size(90, 25);
             this.btnBrowse.TabIndex = 2;
-            this.btnBrowse.Text = "参照...";
+            this.btnBrowse.Text = I18n.T("Common.BtnBrowse");
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             //
@@ -69,7 +69,7 @@ namespace PowerSimBuilder
             this.lblPreview.Name = "lblPreview";
             this.lblPreview.Size = new System.Drawing.Size(45, 15);
             this.lblPreview.TabIndex = 3;
-            this.lblPreview.Text = "プレビュー:";
+            this.lblPreview.Text = I18n.T("StaTableImport.LblPreview");
             //
             // txtPreview
             //
@@ -94,7 +94,7 @@ namespace PowerSimBuilder
             this.btnGenerate.Name = "btnGenerate";
             this.btnGenerate.Size = new System.Drawing.Size(90, 30);
             this.btnGenerate.TabIndex = 5;
-            this.btnGenerate.Text = "生成...";
+            this.btnGenerate.Text = I18n.T("Common.BtnGenerate");
             this.btnGenerate.UseVisualStyleBackColor = true;
             this.btnGenerate.Click += new System.EventHandler(this.btnGenerate_Click);
             //
@@ -106,7 +106,7 @@ namespace PowerSimBuilder
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(84, 30);
             this.btnCancel.TabIndex = 6;
-            this.btnCancel.Text = "キャンセル";
+            this.btnCancel.Text = I18n.T("Common.BtnCancel");
             this.btnCancel.UseVisualStyleBackColor = true;
             //
             // StaTableImportForm
@@ -124,7 +124,7 @@ namespace PowerSimBuilder
             this.MinimumSize = new System.Drawing.Size(740, 510);
             this.Name = "StaTableImportForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "StaTable XML 取り込み";
+            this.Text = I18n.T("StaTableImport.Title");
             this.ResumeLayout(false);
             this.PerformLayout();
         }

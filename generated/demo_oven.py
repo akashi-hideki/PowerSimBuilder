@@ -1,138 +1,189 @@
-"""Cooking Heater Demo (Task 3-C-4).
-
-Two scenarios:
-1. Overheat detection: heater on -> T > 250C -> error_code = 0xE3
-2. Door safety: heater on -> door opens -> all actuators off
-"""
-
 from __future__ import annotations
 
-import sys
-from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
-
-from python_runtime import SimulationRunner
-from python_runtime.components import ControllerBox, HeaterBlock, Gain
-
-GENERATED = ROOT / "generated" / "controller_box_powersim_demo.py"
-
-
-def build_runner():
-    """Build a fresh SimulationRunner for the demo."""
-    runner = SimulationRunner(dt=0.01)
-
-    ctrl = ControllerBox("ctrl", generated_path=str(GENERATED))
-    ctrl.parameters["auto_events"] = "demo_oven"
-
-    heater = HeaterBlock("heater1")
-    # Override for faster demo: C_th=50 J/K => ~12.7s to reach 250C
-    heater.parameters["thermal_capacity"] = 50.0
-    heater.parameters["thermal_resistance"] = 1.0
-
-    gain = Gain("gain1")
-    gain.parameters["gain"] = 2.0   # 0-100% -> 0-200V
-    gain.parameters["bias"] = 0.0
-
-    runner.add_component(ctrl)
-    runner.add_component(heater)
-    runner.add_component(gain)
-
-    runner.add_connection("ctrl.outputs.heater_top_duty", "gain1.inputs.input")
-    runner.add_connection("gain1.outputs.output", "heater1.inputs.voltage")
-    runner.add_connection("heater1.outputs.temperature", "ctrl.inputs.thermistor_top")
-
-    return runner, ctrl, heater
-
-
-def scenario_overheat():
-    print("=" * 60)
-    print("Scenario 1: Overheat detection")
-    print("=" * 60)
-
-    runner, ctrl, heater = build_runner()
-
-    for i in range(2000):  # 20s max
-        t = i * 0.01
-        runner.step(t)
-
-        if i % 100 == 0:
-            print(
-                f"  t={t:5.2f}s  T={heater.outputs['temperature']:6.1f}C  "
-                f"duty={ctrl.outputs.get('heater_top_duty', 0):3.0f}  "
-                f"err=0x{ctrl.outputs.get('error_code', 0):02X}"
-            )
-
-        if ctrl.outputs.get("error_code") == 0xE3:
-            print(
-                f"\n  [PASS] Overheat at t={t:.2f}s, "
-                f"T={heater.outputs['temperature']:.1f}C"
-            )
-            return True
-
-    print("\n  [FAIL] Overheat not detected in 20s")
-    return False
-
-
-def scenario_door_safety():
-    print("\n" + "=" * 60)
-    print("Scenario 2: Door safety")
-    print("=" * 60)
-
-    runner, ctrl, heater = build_runner()
-
-    print("  Phase 1: run 1s (heaters on)")
-    for i in range(100):
-        runner.step(i * 0.01)
-
-    duty_before = ctrl.outputs.get("heater_top_duty", 0)
-    print(f"  After 1s: heater_top_duty={duty_before}")
-
-    if duty_before == 0:
-        print("  [FAIL] Heaters did not turn on")
-        return False
-
-    print("  Phase 2: open door, run 0.1s")
-    ctrl.inputs["door_open"] = 1
-    for i in range(10):
-        runner.step(1.0 + i * 0.01)
-
-    duty_after = ctrl.outputs.get("heater_top_duty", 0)
-    fan_after = ctrl._globals.get("fan_on", 0)
-    mag_after = ctrl._globals.get("mag_on", 0)
-
-    if duty_after == 0 and fan_after == 0 and mag_after == 0:
-        print(f"  [PASS] All actuators OFF (duty={duty_after})")
-        return True
-
-    print(
-        f"  [FAIL] Actuators not off: duty={duty_after}, "
-        f"fan={fan_after}, mag={mag_after}"
-    )
-    return False
+from python_runtime import SimulationData
+from python_runtime.components import DigitalOutput, Sum
 
 
 def main():
-    print(f"Cooking Heater Demo (Task 3-C-4)")
-    print(f"Generated module: {GENERATED}")
-    print(f"Exists: {GENERATED.is_file()}\n")
+    dt = 0.001
+    t_end = 5.0
+    sim_data = SimulationData(time_step=dt)
+    # コンポーネント辞書の定義
+    components = {
+        "digital output": DigitalOutput("digital output"),
+        "sum": Sum("sum"),
+    }
 
-    if not GENERATED.is_file():
-        print("[ERROR] Generated module not found.")
-        return 1
+    # Digital Output のパラメータ設定
+    components["digital output"].parameters["active_low"] = False
+    components["digital output"].parameters["on_current_ma"] = 20
 
-    ok1 = scenario_overheat()
-    ok2 = scenario_door_safety()
+    # Sum のパラメータ設定
+    components["sum"].parameters["input_count"] = 3
 
-    print("\n" + "=" * 60)
-    print("SUMMARY")
-    print("=" * 60)
-    print(f"  Overheat detection:  {'PASS' if ok1 else 'FAIL'}")
-    print(f"  Door safety:         {'PASS' if ok2 else 'FAIL'}")
+    # 接続リストの定義
+    connections = [
+        {"from":"digital output.outputs.current_draw","to":"sum.inputs.input_1"},
+    ]
 
-    return 0 if (ok1 and ok2) else 1
+    n_steps = int(round(t_end / dt))
+    for i in range(n_steps + 1):
+        t = i * dt
+        for comp in components.values():
+            comp.update(t, dt, sim_data)
+
+        for conn in connections:
+            src_id, src_sec, src_port = conn["from"].split(".")
+            dst_id, dst_sec, dst_port = conn["to"].split(".")
+            components[dst_id].inputs[dst_port] = components[src_id].outputs[src_port]
+
+        sim_data.logs.append({
+            "time": t,
+            "components": {cid: {"inputs": comp.inputs.copy(),
+                                 "outputs": comp.outputs.copy(),
+                                 "parameters": comp.parameters.copy()}
+                           for cid, comp in components.items()}
+        })
+
+    # シミュレーション実行後のプロット
+    plot_signals(sim_data, plot_config)
+    print("シミュレーション完了")
+
+
+# プロット設定（ベースデータ）
+# 接続情報から自動生成された信号設定
+plot_config = {
+    'signals': [
+        {'name': 'digital output_current_draw', 'component': 'digital output', 'port': 'current_draw', 'enabled': True, 'color': '#FF5733', 'line_style': '-'},
+    ],
+    'global_settings': {
+        'figure_size': (12, 8),
+        'title': 'シミュレーション信号',
+        'xlabel': '時間 (秒)',
+        'ylabel': '値',
+        'grid': True,
+        'legend_location': 'upper right',
+        'save_format': 'png',
+        'dpi': 300
+    }
+}
+
+
+# プロット関数（コード）
+def plot_signals(sim_data, plot_config):
+    """
+    設定に基づいて信号をプロットする
+
+    Parameters:
+    sim_data: SimulationData
+        シミュレーションデータオブジェクト
+    plot_config: dict
+        プロット設定
+    """
+
+    # グローバル設定の適用
+    settings = plot_config['global_settings']
+    plt.figure(figsize=settings['figure_size'])
+    plt.title(settings['title'])
+    plt.xlabel(settings['xlabel'])
+    plt.ylabel(settings['ylabel'])
+
+    if settings['grid']:
+        plt.grid(True, linestyle='--', alpha=0.7)
+
+    # 有効な信号のみをフィルタリング
+    enabled_signals = [s for s in plot_config['signals'] if s['enabled']]
+
+    # 各信号のデータを収集してプロット
+    for signal in enabled_signals:
+        comp_name = signal['component']
+        port_name = signal['port']
+
+        # 時間と値を格納するリスト
+        times = []
+        values = []
+
+        # 各時間ステップのデータを収集
+        for log in sim_data.logs:
+            time = log['time']
+            comp_data = log['components'].get(comp_name, {})
+            outputs = comp_data.get('outputs', {})
+            value = outputs.get(port_name, 0)
+
+            times.append(time)
+            values.append(value)
+
+        # データをプロット
+        if times and values:
+            color = signal.get('color', None)
+            line_style = signal.get('line_style', '-')
+
+            plt.plot(times, values, label=signal['name'], color=color, linestyle=line_style, linewidth=2)
+
+    # 凡例を追加
+    plt.legend(loc=settings['legend_location'])
+
+    # レイアウト調整
+    plt.tight_layout()
+
+    # グラフを表示
+    plt.show()
+
+    # グラフを保存
+    save_format = settings['save_format']
+    dpi = settings['dpi']
+    plt.savefig(f'simulation_signals.{save_format}', bbox_inches='tight', dpi=dpi)
+    print(f"グラフを 'simulation_signals.{save_format}' に保存しました")
+
+
+def toggle_signal(plot_config, signal_name, enabled=None):
+    """
+    信号の有効/無効を切り替える
+
+    Parameters:
+    plot_config: dict
+        プロット設定
+    signal_name: str
+        信号名
+    enabled: bool, optional
+        設定する状態（Noneの場合はトグル）
+
+    Returns:
+    bool: 新しい状態
+    """
+    for signal in plot_config['signals']:
+        if signal['name'] == signal_name:
+            if enabled is None:
+                # トグル
+                signal['enabled'] = not signal['enabled']
+            else:
+                signal['enabled'] = enabled
+
+            status = '有効' if signal['enabled'] else '無効'
+            print(f"信号 '{signal_name}' を {status} に設定しました")
+            return signal['enabled']
+
+    print(f"エラー: 信号 '{signal_name}' が見つかりませんでした")
+    return False
+
+
+def list_signals(plot_config):
+    """
+    すべての信号とその状態をリスト表示する
+
+    Parameters:
+    plot_config: dict
+        プロット設定
+    """
+    print("利用可能な信号:")
+    print("-" * 50)
+    for signal in plot_config['signals']:
+        status = "有効" if signal['enabled'] else "無効"
+        print(f"{signal['name']}: {status} (コンポーネント: {signal['component']}, ポート: {signal['port']})")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

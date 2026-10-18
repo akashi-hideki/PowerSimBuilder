@@ -35,15 +35,15 @@ namespace PowerSimBuilder
         public AddParameterForm()
         {
             InitializeComponent();
-            Text = "新規パラメータ追加";
+            Text = I18n.T("AddParameterForm.TitleNew");
             cmbType.SelectedIndex = 0; // デフォルトで最初の項目を選択
         }
 
         /// <summary>
         public AddParameterForm(ParameterDescriptor param) : this()
         {
-            Text = "パラメータ編集";
-            btnOK.Text = "更新";
+            Text = I18n.T("AddParameterForm.TitleEdit");
+            btnOK.Text = I18n.T("Common.BtnUpdate");
 
             // 既存データを設定
             txtName.Text = param.Name;
@@ -55,7 +55,7 @@ namespace PowerSimBuilder
         {
             if (string.IsNullOrWhiteSpace(txtName.Text))
             {
-                MessageBox.Show("パラメータ名は必須です");
+                MessageBox.Show(I18n.T("AddParameterForm.MsgNameRequired"));
                 this.DialogResult = DialogResult.None;
                 return;
             }
@@ -70,7 +70,7 @@ namespace PowerSimBuilder
             }
             catch (FormatException)
             {
-                MessageBox.Show("デフォルト値が型に一致しません", "エラー",
+                MessageBox.Show(I18n.T("AddParameterForm.MsgDefaultValueTypeMismatch"), I18n.T("Common.MsgTitleError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.DialogResult = DialogResult.None;
                 return;

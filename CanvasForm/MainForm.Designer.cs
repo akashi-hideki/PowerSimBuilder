@@ -93,7 +93,7 @@ namespace PowerSimBuilder
             this.saveButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(43, 28);
-            this.saveButton.Text = "保存";
+            this.saveButton.Text = I18n.T("Common.BtnSave");
             // 
             // loadButton
             // 
@@ -101,7 +101,7 @@ namespace PowerSimBuilder
             this.loadButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.loadButton.Name = "loadButton";
             this.loadButton.Size = new System.Drawing.Size(69, 28);
-            this.loadButton.Text = "読み込み";
+            this.loadButton.Text = I18n.T("Common.BtnLoad");
             // 
             // undoButton
             // 
@@ -109,7 +109,7 @@ namespace PowerSimBuilder
             this.undoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.undoButton.Name = "undoButton";
             this.undoButton.Size = new System.Drawing.Size(67, 28);
-            this.undoButton.Text = "元に戻す";
+            this.undoButton.Text = I18n.T("Common.BtnUndo");
             // 
             // redoButton
             // 
@@ -117,7 +117,7 @@ namespace PowerSimBuilder
             this.redoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.redoButton.Name = "redoButton";
             this.redoButton.Size = new System.Drawing.Size(61, 28);
-            this.redoButton.Text = "やり直し";
+            this.redoButton.Text = I18n.T("Common.BtnRedo");
             // 
             // runButton
             // 
@@ -125,7 +125,7 @@ namespace PowerSimBuilder
             this.createSimButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.createSimButton.Name = "runButton";
             this.createSimButton.Size = new System.Drawing.Size(127, 28);
-            this.createSimButton.Text = "シュミレーション生成";
+            this.createSimButton.Text = I18n.T("MainForm.BtnCreateSim");
             // 
             // arrangeButton
             // 
@@ -133,7 +133,7 @@ namespace PowerSimBuilder
             this.arrangeButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.arrangeButton.Name = "arrangeButton";
             this.arrangeButton.Size = new System.Drawing.Size(73, 28);
-            this.arrangeButton.Text = "配置整理";
+            this.arrangeButton.Text = I18n.T("MainForm.BtnArrange");
             //
             // staTableImportButton
             //
@@ -142,7 +142,7 @@ namespace PowerSimBuilder
             this.staTableImportButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.staTableImportButton.Name = "staTableImportButton";
             this.staTableImportButton.Size = new System.Drawing.Size(89, 28);
-            this.staTableImportButton.Text = "StaTable取込";
+            this.staTableImportButton.Text = I18n.T("MainForm.BtnStaTableImport");
             // 
             // splitContainer1
             // 
@@ -180,7 +180,7 @@ namespace PowerSimBuilder
             this.addButton.Name = "addButton";
             this.addButton.Size = new System.Drawing.Size(80, 27);
             this.addButton.TabIndex = 3;
-            this.addButton.Text = "追加";
+            this.addButton.Text = I18n.T("Common.BtnAdd");
             this.addButton.UseVisualStyleBackColor = true;
             // 
             // editButton
@@ -191,7 +191,7 @@ namespace PowerSimBuilder
             this.editButton.Name = "editButton";
             this.editButton.Size = new System.Drawing.Size(80, 27);
             this.editButton.TabIndex = 4;
-            this.editButton.Text = "編集";
+            this.editButton.Text = I18n.T("Common.BtnEdit");
             this.editButton.UseVisualStyleBackColor = true;
             // 
             // removePalletButton
@@ -202,7 +202,7 @@ namespace PowerSimBuilder
             this.removePalletButton.Name = "removePalletButton";
             this.removePalletButton.Size = new System.Drawing.Size(80, 27);
             this.removePalletButton.TabIndex = 5;
-            this.removePalletButton.Text = "削除";
+            this.removePalletButton.Text = I18n.T("Common.BtnDelete");
             this.removePalletButton.UseVisualStyleBackColor = true;
             // 
             // MainForm
@@ -218,7 +218,7 @@ namespace PowerSimBuilder
             this.Controls.Add(this.toolStrip1);
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "MainForm";
-            this.Text = "電力系統シミュレーションビルダー";
+            this.Text = I18n.T("MainForm.Title");
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.splitContainer1.Panel1.ResumeLayout(false);

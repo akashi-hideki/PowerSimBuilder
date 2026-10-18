@@ -68,14 +68,14 @@ namespace PowerSimBuilder
             contextMenu = new ContextMenuStrip();
 
             // メニュー項目の作成
-            menuItemForLoop = new ToolStripMenuItem("Forループを挿入");
-            menuItemWhileLoop = new ToolStripMenuItem("Whileループを挿入");
-            menuItemIfStatement = new ToolStripMenuItem("If文を挿入");
-            menuItemFunctionDef = new ToolStripMenuItem("関数定義を挿入");
-            menuItemClassDef = new ToolStripMenuItem("クラス定義を挿入");
-            menuItemImport = new ToolStripMenuItem("Import文を挿入");
-            menuItemTryCatch = new ToolStripMenuItem("Try-Catchブロックを挿入");
-            menuItemComment = new ToolStripMenuItem("コメントを挿入");
+            menuItemForLoop = new ToolStripMenuItem(I18n.T("PythonEditor.MenuInsertForLoop"));
+            menuItemWhileLoop = new ToolStripMenuItem(I18n.T("PythonEditor.MenuInsertWhileLoop"));
+            menuItemIfStatement = new ToolStripMenuItem(I18n.T("PythonEditor.MenuInsertIf"));
+            menuItemFunctionDef = new ToolStripMenuItem(I18n.T("PythonEditor.MenuInsertFunction"));
+            menuItemClassDef = new ToolStripMenuItem(I18n.T("PythonEditor.MenuInsertClass"));
+            menuItemImport = new ToolStripMenuItem(I18n.T("PythonEditor.MenuInsertImport"));
+            menuItemTryCatch = new ToolStripMenuItem(I18n.T("PythonEditor.MenuInsertTryCatch"));
+            menuItemComment = new ToolStripMenuItem(I18n.T("PythonEditor.MenuInsertComment"));
 
             // イベントハンドラーの設定
             menuItemForLoop.Click += InsertForLoop;
@@ -115,7 +115,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ファイルの読み込みに失敗しました: {ex.Message}", "エラー",
+                MessageBox.Show(I18n.T("PythonEditor.MsgLoadFail", ex.Message), I18n.T("Common.MsgTitleError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.Cancel;
                 Close();
@@ -124,13 +124,12 @@ namespace PowerSimBuilder
 
         private void UpdateTitle()
         {
-            this.Text = $"Pythonコードエディタ - {Path.GetFileName(_filePath)}" +
-                       (IsModified ? " *" : "");
+            this.Text = I18n.T("PythonEditor.TitleTemplate", Path.GetFileName(_filePath), IsModified ? " *" : "");
         }
 
         private void UpdateStatus()
         {
-            lblStatus.Text = IsModified ? "変更あり" : "変更なし";
+            lblStatus.Text = IsModified ? I18n.T("PythonEditor.LblModified") : I18n.T("PythonEditor.LblUnmodified");
         }
 
         private void textEditor_TextChanged(object sender, EventArgs e)
@@ -155,7 +154,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ファイルの保存に失敗しました: {ex.Message}", "エラー",
+                MessageBox.Show(I18n.T("PythonEditor.MsgSaveFail", ex.Message), I18n.T("Common.MsgTitleError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -164,8 +163,8 @@ namespace PowerSimBuilder
         {
             if (IsModified)
             {
-                var result = MessageBox.Show("変更内容が保存されていません。閉じますか？",
-                    "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                var result = MessageBox.Show(I18n.T("PythonEditor.MsgUnsavedClose"),
+                    I18n.T("Common.MsgTitleConfirm"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                 if (result == DialogResult.No)
                     return;
@@ -192,8 +191,8 @@ namespace PowerSimBuilder
         {
             if (IsModified)
             {
-                var result = MessageBox.Show("変更内容が失われます。よろしいですか？",
-                    "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                var result = MessageBox.Show(I18n.T("PythonEditor.MsgUnsavedDiscard"),
+                    I18n.T("Common.MsgTitleConfirm"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                 if (result == DialogResult.No)
                     return;
@@ -214,13 +213,13 @@ namespace PowerSimBuilder
                 }
                 else
                 {
-                    MessageBox.Show("フォルダが見つかりません", "エラー",
+                    MessageBox.Show(I18n.T("PythonEditor.MsgFolderNotFound"), I18n.T("Common.MsgTitleError"),
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"フォルダを開けませんでした: {ex.Message}", "エラー",
+                MessageBox.Show(I18n.T("PythonEditor.MsgFolderOpenFail", ex.Message), I18n.T("Common.MsgTitleError"),
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -234,18 +233,16 @@ namespace PowerSimBuilder
             // Python実行環境が設定されていない場合はメッセージを表示
             if (_executor == null)
             {
-                MessageBox.Show("Python実行環境が設定されていません。\n\n" +
-                               "ExecutorプロパティにPythonExecutorインスタンスを設定してください。\n" +
-                               "例: editor.Executor = new PythonExecutor();",
-                    "実行エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(I18n.T("PythonEditor.MsgNoExecutorDetail"),
+                    I18n.T("PythonEditor.MsgExecError"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
             // 変更があれば一時ファイルに保存して実行
             if (IsModified)
             {
-                var result = MessageBox.Show("変更されたコードを一時ファイルに保存して実行しますか？",
-                    "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                var result = MessageBox.Show(I18n.T("PythonEditor.MsgSaveTempBeforeRun"),
+                    I18n.T("Common.MsgTitleConfirm"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                 if (result == DialogResult.No)
                     return false;
@@ -262,7 +259,7 @@ namespace PowerSimBuilder
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"一時ファイルの作成に失敗しました: {ex.Message}", "エラー",
+                    MessageBox.Show(I18n.T("PythonEditor.MsgTempFail", ex.Message), I18n.T("Common.MsgTitleError"),
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }

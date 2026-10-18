@@ -37,13 +37,13 @@ namespace PowerSimBuilder
         private void InitializeForm()
         {
             // 基本レイアウト設定
-            this.Text = "接続詳細設定";
+            this.Text = I18n.T("ConnectionEditorForm.Title");
             this.Size = new Size(400, 250);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.StartPosition = FormStartPosition.CenterParent;
 
             // ソースコンポーネント名
-            var lblSourceComp = new Label { Text = "ソース:", Location = new Point(20, 20) };
+            var lblSourceComp = new Label { Text = I18n.T("ConnectionEditorForm.LblSource"), Location = new Point(20, 20) };
             var txtSourceComp = new TextBox
             {
                 Text = _source.InstanceName,
@@ -53,7 +53,7 @@ namespace PowerSimBuilder
             };
 
             // ソースポート
-            var lblSourcePort = new Label { Text = "ソースポート:", Location = new Point(20, 50) };
+            var lblSourcePort = new Label { Text = I18n.T("ConnectionEditorForm.LblSourcePort"), Location = new Point(20, 50) };
             var cmbSourcePort = new ComboBox { Location = new Point(100, 50), Width = 200 };
 
             if (_source.Descriptor.OutputPorts != null)
@@ -62,7 +62,7 @@ namespace PowerSimBuilder
             }
 
             // ターゲットコンポーネント名
-            var lblTargetComp = new Label { Text = "ターゲット:", Location = new Point(20, 80) };
+            var lblTargetComp = new Label { Text = I18n.T("ConnectionEditorForm.LblTarget"), Location = new Point(20, 80) };
             var txtTargetComp = new TextBox
             {
                 Text = _target.InstanceName,
@@ -72,7 +72,7 @@ namespace PowerSimBuilder
             };
 
             // ターゲットポート
-            var lblTargetPort = new Label { Text = "ターゲットポート:", Location = new Point(20, 110) };
+            var lblTargetPort = new Label { Text = I18n.T("ConnectionEditorForm.LblTargetPort"), Location = new Point(20, 110) };
             var cmbTargetPort = new ComboBox { Location = new Point(100, 110), Width = 200 };
 
             if (_target.Descriptor.InputPorts != null)
@@ -81,7 +81,7 @@ namespace PowerSimBuilder
             }
 
             // データタイプ
-            var lblDataType = new Label { Text = "データタイプ:", Location = new Point(20, 140) };
+            var lblDataType = new Label { Text = I18n.T("ConnectionEditorForm.LblDataType"), Location = new Point(20, 140) };
             var cmbDataType = new ComboBox { Location = new Point(100, 140), Width = 200 };
             cmbDataType.Items.AddRange(new[] { "double", "vector2", "vector3", "complex" });
 
@@ -102,7 +102,7 @@ namespace PowerSimBuilder
 
             // OK/キャンセルボタン
             var btnOK = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(120, 180) };
-            var btnCancel = new Button { Text = "キャンセル", DialogResult = DialogResult.Cancel, Location = new Point(220, 180) };
+            var btnCancel = new Button { Text = I18n.T("Common.BtnCancel"), DialogResult = DialogResult.Cancel, Location = new Point(220, 180) };
 
             // コントロール追加
             this.Controls.AddRange(new Control[] {
@@ -119,7 +119,7 @@ namespace PowerSimBuilder
             {
                 if (cmbSourcePort.SelectedItem == null || cmbTargetPort.SelectedItem == null)
                 {
-                    MessageBox.Show("ソースポートとターゲットポートを選択してください");
+                    MessageBox.Show(I18n.T("ConnectionEditorForm.MsgPortsRequired"));
                     this.DialogResult = DialogResult.None;
                     return;
                 }
