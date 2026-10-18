@@ -2215,7 +2215,7 @@ Select-String -Path CanvasForm\MainForm.cs -Pattern "createSimButton_Click|ShowD
 | # | 制約 | 対応 |
 |:---:|---|---|
 | 1 | plt.show() ウィンドウが GUI で非表示 | UX 改善 Issue |
-| 2 | 完了時に PNG 自動オープンなし | feat(executor): auto-open simulation_signals.png |
+| 2 | 完了時に PNG 自動オープンなし | **不要**（ユーザー判断、手動で開く） |
 | 3 | 連打ガード / 閉じ忘れ復帰の手動テスト未実施 | test(executor): manual scenarios |
 
 ### 本セッションの教訓
@@ -2240,7 +2240,6 @@ HANDOFF_STATABLE.md の ## 85 を読んで、
 - .NET 10 LTS 移行完了
 
 次タスク候補:
-- v0.6.1: auto-open simulation_signals.png on completion
 - v0.6.1: manual test scenarios for HasExited guard
 - v0.7.0: i18n (EN/JA/ZH)
 ```
@@ -2254,4 +2253,8 @@ git status --porcelain=v1
 dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build
 ```
 
+
+### 補足（同日追記）
+
+PNG auto-open は不要と判断（ユーザー）。simulation_signals.png は手動で開く運用。
 **End of Session (2026-10-18)**
