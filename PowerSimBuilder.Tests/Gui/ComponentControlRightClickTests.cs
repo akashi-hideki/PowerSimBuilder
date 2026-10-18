@@ -35,6 +35,20 @@ namespace PowerSimBuilder.Tests.Gui
             m.Invoke(c, new object[] { new MouseEventArgs(b, 1, x, y, 0) });
         }
 
+        public static void RaiseMouseMove(Control c, MouseButtons b, int x, int y)
+        {
+            var m = typeof(Control).GetMethod("OnMouseMove",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            m.Invoke(c, new object[] { new MouseEventArgs(b, 0, x, y, 0) });
+        }
+
+        public static void RaiseMouseUp(Control c, MouseButtons b, int x, int y)
+        {
+            var m = typeof(Control).GetMethod("OnMouseUp",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            m.Invoke(c, new object[] { new MouseEventArgs(b, 1, x, y, 0) });
+        }
+
         public static object GetField(object o, string name)
         {
             var f = o.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
