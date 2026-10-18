@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-18
+
+### Fixed
+
+- **Canvas context menu Delete mis-target** (`ComponentControl`, `DesignCanvas`)
+  - Right-click over a port now sets selection so the context menu targets the clicked component
+  - Right-click no longer starts a wire drag (S3)
+  - Pending `_currentConnection` cleared on right-click / empty-canvas click
+  - Temporary dashed line no longer persists after cancel
+
+
 ## [0.7.0] - 2026-10-18
 
 ### Added
@@ -420,7 +431,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.1...v0.5.2

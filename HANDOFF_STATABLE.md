@@ -2424,3 +2424,63 @@ HANDOFF_STATABLE.md の ## 87 を読んで、
 ```
 
 **End of i18n Phase 1 + v0.7.0**
+
+---
+
+# v0.7.1 リリース完了（2026-10-18 追記）
+
+**HEAD:** 78c9de0 (origin/main), tag: v0.7.1
+
+## 88. 本セッション完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | Canvas 右クリック修正 | `78c9de0` | context menu 誤削除 + S3 + 点線残留 |
+| 2 | v0.7.1 リリース | (release commit) | patch リリース |
+
+### 修正内容（2 ファイル、18 行追加）
+
+- `CanvasForm/ComponentControl.cs`: 右クリック時に `IsSelected = true` を必ず実行（Fix 1）
+- `CanvasForm/DesignCanvas.cs`:
+  - `ComponentControl_MouseDown` 先頭で非左クリックを早期 return + `_currentConnection = null` + `Invalidate()`
+  - `HandleMouseDown` 冒頭で `_currentConnection = null`（保留接続のキャンセル）
+
+### 解消した症状
+
+| # | 症状 | 原因 |
+|:---:|---|---|
+| 症状 1 | 1 個残で Delete メニュー非表示 | ポート上右クリックで `IsSelected` スキップ → `SelectedComponent` null |
+| 症状 2 | ControllerBox 削除で別のが消える | 同上 + ControllerBox は 24 ポートで再現率高 |
+| S3 | 右クリックで接続線ドラッグ開始 | `DesignCanvas` 側の `CheckPortClick` 経路が未対策 |
+| 点線残留 | 未確定接続線が残る | `_currentConnection` が右クリック/空白クリックで未クリア |
+
+### 検証
+
+| スコープ | 結果 |
+|---|---|
+| C# テスト | 227 pass / 0 fail |
+| ビルド | 0 warnings / 0 errors（GUI 停止後） |
+| C# CI (`ci.yml`) | green (run 39093651795) |
+| GUI 手動 | 症状 1/2/S3/点線 すべて解消 |
+| pre-push hook | pytest Passed |
+
+### 本セッションの教訓（PowerShell、追記）
+
+| 罠 | 対処 |
+|---|---|
+| `Get-ChildItem -LiteralPath` はワイルドカード非対応 | ワイルドカード展開は `-Path` |
+| 対話貼り付けでは `throw` の後も次行実行 | 早期中止は `if/else` チェーン |
+| `$lines -join $nl` で二重改行混入 | `+` 連結子で 1 本に組む |
+| `` `r`n `` リテラルも貼り付け崩れ | `[string][char]13 + [string][char]10` |
+| GUI 起動中の `dotnet build` → MSB3026（EXE ロック） | ビルド前に `Get-Process PowerSimBuilder \| Stop-Process -Force` |
+| 警告付きビルドは DLL のみ更新で EXE は古いまま | GUI 手動テストは警告 0 を確認してから |
+
+### 次セッションの候補
+
+| # | タスク | 優先度 |
+|:---:|---|:---:|
+| B | Fix 3（前選択解除）/ Fix 4（空白クリック選択解除） | 🟢 |
+| C | `ComponentControlTests.cs` 右クリック単体テスト | 🟡 |
+| D | 中国語対応（v0.8.0、ペンディング解除時） | 🟡 |
+
+**End of v0.7.1**

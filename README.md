@@ -33,6 +33,12 @@ StaTable alone answers **"does it compile?"**. PowerSimBuilder answers
 
 ---
 
+## What's New in v0.7.1
+
+- **Canvas right-click fix**: context menu Delete now targets the clicked component even over a port; right-click no longer starts a wire drag; pending dashed line is cancelled on right-click / empty-canvas click
+- **i18n Phase 1** (v0.7.0): English-only UI via `I18n.T("key")` + `Resources/i18n/en.json` (178 keys); `zh.json` slot reserved for future
+- **.NET 10 LTS migration** (v0.6.0): from .NET Framework 4.7.2; SDK-style csproj; CI on `actions/setup-dotnet@v4`
+
 ## What's New in v0.6.0
 
 ### Build system

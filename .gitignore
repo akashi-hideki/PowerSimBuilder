@@ -205,3 +205,4 @@ generated/demo_dbg_*.txt
 generated/out.txt
 generated/err.txt
 executor_trace.log
+*.bak.*
