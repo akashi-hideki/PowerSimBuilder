@@ -10,7 +10,7 @@ from typing import Any
 _SECTIONS = ("inputs", "outputs", "parameters")
 
 # ---------------------------------------------------------------------------
-# Japanese font configuration
+# CJK font configuration (Japanese + Simplified Chinese)
 # ---------------------------------------------------------------------------
 
 _FONT_CONFIGURED = False
@@ -47,21 +47,33 @@ def configure_japanese_font() -> str:
     from matplotlib import font_manager
 
     candidates: list[str] = []
-    user_font = os.environ.get("PSB_JP_FONT")
+    # PSB_CJK_FONT is the preferred override; PSB_JP_FONT kept for backward
+    # compatibility (both are checked).
+    user_font = os.environ.get("PSB_CJK_FONT") or os.environ.get("PSB_JP_FONT")
     if user_font:
         candidates.append(user_font)
 
     candidates.extend(
         [
+            # Japanese Windows (existing behavior: picked first on JP OS)
             "Yu Gothic",  # Windows 8.1+
             "Meiryo",  # Windows Vista+
-            "MS Gothic",  # Windows (legacy)
-            "Hiragino Sans",  # macOS
+            # Simplified Chinese Windows
+            "Microsoft YaHei",  # Windows (Simplified Chinese)
+            "Microsoft YaHei UI",  # Windows (Simplified Chinese variant)
+            # Legacy / fallback CJK fonts on Windows
+            "MS Gothic",  # Windows (legacy Japanese)
+            "SimHei",  # Windows (Simplified Chinese fallback)
+            "SimSun",  # Windows (Simplified Chinese fallback)
+            # macOS
+            "Hiragino Sans",
             "Hiragino Kaku Gothic ProN",  # macOS (older)
-            "Noto Sans CJK JP",  # Linux
-            "Noto Sans JP",  # Linux
+            # Linux
+            "Noto Sans CJK JP",
+            "Noto Sans CJK SC",  # Simplified Chinese
+            "Noto Sans JP",
             "IPAGothic",  # Debian/Ubuntu
-            "TakaoGothic",  # Linux
+            "TakaoGothic",
         ]
     )
 
@@ -69,7 +81,21 @@ def configure_japanese_font() -> str:
     chosen = next((n for n in candidates if n in available), None)
 
     if chosen is not None:
-        matplotlib.rcParams["font.family"] = chosen
+        # Use a fallback chain so mixed-language labels render correctly.
+        # Example: a Japanese OS picks "Yu Gothic" first, but a Chinese
+        # label like 电力系统 would be a tofu box because Yu Gothic lacks
+        # Simplified Chinese glyphs. Listing every available CJK font in
+        # font.sans-serif lets matplotlib fall back per-glyph.
+        fallback_chain = [chosen] + [
+            name for name in candidates if name != chosen and name in available
+        ]
+        # matplotlib 3.6+ enables per-glyph fallback only when font.family
+        # is a list of concrete font names. Setting it to "sans-serif"
+        # makes prop.get_family() return ["sans-serif"], which short-circuits
+        # the fallback chain and leaves CJK glyphs as tofu boxes. Assigning
+        # the list directly fixes the issue.
+        matplotlib.rcParams["font.family"] = fallback_chain
+        matplotlib.rcParams["font.sans-serif"] = fallback_chain
     # Always allow minus sign rendering with CJK fonts
     matplotlib.rcParams["axes.unicode_minus"] = False
 
