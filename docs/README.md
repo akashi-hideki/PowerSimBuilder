@@ -1,18 +1,11 @@
-# Documentation Index
+# PowerSimBuilder Documentation
 
-- [Python Runtime overview](python_runtime.md)
-- [API reference](python_runtime_api.md)
-- [Scenarios and hand-verification](python_runtime_scenarios.md)
-- [Architecture](python_runtime_architecture.md)
-- [Handoff notes](HANDOFF.md)
-- [Specifications](specs/)
+Index of documents under `docs/`.
 
-## Python runtime at a glance
+| Document | Description |
+|---|---|
+| [QUICKSTART.md](QUICKSTART.md) | First-project walkthrough |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Internal design (Canvas / generators / runtime) |
+| [PUBLICATION_AUDIT.md](PUBLICATION_AUDIT.md) | Release readiness + 4-week roadmap |
 
-| Item | Value |
-|------|-------|
-| Components | 8 (4 I/O + 4 logic) |
-| Tests | 83 |
-| Coverage | 96% |
-| Dependencies | numpy, matplotlib (optional for I/O) |
-| Python | >= 3.10 |
+> Main project README: [../README.md](../README.md)
