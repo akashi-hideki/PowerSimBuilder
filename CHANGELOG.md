@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.7.2] - 2026-10-18
+
+### Fixed
+
+- **Canvas selection consistency** (`CanvasForm/DesignCanvas.cs`)
+  - Empty-canvas click now clears `SelectedComponent` and `IsSelected` (HANDOFF `S2`, Fix 4)
+  - Selecting a new component now unselects the previous one (HANDOFF `S1`, Fix 3)
+
+### Added (test infrastructure)
+
+- `PowerSimBuilder.Tests/Gui/` (19 headless WinForms tests, xUnit)
+  - `ComponentControlRightClickTests` (5 tests, v0.7.1 regression guard)
+  - `DesignCanvasRightClickTests` (5 tests, v0.7.1 regression guard)
+  - `DesignCanvasDeleteTests` (9 tests: selection / delete / cascade)
+- `xunit.runner.json` with `parallelizeTestCollections: false`
+  (WinForms `KeysConverter` static dictionary is not thread-safe)
 
 ## [0.7.1] - 2026-10-18
 
@@ -431,7 +448,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.2...v0.6.0

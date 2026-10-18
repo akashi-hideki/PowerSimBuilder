@@ -425,6 +425,13 @@ namespace PowerSimBuilder
 
             ConnectionSelected?.Invoke(this, new ConnectionEventArgs(null));
             DeselectAllConnections();
+
+            // FIX 4: clear component selection on empty-canvas click
+            if (SelectedComponent != null)
+            {
+                SelectedComponent.IsSelected = false;
+                SelectedComponent = null;
+            }
             Invalidate();
         }
 
@@ -481,6 +488,11 @@ namespace PowerSimBuilder
         private void HandleComponentSelectedChanged(object sender)
         {
             var component = (ComponentControl)sender;
+            // FIX 3: unselect previous component before assigning new one
+            if (SelectedComponent != null && SelectedComponent != component)
+            {
+                SelectedComponent.IsSelected = false;
+            }
             SelectedComponent = component;
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             ComponentSelected?.Invoke(this, new ComponentEventArgs(component));
