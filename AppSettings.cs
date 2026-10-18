@@ -56,8 +56,10 @@ namespace PowerSimBuilder
             try
             {
                 var two = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+                // Only languages with a bundled i18n file are returned here.
+                // Japanese is intentionally not returned: the English-only UI
+                // policy means "ja" would result in an empty string table.
                 if (two == "zh") return "zh";
-                if (two == "ja") return "ja";
                 return "en";
             }
             catch

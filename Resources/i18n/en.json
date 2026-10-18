@@ -144,6 +144,7 @@
   "ParametersEditorForm.ColName": "Parameter Name",
   "ParametersEditorForm.ColType": "Type",
   "ParametersEditorForm.ColValue": "Value",
+  "ParametersEditorForm.ParameterTypesAutoDetected": "Parameter types are auto-detected (number / boolean / string)",
   "ParametersEditorForm.MsgNoParams": "This component has no editable parameters.",
   "ParametersEditorForm.BtnCancel": "Cancel",
   "ParametersEditorForm.BtnReset": "Reset to Defaults",
@@ -179,5 +180,12 @@
   "PythonSimulationMainBuilder.ErrConnection": "An error occurred while processing a connection: {0}",
   "PythonSimulationMainBuilder.ErrFileWrite": "An error occurred during file write: {0}",
   "PythonSimulationMainBuilder.ErrSectionAccess": "Section '{0}' not found.",
-  "PythonSimulationMainBuilder.ErrUnknown": "An unknown error occurred."
+  "PythonSimulationMainBuilder.ErrUnknown": "An unknown error occurred.",
+  "I18n.LangMenu": "Language",
+  "I18n.LangEnglish": "English",
+  "I18n.LangChinese": "简体中文",
+  "I18n.BtnRestart": "Restart",
+  "I18n.MsgRestartWithUnsaved": "There are unsaved changes. Restarting will discard them. Continue?",
+  "I18n.MsgRestartToApply": "Language changed. Please restart PowerSimBuilder to apply.",
+  "I18n.MsgRestartTitle": "Restart Required"
 }

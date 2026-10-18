@@ -28,7 +28,127 @@ namespace PowerSimBuilder
         public MainForm()
         {
             InitializeComponent();
+            SetupLanguageMenu();
         }
+        /// <summary>
+        /// Adds the language selector to the toolbar.
+        /// Changing the language writes settings.json and asks the user to
+        /// restart (real-time refresh is out of scope; matches StaTable).
+        /// </summary>
+        private void SetupLanguageMenu()
+        {
+            if (toolStrip1 == null) return;
+
+            var langMenu = new ToolStripDropDownButton
+            {
+                Name = "languageButton",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Text = I18n.T("I18n.LangMenu"),
+                ToolTipText = "Language / 语言"
+            };
+
+            var enItem = new ToolStripMenuItem(I18n.T("I18n.LangEnglish"))
+            {
+                Checked = I18n.CurrentLanguage == "en"
+            };
+            enItem.Click += (s, e) => OnChangeLanguage("en");
+            langMenu.DropDownItems.Add(enItem);
+
+            var zhItem = new ToolStripMenuItem(I18n.T("I18n.LangChinese"))
+            {
+                Checked = I18n.CurrentLanguage == "zh"
+            };
+            zhItem.Click += (s, e) => OnChangeLanguage("zh");
+            langMenu.DropDownItems.Add(zhItem);
+
+            toolStrip1.Items.Add(langMenu);
+        }
+
+        /// <summary>
+        /// Shows a small modal dialog with "Restart" and "Cancel" buttons.
+        /// MessageBox cannot rename its OK button, so we build a tiny Form.
+        /// </summary>
+        private bool ShowRestartConfirmDialog()
+        {
+            using var form = new Form
+            {
+                Text = I18n.T("I18n.MsgRestartTitle"),
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                StartPosition = FormStartPosition.CenterParent,
+                MinimizeBox = false,
+                MaximizeBox = false,
+                ShowInTaskbar = false,
+                ClientSize = new Size(440, 170),
+                Font = this.Font,
+                AutoScaleMode = AutoScaleMode.Font
+            };
+
+            var label = new Label
+            {
+                Text = I18n.T("I18n.MsgRestartToApply"),
+                AutoSize = false,
+                Dock = DockStyle.Fill,
+                Padding = new Padding(12),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            var btnRestart = new Button
+            {
+                Text = I18n.T("I18n.BtnRestart"),
+                DialogResult = DialogResult.OK,
+                Size = new Size(110, 30),
+                Margin = new Padding(6)
+            };
+
+            var btnCancel = new Button
+            {
+                Text = I18n.T("Common.BtnCancel"),
+                DialogResult = DialogResult.Cancel,
+                Size = new Size(110, 30),
+                Margin = new Padding(6)
+            };
+
+            var buttonPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Bottom,
+                FlowDirection = FlowDirection.RightToLeft,
+                Height = 50,
+                Padding = new Padding(8)
+            };
+            buttonPanel.Controls.Add(btnCancel);
+            buttonPanel.Controls.Add(btnRestart);
+
+            form.Controls.Add(label);
+            form.Controls.Add(buttonPanel);
+            form.AcceptButton = btnRestart;
+            form.CancelButton = btnCancel;
+
+            return form.ShowDialog(this) == DialogResult.OK;
+        }
+
+        private void OnChangeLanguage(string lang)
+        {
+            if (I18n.CurrentLanguage == lang) return;
+
+            if (_canvasManager != null && _canvasManager.IsModified)
+            {
+                var warn = MessageBox.Show(
+                    I18n.T("I18n.MsgRestartWithUnsaved"),
+                    I18n.T("I18n.MsgRestartTitle"),
+                    MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Warning);
+                if (warn != DialogResult.OK) return;
+            }
+
+            if (ShowRestartConfirmDialog())
+            {
+                AppSettings.Language = lang;
+                AppSettings.Save();
+                Application.Restart();
+                Environment.Exit(0);
+            }
+        }
+
         /// <summary>
         /// Load Event Override
         /// </summary>

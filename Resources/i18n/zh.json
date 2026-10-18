@@ -183,6 +183,8 @@
   "I18n.LangMenu": "语言",
   "I18n.LangEnglish": "English",
   "I18n.LangChinese": "简体中文",
+  "I18n.BtnRestart": "重新启动",
+  "I18n.MsgRestartWithUnsaved": "有未保存的更改。重新启动将丢弃这些更改。是否继续？",
   "I18n.MsgRestartToApply": "语言已更改。请重启 PowerSimBuilder 以应用更改。",
   "I18n.MsgRestartTitle": "需要重启"
 }

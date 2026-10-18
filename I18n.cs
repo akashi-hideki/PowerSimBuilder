@@ -48,6 +48,14 @@ namespace PowerSimBuilder
             if (string.IsNullOrWhiteSpace(lang)) lang = DefaultLanguage;
             _currentLanguage = lang;
             LoadLanguage(lang);
+
+            // Fallback: if the requested language has no embedded resource
+            // (or it failed to parse), fall back to the default language.
+            if (_strings.Count == 0 && lang != DefaultLanguage)
+            {
+                _currentLanguage = DefaultLanguage;
+                LoadLanguage(DefaultLanguage);
+            }
         }
 
         public static void Initialize()

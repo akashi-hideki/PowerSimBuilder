@@ -46,11 +46,19 @@ namespace PowerSimBuilder.Tests.Gui
         [Fact]
         public void I18n_EnAndZh_AreDistinct()
         {
-            I18n.SetLanguage("en");
-            var enOk = I18n.T("Common.BtnOK");
-            I18n.SetLanguage("zh");
-            var zhOk = I18n.T("Common.BtnOK");
-            Assert.NotEqual(enOk, zhOk);
+            var original = I18n.CurrentLanguage;
+            try
+            {
+                I18n.SetLanguage("en");
+                var enOk = I18n.T("Common.BtnOK");
+                I18n.SetLanguage("zh");
+                var zhOk = I18n.T("Common.BtnOK");
+                Assert.NotEqual(enOk, zhOk);
+            }
+            finally
+            {
+                I18n.SetLanguage(original);
+            }
         }
     }
 }
