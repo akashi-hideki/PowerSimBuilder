@@ -2484,3 +2484,100 @@ HANDOFF_STATABLE.md の ## 87 を読んで、
 | D | 中国語対応（v0.8.0、ペンディング解除時） | 🟡 |
 
 **End of v0.7.1**
+---
+
+# セッション末ハンドオーバー（2026-10-18 第 9 セッション）
+
+**HEAD:** `b99aaad` (origin/main, tag: v0.7.1)
+**次セッションの起点:** `b99aaad`
+
+> **次セッションは ## 89 と ## 88（v0.7.1 リリース）を読めば完全なコンテキストを得られる。**
+
+## 89. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | Canvas 右クリック修正 | `78c9de0` | context menu 誤削除 + S3 + 点線残留（## 88 参照） |
+| 2 | v0.7.1 リリース | `eebfad3` | patch リリース + tag |
+| 3 | `.gitignore` 修正 | `b99aaad` | `*.bak.*` -> `*.bak*`（`.bak.` と `.bak_` 両対応） |
+| 4 | バックアップ整理 | （作業のみ） | 未追跡ファイル 143 件削除 |
+
+### バックアップ整理の詳細
+
+| カテゴリ | 件数 | 内容 |
+|:---:|---:|---|
+| `*.bak*`（旧形式 .bak_ / 新形式 .bak.） | 104 | 全削除 |
+| Timestamp dirs（`_backup_*` / `_e2e_*` / `_diag_*` 等） | 28 | 全削除 |
+| Root temp files（`.coverage` / `debug.log` / `simulation_signals.png` / `testdata.*` / `system.json` 等） | 9 | 全削除 |
+| Legacy dirs（`spec/` / `Pallets/`） | 2 | 全削除 |
+| **合計** | **143** | |
+
+全て UNTRACKED だったため Git 履歴への影響なし。`git status` clean 維持。
+
+### 残存タスク（別セッション）
+
+| # | タスク | 理由 |
+|:---:|---|---|
+| 1 | `git rm --cached pythonlib previou_files` | `.gitignore` 済みだが tracked のまま（5 + 11 件）。旧 Python ランタイムの整理 |
+| 2 | `MD/` / `parts/` / `templates/` / `examples/` / `tools/` | 追跡下、履歴の一部。保持継続 |
+
+### 次セッションの主目的
+
+**GUI バグ抽出（体系的探索テスト）** — 重要タスクは無し。ユーザー判断で着手。
+
+理由:
+- 今回の v0.7.1 修正はユーザー報告起点だった。体系的に洗い出せば同種バグを先回りできる
+- 右クリック修正で触れた `ComponentControl` / `DesignCanvas` の Mouse 系は回帰リスクあり
+- Fix 3/4（選択状態の整合性）は探索中に自然に確認できる
+- i18n Phase 1 完了直後で、英語 UI の文言・レイアウト確認にも有効
+
+### 次セッションのチェックリスト
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3        # b99aaad が HEAD
+git status --porcelain=v1              # clean
+dotnet build PowerSimBuilder.sln       # 0 warnings / 0 errors（GUI 停止後）
+dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build   # 227 pass
+python -m pytest tests/python -q       # 387+ pass
+```
+
+### GUI バグ抽出の観点（提案）
+
+| カテゴリ | 観点 |
+|---|---|
+| 選択 | 左/右クリック、Ctrl+クリック、空白クリック、前選択解除、複数選択 |
+| 削除 | Delete キー、コンテキストメニュー、最後の 1 個、ControllerBox、接続線 |
+| 接続 | ポート→ポート、途中キャンセル、重複、自己接続、右クリックキャンセル |
+| ドラッグ | コンポーネント移動、キャンバス外、スナップ、Undo/Redo |
+| コンテキストメニュー | 各項目の動作、表示条件、対象の一致 |
+| キーボード | Delete、Ctrl+Z/Y/S、Escape |
+| 保存/読込 | 新規、上書き、名前を付けて保存、不正パス、破損 JSON |
+| i18n | 全フォーム表示、長い文言、missing key ログ |
+| エラー処理 | 不正入力、ファイルロック、実行時例外 |
+
+### 次セッション開始プロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 89 を読んで、GUI バグ抽出に着手してください。
+
+現状:
+- HEAD: b99aaad (origin/main, tag: v0.7.1)
+- 227 C# tests pass / CI green
+- バックアップ整理完了（143 件削除、git status clean）
+
+次セッションの主目的: GUI バグ抽出（体系的探索テスト）
+まず tmp/GUI_BUG_HUNT.md（チェックリスト）と tmp/GUI_BUGS.md（記録）を作成し、
+探索を開始してください。
+```
+
+### 本セッションの教訓（PowerShell、追記）
+
+| 罠 | 対処 |
+|---|---|
+| `git ls-files --error-unmatch` は未追跡で stderr 出力 + 非ゼロ exit | ループ内で使うと例外扱いされる。`git ls-files -- <path>` の出力有無で判定 |
+| `.gitignore` の `*.bak.*` は `.bak_` にマッチしない | `*.bak*` に広げる |
+| 104 件の `.bak_*` が既存 ignore パターンから漏れていた | パターン設計時は実ファイル名を確認 |
+
+**End of Session (2026-10-18 第 9 セッション)**
