@@ -2163,3 +2163,95 @@ Select-String -Path CanvasForm\MainForm.cs -Pattern "createSimButton_Click|ShowD
 - feature ブランチ push では CI 走らない -> PR 作成が必要
 
 **End of Session (2026-10-18)**
+
+---
+
+# v0.6.0 リリース完了（2026-10-18 第 8 セッション）
+
+**HEAD:** `5d7d8bd` (origin/main, tag: v0.6.0)
+**次セッションの起点:** `5d7d8bd`
+
+## 85. v0.6.0 リリース完了
+
+### 完了したマイルストーン
+
+| # | 内容 | コミット |
+|:---:|---|---|
+| 1 | .NET Framework 4.7.2 -> .NET 10 LTS 移行 | `45ae2ca` |
+| 2 | L1: ControllerBox 明示ポート | `84f776d` |
+| 3 | L2: generated_path 自動修復 | `81701dd` |
+| 4 | HANDOFF ## 81-84 | `d8277bf` |
+| 5 | PythonEditorForm 二重購読削除 | `34c16f4` |
+| 6 | PythonExecutor HasExited ガード | `1bfcde9` |
+| 7 | PR #1 マージ | `d9aac8d` |
+| 8 | .gitignore 整理 | `e23c49d` |
+| 9 | README 刷新 + QUICKSTART + ARCHITECTURE | `7cdc4d0` |
+| 10 | **v0.6.0 リリース** | `5d7d8bd` (tag: v0.6.0) |
+
+### RC テスト結果（main 上で実施）
+
+| スコープ | 結果 |
+|---|---|
+| build | 0 warnings / 0 errors |
+| test | 227 pass / 0 fail |
+| CLI simulation | exit 0 + simulation_signals.png (103 KB) |
+| GUI simulation | 単一実行 + 完了ダイアログ |
+| auto_events="demo_oven" | 動作 |
+| TraceRun 削除 | executor_trace.log 出力なし |
+
+### 解決した主要バグ
+
+| バグ | 修正 |
+|---|---|
+| `generated_path` 汚染（demo_main.py 自己参照） | JSON 修正 + L2 |
+| `KeyError: heater_top_on` | L1（output_globals 明示） |
+| `btnRun.Click` 二重購読（1 クリック 2 回実行） | コンストラクタ += 削除 |
+| `_isRunning` フラグ固着 | HasExited ベース判定 |
+| `plt.show()` GUI 非表示 | 仕様（PNG で確認） |
+| auto_events 未設定 | ラッパー実装判明 → 有効化 |
+
+### 既知の制約（v0.6.x / v0.7 で対応）
+
+| # | 制約 | 対応 |
+|:---:|---|---|
+| 1 | plt.show() ウィンドウが GUI で非表示 | UX 改善 Issue |
+| 2 | 完了時に PNG 自動オープンなし | feat(executor): auto-open simulation_signals.png |
+| 3 | 連打ガード / 閉じ忘れ復帰の手動テスト未実施 | test(executor): manual scenarios |
+
+### 本セッションの教訓
+
+- `.Designer.cs` + `.cs` の `+=` 二重購読は 1 クリック 2 回発火の典型
+- `_isRunning` bool フラグは固着しやすい -> `Process.HasExited` が安全
+- `[System.IO.File]::ReadAllText(相対パス)` は CWD 非依存 -> 絶対パス必須
+- `plt.show()` + `CreateNoWindow=true` は GUI ウィンドウ非表示（仕様）
+- `auto_events` はラッパー `controller_box.py` で消費される
+- pre-commit `trailing-whitespace` は README で頻発 -> `git add -A` + 再コミット
+
+### 次セッション開始時のプロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 85 を読んで、
+次タスクに着手してください。
+
+現状:
+- HEAD: 5d7d8bd (origin/main, tag: v0.6.0)
+- 227 C# tests pass / CI green
+- .NET 10 LTS 移行完了
+
+次タスク候補:
+- v0.6.1: auto-open simulation_signals.png on completion
+- v0.6.1: manual test scenarios for HasExited guard
+- v0.7.0: i18n (EN/JA/ZH)
+```
+
+### 次セッション開始前チェックリスト
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3
+git status --porcelain=v1
+dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build
+```
+
+**End of Session (2026-10-18)**
