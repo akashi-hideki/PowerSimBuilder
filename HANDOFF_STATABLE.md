@@ -3129,3 +3129,119 @@ HANDOFF_STATABLE.md の ## 94 を読んで、次タスクに着手してくだ�
 | `gh release create` を直接呼ぶと stderr がエラー扱い | `cmd /c "gh release create ... 2>&1"` で吸収 |
 
 **End of A-2 + v1.0.0 公開可能**
+---
+
+# v0.9.0 リリース完了 + 中国語対応（2026-10-18 第 15 セッション）
+
+**HEAD:** `f3b3c2c` (origin/main, tag: v0.9.0)
+**次セッションの起点:** `f3b3c2c`
+
+> **次セッションは ## 95 と ## 94 を読めば完全なコンテキストを得られる。**
+
+## 95. 本セッションの完了タスク（Simplified Chinese UI + CJK フォント）
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | Phase 1a: zh.json + AppSettings + Program.cs | `6d86457` | 188 キー翻訳、%APPDATA% 永続化 |
+| 2 | Phase 1b: ツールバー言語メニュー | `cc38204` | Language dropdown + Restart ダイアログ |
+| 3 | Phase 1c: CJK フォント fallback | `fac1476` | matplotlib per-glyph fallback |
+| 4 | v0.9.0 リリース | `f3b3c2c` | tag + GitHub Release（Latest） |
+
+### 中国語対応の設計
+
+| 項目 | 決定 |
+|---|---|
+| 言語コード | `zh`（簡体字） |
+| デフォルト | `en`（中国語 OS のみ `zh` 自動検出） |
+| 切替UI | ツールバー右端の `Language` / `语言` ドロップダウン |
+| 切替方式 | **再起動方式**（StaTable と統一）、`Application.Restart()` で自動再起動 |
+| 永続化 | `%APPDATA%\PowerSimBuilder\settings.json` |
+| ダイアログ | カスタム Form（`[Restart]` / `[取消]`、MessageBox では OK を rename 不可のため） |
+| 未保存警告 | `_canvasManager.IsModified` 時に警告 → OK でのみ続行 |
+| フォント | Yu Gothic / Microsoft YaHei / SimHei / SimSun / Noto Sans CJK SC のリスト |
+
+### 発見・修正したバグ（中国語対応中）
+
+| Bug | 内容 | 修正 |
+|:---:|---|---|
+| BUG-007 | 日本語 Windows で `DetectOsLanguage()` が `ja` を返し、`ja.json` 不在で全キー未解決 | `zh` or `en` に変更 |
+| BUG-008 | `I18n.SetLanguage("xx")` で未対応言語を要求すると `_strings = {}` になる | `en` にフォールバック |
+| BUG-009 | `AppSettingsTests` が `I18n.CurrentLanguage` を復元せず、他テストを汚染 | `finally` で復元 |
+| BUG-010 | 日本語 Windows で中国語ラベルが豆腐（□）になる | `font.family` をリストに変更（per-glyph fallback） |
+
+### テスト状況（v0.9.0 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|:---:|
+| C# 全テスト | **284** | ✅ pass（283 pass / 1 skip） |
+| - AppSettingsTests（新規） | 4 | ✅ pass |
+| Python 全テスト | **400** | ✅ pass |
+| Python カバレッジ | **99%** | ✅ |
+
+### リリース履歴（本セッションで 7 バージョン）
+
+| Tag | 内容 |
+|:---:|---|
+| v0.7.1 | Canvas 右クリック 4 症状 |
+| v0.7.2 | 選択整合性 + ヘッドレス GUI 19 件 |
+| v0.7.3 | 接続検証（HIGH 3 件） |
+| **v0.9.0** | **Simplified Chinese UI（本セッション）** |
+
+### ビジネス的文脈
+
+- **仕向けが中国** のため、中国語対応が最重要タスクだった
+- v0.9.0 で **中国市場向けに完全対応**（UI / エラーメッセージ / グラフラベル）
+- v1.0.0 はフィールドテスト後の安定版として位置づけ
+
+### 残タスク（次セッション以降）
+
+| 優先 | タスク | 工数 |
+|:---:|---|:---:|
+| 🟡 | v0.9.0 フィールドテスト（中国語 UI の実機確認） | 1-2h |
+| 🟡 | v1.0.0 リリース判定（公開範囲・告知方法） | 30m |
+| 🟢 | GUI Bug Hunt Phase 4/6/7（Drag / Keyboard / Save-Load） | 2-4h |
+| 🟢 | `git rm --cached pythonlib previou_files` | 30m |
+| 🟢 | 繁体字中国語対応（`zh-TW.json`、将来） | 1-2h |
+
+### 次セッション開始時のチェックリスト
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3        # f3b3c2c が HEAD
+git status --porcelain=v1              # clean
+dotnet build PowerSimBuilder.sln       # 0 warnings / 0 errors
+dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build   # 284 tests
+python -m pytest tests/python -q       # 400 pass
+gh release list --limit 3              # v0.9.0 = Latest
+```
+
+### 次セッション開始プロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 95 を読んで、次タスクに着手してください。
+
+現状:
+- HEAD: f3b3c2c (origin/main, tag: v0.9.0)
+- C# 284 pass / Python 400 pass / coverage 99% / CI green
+- v0.9.0 リリース（Simplified Chinese UI）完了
+
+次タスク候補:
+- v0.9.0 フィールドテスト（中国語 UI の実機確認）
+- GUI Bug Hunt Phase 4/6/7
+- v1.0.0 リリース判定
+
+まず v0.9.0 のフィールドテストから着手してください。
+```
+
+### 本セッションの教訓（PowerShell、追記）
+
+| 罠 | 対処 |
+|---|---|
+| `font.family = "sans-serif"` では matplotlib の per-glyph fallback が効かない | **具体的なフォント名のリスト**を `font.family` に直接設定 |
+| `font.family = "Yu Gothic"`（単一）では中国語グリフが豆腐 | 複数 CJK フォントのリストで fallback chain を設定 |
+| static クラス（I18n）を変更するテストが他テストを汚染 | `try/finally` で必ず復元 |
+| `DetectOsLanguage()` が未サポート言語を返すと空文字テーブル | サポート言語（`zh` / `en`）のみ返す、または `SetLanguage` で fallback |
+| カスタムダイアログのボタン名変更 | `MessageBox` では不可、`Form` + `Button` を動的生成 |
+
+**End of v0.9.0 Release**
