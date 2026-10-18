@@ -3,7 +3,7 @@
 [![CI](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-265%20pass-green.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-279%20pass-green.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Windows%20only-lightgrey.svg)]()
 
 **Visual simulation companion to [StaTable](https://github.com/akashi-hideki/StaTable) — load StaTable XML, build Python state-machine controllers, run end-to-end simulations with signal plots.**
@@ -32,6 +32,15 @@ StaTable alone answers **"does it compile?"**. PowerSimBuilder answers
 **"does the behavior make sense?"** — before you flash the firmware.
 
 ---
+
+## What's New in v0.7.3
+
+- **Canvas connection validation** (HIGH severity, v0.7.3): self-connection, invalid direction (out->out, in->in, in->out), and duplicate connections are now rejected
+- **Selection consistency** (v0.7.2): empty-canvas click clears the current selection; selecting a new component unselects the previous one
+- **Save/Load round-trip tests**: 11 new tests verifying `CanvasModel` <-> JSON serialization (components, positions, connections, parameters, selection state)
+- **Python edge case tests**: 11 new tests covering error paths and boundary conditions; line coverage 98% -> 99%
+- **Python-not-installed UX**: startup check with warning dialog + Create Simulation button disabled; friendly error with install link
+- **Test suite**: 280 C# tests (279 pass / 1 skip) + 400 Python tests (99% coverage)
 
 ## What's New in v0.7.1
 
