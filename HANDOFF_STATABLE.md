@@ -3164,7 +3164,7 @@ HANDOFF_STATABLE.md の ## 94 を読んで、次タスクに着手してくだ�
 
 | Bug | 内容 | 修正 |
 |:---:|---|---|
-| BUG-007 | 日本語 Windows で `DetectOsLanguage()` が `ja` を返し、`ja.json` 不在で全キー未解決 | `zh` or `en` に変更 |
+| BUG-007 | 日本語 Windows で `DetectOsLanguage()` が `ja` を返し、`ja.json` 不在で全キー未解決 | **CLOSED**: `if zh then zh else en` + `SetLanguage` fallback。サポート言語は**明示的 whitelist**（EN + ZH）で管理する設計判断 |
 | BUG-008 | `I18n.SetLanguage("xx")` で未対応言語を要求すると `_strings = {}` になる | `en` にフォールバック |
 | BUG-009 | `AppSettingsTests` が `I18n.CurrentLanguage` を復元せず、他テストを汚染 | `finally` で復元 |
 | BUG-010 | 日本語 Windows で中国語ラベルが豆腐（□）になる | `font.family` をリストに変更（per-glyph fallback） |
@@ -3245,3 +3245,69 @@ HANDOFF_STATABLE.md の ## 95 を読んで、次タスクに着手してくだ�
 | カスタムダイアログのボタン名変更 | `MessageBox` では不可、`Form` + `Button` を動的生成 |
 
 **End of v0.9.0 Release**
+---
+
+# BUG-007 設計判断の確定（2026-10-18 追記）
+
+**HEAD:** `6247d4d` (origin/main, tag: v0.9.0) — コード変更なし
+
+## 96. BUG-007 のステータスを「WORKAROUND」から「CLOSED」に修正
+
+### 経緯
+
+`## 95` で BUG-007 を「`DetectOsLanguage()` から `ja` を削除 + `SetLanguage` fallback」で
+塞いだが、これを「WORKAROUND（設計負債残）」と記述した。
+
+しかし、その後の検討で **「シンプルな明示 whitelist（`if zh then zh else en`）が
+このプロジェクトの正しい設計**」と判断したため、記述を修正する。
+
+### なぜ明示 whitelist が正しいか
+
+| 観点 | `GetAvailableLanguages()` 案（auto-detect） | 明示 whitelist 案（現状） |
+|:---:|---|---|
+| サポート言語の定義 | リソースファイル（暗黙） | C# コード（明示） |
+| 新言語追加 | JSON を置くだけ | JSON 配置 + `DetectOsLanguage()` に 1 行追加 |
+| stray JSON の誤認識 | あり（テスト用 `xx.json` 等） | なし |
+| コード複雑度 | +40 行、+2 tests | 変化なし |
+| 「公式サポート」の制御 | リソース配置に依存 | 明示的（意図せぬ追加を防ぐ） |
+
+**判断**: 「サポート言語は明示的に管理する」方が、UI の言語対応という性質上、
+望ましい。`ja.json` / `ko.json` を追加する時点で「その言語を公式サポートする」
+という意思決定があるので、`DetectOsLanguage()` に 1 行追加するのは**手間ではなく意図の表明**。
+
+### 現状の実装（`## 95` で確定、`v0.9.0` に含まれる）
+
+```csharp
+// AppSettings.DetectOsLanguage()
+var two = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+if (two == "zh") return "zh";
+return "en";  // 日本語・韓国語・フランス語等はすべて英語
+
+// I18n.SetLanguage() - 防御層
+if (_strings.Count == 0 && lang != DefaultLanguage)
+{
+    _currentLanguage = DefaultLanguage;
+    LoadLanguage(DefaultLanguage);
+}
+```
+
+### 将来の言語追加手順（明示 whitelist 方式）
+
+1. `Resources/i18n/ja.json` を作成（188 キー）
+2. `AppSettings.DetectOsLanguage()` に 1 行追加:
+   ```csharp
+   if (two == "ja") return "ja";
+   ```
+3. `MainForm.SetupLanguageMenu()` に `jaItem` を追加（4 行）
+4. テスト追加（`GetAvailableLanguages_ContainsJa` 相当の検証）
+
+合計 30 分程度。「明示的にサポートを宣言する」コストとして妥当。
+
+### 結論
+
+- BUG-007 は **CLOSED**（`## 95` の実装で完全に解決）
+- 「設計負債」ではなく「明示的 whitelist という設計判断」
+- 案 A（`GetAvailableLanguages()`）は **不採用**（over-engineering）
+- `v0.9.0` はこのまま有効
+
+**End of BUG-007 Design Decision**
