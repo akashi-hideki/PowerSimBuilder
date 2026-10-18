@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-18
+
+### Added
+
+- **i18n infrastructure** (`I18n.cs`, `Resources/i18n/en.json` with 178 keys)
+  - `I18n.T(key)` and `I18n.T(key, params object[] args)`
+  - `SetLanguage(lang)` / `CurrentLanguage` / `DefaultLanguage = "en"`
+  - Auto-init via static constructor (test-friendly, no `Program.Main` dependency)
+  - Missing-key logging to `i18n_missing.log` (best-effort)
+  - Future `zh.json` can be added without touching existing code
+
+### Changed (UI language)
+
+- **English-only UI** (Japanese UI removed; Chinese deferred to future release)
+  - Phase 1-A: `ParametersEditorForm`, `ConnectionProperties`
+  - Phase 1-B: `MainForm`, `ComponentPalette`, `ComponentManager`
+  - Phase 1-C: `PythonEditorForm`, `PythonExecutor`, remaining forms
+  - Residual strings: `CanvasManager`, `ParameterTypeHelper`, `DesignCanvas`,
+    `StaTableProjectReader`, `PowerSimBuilderPanelDefine`
+  - `PythonSimulationMainBuilder`: `ErrorMessageTable` refactored to key lookup
+    (static readonly initialization order safety)
+
+### Notes
+
+- Japanese comments and log output remain as-is (not in i18n scope)
+- Generated Python code comments remain as-is (not in i18n scope)
+- Full `.cs` scan: **0 UI Japanese literals**
+
+### Tests
+
+- C# (xUnit): **227 pass** / 0 fail
+- GUI smoke test: all forms display English correctly, no missing keys logged
+
 ## [0.6.0] - 2026-10-18
 
 ### Changed (build system)
@@ -387,7 +420,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.5.0...v0.5.1
 [0.1.0]: https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v0.1.0
