@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-18
+
+### Changed (build system)
+
+- **.NET Framework 4.7.2 -> .NET 10 LTS** (supported until 2028-11)
+  - SDK-style csproj (main + tests), net10.0-windows
+  - NoWarn: WFO1000;NU1701
+- **CI updated to .NET 10 CLI** (actions/setup-dotnet@v4)
+
+### Fixed
+
+- L1 (84f776d): ControllerBox explicit input_globals/output_globals
+- L2 (81701dd): generated_path auto-repair at project load
+- PythonEditorForm (34c16f4): double-subscription of run buttons removed
+- PythonExecutor (1bfcde9): HasExited guard, WorkingDirectory+PYTHONPATH,
+  CreateNoWindow, completion dialog via Exited
+- MainForm (1bfcde9): redundant success MessageBox removed
+
+### Docs
+
+- README rewritten for v0.6.0 (StaTable companion positioning)
+- docs/QUICKSTART.md, docs/ARCHITECTURE.md added
+- docs/README.md updated as document index
+
+### Verification
+
+- 227 C# tests pass
+- CLI + GUI simulation: シミュレーション完了 + simulation_signals.png
+- auto_events="demo_oven" driver works
+- TraceRun removed (no executor_trace.log)
+
 ## [0.5.2] - 2026-10-17
 
 ### Added (RoleFunction static analysis)
