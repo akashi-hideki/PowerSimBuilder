@@ -33,7 +33,13 @@ namespace PowerSimBuilder
         [STAThread]
         static void Main(string[] args)
         {
+            // Register global exception handler FIRST so that unexpected errors
+            // in subsequent startup code (settings / i18n init / UI) are reported.
             CrashReportManager crashReportManager = CrashReportManager.Instance;
+
+            // Load user settings and language (also covered by the handler above).
+            AppSettings.Load();
+            I18n.SetLanguage(AppSettings.ResolveStartupLanguage());
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -48,11 +54,11 @@ namespace PowerSimBuilder
                     return;
                 }
                 // 引数なし → GUI 起動（従来動作）
-                I18n.Initialize(); I18nDumpUi.InstallAutoDump(); Application.Run(new StaTableImportForm());
+                I18nDumpUi.InstallAutoDump(); Application.Run(new StaTableImportForm());
             }
             else
             {
-                I18n.Initialize(); Application.Run(new MainForm());
+                Application.Run(new MainForm());
             }
         }
 
