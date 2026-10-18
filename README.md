@@ -3,7 +3,7 @@
 [![CI](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-227%20pass-green.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-265%20pass-green.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Windows%20only-lightgrey.svg)]()
 
 **Visual simulation companion to [StaTable](https://github.com/akashi-hideki/StaTable) — load StaTable XML, build Python state-machine controllers, run end-to-end simulations with signal plots.**
@@ -98,7 +98,7 @@ PowerSimBuilder closes that gap:
   detected and reset to the Descriptor default
 - ✅ **Demo driver** (`auto_events="demo_oven"`): drives the controller
   with synthetic events so a first simulation runs immediately
-- ✅ **227 C# tests**, 4-matrix CI green
+- ✅ **265 C# tests**, 4-matrix CI green
 - ✅ **.NET 10 LTS**, Windows-only (WinForms)
 
 ---
@@ -248,7 +248,7 @@ dotnet build -c Debug
 dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build
 ```
 
-Expected: **227 test cases pass** (`[Theory]+[InlineData]` expanded).
+Expected: **265 test cases pass** (`[Theory]+[InlineData]` expanded).
 
 ### CI
 
