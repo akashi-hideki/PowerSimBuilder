@@ -2803,3 +2803,118 @@ HANDOFF_STATABLE.md の ## 91 を読んで、次タスクに着手してくだ�
 | pre-commit 失敗時にタグを打つと誤タグ | `$commitExit = $LASTEXITCODE` を捕捉 → `if ($commitExit -eq 0)` でタグ作成 |
 
 **End of v0.7.3 + GUI Bug Hunt Phase 3**
+---
+
+# Python UX 改善 + テスト十分性確認（2026-10-18 第 12 セッション）
+
+**HEAD:** `19f485d` (origin/main, tag: v0.7.3)
+**次セッションの起点:** `19f485d`
+
+> **次セッションは ## 92 と ## 91 を読めば完全なコンテキストを得られる。**
+
+## 92. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | Python エッジケース | `43d1d54` | 11 tests、カバレッジ 98% -> 99% |
+| 2 | README C# 件数更新 | `4eee110` | 227 -> 265 |
+| 3 | Python 未インストール UX 改善 | `19f485d` | 起動時チェック + 親切なエラー + 3 tests |
+
+### Python 未インストール時の挙動（改善後）
+
+| 局面 | 改善前 | 改善後 |
+|:---:|---|---|
+| 起動 | 何も起きない（気づかない） | **警告 MessageBox + Create Simulation ボタン無効化** |
+| コード生成 | 動く | 動く（変更なし） |
+| シミュレーション実行 | 「実行失敗 + OS 生メッセージ」 | 「Python をインストールしてください + URL」 |
+
+### 修正内容（5 ファイル、+114/-1）
+
+| ファイル | 変更 |
+|---|---|
+| `PythonExecutor.cs` | `IsPythonAvailable()` 静的プローブ、`Win32Exception` 専用 catch |
+| `MainForm.cs` | `CheckPythonAtStartup()` + `OnLoad` から呼び出し |
+| `en.json` | 3 キー（`PythonNotFound` / `MissingAtStartup` / `MsgTitleWarning`） |
+| `README.md` | Requirements の Python 行に PATH 必須を明記 |
+| `PythonExecutorProbeTests.cs` | 3 tests（Python 有無に関わらず pass） |
+
+### テスト状況（v0.7.3 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|:---:|
+| C# 全テスト | **269** | ✅ pass（268 pass / 1 skip） |
+| - PythonExecutorProbeTests（新規） | 3 | ✅ pass |
+| Python 全テスト | **400** | ✅ pass |
+| Python カバレッジ | **99%** | ✅ |
+
+### Python テスト十分性の評価
+
+| 観点 | 実測 | 判定 |
+|---|---|:---:|
+| 行カバレッジ | 99% | ✅ 十分 |
+| テスト数 | 400 | ✅ 十分 |
+| 例外系テスト | 12 件（raises） | ✅ 十分（前回 2 -> 12） |
+| 境界値テスト | 追加済み | ✅ |
+| 回帰防止（v0.5.0 IM standstill） | 追加済み | ✅ |
+
+**残り未カバー 14 行は「環境依存 fallback」または「到達不可能な防御コード」** で、テスト価値なしと判断。
+
+### CI 統合状況
+
+- `ci.yml` の `dotnet test` は `--filter` 無しで全テスト実行 → **新テストは自動で CI に乗る**
+- 新規 3 テストが CI で pass（TRX で確認済み）
+- `IsPythonAvailable_PathWithoutPython_ReturnsFalse` が **Python 有無に関わらず pass** することで、未インストール環境での安全性を担保
+
+### 残タスク（次セッション以降）
+
+| 優先 | タスク | 工数 |
+|:---:|---|:---:|
+| 🟡 | GUI Bug Hunt Phase 4（Drag / Move / Undo） | 1-2h |
+| 🟡 | GUI Bug Hunt Phase 6（Keyboard: Delete / Ctrl+Z/S / Escape） | 1h |
+| 🟡 | GUI Bug Hunt Phase 7（Save / Load） | 1-2h |
+| 🟢 | `git rm --cached pythonlib previou_files`（## 89 から継続） | 30m |
+| 🟢 | 中国語対応（v0.8.0、ペンディング解除時） | 数日 |
+| 🟢 | Python 検出の柔軟化（python3 / py -3 フォールバック） | 1h |
+
+### 次セッション開始時のチェックリスト
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3        # 19f485d が HEAD
+git status --porcelain=v1              # clean
+dotnet build PowerSimBuilder.sln       # 0 warnings / 0 errors
+dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build   # 269 tests
+python -m pytest tests/python -q       # 400 pass
+```
+
+### 次セッション開始プロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 92 を読んで、次タスクに着手してください。
+
+現状:
+- HEAD: 19f485d (origin/main, tag: v0.7.3)
+- C# 269 pass / Python 400 pass / coverage 99% / CI green
+- GUI Bug Hunt Phase 1-3 + 回帰テスト + Python エッジケース完了
+- Python 未インストール UX 改善完了
+
+次タスク候補:
+- GUI Bug Hunt Phase 4/6/7（Drag / Keyboard / Save-Load）
+- pythonlib / previou_files の untrack
+- Python 検出の柔軟化（python3 / py -3 フォールバック）
+
+まず Phase 4（Drag）のヘッドレステストから着手してください。
+```
+
+### 本セッションの教訓（PowerShell、追記）
+
+| 罠 | 対処 |
+|---|---|
+| `dotnet test` 日本語出力は `合格: N`（`成功数:` ではない）、全角読点 `、` 区切り | `Out-String` で実出力をキャプチャして正規表現設計 |
+| multi-line `if/elseif/else` の貼り付けで `elseif` / `else` が単独コマンド扱い | `if` を独立ブロックで並べる |
+| パース失敗時の `0` がファイルに書き込まれる | 書き込み前に `if ($value -gt 0)` チェック必須 |
+| 修正失敗時は `git checkout <file>` で即復旧 | 破損状態を残さない |
+| README の `\|\s*Python\s*\|` が比較表にもマッチして誤判定 | より具体的な文脈でマッチ（`## Requirements` 内等） |
+
+**End of Python UX + テスト十分性確認**
