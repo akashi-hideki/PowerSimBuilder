@@ -96,7 +96,7 @@ namespace PowerSimBuilder.Tests.StaTable
             var result = reader.Parse("<Project><broken");
 
             Assert.False(result.IsUsable);
-            Assert.Contains(result.Errors, e => e.Contains("XML パースエラー"));
+            Assert.Contains(result.Errors, e => e.Contains("XML parse error"));
         }
 
         [Fact]

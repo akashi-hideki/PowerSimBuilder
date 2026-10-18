@@ -680,7 +680,7 @@ namespace PowerSimBuilder
             catch (Exception ex)
             {
                 LogcatTraceHelper.Instance.LogError("ConnectionHistory",
-                    $"ヒストリー削除エラー: {ex.Message}");
+                    I18n.T("DesignCanvas.MsgHistoryDeleteError", ex.Message));
             }
         }
         #endregion
@@ -982,7 +982,7 @@ namespace PowerSimBuilder
             catch (Exception ex)
             {
                 LogcatTraceHelper.Instance.LogError("RemoveComponent",
-                    $"コンポーネント削除エラー: {ex.Message}");
+                    I18n.T("DesignCanvas.MsgComponentDeleteError", ex.Message));
             }
         }
 
@@ -1019,7 +1019,7 @@ namespace PowerSimBuilder
     catch (Exception ex)
     {
         LogcatTraceHelper.Instance.LogError("RemoveConnection",
-            $"接続線削除エラー: {ex.Message}");
+            I18n.T("DesignCanvas.MsgConnectionDeleteError", ex.Message));
     }
 }
 
@@ -1497,11 +1497,11 @@ private void ClearCanvas()
         {
             var contextMenu = new ContextMenuStrip();
 
-            var deleteConnectionItem = new ToolStripMenuItem("接続線を削除");
+            var deleteConnectionItem = new ToolStripMenuItem(I18n.T("DesignCanvas.MenuDeleteConnection"));
             deleteConnectionItem.Click += DeleteConnectionItem_Click;
             deleteConnectionItem.ShortcutKeys = Keys.Delete;
 
-            var deleteComponentItem = new ToolStripMenuItem("コンポーネントを削除");
+            var deleteComponentItem = new ToolStripMenuItem(I18n.T("DesignCanvas.MenuDeleteComponent"));
             deleteComponentItem.Click += DeleteComponentItem_Click;
             deleteComponentItem.ShortcutKeys = Keys.Delete;
 

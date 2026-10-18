@@ -170,7 +170,7 @@ namespace PowerSimBuilder
                 throw new ArgumentNullException();
 
             if (string.IsNullOrEmpty(startPort) || string.IsNullOrEmpty(endPort))
-                throw new ArgumentException("ポート名を指定してください");
+                throw new ArgumentException(I18n.T("CanvasManager.MsgPortNameRequired"));
 
             SaveStateForUndo();
 

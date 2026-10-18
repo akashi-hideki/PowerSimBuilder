@@ -8,7 +8,6 @@
   "Common.MsgTitleError": "Error",
   "Common.MsgTitleWarning": "Warning",
   "Common.PortName": "Port Name",
-
   "AddComponentForm.TitleNew": "Add New Component",
   "AddComponentForm.TitleEdit": "Edit Component",
   "AddComponentForm.MsgSelectParameterToEdit": "Please select a parameter to edit.",
@@ -19,7 +18,6 @@
   "AddComponentForm.MsgPortNameRequired": "Port name cannot be empty.",
   "AddComponentForm.MsgPortNameUnique": "Port names must be unique.",
   "AddComponentForm.SaveFileTitle": "Select save location for Python file",
-
   "ComponentPropertyForm.Title": "Component Properties",
   "ComponentPropertyForm.LblName": "Name:",
   "ComponentPropertyForm.LblX": "X Position:",
@@ -28,7 +26,6 @@
   "ComponentPropertyForm.LblOutputPorts": "Output Ports:",
   "ComponentPropertyForm.BtnThermalParams": "Thermal Parameters",
   "ComponentPropertyForm.BtnFaultConditions": "Fault Conditions",
-
   "ConnectionEditorForm.Title": "Connection Settings",
   "ConnectionEditorForm.LblSource": "Source:",
   "ConnectionEditorForm.LblSourcePort": "Source Port:",
@@ -36,22 +33,18 @@
   "ConnectionEditorForm.LblTargetPort": "Target Port:",
   "ConnectionEditorForm.LblDataType": "Data Type:",
   "ConnectionEditorForm.MsgPortsRequired": "Please select source port and target port.",
-
   "AddParameterForm.TitleNew": "Add New Parameter",
   "AddParameterForm.TitleEdit": "Edit Parameter",
   "AddParameterForm.MsgNameRequired": "Parameter name is required.",
   "AddParameterForm.MsgDefaultValueTypeMismatch": "Default value does not match the type.",
-
   "ThermalParameterForm.Title": "Thermal Parameters",
   "ThermalParameterForm.LblResistance": "Thermal Resistance [K/W]:",
   "ThermalParameterForm.LblCapacity": "Thermal Capacity [J/K]:",
-
   "Common.LblName": "Name:",
   "Common.LblType": "Type:",
   "Common.BtnDelete": "Delete",
   "AddComponentForm.LblCategory": "Category:",
   "AddParameterForm.LblDefault": "Default Value:",
-
   "Common.BtnSave": "Save",
   "Common.BtnLoad": "Load",
   "Common.BtnUndo": "Undo",
@@ -61,10 +54,8 @@
   "Common.BtnGenerate": "Generate...",
   "Common.BtnOpenFolder": "Open Folder",
   "Common.MsgTitleSuccess": "Success",
-
   "SimRegistForm.TabSimList": "Simulation List",
   "SimRegistForm.TabPartsList": "Parts List",
-
   "MainForm.Title": "Power System Simulation Builder",
   "MainForm.BtnCreateSim": "Create Simulation",
   "MainForm.BtnArrange": "Arrange Layout",
@@ -82,19 +73,16 @@
   "MainForm.MsgLoadFail": "Failed to load file: {0}",
   "MainForm.MsgErrCategory": "Error ({0}): {1}",
   "MainForm.MsgGenerateFail": "An error occurred during file generation:\n{0}",
-
   "Palette.MsgNoComponents": "No available components.",
   "Palette.MsgIncomplete": "Component information is incomplete.",
   "Palette.MsgDuplicate": "A component with the same name already exists.",
   "Palette.MsgError": "An error occurred while adding the component: {0}",
   "Palette.MsgNameInUse": "This name is already in use.",
-
   "Manager.Title": "Component Selection",
   "Manager.SaveDialogTitle": "Save Python File",
   "Manager.MsgNoSelection": "No component is selected.",
   "Manager.MsgGenerated": "Python file generated.",
   "Manager.MsgNoChange": "No changes.",
-
   "PythonEditor.Title": "Python Code Editor",
   "PythonEditor.BtnRun": "Run",
   "PythonEditor.LblStatus": "Status: ",
@@ -107,35 +95,28 @@
   "PythonEditor.MsgNoExecutor": "Python execution environment is not set. Please set the Executor property.",
   "PythonEditor.MsgSaveTempBeforeRun": "Save the modified code to a temporary file and run?",
   "PythonEditor.MsgTempFail": "Failed to create temporary file: {0}",
-
   "PythonExecutor.MsgScriptNotFound": "Script file not found: {0}",
   "PythonExecutor.MsgExecFail": "Failed to run Python script: {0}\n\nPlease verify that Python is installed.",
-
   "StaTableImport.Title": "StaTable XML Import",
   "StaTableImport.LblFilePath": "XML File:",
   "StaTableImport.LblPreview": "Preview:",
   "StaTableImport.BrowseXmlTitle": "Select StaTable XML file",
   "StaTableImport.SavePyTitle": "Save location for controller_box.py (recommended: generated/)",
-
   "FaultConditionEditorForm.Title": "Fault Condition Editor",
   "FaultConditionEditorForm.MsgSelectAll": "Please select all fields.",
-
   "Common.MsgTitleConfirm": "Confirm",
   "Common.MsgTitleSystemError": "System Error",
   "Common.FilterSimProject": "Simulation Project|*.json|All Files|*.*",
   "Common.FilterPython": "Python File|*.py|All Files|*.*",
   "Common.FilterXml": "StaTable XML|*.xml|All Files|*.*",
-
   "FaultConditionEditorForm.LblComponent": "Target Component:",
   "FaultConditionEditorForm.LblState": "Monitored State:",
   "FaultConditionEditorForm.LblType": "Condition Type:",
-
   "MainForm.BtnParametersEdit": "Edit Parameters",
   "MainForm.MsgDeleteConfirm": "Delete component '{0}'?",
   "MainForm.MsgParamSelectFirst": "Please select a component on the canvas to edit parameters.",
   "MainForm.MsgPaletteAdded": "Added '{0}' to the palette.\n\nInputs: {1} / Outputs: {2}",
   "MainForm.MsgDescriptorFail": "Failed to build descriptor:\n{0}",
-
   "PythonEditor.MenuInsertForLoop": "Insert For Loop",
   "PythonEditor.MenuInsertWhileLoop": "Insert While Loop",
   "PythonEditor.MenuInsertIf": "Insert If Statement",
@@ -149,15 +130,12 @@
   "PythonEditor.MsgExecError": "Execution Error",
   "PythonEditor.MsgNoExecutorDetail": "Python execution environment is not set.\n\nPlease set the Executor property with a PythonExecutor instance.\nExample: editor.Executor = new PythonExecutor();",
   "PythonEditor.TitleTemplate": "Python Code Editor - {0}{1}",
-
   "PythonExecutor.MsgCompleted": "Python script completed.",
   "PythonExecutor.MsgExitedWithCode": "Python script exited with code {0}.",
   "PythonExecutor.MsgStillRunning": "Python script is still running.\nClose the plot window or wait for the completion message.",
-
   "StaTableImport.MsgLoadXmlFirst": "Please load an XML file first.",
   "StaTableImport.MsgGenerated": "Generated:\n{0}",
   "StaTableImport.MsgGenerateFail": "Generation failed:\n{0}",
-
   "ParametersEditorForm.TitleTemplate": "Edit Parameters - {0} ({1})",
   "ParametersEditorForm.ComponentHeader": "Component: {0} ({1})\nParameter types are auto-detected (number / boolean / string)",
   "ParametersEditorForm.ColName": "Parameter Name",
@@ -169,5 +147,34 @@
   "ParametersEditorForm.MsgInvalidValue": "Invalid value for parameter '{0}':\n{1}",
   "ParametersEditorForm.MsgInputError": "Input Error",
   "ParametersEditorForm.MsgResetConfirm": "Reset all parameters to the component's default values?\n(This will not take effect until you click OK.)",
-  "Common.MsgTitleWarning": "Warning"
+  "CanvasManager.MsgPortNameRequired": "Port name is required.",
+  "ParameterTypeHelper.ErrIntParse": "Cannot parse as integer: '{0}'",
+  "ParameterTypeHelper.ErrDecimalParse": "Cannot parse as decimal: '{0}'",
+  "DesignCanvas.MsgHistoryDeleteError": "History delete error: {0}",
+  "DesignCanvas.MsgComponentDeleteError": "Component delete error: {0}",
+  "DesignCanvas.MsgConnectionDeleteError": "Connection delete error: {0}",
+  "DesignCanvas.MenuDeleteConnection": "Delete Connection",
+  "DesignCanvas.MenuDeleteComponent": "Delete Component",
+  "SimRegistForm.ColSimList": "Simulation List",
+  "SimRegistForm.ColPartsList": "Parts List",
+  "StaTableProjectReader.ErrPathRequired": "Path is null or empty.",
+  "StaTableProjectReader.ErrFileNotFound": "File not found: {0}",
+  "StaTableProjectReader.ErrFileReadFailed": "Failed to read file: {0}",
+  "StaTableProjectReader.ErrXmlEmpty": "XML is null or empty.",
+  "StaTableProjectReader.ErrXmlParseFailed": "XML parse error: {0}",
+  "StaTableProjectReader.ErrProjectRootMissing": "Root element <Project> not found.",
+  "StaTableProjectReader.WarnCodeGenerationMissing": "<CodeGeneration> not found.",
+  "StaTableProjectReader.WarnTabMissing": "<Tab> element not found.",
+  "StaTableProjectReader.WarnTabParseFailed": "Failed to parse <Tab>: {0}",
+  "PanelDefine.ColControlBoxName": "Control Box Name",
+  "PanelDefine.ColDescription": "Description",
+  "PanelDefine.ColPartName": "Part Name",
+  "PythonSimulationMainBuilder.ErrBuild": "An error occurred during file generation: {0}",
+  "PythonSimulationMainBuilder.ErrValidation": "{0}",
+  "PythonSimulationMainBuilder.ErrGeneration": "An error occurred during code generation: {0}",
+  "PythonSimulationMainBuilder.ErrComponent": "An error occurred while processing component '{0}': {1}",
+  "PythonSimulationMainBuilder.ErrConnection": "An error occurred while processing a connection: {0}",
+  "PythonSimulationMainBuilder.ErrFileWrite": "An error occurred during file write: {0}",
+  "PythonSimulationMainBuilder.ErrSectionAccess": "Section '{0}' not found.",
+  "PythonSimulationMainBuilder.ErrUnknown": "An unknown error occurred."
 }

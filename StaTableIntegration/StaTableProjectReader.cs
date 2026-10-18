@@ -26,12 +26,12 @@ namespace PowerSimBuilder
             var result = new StaTableParseResult();
             if (string.IsNullOrEmpty(path))
             {
-                result.Errors.Add("パスが null または空です");
+                result.Errors.Add(I18n.T("StaTableProjectReader.ErrPathRequired"));
                 return result;
             }
             if (!File.Exists(path))
             {
-                result.Errors.Add("ファイルが見つかりません: " + path);
+                result.Errors.Add(I18n.T("StaTableProjectReader.ErrFileNotFound", path));
                 return result;
             }
 
@@ -42,7 +42,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex)
             {
-                result.Errors.Add("ファイル読み込み失敗: " + ex.Message);
+                result.Errors.Add(I18n.T("StaTableProjectReader.ErrFileReadFailed", ex.Message));
                 return result;
             }
 
@@ -60,7 +60,7 @@ namespace PowerSimBuilder
             var result = new StaTableParseResult();
             if (string.IsNullOrEmpty(xml))
             {
-                result.Errors.Add("XML が null または空です");
+                result.Errors.Add(I18n.T("StaTableProjectReader.ErrXmlEmpty"));
                 return result;
             }
 
@@ -71,14 +71,14 @@ namespace PowerSimBuilder
             }
             catch (XmlException ex)
             {
-                result.Errors.Add("XML パースエラー: " + ex.Message);
+                result.Errors.Add(I18n.T("StaTableProjectReader.ErrXmlParseFailed", ex.Message));
                 return result;
             }
 
             var root = doc.Root;
             if (root == null || root.Name.LocalName != "Project")
             {
-                result.Errors.Add("ルート要素 <Project> が見つかりません");
+                result.Errors.Add(I18n.T("StaTableProjectReader.ErrProjectRootMissing"));
                 return result;
             }
 
@@ -98,7 +98,7 @@ namespace PowerSimBuilder
             }
             else
             {
-                result.Warnings.Add("<CodeGeneration> が見つかりません");
+                result.Warnings.Add(I18n.T("StaTableProjectReader.WarnCodeGenerationMissing"));
             }
 
             // GlobalDefinitions
@@ -119,7 +119,7 @@ namespace PowerSimBuilder
             var tabs = root.Elements("Tab").ToList();
             if (tabs.Count == 0)
             {
-                result.Warnings.Add("<Tab> 要素が見つかりません");
+                result.Warnings.Add(I18n.T("StaTableProjectReader.WarnTabMissing"));
             }
             foreach (var tab in tabs)
             {
@@ -130,7 +130,7 @@ namespace PowerSimBuilder
                 }
                 else
                 {
-                    result.Warnings.Add("<Tab> のパースに失敗: " + ((string)tab.Attribute("name") ?? "(no name)"));
+                    result.Warnings.Add(I18n.T("StaTableProjectReader.WarnTabParseFailed", (string)tab.Attribute("name") ?? "(no name)"));
                 }
             }
 

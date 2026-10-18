@@ -63,15 +63,15 @@ namespace PowerSimBuilder
         };
 
         /// <summary>エラーメッセージの固定テーブル</summary>
-        private static readonly Dictionary<ErrorCategory, string> ErrorMessageTable = new Dictionary<ErrorCategory, string>
+        private static readonly Dictionary<ErrorCategory, string> ErrorMessageKeys = new Dictionary<ErrorCategory, string>
         {
-            { ErrorCategory.BuildError, "ファイル生成中にエラーが発生しました: {0}" },
-            { ErrorCategory.ValidationError, "{0}" },
-            { ErrorCategory.GenerationError, "コード生成中にエラーが発生しました: {0}" },
-            { ErrorCategory.ComponentError, "コンポーネント '{0}' の処理中にエラーが発生しました: {1}" },
-            { ErrorCategory.ConnectionError, "接続の処理中にエラーが発生しました: {0}" },
-            { ErrorCategory.FileWriteError, "ファイル書き込み中にエラーが発生しました: {0}" },
-            { ErrorCategory.SectionAccessError, "セクション '{0}' が見つかりません。" }
+            { ErrorCategory.BuildError, "PythonSimulationMainBuilder.ErrBuild" },
+            { ErrorCategory.ValidationError, "PythonSimulationMainBuilder.ErrValidation" },
+            { ErrorCategory.GenerationError, "PythonSimulationMainBuilder.ErrGeneration" },
+            { ErrorCategory.ComponentError, "PythonSimulationMainBuilder.ErrComponent" },
+            { ErrorCategory.ConnectionError, "PythonSimulationMainBuilder.ErrConnection" },
+            { ErrorCategory.FileWriteError, "PythonSimulationMainBuilder.ErrFileWrite" },
+            { ErrorCategory.SectionAccessError, "PythonSimulationMainBuilder.ErrSectionAccess" }
         };
 
         /// <summary>Pythonデフォルト値変換マッピング</summary>
@@ -306,11 +306,11 @@ namespace PowerSimBuilder
         /// <returns>フォーマットされたエラーメッセージ</returns>
         private static string GetErrorMessage(ErrorCategory category, params object[] args)
         {
-            if (ErrorMessageTable.TryGetValue(category, out string format))
+            if (ErrorMessageKeys.TryGetValue(category, out string key))
             {
-                return string.Format(format, args);
+                return I18n.T(key, args);
             }
-            return "不明なエラーが発生しました。";
+            return I18n.T("PythonSimulationMainBuilder.ErrUnknown");
         }
 
         /// <summary>

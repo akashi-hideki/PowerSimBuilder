@@ -69,7 +69,7 @@ namespace PowerSimBuilder
                     long lv;
                     if (long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out lv))
                         return lv;
-                    throw new FormatException("整数として解釈できません: '" + text + "'");
+                    throw new FormatException(I18n.T("ParameterTypeHelper.ErrIntParse", text));
 
                 case ParameterTypeCategory.Number:
                     double dv;
@@ -77,7 +77,7 @@ namespace PowerSimBuilder
                         return dv;
                     if (double.TryParse(text, out dv))
                         return dv;
-                    throw new FormatException("小数として解釈できません: '" + text + "'");
+                    throw new FormatException(I18n.T("ParameterTypeHelper.ErrDecimalParse", text));
 
                 default:
                     return text;

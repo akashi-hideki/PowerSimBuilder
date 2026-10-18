@@ -105,7 +105,7 @@ namespace PowerSimBuilder
             _viewSimKindRegistMulti.enableAddLineInputBox = false;
             _viewSimKindRegistMulti.Folder = "PowerSimBuilder\\Regist";
             _viewSimKindRegistMulti.TableSetting = data_table.SimKindSetting;
-            _viewSimKindRegistMulti.TitleName = "シュミレーション一覧";
+            _viewSimKindRegistMulti.TitleName = I18n.T("SimRegistForm.ColSimList");
             _viewSimKindRegistMulti.OrderMap = _ordermap;
             _viewSimKindRegistMulti.InputBoxTitle = "SimKind";
             ///<summary>
@@ -123,7 +123,7 @@ namespace PowerSimBuilder
             _viewPartsRegPartsMulti.enableAddLineInputBox = false;
             _viewPartsRegPartsMulti.Folder = "PowerSimBuilder\\RegParts";
             _viewPartsRegPartsMulti.TableSetting = data_table.PartsSetting;
-            _viewPartsRegPartsMulti.TitleName = "パーツ一覧";
+            _viewPartsRegPartsMulti.TitleName = I18n.T("SimRegistForm.ColPartsList");
             _viewPartsRegPartsMulti.OrderMap = _ordermap;
             _viewPartsRegPartsMulti.InputBoxTitle = "Parts";
             ///<summary>

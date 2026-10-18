@@ -98,8 +98,8 @@ namespace PowerSimBuilder
         /// </summary>
         public Dictionary<string, tableParam> SimKindSetting = new Dictionary<string, tableParam>
         {
-            { "Name", new tableParam { KeyName = "Name", TitleName = "制御ボックス名", Width = 15, ComboxStringName = "", ReadOnly = false } },
-            { "Descript", new tableParam { KeyName = "Descript", TitleName = "説明", Width = 100, ComboxStringName = "", ReadOnly = false } },
+            { "Name", new tableParam { KeyName = "Name", TitleName = I18n.T("PanelDefine.ColControlBoxName"), Width = 15, ComboxStringName = "", ReadOnly = false } },
+            { "Descript", new tableParam { KeyName = "Descript", TitleName = I18n.T("PanelDefine.ColDescription"), Width = 100, ComboxStringName = "", ReadOnly = false } },
         };
         /// <summary>
         /// The table name.: Parts
@@ -107,9 +107,9 @@ namespace PowerSimBuilder
         /// </summary>
         public Dictionary<string, tableParam> PartsSetting = new Dictionary<string, tableParam>
         {
-            { "Name", new tableParam { KeyName = "Name", TitleName = "パーツ名", Width = 15, ComboxStringName = "", ReadOnly = false } },
-            { "SimName", new tableParam { KeyName = "SimName", TitleName = "制御ボックス名", Width = 15, ComboxStringName = "", ReadOnly = false } },
-            { "Descript", new tableParam { KeyName = "Descript", TitleName = "説明", Width = 100, ComboxStringName = "", ReadOnly = false } },
+            { "Name", new tableParam { KeyName = "Name", TitleName = I18n.T("PanelDefine.ColPartName"), Width = 15, ComboxStringName = "", ReadOnly = false } },
+            { "SimName", new tableParam { KeyName = "SimName", TitleName = I18n.T("PanelDefine.ColControlBoxName"), Width = 15, ComboxStringName = "", ReadOnly = false } },
+            { "Descript", new tableParam { KeyName = "Descript", TitleName = I18n.T("PanelDefine.ColDescription"), Width = 100, ComboxStringName = "", ReadOnly = false } },
         };
     }
 }

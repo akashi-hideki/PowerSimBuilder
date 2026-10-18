@@ -19,6 +19,8 @@ namespace PowerSimBuilder
         private static Dictionary<string, string> _strings =
             new Dictionary<string, string>(StringComparer.Ordinal);
 
+        static I18n() { Initialize(); }
+
         public static string CurrentLanguage => _currentLanguage;
 
         public static string T(string key)
