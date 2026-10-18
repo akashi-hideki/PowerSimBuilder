@@ -2341,3 +2341,86 @@ Phase 1-A:
 ```
 
 **End of i18n Phase 0 (2026-10-18)**
+
+---
+
+# i18n Phase 1 完了 + v0.7.0 リリース（2026-10-18 追記）
+
+**HEAD:** `17c8bee` (origin/main, tag: v0.7.0)
+**次セッションの起点:** `17c8bee`
+
+## 87. i18n Phase 1 完全完了 + v0.7.0 リリース
+
+### 完了マイルストーン
+
+| # | 内容 | コミット |
+|:---:|---|---|
+| 1 | I18n 基盤 (`I18n.cs` + `Resources/i18n/en.json` 178 keys) | `317fcef` |
+| 2 | Phase 1-A (`ParametersEditorForm` / `ConnectionProperties`) | `317fcef` |
+| 3 | Phase 1-B (`MainForm` / `ComponentPalette` / `ComponentManager`) | `317fcef` |
+| 4 | Phase 1-C (`PythonEditorForm` / `PythonExecutor` / 他) | `317fcef` |
+| 5 | 残余文字列 31 件 (CanvasManager / ParameterTypeHelper / DesignCanvas / StaTableProjectReader / PowerSimBuilderPanelDefine) | `ddf8a9e` |
+| 6 | PythonSimulationMainBuilder: ErrorMessageTable キー保持方式に refactor | `ddf8a9e` |
+| 7 | I18n static ctor auto-init（テスト対応） | `ddf8a9e` |
+| 8 | **v0.7.0 リリース** | `17c8bee` (tag: v0.7.0) |
+
+### 検証結果
+
+| スコープ | 結果 |
+|---|---|
+| 全 `.cs` スキャン（UI 日本語リテラル） | **Total 0** |
+| GUI スモークテスト（全フォーム） | 英語表示、missing keys なし |
+| C# テスト | **227 pass / 0 fail** |
+| CI (`ci.yml`, 3 run 連続) | 全 green |
+| GitHub Release | 公開済み (tag v0.7.0) |
+
+### 設計ポイント
+
+- **I18n.T のシグネチャ**: `T(string key)` と `T(string key, params object[] args)` の 2 系統
+- **en.json はフラットキー方式**: `"ParametersEditorForm.ColName": "Parameter Name"` 形式
+- **static ctor auto-init**: `static I18n() { Initialize(); }` により、`Program.Main` を通らないテストプロジェクトでも en.json がロードされる
+- **属性引数は英語ハードコード**: `[Category("...")]` は const 必須のため `I18n.T` 不可（`ConnectionProperties.cs`）
+- **static readonly 辞書はキー保持方式**: `ErrorMessageTable` は値がキー文字列のみ、実解決は `GetErrorMessage()` 内で `I18n.T` 呼び出し
+
+### 本セッションの教訓
+
+| 罠 | 対処 |
+|---|---|
+| `function R {}` は `Invoke-History` エイリアスと衝突 | `Replace-Literal` 等の複合名を使う |
+| pre-commit `mixed-line-ending` でコミット失敗 | `git add -A` → 再コミット |
+| **コミット失敗後にタグだけ先に打つと誤タグ** | 必ずコミット成功確認 → タグ。誤ったら `git tag -d` + `git push origin :refs/tags/vX.Y.Z` |
+| `git push 2>&1` パイプの $LASTEXITCODE 誤検知 | `git push` は直接実行 |
+| `I18nDumpUi.cs` 等のデバッグツールのスキャン誤検知 | スキャナの EXCLUDE に明示 |
+| PowerShell の `if/else` 別行 | 同一行に書く |
+| トップレベル `return` | 対話セッションを終了させる → 使わない |
+| **長い here-string の貼り付けで ^C 混入** | `@(...) -join` 方式で行配列化 |
+
+### 次セッションの候補
+
+| 優先 | タスク | 工数 |
+|:---:|---|:---:|
+| 🟡 中 | **中国語対応（v0.8.0）**: `zh.json` + 言語メニュー | 数日（**ペンディング**） |
+| 🟡 中 | GitHub Release 本文の微調整 / README 更新 | 30m |
+| 🟢 低 | `I18nDumpUi.cs` の扱い見直し | 30m |
+| 🟢 低 | 旧残課題（B-warn / B-bare） | 30m x 2 |
+| 🟢 低 | `docs/QUICKSTART.md` に i18n セクション追記 | 15m |
+
+### 次セッション開始時のプロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 87 を読んで、
+次タスクに着手してください。
+
+現状:
+- HEAD: 17c8bee (origin/main, tag: v0.7.0)
+- C# 227 pass / CI green
+- i18n Phase 1 完了（英語のみ、中国語はペンディング）
+
+次タスク候補:
+- GitHub Release / README の微調整
+- I18nDumpUi.cs 見直し
+- 中国語対応（v0.8.0、ペンディング解除時）
+```
+
+**End of i18n Phase 1 + v0.7.0**
