@@ -2581,3 +2581,110 @@ HANDOFF_STATABLE.md の ## 89 を読んで、GUI バグ抽出に着手してく�
 | 104 件の `.bak_*` が既存 ignore パターンから漏れていた | パターン設計時は実ファイル名を確認 |
 
 **End of Session (2026-10-18 第 9 セッション)**
+---
+
+# v0.7.2 リリース完了 + GUI Bug Hunt Phase 1-2（2026-10-18 第 10 セッション）
+
+**HEAD:** `b14c079` (origin/main, tag: v0.7.2)
+**次セッションの起点:** `b14c079`
+
+> **次セッションは ## 90 と ## 89 を読めば完全なコンテキストを得られる。**
+
+## 90. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | ヘッドレス GUI テスト基盤 | `b14c079` | 19 tests / xunit.runner.json |
+| 2 | Fix 4 (HANDOFF S2) | `b14c079` | 空白クリックで選択解除 |
+| 3 | Fix 3 (HANDOFF S1) | `b14c079` | 前選択の IsSelected 解除 |
+| 4 | v0.7.2 リリース | `b14c079` | tag + push |
+
+### GUI Bug Hunt の成果
+
+**Phase 1（選択）+ Phase 2（削除）をヘッドレスで自動検証**。GUI 起動不要・1 テスト < 1 秒。
+
+| Bug | 内容 | 状態 |
+|:---:|---|:---:|
+| BUG-001 | 空白クリックで `SelectedComponent` が残る（HANDOFF `S2`） | ✅ CLOSED (Fix 4) |
+| BUG-002 | テスト並列実行で KeysConverter 重複キー例外 | ✅ FIXED (xunit.runner.json) |
+| BUG-003 | 新選択時に前選択の `IsSelected` が残る（HANDOFF `S1`） | ✅ CLOSED (Fix 3) |
+
+詳細は `tmp/GUI_BUGS.md`（ローカルのみ、gitignore 対象）。
+
+### テスト状況（v0.7.2 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|:---:|
+| C# 全テスト | 246 | ✅ pass（227 + Gui 19） |
+| C# GUI テスト | 19 pass / 1 skip / 0 fail | ✅ |
+| Python | 387+ | ✅ pass |
+
+### ヘッドレス GUI テストの仕組み
+
+```csharp
+// STA スレッドで WinForms コントロールを生成
+var canvas = new DesignCanvas();
+canvas.AddComponent(descriptor, new Point(100, 100));
+
+// reflection で OnMouseDown を発火
+typeof(Control).GetMethod("OnMouseDown", NonPublic | Instance)
+    .Invoke(component, new[] { new MouseEventArgs(...) });
+
+// 状態を Assert で検証
+Assert.Null(GuiReflection.GetField(canvas, "_currentConnection"));
+```
+
+- `GuiSta.Run(Action)` — STA スレッドラッパー
+- `GuiReflection.RaiseMouseDown()` / `GetField()` / `SetField()` — private メンバーアクセス
+- `xunit.runner.json`: `parallelizeTestCollections: false` — WinForms の static dictionary 競合回避
+
+### 残タスク（次セッション以降）
+
+| 優先 | タスク | 工数 |
+|:---:|---|:---:|
+| 🟡 | GUI Bug Hunt Phase 3〜9（接続 / ドラッグ / キーボード / 保存読込 / i18n / エラー処理） | 2-4h |
+| 🟢 | `git rm --cached pythonlib previou_files`（HANDOFF ## 89 から継続） | 30m |
+| 🟢 | 中国語対応（v0.8.0、ペンディング解除時） | 数日 |
+
+### 次セッション開始時のチェックリスト
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3        # b14c079 が HEAD
+git status --porcelain=v1              # clean
+dotnet build PowerSimBuilder.sln       # 0 warnings / 0 errors
+dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build   # 246 pass（Gui 19 含む）
+python -m pytest tests/python -q       # 387+ pass
+```
+
+### 次セッション開始プロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 90 を読んで、次タスクに着手してください。
+
+現状:
+- HEAD: b14c079 (origin/main, tag: v0.7.2)
+- C# 246 pass / Python 387+ pass / CI green
+- GUI Bug Hunt Phase 1-2 完了（19 headless tests）
+
+次タスク候補:
+- GUI Bug Hunt Phase 3〜9（Connection / Drag / Keyboard / Save / i18n / Error）
+- pythonlib / previou_files の untrack（git rm --cached）
+- 中国語対応（v0.8.0、ペンディング解除時）
+
+まず Phase 3（Connection）のヘッドレステストから着手してください。
+```
+
+### 本セッションの教訓（HANDOFF 追記）
+
+| 罠 | 対処 |
+|---|---|
+| pre-commit hook が修正して commit 失敗 → そのままタグを打つと誤タグ | **必ず `if ($LASTEXITCODE -eq 0)` でコミット成功を確認**してから `git tag` |
+| 誤タグをリモートに push してしまった | `git tag -d <tag>` + `git push origin :refs/tags/<tag>` |
+| `git push origin main` が `Everything up-to-date` | 新コミットが無い = commit 失敗を疑う |
+| `git rev-parse v0.7.2^{commit}` が `-encodedCommand` エラー | PowerShell が `^` をエスケープ扱い。`"v0.7.2^{commit}"` とクォート |
+| WinForms テストが並列実行で落ちる | `xunit.runner.json` に `parallelizeTestCollections: false` |
+| WinForms `ToolStripItem.Visible` はヘッドレスで不安定 | `[Fact(Skip = "...")]` で UI 依存テストを分離 |
+
+**End of v0.7.2 + GUI Bug Hunt Phase 1-2**
