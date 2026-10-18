@@ -2918,3 +2918,115 @@ HANDOFF_STATABLE.md の ## 92 を読んで、次タスクに着手してくだ�
 | README の `\|\s*Python\s*\|` が比較表にもマッチして誤判定 | より具体的な文脈でマッチ（`## Requirements` 内等） |
 
 **End of Python UX + テスト十分性確認**
+---
+
+# Save/Load テスト完了 + テスト十分性確立（2026-10-18 第 13 セッション）
+
+**HEAD:** `23d8edc` (origin/main, tag: v0.7.3)
+**次セッションの起点:** `23d8edc`
+
+> **次セッションは ## 93 と ## 92 を読めば完全なコンテキストを得られる。**
+
+## 93. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | Save/Load JSON round-trip テスト | `23d8edc` | 11 tests、CanvasModel <-> JSON |
+
+### 実装内容
+
+`MainForm.saveButton_Click` / `loadButton_Click` と同じ `JsonSerializerOptions` を
+テストで再現し、シリアライズ層（`CanvasModel` <-> JSON）を 11 件で検証。
+
+| テスト | 検証内容 |
+|---|---|
+| `RoundTrip_EmptyCanvas_IsEmpty` | 空 canvas の round-trip |
+| `RoundTrip_MultipleComponents_PreservesPositions` | 2 個配置、位置・名前・型 |
+| `RoundTrip_WithConnection_PreservesEndpoints` | 接続線の Start/End |
+| `RoundTrip_PreservesSelectionIndices` | 選択インデックス |
+| `RoundTrip_PreservesNumericParameters` | double/int/bool |
+| `RoundTrip_PreservesStringParameters` | 文字列 |
+| `Serialize_UsesCamelCasePropertyNames` | **MainForm 保存形式との互換性** |
+| `Deserialize_EmptyString_Throws` | 空文字列 → JsonException |
+| `Deserialize_InvalidJson_Throws` | 破損 JSON → JsonException |
+| `Deserialize_MissingFields_UsesDefaults` | 部分 JSON → デフォルト |
+| `RoundTrip_RealDescriptorFromDictionary_Succeeds` | 実記述子の round-trip |
+
+### テスト状況（`23d8edc` 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|:---:|
+| C# 全テスト | **280** | ✅ pass（279 pass / 1 skip） |
+| - SaveLoadRoundTripTests（新規） | 11 | ✅ pass |
+| - 既存 Gui テスト | 38 | ✅ pass |
+| Python 全テスト | **400** | ✅ pass |
+| Python カバレッジ | **99%** | ✅ |
+
+### Save/Load 実装の特徴（テストから判明）
+
+- `CanvasModel.Components` は `List<ComponentModel>`（Descriptor + Parameters + Location + InstanceName）
+- `CanvasModel.Connections` はインデックス参照（StartComponentIndex / EndComponentIndex）
+- `Dictionary<string, object>` パラメータは JSON 経由で `JsonElement` になる（System.Text.Json の仕様）
+- Save は camelCase（`PropertyNamingPolicy = JsonNamingPolicy.CamelCase`）
+- Load は `PropertyNameCaseInsensitive = true` で緩く解釈
+- `PointJsonConverter` で `{x, y}` 形式に変換
+
+### v1.0.0 公開ブロッカーの進捗
+
+| # | ブロッカー | 状態 |
+|:---:|---|:---:|
+| A-1 | Save/Load 異常系テスト | ✅ **完了**（本セッション） |
+| A-2 | GitHub Release 整備（v0.7.3 本文、バッジ最新化） | ⏳ 未着手 |
+
+**A-2 完了で v1.0.0 公開可能**（英語のみ）。
+
+### 残タスク（次セッション以降）
+
+| 優先 | タスク | 工数 |
+|:---:|---|:---:|
+| 🟡 高 | **A-2: GitHub Release 整備**（v0.7.3 draft release 本文、README バッジ最新化） | 30m |
+| 🟡 中 | B-1: Keyboard テスト（Ctrl+Z/Y/S、Escape） | 1h |
+| 🟢 低 | B-2: Drag/Undo テスト、B-4: TRX パース改善 | 1h |
+| 🟢 低 | C-1: pythonlib / previou_files untrack | 30m |
+| ⏸️ 保留 | D-1: 中国語 UI（v0.8.0） | 数日 |
+
+### 次セッション開始時のチェックリスト
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3        # 23d8edc が HEAD
+git status --porcelain=v1              # clean
+dotnet build PowerSimBuilder.sln       # 0 warnings / 0 errors
+dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build   # 280 tests
+python -m pytest tests/python -q       # 400 pass
+```
+
+### 次セッション開始プロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 93 を読んで、次タスクに着手してください。
+
+現状:
+- HEAD: 23d8edc (origin/main, tag: v0.7.3)
+- C# 280 pass / Python 400 pass / coverage 99% / CI green
+- Save/Load round-trip 11 tests 完了（A-1 完了）
+
+次タスク: A-2 GitHub Release 整備
+- v0.7.3 の draft release 本文を作成
+- README バッジを最新化
+- v1.0.0 公開準備を完了させる
+
+まず現状の GitHub Release / バッジを診断してください。
+```
+
+### 本セッションの教訓（PowerShell、追記）
+
+| 罠 | 対処 |
+|---|---|
+| `dotnet test` 日本語出力が文字化け → 正規表現マッチ失敗 | TRX ファイル（UTF-8 XML）を直接パースすれば確実 |
+| `Skipped: {0}` で `$counters.notExecuted + $counters.inconclusive` が文字列連結になる | `[int]$counters.notExecuted + [int]$counters.inconclusive` で明示変換 |
+| `$Matches` が複数の `-match` で上書きされる | 各マッチ後に即 `$var = $Matches[n]` で退避 |
+| `if/elseif/else` の multi-line 貼り付け | `if` を独立ブロックで並べる |
+
+**End of Save/Load テスト完了**
