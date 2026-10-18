@@ -3,7 +3,7 @@
 [![CI](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-279%20pass-green.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-283%20pass-green.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Windows%20only-lightgrey.svg)]()
 
 **Visual simulation companion to [StaTable](https://github.com/akashi-hideki/StaTable) — load StaTable XML, build Python state-machine controllers, run end-to-end simulations with signal plots.**
@@ -33,6 +33,14 @@ StaTable alone answers **"does it compile?"**. PowerSimBuilder answers
 
 ---
 
+## What's New in v0.9.0
+
+- **Simplified Chinese UI** (188 keys): auto-detected from OS UI culture, persistent via `%APPDATA%\PowerSimBuilder\settings.json`, switchable from the toolbar `Language` / `语言` menu
+- **Custom Restart dialog**: `[Restart]` / `[取消]` buttons (MessageBox cannot rename its OK button); auto-restarts via `Application.Restart()`; `[Cancel]` leaves the setting untouched
+- **CJK font fallback in matplotlib plots**: Microsoft YaHei / SimHei / SimSun / Noto Sans CJK SC added; mixed Japanese + Chinese labels render without tofu boxes
+- **Save/Load round-trip tests**: 11 tests (CanvasModel <-> JSON)
+- **Python-not-installed UX**: startup check + friendly error (v0.7.x)
+- **Test suite**: 283 C# tests (283 pass / 1 skip) + 400 Python tests (99% coverage)
 ## What's New in v0.7.3
 
 - **Canvas connection validation** (HIGH severity, v0.7.3): self-connection, invalid direction (out->out, in->in, in->out), and duplicate connections are now rejected

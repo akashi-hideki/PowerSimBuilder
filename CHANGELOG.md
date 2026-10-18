@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-18
+
+### Added (Simplified Chinese UI)
+
+- **188-key Simplified Chinese translation** (`Resources/i18n/zh.json`)
+  - Auto-embedded via existing `<EmbeddedResource Include="Resources/i18n/**/*.json" />`
+  - `en.json` also expanded to 188 keys (previously 180 + 6 I18n/MainForm keys)
+- **Persistent language setting** (`AppSettings.cs`)
+  - Stored at `%APPDATA%\PowerSimBuilder\settings.json`
+  - Startup resolution: `settings.json` > OS UI culture (`zh`) > `en`
+  - `DetectOsLanguage()`: returns `zh` for Chinese OS, `en` for everything else
+- **Toolbar language menu** (`CanvasForm/MainForm.cs`)
+  - `Language` / `语言` dropdown at the toolbar right edge
+  - Current selection checkmarked
+- **Custom restart dialog** with `[Restart]` / `[取消]` buttons
+  - `MessageBox.Show` cannot rename its OK button, so a small Form is built
+  - `[Restart]` → `Application.Restart()` (auto-relaunch, new language applied)
+  - `[Cancel]` → no-op (settings.json untouched)
+  - Unsaved-change warning when `_canvasManager.IsModified`
+- **CJK font fallback** in matplotlib plots (`src/python_runtime/logger.py`)
+  - Candidates extended with `Microsoft YaHei`, `Microsoft YaHei UI`,
+    `SimHei`, `SimSun`, `Noto Sans CJK SC`
+  - `font.family` is now a concrete-name list (not `"sans-serif"`), which
+    enables matplotlib 3.6+ per-glyph fallback. Japanese labels render in
+    Yu Gothic; Chinese labels fall back to Microsoft YaHei automatically
+  - `PSB_CJK_FONT` env var is the preferred override (`PSB_JP_FONT` kept
+    for backward compatibility)
+
+### Fixed (during Chinese support work)
+
+- **`AppSettings.DetectOsLanguage()`** no longer returns `ja`. Japanese
+  Windows previously produced an empty string table because `ja.json`
+  does not exist; the fallback is now `en`.
+- **`I18n.SetLanguage()`** falls back to `en` if the requested language
+  has no embedded resource (or it failed to parse).
+- **`AppSettingsTests.I18n_EnAndZh_AreDistinct`** restores
+  `I18n.CurrentLanguage` in a `finally` block. Previously it left the
+  static I18n state in `zh` and caused
+  `StaTableProjectReaderTests.Parse_InvalidXml_ReturnsError` to fail.
+
+### Added (test infrastructure)
+
+- `AppSettingsTests` (4 tests): AppSettings type/members, zh loading,
+  en vs zh distinction (with finally restoration)
+
+### Tests
+
+- C#: **283 pass / 0 fail / 1 skip** (284 total)
+- Python: **400 pass** (99% coverage)
+- CI: C# 4-matrix + Python 4-version, all green
+
+### Notes
+
+- The Chinese UI was the primary business driver for the China market.
+  This release makes PowerSimBuilder fully usable in Simplified Chinese.
+- v1.0.0 will follow after field testing; no further feature work is
+  planned for the 0.x series.
+
 ## [0.7.3] - 2026-10-18
 
 ### Fixed (HIGH severity)
@@ -469,7 +527,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `readme.md` (spec) to `docs/specs/SPEC_POWERSIM.md`
 - Added comprehensive `.gitignore`
 
-[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.3...HEAD
+[Unreleased]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.3...v0.9.0
 [0.7.3]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/akashi-hideki/PowerSimBuilder/compare/v0.7.0...v0.7.1
