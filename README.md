@@ -111,7 +111,7 @@ PowerSimBuilder closes that gap:
 |---|---|---|
 | Windows | 10 / 11 | WinForms target |
 | .NET SDK | **10.0.x** | Free download from <https://dot.net/download> |
-| Python | **3.10+** | `python_runtime` is pip-installable via `pip install -e .` |
+| Python | **3.10+** | **Must be on PATH** for simulation execution. Runtime package is pip-installable via `pip install -e .` |
 
 ### Install
 

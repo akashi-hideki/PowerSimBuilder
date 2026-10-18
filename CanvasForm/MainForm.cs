@@ -58,6 +58,7 @@ namespace PowerSimBuilder
             componentPalette1.Padding = new Padding(0, 0, 0, 40);
 
             InitializeRuntimeComponents();
+            CheckPythonAtStartup();
 
             // 境界線の設定
             designCanvas1.BorderStyle = BorderStyle.FixedSingle;
@@ -546,6 +547,28 @@ namespace PowerSimBuilder
                         I18n.T("Common.MsgTitleError"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        /// <summary>
+        /// Warns the user at startup if Python is not on PATH.
+        /// Disables the Create Simulation button. Code generation still works.
+        /// </summary>
+        private void CheckPythonAtStartup()
+        {
+            if (PythonExecutor.IsPythonAvailable())
+                return;
+
+            if (createSimButton != null)
+            {
+                createSimButton.Enabled = false;
+                createSimButton.ToolTipText = I18n.T("MainForm.MsgPythonMissingAtStartup");
+            }
+
+            MessageBox.Show(
+                I18n.T("MainForm.MsgPythonMissingAtStartup"),
+                I18n.T("Common.MsgTitleWarning"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
         }
 
         private void createSimButton_Click(object sender, EventArgs e)

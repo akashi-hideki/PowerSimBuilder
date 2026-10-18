@@ -35,6 +35,31 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
+        /// Returns true if "python" is available on PATH.
+        /// </summary>
+        public static bool IsPythonAvailable()
+        {
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo("python", "--version")
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+                using var p = System.Diagnostics.Process.Start(psi);
+                if (p == null) return false;
+                p.WaitForExit(3000);
+                return p.HasExited && p.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// デフォルトのPython実行メソッド（Processを使用）
         /// </summary>
         private bool DefaultExecutePythonScript(string scriptPath)
@@ -121,6 +146,12 @@ namespace PowerSimBuilder
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 return true;
+            }
+            catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 2)
+            {
+                MessageBox.Show(I18n.T("PythonExecutor.MsgPythonNotFound"),
+                    I18n.T("Common.MsgTitleError"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
             }
             catch (Exception ex)
             {
