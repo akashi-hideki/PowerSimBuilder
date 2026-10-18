@@ -173,6 +173,15 @@ namespace PowerSimBuilder
         private void ComponentControl_MouseDown(object sender, MouseEventArgs e)
         {
             this.Focus();
+            // Right-click: only update selection, never start port/connection operations.
+            // Ensures IsSelected is set even when the click lands on a port, so the
+            // context menu Delete always targets the correct component.
+            if (e.Button != MouseButtons.Left)
+            {
+                IsSelected = true;
+                BringToFront();
+                return;
+            }
             bool portClicked = false;
 
             // 入力ポートチェック

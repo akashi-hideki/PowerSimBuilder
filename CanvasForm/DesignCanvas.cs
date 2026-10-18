@@ -242,6 +242,13 @@ namespace PowerSimBuilder
         /// </summary>
         private void ComponentControl_MouseDown(object sender, MouseEventArgs e)
         {
+            // Right-click: skip drag/port logic (selection already handled by ComponentControl)
+            if (e.Button != MouseButtons.Left)
+            {
+                _currentConnection = null;   // Cancel on right-click
+                Invalidate();                // Clear temporary line
+                return;
+            }
             HandleComponentMouseDown(sender, e);
         }
 
@@ -409,6 +416,8 @@ namespace PowerSimBuilder
         /// </summary>
         private void HandleMouseDown(Point location)
         {
+            // Cancel any pending connection (leftover from an incomplete start)
+            _currentConnection = null;
             if (TrySelectConnection(location)) return;
             // [Fix 3-C-7c] Duplicate fire prevention
 
