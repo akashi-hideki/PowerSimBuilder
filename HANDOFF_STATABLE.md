@@ -2688,3 +2688,118 @@ HANDOFF_STATABLE.md の ## 90 を読んで、次タスクに着手してくだ�
 | WinForms `ToolStripItem.Visible` はヘッドレスで不安定 | `[Fact(Skip = "...")]` で UI 依存テストを分離 |
 
 **End of v0.7.2 + GUI Bug Hunt Phase 1-2**
+---
+
+# v0.7.3 リリース完了 + GUI Bug Hunt Phase 3（2026-10-18 第 11 セッション）
+
+**HEAD:** `7db2100` (origin/main, tag: v0.7.3)
+**次セッションの起点:** `7db2100`
+
+> **次セッションは ## 91 と ## 90 を読めば完全なコンテキストを得られる。**
+
+## 91. 本セッションの完了タスク
+
+| # | タスク | コミット | 内容 |
+|:---:|---|---|---|
+| 1 | Phase 3 (Connection) テスト | `7db2100` | `DesignCanvasConnectionTests` 7 tests |
+| 2 | Fix 5 (BUG-004/005/006) | `7db2100` | `CompleteConnection` で自己/方向/重複を検証 |
+| 3 | v0.7.3 リリース | `7db2100` | tag + push |
+
+### 発見・修正した Bug（HIGH severity 3 件）
+
+| Bug | 内容 | 影響 |
+|:---:|---|---|
+| BUG-004 | 自己接続（同一コンポーネント out → in）が拒否されない | シミュレーションで無限フィードバックの可能性 |
+| BUG-005 | 方向不正（out→out / in→in / in→out）が接続される | 意味のない接続がグラフに混入 |
+| BUG-006 | 重複接続が拒否されない（参照等価で比較） | 二重イベント、UI の混乱 |
+
+### 修正内容（`DesignCanvas.CompleteConnection`）
+
+```csharp
+// FIX 5: validate self-connection, direction, and duplicates
+if (_currentConnection == null) return;
+
+if (_currentConnection.StartComponent == component) { _currentConnection = null; return; }
+
+var startPorts = _currentConnection.StartComponent.Descriptor.OutputPorts;
+var endPorts = component.Descriptor.InputPorts;
+bool startIsOutput = startPorts != null && Enumerable.Contains(startPorts, _currentConnection.StartPort);
+bool endIsInput = endPorts != null && Enumerable.Contains(endPorts, portName);
+if (!startIsOutput || !endIsInput) { _currentConnection = null; return; }
+
+// 4 引数の値ベース比較に置換
+if (!ConnectionGraph.ConnectionExists(start, startPort, end, endPort))
+    AddConnection(_currentConnection);
+```
+
+### テスト状況（v0.7.3 時点）
+
+| スコープ | 件数 | 状態 |
+|---|---:|:---:|
+| C# 全テスト | **253** | ✅ pass（227 + Gui 26） |
+| C# GUI テスト | 26 pass / 1 skip / 0 fail | ✅ |
+| Python | 387+ | ✅ pass |
+
+### ヘッドレス GUI テストの拡張（v0.7.3）
+
+```csharp
+// ポート座標計算ヘルパー
+Point InputPortCenter(ComponentControl c, int i)
+    => new Point(ComponentControl.PortRadius, (int)(c.Height * (i + 1f) / (n + 1)));
+Point OutputPortCenter(ComponentControl c, int i)
+    => new Point(c.Width - ComponentControl.PortRadius, (int)(c.Height * (i + 1f) / (n + 1)));
+
+// 記述子選定: 入力/出力ポート名が異なるものを優先（方向テストの曖昧性回避）
+foreach (var d in Descriptors.Values) {
+    if (d.InputPorts[0] != d.OutputPorts[0]) return d;
+}
+```
+
+### 残タスク（次セッション以降）
+
+| 優先 | タスク | 工数 |
+|:---:|---|:---:|
+| 🟡 | GUI Bug Hunt Phase 4（Drag / Move / Undo） | 1-2h |
+| 🟡 | GUI Bug Hunt Phase 6（Keyboard: Delete / Ctrl+Z / Escape） | 1h |
+| 🟡 | GUI Bug Hunt Phase 7（Save / Load: 新規 / 上書き / 破損 JSON） | 1-2h |
+| 🟢 | `git rm --cached pythonlib previou_files`（## 89 から継続） | 30m |
+| 🟢 | 中国語対応（v0.8.0、ペンディング解除時） | 数日 |
+
+### 次セッション開始時のチェックリスト
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3        # 7db2100 が HEAD
+git status --porcelain=v1              # clean
+dotnet build PowerSimBuilder.sln       # 0 warnings / 0 errors
+dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build   # 253 pass
+python -m pytest tests/python -q       # 387+ pass
+```
+
+### 次セッション開始プロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 91 を読んで、次タスクに着手してください。
+
+現状:
+- HEAD: 7db2100 (origin/main, tag: v0.7.3)
+- C# 253 pass / Python 387+ pass / CI green
+- GUI Bug Hunt Phase 1-3 完了（26 headless tests）
+
+次タスク候補:
+- GUI Bug Hunt Phase 4/6/7（Drag / Keyboard / Save-Load）
+- pythonlib / previou_files の untrack
+
+まず Phase 4（Drag）のヘッドレステストから着手してください。
+```
+
+### 本セッションの教訓（HANDOFF 追記）
+
+| 罠 | 対処 |
+|---|---|
+| 記述子の `InputPorts[0] == OutputPorts[0]` のとき方向テストが曖昧 | distinct ports の記述子を優先選択 |
+| `git rev-parse v0.7.3^{commit}` は `^` エスケープ問題 | `git log --oneline -1 --decorate` で確認 |
+| pre-commit 失敗時にタグを打つと誤タグ | `$commitExit = $LASTEXITCODE` を捕捉 → `if ($commitExit -eq 0)` でタグ作成 |
+
+**End of v0.7.3 + GUI Bug Hunt Phase 3**
