@@ -2258,3 +2258,86 @@ dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build
 
 PNG auto-open は不要と判断（ユーザー）。simulation_signals.png は手動で開く運用。
 **End of Session (2026-10-18)**
+
+---
+
+# i18n Phase 0 結果 + 方針確定（2026-10-18 追記）
+
+## 86. i18n 方針決定 + Phase 0 結果
+
+### 方針（ユーザー決定）
+
+| 項目 | 決定 |
+|---|---|
+| UI 言語 | **English のみ** |
+| 日本語 UI | **廃止** |
+| 中国語 | **保留**（将来追加予定、今回スコープ外） |
+| デフォルト言語 | English |
+| 方式 | **i18n 基盤あり（案 A）** — 将来の中国語追加容易性のため |
+| 日本語コメント・ログ | そのまま（翻訳対象外） |
+| 生成 Python コメント | そのまま（翻訳対象外） |
+
+### Phase 0 調査結果
+
+| 分類 | 件数 | 対応 |
+|---|:---:|---|
+| UI 文字列（Text/Title/MessageBox） | 92 | ✅ 翻訳対象 |
+| toolTip / Items.Add | 18 | ✅ 翻訳対象 |
+| **UI 合計** | **110** | ✅ 英語化対象 |
+| throw new | 3 | ❌ 開発者向け |
+| 生成コードコメント | 40 | ❌ 対象外 |
+| その他文字列 | 171 | ❌ 内部ロジック |
+
+### i18n 基盤（中国語を見据えた設計）
+
+```
+Resources/i18n/en.json   ← 今回実装（110 件）
+Resources/i18n/zh.json   ← 将来追加（今回は未作成）
+I18n.cs                  ← I18n.T("key") → 現在言語の文字列
+                           言語コードは引数で汎用化（将来 zh 対応容易）
+```
+
+**中国語追加時の作業（将来）:**
+1. `Resources/i18n/zh.json` を作成（110 件の中国語訳）
+2. メニューに「简体中文」項目を追加（1 行）
+3. 完了（既存コード変更不要）
+
+### Phase 計画（英語のみ）
+
+| Phase | 対象 | 件数 | 工数 |
+|:---:|---|:---:|:---:|
+| 1-A | I18n.cs + en.json + 小フォーム 5 つ | 39 | 2-3h |
+| 1-B | MainForm + ComponentPalette + ComponentManager | 25 | 1h |
+| 1-C | PythonEditorForm + 他 + toolTip | 46 | 1-2h |
+| 1-D | 言語メニュー枠 + テスト + v0.7.0 | — | 1h |
+
+### Phase 1-A 対象ファイル（5 つ、39 件）
+
+| ファイル | 件数 |
+|---|:---:|
+| `AddComponentForm.cs` | 12 |
+| `ComponentPropertyForm.cs` | 9 |
+| `ConnectionEditorForm.cs` | 8 |
+| `AddParameterForm.cs` | 5 |
+| `ThermalParameterForm.cs` | 5 |
+
+### 次セッション開始プロンプト例
+
+```
+PowerSimBuilder の続きです。
+HANDOFF_STATABLE.md の ## 86 を読んで、
+i18n Phase 1-A に着手してください。
+
+現状:
+- HEAD: 24c1203 (origin/main, tag: v0.6.0)
+- 方針: 英語のみ（JA 廃止、中国語保留）
+- UI 文字列 110 件、Phase 1-A は 39 件
+
+Phase 1-A:
+- I18n.cs（言語コード汎用化、将来 zh 対応容易）
+- Resources/i18n/en.json 雛形
+- 小フォーム 5 つの置換（AddComponent, AddParameter,
+  ComponentProperty, ConnectionEditor, ThermalParameter）
+```
+
+**End of i18n Phase 0 (2026-10-18)**
