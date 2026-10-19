@@ -180,6 +180,8 @@ namespace PowerSimBuilder
             {
                 IsSelected = true;
                 BringToFront();
+                // Right-click: show parent DesignCanvas ContextMenuStrip explicitly.
+                ShowParentContextMenu(e.Location);
                 return;
             }
             bool portClicked = false;
@@ -227,6 +229,22 @@ namespace PowerSimBuilder
             {
                 IsSelected = true;
                 BringToFront();
+            }
+        }
+
+        /// <summary>
+        /// 右クリック時に親 DesignCanvas の ContextMenuStrip を表示する。
+        /// 理由: UserControl は WM_CONTEXTMENU を親にバブルさせないため、明示的に Show() を呼ぶ。
+        /// </summary>
+        private void ShowParentContextMenu(System.Drawing.Point clientLocation)
+        {
+            Control p = this.Parent;
+            while (p != null && !(p is DesignCanvas))
+                p = p.Parent;
+            if (p != null && p.ContextMenuStrip != null)
+            {
+                System.Drawing.Point screenPt = this.PointToScreen(clientLocation);
+                p.ContextMenuStrip.Show(screenPt);
             }
         }
 

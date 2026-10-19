@@ -1553,6 +1553,10 @@ private void ClearCanvas()
 
             contextMenu.Items.Add(deleteConnectionItem);
             contextMenu.Items.Add(deleteComponentItem);
+            var generatePythonItem = new ToolStripMenuItem(I18n.T("DesignCanvas.MenuGeneratePython"));
+            generatePythonItem.Name = "MenuGeneratePython";
+            generatePythonItem.Click += GeneratePythonItem_Click;
+            contextMenu.Items.Add(generatePythonItem);
             this.ContextMenuStrip = contextMenu;
         }
 
@@ -1567,6 +1571,8 @@ private void ClearCanvas()
             {
                 ContextMenuStrip.Items[0].Visible = (SelectedConnection != null);
                 ContextMenuStrip.Items[1].Visible = (SelectedComponent != null);
+                if (ContextMenuStrip.Items.Count > 2)
+                    ContextMenuStrip.Items[2].Visible = (SelectedComponent != null);
             }
         }
 
@@ -1588,6 +1594,26 @@ private void ClearCanvas()
         private void DeleteComponentItem_Click(object sender, EventArgs e)
         {
             if (SelectedComponent != null) RemoveComponent(SelectedComponent);
+        }
+        /// <summary>
+        /// Generate Python Component メニュー項目クリック処理
+        /// 機能: 選択中の ComponentDescriptor から Python コードを生成
+        /// 備考: 未接続だった ComponentManager.GeneratePythonComponent を接続
+        /// </summary>
+        private void GeneratePythonItem_Click(object sender, System.EventArgs e)
+        {
+            if (SelectedComponent == null) return;
+            try
+            {
+                ComponentManager.GeneratePythonComponent(SelectedComponent.Descriptor);
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(
+                    I18n.T("MainForm.MsgGenerateFail", ex.Message),
+                    I18n.T("Common.MsgTitleError"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         #endregion
 
