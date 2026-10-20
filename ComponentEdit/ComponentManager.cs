@@ -9,45 +9,37 @@ namespace PowerSimBuilder
         {
             if (descriptor == null)
             {
-                MessageBox.Show(I18n.T("Manager.MsgNoSelection"), I18n.T("Common.MsgTitleError"),
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AppServices.MessageBox.ShowError(null,
+                    I18n.T("Manager.MsgNoSelection"),
+                    I18n.T("Common.MsgTitleError"));
                 return;
             }
 
-            // ファイル保存ダイアログを表示
-            using (var saveFileDialog = new SaveFileDialog())
+            string filePath = AppServices.FileDialog.PickSavePath(
+                null,
+                I18n.T("Common.FilterPython"),
+                I18n.T("Manager.SaveDialogTitle"),
+                $"{descriptor.Type}.py");
+            if (string.IsNullOrEmpty(filePath)) return;
+
+            var generator = new ComponentCodeGenerator();
+            generator.GeneratePythonCode(descriptor, filePath);
+
+            using (var editorForm = new PythonEditorForm(filePath, false))
             {
-                saveFileDialog.Filter = I18n.T("Common.FilterPython");
-                saveFileDialog.Title = I18n.T("Manager.SaveDialogTitle");
-                saveFileDialog.FileName = $"{descriptor.Type}.py";
-
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                editorForm.Executor = new PythonExecutor();
+                if (editorForm.ShowDialog() == DialogResult.OK && editorForm.IsModified)
                 {
-                    string filePath = saveFileDialog.FileName;
-
-                    // Pythonコードを生成
-                    var generator = new ComponentCodeGenerator();
-                    generator.GeneratePythonCode(descriptor, filePath);
-
-                    // 編集フォームを表示
-                    using (var editorForm = new PythonEditorForm(filePath, false))
-                    {
-                        editorForm.Executor = new PythonExecutor();
-                        if (editorForm.ShowDialog() == DialogResult.OK && editorForm.IsModified)
-                        {
-                            // 変更があればファイルに保存
-                            File.WriteAllText(filePath, editorForm.GetPythonCode());
-                            MessageBox.Show(I18n.T("Manager.MsgGenerated"), I18n.T("Common.MsgTitleSuccess"),
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        else
-                        {
-                            // 変更がなければファイルを削除（オプション）
-                            // File.Delete(filePath);
-                            MessageBox.Show(I18n.T("Manager.MsgNoChange"), I18n.T("Common.MsgTitleInfo"),
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
+                    File.WriteAllText(filePath, editorForm.GetPythonCode());
+                    AppServices.MessageBox.ShowInfo(null,
+                        I18n.T("Manager.MsgGenerated"),
+                        I18n.T("Common.MsgTitleSuccess"));
+                }
+                else
+                {
+                    AppServices.MessageBox.ShowInfo(null,
+                        I18n.T("Manager.MsgNoChange"),
+                        I18n.T("Common.MsgTitleInfo"));
                 }
             }
         }

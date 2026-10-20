@@ -118,9 +118,7 @@ namespace PowerSimBuilder.ComponentEdit
         {
             if (treeRoleFunctions.Nodes.Count == 0)
             {
-                MessageBox.Show(this, I18n.T("EditPanel.MsgJumpNoFunc"),
-                    I18n.T("Common.MsgTitleInfo"),
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                AppServices.MessageBox.ShowInfo(this, I18n.T("EditPanel.MsgJumpNoFunc"), I18n.T("Common.MsgTitleInfo"));
                 return;
             }
             int start = treeRoleFunctions.SelectedNode?.Index ?? -1;

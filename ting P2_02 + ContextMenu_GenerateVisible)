@@ -1,0 +1,7 @@
+warning: in the working copy of 'ComponentEdit/ComponentManager.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ComponentEdit/EditPanel.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ComponentEdit/PythonEditorForm.cs', LF will be replaced by CRLF the next time Git touches it
+ ComponentEdit/ComponentManager.cs | 60 [32m+++++++++++++++++[m[31m----------------------[m
+ ComponentEdit/EditPanel.cs        |  4 [32m+[m[31m--[m
+ ComponentEdit/PythonEditorForm.cs | 20 [32m+++[m[31m----------[m
+ 3 files changed, 31 insertions(+), 53 deletions(-)

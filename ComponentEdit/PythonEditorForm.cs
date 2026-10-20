@@ -62,15 +62,9 @@ namespace PowerSimBuilder
             editPanel.JumpRequested += (s, info) => JumpToLine(info.StartLine);
             editPanel.OverrideRequested += (s, info) => CreateOverride(info);
             editPanel.AdapterRequested += (s, e) =>
-                MessageBox.Show(this,
-                    I18n.T("EditPanel.MsgAdapterNotReady"),
-                    I18n.T("Common.MsgTitleInfo"),
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                AppServices.MessageBox.ShowInfo(this, I18n.T("EditPanel.MsgAdapterNotReady"), I18n.T("Common.MsgTitleInfo"));
             editPanel.ImportCRequested += (s, e) =>
-                MessageBox.Show(this,
-                    I18n.T("EditPanel.MsgImportCNotReady"),
-                    I18n.T("Common.MsgTitleInfo"),
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                AppServices.MessageBox.ShowInfo(this, I18n.T("EditPanel.MsgImportCNotReady"), I18n.T("Common.MsgTitleInfo"));
         }
 
         public void RefreshEditPanel()
@@ -126,18 +120,12 @@ namespace PowerSimBuilder
             {
                 var targetDir = Path.Combine(projectDir, "user_components");
                 var createdPath = ComponentOverrideHelper.Scaffold(info.FilePath, targetDir, info.Name);
-                MessageBox.Show(this,
-                    I18n.T("EditPanel.MsgOverrideSuccess", createdPath),
-                    I18n.T("Common.MsgTitleSuccess"),
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                AppServices.MessageBox.ShowInfo(this, I18n.T("EditPanel.MsgOverrideSuccess", createdPath), I18n.T("Common.MsgTitleSuccess"));
                 RefreshEditPanel();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this,
-                    I18n.T("EditPanel.MsgOverrideFail", ex.Message),
-                    I18n.T("Common.MsgTitleError"),
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AppServices.MessageBox.ShowError(this, I18n.T("EditPanel.MsgOverrideFail", ex.Message), I18n.T("Common.MsgTitleError"));
             }
         }
 
