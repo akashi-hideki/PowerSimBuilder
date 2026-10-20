@@ -371,6 +371,28 @@ namespace PowerSimBuilder
                 throw;
             }
         }
+
+        /// <summary>
+        /// Generate Python code as a string (no disk write). Used by the
+        /// Edit First flow where the editor opens with in-memory code.
+        /// </summary>
+        public string GeneratePythonCodeAsString(ComponentDescriptor descriptor)
+        {
+            var tempFile = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(),
+                "psb_gen_" + System.Guid.NewGuid().ToString("N") + ".py");
+            try
+            {
+                GeneratePythonCode(descriptor, tempFile);
+                return System.IO.File.ReadAllText(tempFile);
+            }
+            finally
+            {
+                try { System.IO.File.Delete(tempFile); } catch { }
+            }
+        }
+
+
         /// <summary>
         /// 指定されたテンプレートキーに対応するフォーマット済みテンプレート行をリストに追加します
         /// </summary>

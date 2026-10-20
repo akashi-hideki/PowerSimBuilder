@@ -62,14 +62,22 @@ namespace PowerSimBuilder.Tests.ComponentEdit
         }
 
         [Fact]
-        public void ComponentManager_SaveCanceled_DoesNothing()
+        public void CreateEditorForComponent_NoShowDialog_NoSaveDialog()
         {
-            _dlg.SaveResult = null;
-            var descriptor = ComponentDescriptorDictionary.Descriptors.Values.First();
-            ComponentManager.GeneratePythonComponent(descriptor);
-            Assert.Single(_dlg.SaveCalls);
-            Assert.Empty(_box.InfoCalls);
-            Assert.Empty(_box.ErrorCalls);
+            // Edit First: CreateEditorForComponent builds the form with
+            // in-memory code and does NOT call ShowDialog. The SaveFileDialog
+            // would only fire on the editor's first Save, which this test
+            // does not trigger. This avoids the modal ShowDialog path entirely.
+            GuiSta.Run(() =>
+            {
+                _dlg.SaveResult = null;
+                var descriptor = ComponentDescriptorDictionary.Descriptors.Values.First();
+                using (var editor = ComponentManager.CreateEditorForComponent(descriptor))
+                {
+                    Assert.NotNull(editor);
+                    Assert.Empty(_dlg.SaveCalls);  // key: no SaveDialog upfront
+                }
+            });
         }
 
         [Fact]
@@ -158,26 +166,24 @@ namespace PowerSimBuilder.Tests.ComponentEdit
         }
 
         [Fact]
-        public void DesignCanvas_GeneratePythonItem_Click_InvokesSaveDialog()
+        public void CreateEditorForComponent_ProducesNonEmptyCode_NoSaveDialog()
         {
+            // Verifies that the Edit First flow generates/reads code in memory
+            // before showing the editor. The SaveFileDialog is only called from
+            // btnSave_Click, which is not triggered here.
             GuiSta.Run(() =>
             {
-                var canvas = new DesignCanvas();
+                _dlg.SaveResult = null;
                 var descriptor = ComponentDescriptorDictionary.Descriptors.Values
                     .First(d => d.InputPorts != null && d.InputPorts.Length > 0
                              && d.OutputPorts != null && d.OutputPorts.Length > 0);
-                canvas.AddComponent(descriptor, new Point(100, 100));
-                var comp = canvas.Components[0];
-                SetSelectedComponent(canvas, comp);
-                _dlg.SaveResult = null;
-
-                var method = typeof(DesignCanvas).GetMethod("GeneratePythonItem_Click",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                method.Invoke(canvas, new object[] { canvas, EventArgs.Empty });
-
-                Assert.Single(_dlg.SaveCalls);
-                Assert.Equal(I18n.T("Manager.SaveDialogTitle"), _dlg.SaveCalls[0].Title);
-                Assert.EndsWith(".py", _dlg.SaveCalls[0].DefaultFileName);
+                using (var editor = ComponentManager.CreateEditorForComponent(descriptor))
+                {
+                    Assert.NotNull(editor);
+                    Assert.False(string.IsNullOrEmpty(editor.GetPythonCode()),
+                        "in-memory code should be populated");
+                    Assert.Empty(_dlg.SaveCalls);
+                }
             });
         }
 

@@ -175,6 +175,10 @@ namespace PowerSimBuilder
                     MessageBox.Show(this,
                         I18n.T("StaTableImport.MsgGenerated", dlg.FileName),
                         I18n.T("Common.MsgTitleSuccess"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            // v1.1.0: open the generated file in PythonEditorForm so that
+            // STABLE_USER_CODE / Role Functions are immediately visible.
+            OpenGeneratedInEditor(dlg.FileName);
                     DialogResult = DialogResult.OK;
                     Close();
                 }
@@ -190,6 +194,30 @@ namespace PowerSimBuilder
         // ==============================================================
         // Task 3-C-7: 保存先の自動提案ヘルパー
         // ==============================================================
+
+
+        /// <summary>
+        /// v1.1.0: after generating a StaTable controller, open the .py in
+        /// PythonEditorForm so the user can edit STABLE_USER_CODE blocks and
+        /// see Role Functions in the EditPanel.
+        /// </summary>
+        private void OpenGeneratedInEditor(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath)) return;
+            try
+            {
+                using (var editorForm = new PythonEditorForm(filePath, false))
+                {
+                    editorForm.ProjectDir = System.IO.Path.GetDirectoryName(filePath);
+                    editorForm.Executor = new PythonExecutor();
+                    editorForm.ShowDialog(this);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                AppServices.MessageBox.ShowError(this, ex.Message, I18n.T("Common.MsgTitleError"));
+            }
+        }
 
         /// <summary>
         /// プロジェクトルートの generated/ ディレクトリを探す。

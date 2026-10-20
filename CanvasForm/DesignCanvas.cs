@@ -1553,10 +1553,10 @@ private void ClearCanvas()
 
             contextMenu.Items.Add(deleteConnectionItem);
             contextMenu.Items.Add(deleteComponentItem);
-            var generatePythonItem = new ToolStripMenuItem(I18n.T("DesignCanvas.MenuGeneratePython"));
-            generatePythonItem.Name = "MenuGeneratePython";
-            generatePythonItem.Click += GeneratePythonItem_Click;
-            contextMenu.Items.Add(generatePythonItem);
+            var editPythonCodeItem = new ToolStripMenuItem(I18n.T("DesignCanvas.MenuEditPythonCode"));
+            editPythonCodeItem.Name = "MenuEditPythonCode";
+            editPythonCodeItem.Click += EditPythonCodeItem_Click;
+            contextMenu.Items.Add(editPythonCodeItem);
             this.ContextMenuStrip = contextMenu;
         }
 
@@ -1600,19 +1600,68 @@ private void ClearCanvas()
         /// 機能: 選択中の ComponentDescriptor から Python コードを生成
         /// 備考: 未接続だった ComponentManager.GeneratePythonComponent を接続
         /// </summary>
-        private void GeneratePythonItem_Click(object sender, System.EventArgs e)
+        /// <summary>
+        /// Unified "Edit Python Code" handler.
+        /// - ControllerBox: open Parameters["generated_path"] (StaTable-generated
+        ///   _powersim.py with STABLE_USER_CODE:Layer.F_xxx markers) directly.
+        /// - Other components: generate code via ComponentManager and open it.
+        /// </summary>
+        private void EditPythonCodeItem_Click(object sender, System.EventArgs e)
         {
             if (SelectedComponent == null) return;
+            var descriptor = SelectedComponent.Descriptor;
+            if (descriptor == null) return;
+
             try
             {
-                ComponentManager.GeneratePythonComponent(SelectedComponent.Descriptor);
+                if (descriptor.Type == "ControllerBox")
+                {
+                    string generatedPath = null;
+                    if (SelectedComponent.Parameters != null &&
+                        SelectedComponent.Parameters.TryGetValue("generated_path", out var raw))
+                    {
+                        generatedPath = raw as string;
+                    }
+
+                    if (string.IsNullOrEmpty(generatedPath))
+                    {
+                        AppServices.MessageBox.ShowInfo(this,
+                            I18n.T("DesignCanvas.MsgNoGeneratedPath"),
+                            I18n.T("Common.MsgTitleInfo"));
+                        return;
+                    }
+                    if (!System.IO.File.Exists(generatedPath))
+                    {
+                        AppServices.MessageBox.ShowWarning(this,
+                            I18n.T("DesignCanvas.MsgGeneratedMissing", generatedPath),
+                            I18n.T("Common.MsgTitleWarning"));
+                        return;
+                    }
+                    OpenPythonEditor(generatedPath);
+                    return;
+                }
+
+                // Generic component: generate then edit (existing behavior)
+                ComponentManager.GeneratePythonComponent(descriptor);
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show(
+                AppServices.MessageBox.ShowError(this,
                     I18n.T("MainForm.MsgGenerateFail", ex.Message),
-                    I18n.T("Common.MsgTitleError"),
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    I18n.T("Common.MsgTitleError"));
+            }
+        }
+
+        /// <summary>
+        /// Open a Python file in PythonEditorForm with ProjectDir set.
+        /// </summary>
+        private void OpenPythonEditor(string filePath)
+        {
+            using (var editorForm = new PythonEditorForm(filePath, false))
+            {
+                editorForm.ProjectDir = System.IO.Path.GetDirectoryName(filePath);
+                editorForm.Executor = new PythonExecutor();
+                editorForm.ShowDialog(this);
             }
         }
         #endregion

@@ -27,5 +27,13 @@ namespace PowerSimBuilder
             else
                 MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
+
+        public bool ShowConfirm(IWin32Window owner, string message, string title)
+        {
+            DialogResult result = owner != null
+                ? MessageBox.Show(owner, message, title, MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                : MessageBox.Show(message, title, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            return result == DialogResult.Yes;
+        }
     }
 }

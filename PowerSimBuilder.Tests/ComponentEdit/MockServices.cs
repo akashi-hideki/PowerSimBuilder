@@ -19,6 +19,15 @@ namespace PowerSimBuilder.Tests.ComponentEdit
 
         public void ShowWarning(IWin32Window owner, string message, string title)
             => WarningCalls.Add((message, title));
+
+        public bool ConfirmResult { get; set; } = true;
+        public List<(string Message, string Title)> ConfirmCalls { get; } = new();
+
+        public bool ShowConfirm(IWin32Window owner, string message, string title)
+        {
+            ConfirmCalls.Add((message, title));
+            return ConfirmResult;
+        }
     }
 
     public sealed class MockFileDialogService : IFileDialogService

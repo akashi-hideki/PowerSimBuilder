@@ -1,7 +1,7 @@
 """
 Digital Inputコンポーネント
 自動生成コード
-生成日時: 2026/10/20 19:36:15
+生成日時: 2026/10/20 20:58:18
 """
 
 import math
@@ -63,9 +63,11 @@ class DigitalInput(Component):
         """コンポーネントの状態を更新"""
         # 入力値の取得
         state = self.inputs['state']
-
+        # STABLE_USER_CODE_START
         # ここにコンポーネントのロジックを実装
         # 例: 簡単な計算や状態更新
+        # ユーザーコードはこのマーカー内に記述してください
+        # STABLE_USER_CODE_END
 
         # 出力値の設定
         self.outputs['state'] = 0.0  # 実際の計算結果に置き換える

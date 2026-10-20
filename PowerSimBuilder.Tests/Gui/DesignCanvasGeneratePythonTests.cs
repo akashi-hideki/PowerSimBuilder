@@ -39,10 +39,10 @@ namespace PowerSimBuilder.Tests.Gui
                 using var canvas = new DesignCanvas();
                 Assert.NotNull(canvas.ContextMenuStrip);
                 Assert.True(canvas.ContextMenuStrip.Items.Count >= 3,
-                    "Generate Python Component menu item must be present");
+                    "Edit Python Code menu item must be present");
                 var item = canvas.ContextMenuStrip.Items[2];
                 Assert.True(item is ToolStripMenuItem);
-                Assert.Equal("MenuGeneratePython", item.Name);
+                Assert.Equal("MenuEditPythonCode", item.Name);
             });
         }
 
@@ -57,7 +57,7 @@ namespace PowerSimBuilder.Tests.Gui
                 SelectComponent(canvas, comp);
                 InvokeContextMenuOpening(canvas);
                 Assert.True(canvas.ContextMenuStrip.Items[2].Visible,
-                    "Generate Python Component should be visible when a component is selected");
+                    "Edit Python Code should be visible when a component is selected");
             });
         }
 
@@ -70,7 +70,7 @@ namespace PowerSimBuilder.Tests.Gui
                 canvas.AddComponent(PickDescriptor(), new Point(100, 100));
                 InvokeContextMenuOpening(canvas);
                 Assert.False(canvas.ContextMenuStrip.Items[2].Visible,
-                    "Generate Python Component should be hidden when nothing is selected");
+                    "Edit Python Code should be hidden when nothing is selected");
             });
         }
 
@@ -86,7 +86,7 @@ namespace PowerSimBuilder.Tests.Gui
                 // Existing delete items do not set Name; verify by their menu text instead.
                 Assert.NotNull(canvas.ContextMenuStrip.Items[0]);
                 Assert.NotNull(canvas.ContextMenuStrip.Items[1]);
-                Assert.Equal("MenuGeneratePython", canvas.ContextMenuStrip.Items[2].Name);
+                Assert.Equal("MenuEditPythonCode", canvas.ContextMenuStrip.Items[2].Name);
             });
         }
     }

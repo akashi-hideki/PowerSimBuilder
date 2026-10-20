@@ -1,7 +1,7 @@
 """
 CookingHeaterControllerコンポーネント
 自動生成コード
-生成日時: 2026/10/20 19:39:13
+生成日時: 2026/10/20 19:59:27
 """
 
 import math
@@ -28,8 +28,8 @@ except ImportError:
 @dataclass
 class ControllerBoxParameters:
     """CookingHeaterControllerパラメータのデータクラス"""
-    generated_path: str = "C:\dev\PowerSimBuilder\tests\data\scenarios\cooking_heater\controller_box.py"
-    auto_events: str = None
+    generated_path: str = "C:\dev\PowerSimBuilder\generated\CookingHeaterController_powersim.py"
+    auto_events: str = ""
 
 class ControllerBox(Component):
     """CookingHeaterControllerコンポーネント"""
@@ -122,9 +122,11 @@ class ControllerBox(Component):
         thermistor_middle = self.inputs['thermistor_middle']
         thermistor_top = self.inputs['thermistor_top']
         zc_count = self.inputs['zc_count']
-
+        # STABLE_USER_CODE_START
         # ここにコンポーネントのロジックを実装
         # 例: 簡単な計算や状態更新
+        # ユーザーコードはこのマーカー内に記述してください
+        # STABLE_USER_CODE_END
 
         # 出力値の設定
         self.outputs['boiler_temp'] = 0.0  # 実際の計算結果に置き換える

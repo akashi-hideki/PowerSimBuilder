@@ -207,5 +207,12 @@
   "EditPanel.MsgNoProjectDir": "Project directory is not set. Open a project first.",
   "EditPanel.MsgOverrideSuccess": "Created override: {0}",
   "EditPanel.TitleSelectProject": "Select Project Directory",
-  "DesignCanvas.MenuGeneratePython": "Generate Python Component"
+  "DesignCanvas.MenuGeneratePython": "Generate Python Component",
+  "DesignCanvas.MenuEditPythonCode": "Edit Python Code",
+  "DesignCanvas.MsgGeneratedMissing": "Generated file not found: {0}",
+  "DesignCanvas.MsgNoGeneratedPath": "ControllerBox has no generated_path parameter.",
+  "Manager.MsgSaved": "File saved.",
+  "PythonEditor.SaveDialogTitle": "Save Python File",
+  "EditPanel.GroupBundledComponents": "Bundled Components",
+  "EditPanel.GroupFileStructure": "File Structure (this file)"
 }

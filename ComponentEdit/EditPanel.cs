@@ -15,6 +15,7 @@ namespace PowerSimBuilder.ComponentEdit
     public partial class EditPanel : UserControl
     {
         public event EventHandler<RoleFunctionInfo> JumpRequested;
+        public event EventHandler<int> JumpToLine;
         public event EventHandler<ComponentInfo> OverrideRequested;
         public event EventHandler AdapterRequested;
         public event EventHandler ImportCRequested;
@@ -60,9 +61,21 @@ namespace PowerSimBuilder.ComponentEdit
             };
             treeComponents.NodeMouseDoubleClick += (s, e) =>
             {
-                var info = e.Node?.Tag as ComponentInfo;
-                if (info != null && info.Source == ComponentSourceKind.Bundled)
-                    OverrideRequested?.Invoke(this, info);
+                if (e.Node?.Tag is ComponentInfo compInfo && compInfo.Source == ComponentSourceKind.Bundled)
+                {
+                    OverrideRequested?.Invoke(this, compInfo);
+                    return;
+                }
+                if (e.Node?.Tag is FileMethodInfo methodInfo)
+                {
+                    JumpToLine?.Invoke(this, methodInfo.StartLine);
+                    return;
+                }
+                if (e.Node?.Tag is FileClassInfo classInfo)
+                {
+                    JumpToLine?.Invoke(this, classInfo.StartLine);
+                    return;
+                }
             };
             btnOverride.Click += OnOverrideClick;
             btnAdapter.Click += (s, e) => AdapterRequested?.Invoke(this, EventArgs.Empty);
@@ -92,7 +105,61 @@ namespace PowerSimBuilder.ComponentEdit
             finally { treeComponents.EndUpdate(); }
         }
 
-        public void LoadRoleFunctions(IReadOnlyList<RoleFunctionInfo> roles)
+        /// <summary>
+        /// Render the opened file's class/method structure into treeComponents,
+        /// with a Bundled Components sub-root for the +Override flow.
+        /// </summary>
+        public void LoadFileStructure(
+            IReadOnlyList<FileClassInfo> classes,
+            IReadOnlyList<ComponentInfo> bundled)
+        {
+            treeComponents.BeginUpdate();
+            try
+            {
+                treeComponents.Nodes.Clear();
+
+                // 1) File Structure root
+                if (classes != null && classes.Count > 0)
+                {
+                    var fileRoot = new TreeNode(I18n.T("EditPanel.GroupFileStructure"));
+                    foreach (var cls in classes)
+                    {
+                        string classLabel = string.IsNullOrEmpty(cls.BaseClass)
+                            ? $"📦 {cls.Name} (L{cls.StartLine})"
+                            : $"📦 {cls.Name} : {cls.BaseClass} (L{cls.StartLine})";
+                        var clsNode = new TreeNode(classLabel) { Tag = cls };
+                        foreach (var m in cls.Methods)
+                        {
+                            string icon = m.IsRoleFunction
+                                ? (m.IsStub ? "⚠️" : "✅")
+                                : "";
+                            string label = string.IsNullOrEmpty(icon)
+                                ? $"{m.Name} (L{m.StartLine})"
+                                : $"{icon} {m.Name} (L{m.StartLine})";
+                            clsNode.Nodes.Add(new TreeNode(label) { Tag = m });
+                        }
+                        fileRoot.Nodes.Add(clsNode);
+                    }
+                    treeComponents.Nodes.Add(fileRoot);
+                    fileRoot.Expand();
+                }
+
+                // 2) Bundled Components root (for +Override flow)
+                if (bundled != null && bundled.Count > 0)
+                {
+                    var bundledRoot = new TreeNode(I18n.T("EditPanel.GroupBundledComponents"));
+                    foreach (var c in bundled)
+                    {
+                        bundledRoot.Nodes.Add(new TreeNode(c.DisplayName) { Tag = c });
+                    }
+                    treeComponents.Nodes.Add(bundledRoot);
+                    bundledRoot.Expand();
+                }
+            }
+            finally { treeComponents.EndUpdate(); }
+        }
+
+                public void LoadRoleFunctions(IReadOnlyList<RoleFunctionInfo> roles)
         {
             treeRoleFunctions.BeginUpdate();
             try

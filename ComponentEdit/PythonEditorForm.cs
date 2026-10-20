@@ -38,6 +38,15 @@ namespace PowerSimBuilder
         }
 
         public PythonEditorForm(string filePath, bool enableRunButtons)
+            : this(filePath, enableRunButtons, null) { }
+
+        /// <summary>
+        /// Lazy-save constructor. When filePath is null, the editor opens as
+        /// an unsaved document: no disk write until Save. initialCode (if
+        /// non-null) is shown as-is. On first Save, SaveFileDialog is shown
+        /// using SuggestedFileName as the default filename.
+        /// </summary>
+        public PythonEditorForm(string filePath, bool enableRunButtons, string initialCode)
         {
             InitializeComponent();
             InitializeContextMenu();
@@ -53,13 +62,38 @@ namespace PowerSimBuilder
             btnOpenFolder.Enabled = enableRunButtons;
             lblStatus.Visible = enableRunButtons;
 
-            LoadFile();
+            if (filePath != null)
+            {
+                LoadFile();
+            }
+            else
+            {
+                _originalCode = initialCode ?? "";
+                textEditor.Text = _originalCode;
+                IsModified = !string.IsNullOrEmpty(initialCode);
+                UpdateTitle();
+                UpdateStatus();
+                // Reload is meaningless for an unsaved document
+                btnReload.Enabled = false;
+            }
             RefreshEditPanel();
         }
+
+        /// <summary>
+        /// Default filename proposed in SaveFileDialog on the first save
+        /// (e.g. "DigitalInput.py").
+        /// </summary>
+        public string SuggestedFileName { get; set; }
+
+        /// <summary>
+        /// Initial directory proposed in SaveFileDialog on the first save.
+        /// </summary>
+        public string SuggestedInitialDirectory { get; set; }
 
         private void WireEditPanel()
         {
             editPanel.JumpRequested += (s, info) => JumpToLine(info.StartLine);
+            editPanel.JumpToLine += (s, line) => JumpToLine(line);
             editPanel.OverrideRequested += (s, info) => CreateOverride(info);
             editPanel.AdapterRequested += (s, e) =>
                 AppServices.MessageBox.ShowInfo(this, I18n.T("EditPanel.MsgAdapterNotReady"), I18n.T("Common.MsgTitleInfo"));
@@ -73,10 +107,13 @@ namespace PowerSimBuilder
             {
                 var rootDir = FindRepoRoot();
                 var projectDir = ProjectDir ?? Directory.GetCurrentDirectory();
-                if (rootDir != null)
-                {
-                    editPanel.LoadComponents(ComponentScanner.ScanAll(rootDir, projectDir));
-                }
+
+                var bundled = rootDir != null
+                    ? ComponentScanner.ScanAll(rootDir, projectDir)
+                    : (System.Collections.Generic.IReadOnlyList<ComponentInfo>)new ComponentInfo[0];
+
+                var classes = FileStructureParser.Parse(textEditor.Text);
+                editPanel.LoadFileStructure(classes, bundled);
                 editPanel.LoadRoleFunctions(RoleFunctionParser.Parse(textEditor.Text));
             }
             catch (Exception ex)
@@ -186,7 +223,10 @@ namespace PowerSimBuilder
         // ---- Preserved from original (unchanged) ----
         private void UpdateTitle()
                 {
-                    this.Text = I18n.T("PythonEditor.TitleTemplate", Path.GetFileName(_filePath), IsModified ? " *" : "");
+                    var displayName = string.IsNullOrEmpty(_filePath)
+                        ? "(unsaved)"
+                        : Path.GetFileName(_filePath);
+                    this.Text = I18n.T("PythonEditor.TitleTemplate", displayName, IsModified ? " *" : "");
                 }
 
                 private void UpdateStatus()
@@ -207,6 +247,17 @@ namespace PowerSimBuilder
                 {
                     try
                     {
+                        if (string.IsNullOrEmpty(_filePath))
+                        {
+                            var savePath = AppServices.FileDialog.PickSavePath(
+                                this,
+                                I18n.T("Common.FilterPython"),
+                                I18n.T("PythonEditor.SaveDialogTitle"),
+                                string.IsNullOrEmpty(SuggestedFileName) ? "component.py" : SuggestedFileName);
+                            if (string.IsNullOrEmpty(savePath)) return;
+                            _filePath = savePath;
+                        }
+
                         File.WriteAllText(_filePath, textEditor.Text);
                         _originalCode = textEditor.Text;
                         IsModified = false;
@@ -218,8 +269,9 @@ namespace PowerSimBuilder
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(I18n.T("PythonEditor.MsgSaveFail", ex.Message), I18n.T("Common.MsgTitleError"),
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        AppServices.MessageBox.ShowError(this,
+                            I18n.T("PythonEditor.MsgSaveFail", ex.Message),
+                            I18n.T("Common.MsgTitleError"));
                     }
                 }
 
@@ -227,10 +279,9 @@ namespace PowerSimBuilder
                 {
                     if (IsModified)
                     {
-                        var result = MessageBox.Show(I18n.T("PythonEditor.MsgUnsavedClose"),
-                            I18n.T("Common.MsgTitleConfirm"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                        if (result == DialogResult.No)
+                        if (!AppServices.MessageBox.ShowConfirm(this,
+                            I18n.T("PythonEditor.MsgUnsavedClose"),
+                            I18n.T("Common.MsgTitleConfirm")))
                             return;
                     }
 

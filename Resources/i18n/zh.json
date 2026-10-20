@@ -206,5 +206,12 @@
   "EditPanel.MsgNoProjectDir": "未设置项目目录。请先打开项目。",
   "EditPanel.MsgOverrideSuccess": "已创建覆盖：{0}",
   "EditPanel.TitleSelectProject": "选择项目目录",
-  "DesignCanvas.MenuGeneratePython": "生成 Python 组件"
+  "DesignCanvas.MenuGeneratePython": "生成 Python 组件",
+  "DesignCanvas.MenuEditPythonCode": "编辑 Python 代码",
+  "DesignCanvas.MsgGeneratedMissing": "未找到生成文件：{0}",
+  "DesignCanvas.MsgNoGeneratedPath": "ControllerBox 缺少 generated_path 参数。",
+  "Manager.MsgSaved": "文件已保存。",
+  "PythonEditor.SaveDialogTitle": "保存 Python 文件",
+  "EditPanel.GroupBundledComponents": "内置组件",
+  "EditPanel.GroupFileStructure": "文件结构（本文件）"
 }
