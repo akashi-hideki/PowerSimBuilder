@@ -3,12 +3,28 @@
 [![CI](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-283%20pass-green.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-330%20pass-green.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Windows%20only-lightgrey.svg)]()
 
 **Visual simulation companion to [StaTable](https://github.com/akashi-hideki/StaTable) — load StaTable XML, build Python state-machine controllers, run end-to-end simulations with signal plots.**
 
 ---
+
+## Editing workflow (v1.1.0)
+
+1. **Canvas → right-click → `Edit Python Code`**
+   - The editor opens immediately with in-memory code (existing content or freshly generated), titled `(unsaved) *`.
+   - SaveFileDialog is deferred to the first `Save`.
+2. **Left pane: File Structure**
+   - `📦 ClassName : Base (Lnn)` with expandable methods.
+   - `F_xxx ⚠️` = stub, `F_xxx ✅` = implemented, plain `__init__` etc.
+   - Double-click → jump to line.
+   - `Bundled Components` root → double-click a `🔒` item to create a `user_components/` override.
+3. **Right pane: Python code**
+   - Generated files contain `# STABLE_USER_CODE_START` / `# STABLE_USER_CODE_END` inside `update()`.
+   - StaTable-generated `*_powersim.py` files contain `# STABLE_USER_CODE_START:Layer.F_xxx` markers.
+4. **Manual C → Python conversion**
+   - Open the toolbar `C to Python Reference` for the conversion cheat sheet.
 
 ## What is PowerSimBuilder?
 
@@ -32,6 +48,14 @@ StaTable alone answers **"does it compile?"**. PowerSimBuilder answers
 **"does the behavior make sense?"** — before you flash the firmware.
 
 ---
+
+## What's New in v1.1.0
+
+- **Edit First flow**: `Edit Python Code` on a canvas component now opens the editor immediately with in-memory code, titled `(unsaved) *`. The `SaveFileDialog` fires only on the first `Save`, so you can inspect and cancel without committing a file path.
+- **File Structure panel**: the editor's left pane now shows the opened file's class/method hierarchy (`📦 Class : Base (Lnn)` and `F_xxx ⚠️/✅ (Lnn)`). Double-click any class/method to jump to its line. A `Bundled Components` root preserves the `+Override` flow.
+- **Role Function markers**: generated Python components now contain `# STABLE_USER_CODE_START` / `# STABLE_USER_CODE_END` markers inside `update()`. The `RoleFunctionParser` also falls back to top-level `def` methods when no markers are present, so legacy files still populate the Role Functions tree.
+- **C → Python reference**: `docs/C_TO_PYTHON_REFERENCE.md` (toolbar: `C to Python Reference`) documents manual conversion patterns — type declarations, `g_xxx` → `self.globals`, `static` → `self._xxx`, unsupported constructs, and a complete worked example. Automated C import (tree-sitter-c) is deferred to a later release.
+- **CI stability**: `pytest --basetemp=tmp/pytest` works around a Windows `pytest-of-<user>` junction cleanup bug that occasionally failed `pre-push`.
 
 ## What's New in v0.9.0
 

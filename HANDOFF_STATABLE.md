@@ -3311,3 +3311,97 @@ if (_strings.Count == 0 && lang != DefaultLanguage)
 - `v0.9.0` はこのまま有効
 
 **End of BUG-007 Design Decision**
+
+---
+
+## 97. v1.1.0 P0 完了 + P1 見送り + C→Python 参照情報 (2026-10-20)
+
+### 完了内容
+
+v1.1.0 P0 のすべてを実装・テスト・push 済み (`b8cf737` で `origin/main` 同期)。
+
+#### P0 で実装した機能
+
+| 機能 | 詳細 |
+|---|---|
+| **Python override 機構** | `components/__init__.py` に `load()` / `scaffold_override()`。bundled は無変更、`<project>/user_components/` を優先 |
+| **adapter.wrap_class** | 既存 Python クラスを `Component` として薄くラップ |
+| **C# データモデル** | `RoleFunctionInfo` / `ComponentInfo` / `FileClassInfo` / `FileMethodInfo` |
+| **パーサ** | `RoleFunctionParser` / `ComponentScanner` / `FileStructureParser`（インデントベースの Python クラス構造解析） |
+| **EditPanel + i18n** | EN/ZH 対応。`File Structure` / `Role Functions` / `Bundled Components` の複合ツリー |
+| **PythonEditorForm 統合** | `SplitContainer` 化、遅延保存コンストラクタ、`SuggestedFileName` / `SuggestedInitialDirectory` |
+| **Edit First フロー** | `Edit Python Code` で SaveDialog を後回し、エディタが即座に開く（タイトル `(unsaved) *`）。Save 時のみ SaveDialog |
+| **DesignCanvas メニュー** | 右クリック → `Edit Python Code`（ControllerBox と汎用を Type で分岐） |
+| **File Structure ツリー** | 開いているファイルのクラス・メソッド階層を表示、ダブルクリックでジャンプ |
+| **GUI 診断サービス** | `IMessageBoxService` / `IFileDialogService` / `AppServices` + モック |
+| **`--basetemp` で pytest 安定化** | Windows の `pytest-of-user` junction 問題を根本解決 |
+
+#### テスト結果
+
+- **C#**: total=330 / passed=328 / failed=0
+- **Python**: 288 passed
+- **回帰**: ゼロ
+
+#### コミット履歴（最新 6件）
+
+```
+b8cf737 chore(ci): use --basetemp for pytest pre-push hook
+f93042c feat(v1.1.0): Edit First flow + File Structure panel
+c8805ec feat(v1.1.0): emit STABLE_USER_CODE markers from ComponentCodeGenerator
+a7fe31c chore: remove stray files created by shell error output
+51de1f9 test(v1.1.0): P0 GUI diagnostics - modal services abstraction + 7 headless tests
+cee5dfd feat(v1.1.0): P0 - RoleFunction/Component edit assist + Generate Python Component
+```
+
+### P1（C 変換基盤）を見送り
+
+要件4（C ソースからの RoleFunction 自動変換）は、以下の理由で v1.1.0 スコープ外:
+
+| リスク | 内容 |
+|---|---|
+| **依存追加** | tree-sitter / tree-sitter-c のネイティブバインディング（C コンパイラ依存、Windows wheel 供給の不安定さ） |
+| **セマンティクス** | C → Python の意味保存が難しい（型・ポインタ・プリプロセッサ） |
+| **工数** | Step 7–10 合計 6.5h、1つでも詰まると P0 の安定性に波及 |
+| **ROI** | C 断片を扱うユーザーが限定的。P0 の UX 改善で大半の価値を提供済み |
+| **オフライン前提** | LLM 補助変換は不可（既に ## 96 でスコープ外） |
+
+### 代替: C→Python 手動変換リファレンス
+
+要件4の代替として、手動変換用の参照情報を提供:
+
+- **`docs/C_TO_PYTHON_REFERENCE.md`**（新規）: 基本マッピング、`self.globals` 変換、`static` → `self._xxx`、未対応構文（ポインタ・構造体・マクロ）の扱い、完全な変換例
+- **`parts/CToPythonReferenceForm.cs`**（新規）: アプリ内参照ダイアログ
+- **`MainForm` ツールバー**: 「C to Python Reference」ボタン追加
+
+ユーザーフロー:
+1. `PythonEditorForm` で `STABLE_USER_CODE` を編集
+2. ツールバーから参照 MD を開いてパターン確認
+3. 手動で C → Python 変換
+
+### 次回のタスク（v1.2.0 以降）
+
+- **B2: 未実装スタブ一覧フィルタ**（`File Structure` ツリーに「stub のみ表示」フィルタ）— 1h、低リスク
+- **B3: `STABLE_USER_CODE` 内のコードブロック折りたたみ** — 2h、視認性向上
+- **B4: Layer 間呼び出しの可視化** — 2h、`F_xxx` 呼出グラフ
+- **P1 再検討**: tree-sitter-c の Windows 対応が改善されたら再評価
+
+### 再開手順
+
+```powershell
+cd C:\dev\PowerSimBuilder
+git --no-pager log --oneline -3
+git --no-pager status -sb
+# → b8cf737 が先頭、クリーンな状態を確認
+
+# 手動確認: ツールバーの「C to Python Reference」→ docs/C_TO_PYTHON_REFERENCE.md 表示
+```
+
+### 重要な注意点
+
+1. **`ShowDialog` はテストで避ける**: `ComponentManager.CreateEditorForComponent` を使い、`ShowDialog` を呼ばない経路でテスト
+2. **pre-commit の自動修正は冪等**: 1回目で自動修正 → 2回目は Passed
+3. **`--basetemp=tmp/pytest` で pytest の Windows junction 問題を回避**
+4. **Edit First の定義**: エディタを先に開き、SaveDialog は初回 Save 時のみ
+5. **既存ファイルの解決**: `ResolveExistingPath` で優先順位（`user_components/` → `generated/`）を守る
+
+**End of ## 97**
