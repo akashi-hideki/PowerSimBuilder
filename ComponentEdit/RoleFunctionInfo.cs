@@ -110,6 +110,30 @@ namespace PowerSimBuilder.ComponentEdit
                 result.AddRange(found);
                 i = endIdx + 1;
             }
+            if (result.Count == 0)
+            {
+                // Fallback mode: no STABLE_USER_CODE markers found.
+                // Extract all top-level `def` methods inside a class, skipping
+                // __init__/update/reset boilerplate.
+                for (int lineIdx = 0; lineIdx < lines.Length; lineIdx++)
+                {
+                    var defMatch = DefRegex.Match(lines[lineIdx]);
+                    if (!defMatch.Success) continue;
+                    string defName = defMatch.Groups["name"].Value;
+                    if (defName == "__init__" || defName == "update" || defName == "reset") continue;
+                    string indent = defMatch.Groups["indent"].Value;
+                    int bodyEnd = FindBodyEnd(lines, lineIdx + 1, lines.Length - 1, indent);
+                    bool isStub = IsStubBody(lines, lineIdx + 1, bodyEnd);
+                    result.Add(new RoleFunctionInfo
+                    {
+                        Name = defName,
+                        StartLine = lineIdx + 1,
+                        EndLine = bodyEnd + 1,
+                        Kind = isStub ? RoleFunctionKind.Stub : RoleFunctionKind.Implemented,
+                    });
+                }
+            }
+
             return result;
         }
 

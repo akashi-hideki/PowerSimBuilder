@@ -130,9 +130,11 @@ namespace PowerSimBuilder
             {
                 "UpdateLogic", new List<string>
                 {
-                    "",
+                    "        # STABLE_USER_CODE_START",
                     "        # ここにコンポーネントのロジックを実装",
                     "        # 例: 簡単な計算や状態更新",
+                    "        # ユーザーコードはこのマーカー内に記述してください",
+                    "        # STABLE_USER_CODE_END",
                     "",
                     "        # 出力値の設定"
                 }
