@@ -42,7 +42,7 @@ repos:
     hooks:
       - id: pytest-fast
         name: pytest (tests/python, pre-push)
-        entry: python -m pytest tests/python -q
+        entry: python -m pytest tests/python -q --basetemp=tmp/pytest
         language: system
         pass_filenames: false
         always_run: true
