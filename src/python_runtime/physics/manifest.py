@@ -53,6 +53,98 @@ class PhysicsManifest:
             raise ManifestError("base_dir is not set (internal error)")
         return (self.base_dir / self.source.file).resolve()
 
+    def to_usage_markdown(self, model_dir: str | Path | None = None) -> str:
+        """Generate README.md content explaining how to use this model."""
+        base = Path(model_dir) if model_dir else self.base_dir
+        yaml_path = str((base / MANIFEST_FILENAME).resolve()) if base else MANIFEST_FILENAME
+
+        input_rows = (
+            "\n".join(
+                f"| input | {port} | {var} | - |" for port, var in self.interface.inputs.items()
+            )
+            or "| _(none)_ | | | |"
+        )
+        output_rows = (
+            "\n".join(
+                f"| output | {port} | {var} | - |" for port, var in self.interface.outputs.items()
+            )
+            or "| _(none)_ | | | |"
+        )
+
+        first_input = next(iter(self.interface.inputs), None)
+        first_output = next(iter(self.interface.outputs), None)
+
+        if first_input:
+            input_line = f'fmu.inputs["{first_input}"] = 1.0'
+        else:
+            input_line = "# no inputs defined"
+
+        if first_output:
+            output_line = f'print(f"{first_output} = "' f" + str(fmu.outputs['{first_output}']))"
+        else:
+            output_line = 'print("no outputs defined")'
+
+        license_str = self.source.license or "(unspecified)"
+        url_str = self.source.source_url or "(none)"
+
+        return f"""# {self.name} (Physics Model)
+
+Co-Simulation FMU imported via PowerSimBuilder's "Import Physics Model" dialog.
+
+## Quick start (Python)
+
+```python
+from python_runtime.physics import load_manifest, FmuAdapter
+
+# 1. Load the model manifest
+manifest = load_manifest(r"{yaml_path}")
+
+# 2. Instantiate the FMU adapter
+fmu = FmuAdapter(manifest)
+
+# 3. Set an input (if any)
+{input_line}
+
+# 4. Step forward 10 ms
+fmu.step(0.01)
+
+# 5. Read outputs
+{output_line}
+
+# 6. Cleanup
+fmu.close()
+```
+
+## Interface
+
+| Direction | Port | FMU variable | Unit |
+|-----------|------|--------------|------|
+{input_rows}
+{output_rows}
+
+## Timing
+- Mode: `{self.timing.mode}`
+- Internal dt: `{self.timing.dt_internal}` s
+
+## Source
+- File: `{self.source.file}`
+- License: {license_str}
+- URL: {url_str}
+
+## Files in this directory
+- `{MANIFEST_FILENAME}` - manifest (edit to remap ports/parameters)
+- `{self.source.file}` - the FMU archive
+- `README.md` - this file
+
+## Regenerate this README
+
+After editing `{MANIFEST_FILENAME}`, run:
+
+```powershell
+python -m python_runtime.physics.manifest "{yaml_path}" --write-readme
+```
+"""
+
     def to_dict(self) -> dict[str, Any]:
         src = {k: v for k, v in asdict(self.source).items() if v is not None}
         return {
@@ -139,11 +231,30 @@ def write_manifest(manifest: PhysicsManifest, out_path: str | Path) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
         yaml.safe_dump(
-            manifest.to_dict(), sort_keys=False, allow_unicode=True, default_flow_style=False
+            manifest.to_dict(),
+            sort_keys=False,
+            allow_unicode=True,
+            default_flow_style=False,
         ),
         encoding="utf-8",
     )
     return target
+
+
+def write_usage_readme(
+    manifest: PhysicsManifest,
+    model_dir: str | Path | None = None,
+) -> Path:
+    """Write README.md into the model directory. Returns the written path."""
+    target_dir = Path(model_dir) if model_dir else manifest.base_dir
+    if target_dir is None:
+        raise ManifestError("model_dir is required when base_dir is not set")
+    readme_path = target_dir / "README.md"
+    readme_path.write_text(
+        manifest.to_usage_markdown(model_dir=target_dir),
+        encoding="utf-8",
+    )
+    return readme_path
 
 
 def _coerce_str_map(v: Any, field_name: str, src: Path) -> dict[str, str]:
@@ -157,3 +268,23 @@ def _coerce_str_map(v: Any, field_name: str, src: Path) -> dict[str, str]:
             raise ManifestError(f"'{field_name}.{k}' must be a non-empty string: {src}")
         out[str(k)] = val
     return out
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Physics manifest utility")
+    parser.add_argument("manifest_path", help="Path to model.yaml")
+    parser.add_argument(
+        "--write-readme",
+        action="store_true",
+        help="Write README.md into the model directory",
+    )
+    args = parser.parse_args()
+
+    _m = load_manifest(args.manifest_path)
+    if args.write_readme:
+        _out = write_usage_readme(_m)
+        print(f"Wrote {_out}")
+    else:
+        print(_m.to_usage_markdown())

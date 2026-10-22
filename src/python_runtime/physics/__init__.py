@@ -9,6 +9,7 @@ from .manifest import (
     TimingSpec,
     load_manifest,
     write_manifest,
+    write_usage_readme,
 )
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     "TimingSpec",
     "load_manifest",
     "write_manifest",
+    "write_usage_readme",
     "FmuAdapter",
 ]
