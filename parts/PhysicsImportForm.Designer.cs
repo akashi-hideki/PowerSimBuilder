@@ -26,6 +26,12 @@ partial class PhysicsImportForm
     private Button _btnImport = null!;
     private Button _btnCancel = null!;
     private Label _lblStatus = null!;
+    private Panel _pnlSuccess = null!;
+    private Label _lblSuccessPath = null!;
+    private TextBox _txtPythonSample = null!;
+    private Button _btnCopySample = null!;
+    private Button _btnOpenFolder = null!;
+    private Button _btnShowReadme = null!;
     protected override void Dispose(bool disposing)
     {
         if (disposing) components?.Dispose();
@@ -97,6 +103,53 @@ partial class PhysicsImportForm
         _buttons.Controls.Add(_btnImport);
         _root.Controls.Add(_buttons, 0, 6);
         _root.SetColumnSpan(_buttons, 3);
+
+        // FMU-MVP1.1: success panel (initially hidden)
+        _pnlSuccess = new Panel { Dock = DockStyle.Fill, Visible = false };
+        _lblSuccessPath = new Label
+        {
+            Text = "Imported to: (none)",
+            AutoSize = true,
+            Font = new Font(Font, FontStyle.Bold),
+            Location = new Point(8, 8),
+        };
+        _txtPythonSample = new TextBox
+        {
+            Multiline = true,
+            ReadOnly = true,
+            ScrollBars = ScrollBars.Vertical,
+            Location = new Point(8, 36),
+            Size = new Size(680, 160),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+        };
+        _btnCopySample = new Button
+        {
+            Text = "Copy Python Sample",
+            Location = new Point(8, 204),
+            AutoSize = true,
+        };
+        _btnCopySample.Click += OnCopySampleClick;
+        _btnOpenFolder = new Button
+        {
+            Text = "Open Folder",
+            Location = new Point(150, 204),
+            AutoSize = true,
+        };
+        _btnOpenFolder.Click += OnOpenFolderClick;
+        _btnShowReadme = new Button
+        {
+            Text = "Show README",
+            Location = new Point(260, 204),
+            AutoSize = true,
+        };
+        _btnShowReadme.Click += OnShowReadmeClick;
+        _pnlSuccess.Controls.Add(_lblSuccessPath);
+        _pnlSuccess.Controls.Add(_txtPythonSample);
+        _pnlSuccess.Controls.Add(_btnCopySample);
+        _pnlSuccess.Controls.Add(_btnOpenFolder);
+        _pnlSuccess.Controls.Add(_btnShowReadme);
+        _root.Controls.Add(_pnlSuccess, 0, 7);
+        _root.SetColumnSpan(_pnlSuccess, 3);
 
         AcceptButton = _btnImport;
         CancelButton = _btnCancel;

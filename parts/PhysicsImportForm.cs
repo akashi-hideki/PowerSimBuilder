@@ -169,8 +169,7 @@ public partial class PhysicsImportForm : Form
             File.Copy(_fmuPath, Path.Combine(sourceDir, Path.GetFileName(_fmuPath)), overwrite: true);
             File.WriteAllText(Path.Combine(modelDir, "model.yaml"), yaml, Encoding.UTF8);
             ImportedModelDirectory = modelDir;
-            DialogResult = DialogResult.OK;
-            Close();
+            ShowSuccessPanel(modelDir, selected);
         }
         catch (Exception ex)
         {
@@ -194,6 +193,65 @@ public partial class PhysicsImportForm : Form
             return Path.Combine(cwd, "user_physics_models");
         }
         return Path.Combine(AppContext.BaseDirectory, "user_physics_models");
+    }
+    private void ShowSuccessPanel(string modelDir, List<FmuVariable> selected)
+    {
+        // Generate README.md if not present (Python-side equivalent)
+        var readmePath = Path.Combine(modelDir, "README.md");
+        if (!File.Exists(readmePath))
+        {
+            var modelName = Path.GetFileName(modelDir);
+            var readme = PythonManifestGenerator.BuildReadme(
+                modelName, modelDir, selected, _fmiType);
+            File.WriteAllText(readmePath, readme, Encoding.UTF8);
+        }
+
+        _lblSuccessPath.Text = "Imported to: " + modelDir;
+        _txtPythonSample.Text = PythonManifestGenerator.BuildPythonSample(modelDir, selected);
+        _pnlSuccess.Visible = true;
+        _btnImport.Enabled = false;
+        _btnCancel.Text = "Close";
+        _btnCancel.DialogResult = DialogResult.OK;
+        _lblStatus.Text = "Import succeeded. See panel below.";
+    }
+
+    private void OnCopySampleClick(object? sender, EventArgs e)
+    {
+        if (string.IsNullOrEmpty(_txtPythonSample.Text)) return;
+        Clipboard.SetText(_txtPythonSample.Text);
+        _lblStatus.Text = "Python sample copied to clipboard.";
+    }
+
+    private void OnOpenFolderClick(object? sender, EventArgs e)
+    {
+        var folderPath = _lblSuccessPath.Text.Replace("Imported to: ", "");
+        if (Directory.Exists(folderPath))
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = folderPath,
+                UseShellExecute = true,
+            });
+        }
+    }
+
+    private void OnShowReadmeClick(object? sender, EventArgs e)
+    {
+        var folderPath = _lblSuccessPath.Text.Replace("Imported to: ", "");
+        var readmePath = Path.Combine(folderPath, "README.md");
+        if (File.Exists(readmePath))
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = readmePath,
+                UseShellExecute = true,
+            });
+        }
+        else
+        {
+            MessageBox.Show(this, "README.md not found in " + folderPath,
+                "Not found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 }
 
