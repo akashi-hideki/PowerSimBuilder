@@ -26,6 +26,10 @@ namespace PowerSimBuilder
         {
             return $"{Name} ({Type})";
         }
+
+        // FMU-MVP1: physics model integration
+        public string PhysicsModelPath { get; set; }
+        public string FmiType { get; set; }
     }
 
     /// <summary>

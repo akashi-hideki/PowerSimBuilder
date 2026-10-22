@@ -206,3 +206,6 @@ generated/out.txt
 generated/err.txt
 executor_trace.log
 *.bak*
+
+# --- FMU E2E test artifact (regenerate via Import dialog) ---
+user_physics_models/Dahlquist/

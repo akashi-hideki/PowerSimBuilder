@@ -214,5 +214,13 @@
   "Manager.MsgSaved": "File saved.",
   "PythonEditor.SaveDialogTitle": "Save Python File",
   "EditPanel.GroupBundledComponents": "Bundled Components",
-  "EditPanel.GroupFileStructure": "File Structure (this file)"
+  "EditPanel.GroupFileStructure": "File Structure (this file)",
+  "PhysicsImport.Import": "Import",
+  "PhysicsImport.ToolbarButton": "Import Physics Model",
+  "PhysicsImport.Cancel": "Cancel",
+  "PhysicsImport.Browse": "Browse...",
+  "PhysicsImport.Title": "Import Physics Model (FMU)",
+  "PhysicsImport.Name": "Model name",
+  "PhysicsImport.UnsupportedFmiType": "This FMU is not Co-Simulation. Please re-export as CoSimulation.",
+  "PhysicsImport.File": "FMU file"
 }

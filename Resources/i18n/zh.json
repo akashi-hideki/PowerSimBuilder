@@ -213,5 +213,13 @@
   "Manager.MsgSaved": "文件已保存。",
   "PythonEditor.SaveDialogTitle": "保存 Python 文件",
   "EditPanel.GroupBundledComponents": "内置组件",
-  "EditPanel.GroupFileStructure": "文件结构（本文件）"
+  "EditPanel.GroupFileStructure": "文件结构（本文件）",
+  "PhysicsImport.Import": "导入",
+  "PhysicsImport.ToolbarButton": "导入物理模型",
+  "PhysicsImport.Cancel": "取消",
+  "PhysicsImport.Browse": "浏览...",
+  "PhysicsImport.Title": "导入物理模型（FMU）",
+  "PhysicsImport.Name": "模型名称",
+  "PhysicsImport.UnsupportedFmiType": "此 FMU 不是协同仿真类型，请重新导出为 CoSimulation。",
+  "PhysicsImport.File": "FMU 文件"
 }

@@ -1,0 +1,24 @@
+name: PMSM
+source:
+  type: fmu
+  file: source/PMSM.fmu
+  license: MIT
+  source_url: https://mohub.net/
+interface:
+  fmi_type: CoSimulation
+  inputs:
+    V_dc: V_dc
+    T_load: T_load
+  outputs:
+    omega_m: omega_m
+    I_a: I_a
+  parameters:
+    R_s: 0.1
+    L_d: 0.001
+units:
+  voltage: V
+  current: A
+  speed: rad_per_s
+timing:
+  mode: fixed_step
+  dt_internal: 0.001
