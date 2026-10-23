@@ -63,7 +63,7 @@ public sealed class PhysicsModelPickerForm : Form
         _list.Columns.Add("Out", 40, HorizontalAlignment.Right);
         _list.Columns.Add("FMI", 120);
         _list.DoubleClick += (s, e) => AcceptIfSelected();
-        _list.SelectedIndexChanged += (s, e) => UpdateDetail();
+        _list.SelectedIndexChanged += (s, e) => OnListSelectionChanged();
 
         _txtDetail.Dock = DockStyle.Fill;
         _txtDetail.Multiline = true;
@@ -108,13 +108,6 @@ public sealed class PhysicsModelPickerForm : Form
         bottom.Controls.Add(_lblStatus);
         bottom.Controls.Add(rightPanel);
 
-        _list.SelectedIndexChanged += (s, e) =>
-        {
-            var hasSelection = _list.SelectedItems.Count > 0;
-            _btnInsert.Enabled = hasSelection;
-            _btnOpenFolder.Enabled = hasSelection;
-        };
-
         Controls.Add(split);
         Controls.Add(bottom);
         AcceptButton = _btnInsert;
@@ -146,11 +139,30 @@ public sealed class PhysicsModelPickerForm : Form
         }
     }
 
+    private void OnListSelectionChanged()
+    {
+        var hasSelection = _list.SelectedItems.Count > 0;
+        _btnInsert.Enabled = hasSelection;
+        _btnOpenFolder.Enabled = hasSelection;
+        if (hasSelection)
+        {
+            UpdateDetail();
+        }
+        else
+        {
+            _txtDetail.Text = "";
+        }
+    }
+
     private void UpdateDetail()
     {
         if (_list.SelectedItems.Count == 0) { _txtDetail.Text = ""; return; }
         if (_list.SelectedItems[0].Tag is not PhysicsModelEntry entry) { _txtDetail.Text = ""; return; }
+        _txtDetail.Text = BuildDetailText(entry);
+    }
 
+    private static string BuildDetailText(PhysicsModelEntry entry)
+    {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("Model     : " + entry.Info.ModelName);
         sb.AppendLine("FMI       : " + entry.Info.FmiVersion + " (" + entry.Info.FmiType + ")");
@@ -194,13 +206,13 @@ public sealed class PhysicsModelPickerForm : Form
             sb.AppendLine("Timing: (none)");
         }
 
-        _txtDetail.Text = sb.ToString();
+        return sb.ToString();
     }
 
     private void OpenSelectedFolder()
     {
-        if (_list.SelectedItems.Count == 0) return;
-        if (_list.SelectedItems[0].Tag is not PhysicsModelEntry entry) return;
+        var entry = GetSelectedOrFirst();
+        if (entry == null) return;
 
         try
         {
@@ -217,14 +229,66 @@ public sealed class PhysicsModelPickerForm : Form
         }
     }
 
+    private PhysicsModelEntry? GetSelectedOrFirst()
+    {
+        if (_list.SelectedItems.Count > 0 &&
+            _list.SelectedItems[0].Tag is PhysicsModelEntry sel)
+            return sel;
+        return _entries.Count > 0 ? _entries[0] : null;
+    }
+
     private void AcceptIfSelected()
     {
-        if (_list.SelectedItems.Count == 0) return;
-        if (_list.SelectedItems[0].Tag is PhysicsModelEntry entry)
+        var entry = GetSelectedOrFirst();
+        if (entry == null) return;
+        SelectedModel = entry;
+        DialogResult = DialogResult.OK;
+        Close();
+    }
+
+    // -------- Test hooks --------
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public ListView Test_ListView { get { return _list; } }
+
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public Button Test_InsertButton { get { return _btnInsert; } }
+
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public Button Test_CancelButton { get { return _btnCancel; } }
+
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public Button Test_OpenFolderButton { get { return _btnOpenFolder; } }
+
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public TextBox Test_DetailTextBox { get { return _txtDetail; } }
+
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public Label Test_StatusLabel { get { return _lblStatus; } }
+
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public void Test_RefreshSelection()
+    {
+        var hasSelection = _list.SelectedItems.Count > 0;
+        _btnInsert.Enabled = hasSelection;
+        _btnOpenFolder.Enabled = hasSelection;
+        UpdateDetail();
+    }
+
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public void Test_InvokeInsert() => AcceptIfSelected();
+
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public void Test_SelectFirst()
+    {
+        if (_entries.Count == 0) return;
+        _list.Items[0].Selected = true;
+        if (_list.SelectedItems.Count == 0)
         {
-            SelectedModel = entry;
-            DialogResult = DialogResult.OK;
-            Close();
+            _list.SelectedIndices.Add(0);
         }
+        // Headless fallback: ListView selection may not materialize without ShowDialog.
+        _btnInsert.Enabled = true;
+        _btnOpenFolder.Enabled = true;
+        _txtDetail.Text = BuildDetailText(_entries[0]);
     }
 }

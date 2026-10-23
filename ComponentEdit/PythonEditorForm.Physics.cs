@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -8,16 +9,39 @@ using PowerSimBuilder.Physics;
 
 namespace PowerSimBuilder;
 
+/// <summary>
+/// Picks a physics model. Default implementation opens the WinForms dialog.
+/// Overridable for tests.
+/// </summary>
+public interface IPhysicsPicker
+{
+    PhysicsModelEntry? Pick(IWin32Window? owner);
+}
+
+internal sealed class WinFormsPhysicsPicker : IPhysicsPicker
+{
+    public PhysicsModelEntry? Pick(IWin32Window? owner)
+    {
+        using var picker = new PhysicsModelPickerForm();
+        return picker.ShowDialog(owner) == DialogResult.OK ? picker.SelectedModel : null;
+    }
+}
+
 public partial class PythonEditorForm
 {
     private bool _physicsWired;
-
     private static readonly Color PhysicsHighlightColor = Color.FromArgb(220, 235, 255);
-
-    private readonly Dictionary<string, FmuInfo> _physicsCache =
-        new(StringComparer.Ordinal);
-
+    private readonly Dictionary<string, FmuInfo> _physicsCache = new(StringComparer.Ordinal);
     private string? _statusBeforePhysics;
+
+    private IPhysicsPicker _pickerProvider = new WinFormsPhysicsPicker();
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public IPhysicsPicker PickerProvider
+    {
+        get => _pickerProvider;
+        set => _pickerProvider = value ?? new WinFormsPhysicsPicker();
+    }
 
     public string ComponentType { get; set; } = "";
 
@@ -104,17 +128,16 @@ public partial class PythonEditorForm
             return;
         }
 
-        using var picker = new PhysicsModelPickerForm();
-        if (picker.ShowDialog(this) != DialogResult.OK) return;
-        if (picker.SelectedModel == null) return;
+        var selected = _pickerProvider.Pick(this);
+        if (selected == null) return;
 
-        var result = PhysicsInsertionFlow.TryInsert(textEditor.Text, picker.SelectedModel);
+        var result = PhysicsInsertionFlow.TryInsert(textEditor.Text, selected);
 
         if (result.Outcome == InsertOutcome.AlreadyExists)
         {
             AppServices.MessageBox.ShowInfo(
                 this,
-                I18n.T("EditPanel.MsgPhysicsAlreadyExists", picker.SelectedModel.Info.ModelName),
+                I18n.T("EditPanel.MsgPhysicsAlreadyExists", selected.Info.ModelName),
                 I18n.T("Common.MsgTitleInfo"));
             return;
         }
@@ -128,20 +151,18 @@ public partial class PythonEditorForm
             return;
         }
 
-        // Cache model info for status bar (D)
-        _physicsCache[picker.SelectedModel.Info.ModelName] = picker.SelectedModel.Info;
+        _physicsCache[selected.Info.ModelName] = selected.Info;
 
         textEditor.Text = result.NewCode!;
         RefreshEditPanel();
 
-        var modelName = picker.SelectedModel.Info.ModelName;
-        var initBounds   = PhysicsInsertionHighlighter.FindBlock(result.NewCode!, modelName);
+        var modelName = selected.Info.ModelName;
+        var initBounds = PhysicsInsertionHighlighter.FindBlock(result.NewCode!, modelName);
         var updateBounds = PhysicsInsertionHighlighter.FindUpdateBlock(result.NewCode!, modelName);
 
         void ApplyHighlight()
         {
             HighlightBlocks(initBounds, updateBounds);
-
             if (initBounds is not null)
             {
                 textEditor.SelectionStart = initBounds.Start;
@@ -175,7 +196,6 @@ public partial class PythonEditorForm
         PhysicsBlockBounds? updateBounds)
     {
         if (textEditor is not RichTextBox rtb) return;
-
         rtb.SuspendLayout();
         try
         {
@@ -195,4 +215,20 @@ public partial class PythonEditorForm
             rtb.ResumeLayout();
         }
     }
+
+    // -------- Test hooks --------
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public RichTextBox Test_TextEditor => textEditor;
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public Label Test_StatusLabel => lblStatus;
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public Dictionary<string, FmuInfo> Test_PhysicsCache => _physicsCache;
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void Test_RaisePhysicsRequested() => OnPhysicsRequested(this, EventArgs.Empty);
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void Test_RaiseSelectionChanged() => OnEditorSelectionChanged(this, EventArgs.Empty);
 }
