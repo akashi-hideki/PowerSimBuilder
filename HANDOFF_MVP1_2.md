@@ -262,6 +262,12 @@ C# コード内では `@"..."` を使わず、`"..." + "..."` 連結で書く。
 ### 12. **L2 テスト：`AppServices.MessageBox` が headless でブロック**
 → `PickerProvider` に `MockPicker` を注入。`MessageBox` 経由のパスは L3（FlaUI）でカバー。
 
+
+### 13. `end-of-file-fixer` で commit 中断（HANDOFF 生成時）
+- 症状: 末尾改行が 0 個 or 2個以上だと発火
+- 対策: 生成スクリプトで `$content.TrimEnd("\r","\n") + "\n"` を必ず使う
+- 自動化: **`tools/gcommit.ps1`** を導入済み（add → pre-commit run → add → commit を1コマンドで実行）
+
 ## 次タスク候補（優先度付き）
 
 ### 🟠 中優先（MVP-1.3 候補）
@@ -423,3 +429,71 @@ user_physics_models/
 ---
 
 *Apache 2.0. Windows-only. Companion to StaTable.*
+
+## 付録E: 開発ツール (tools/gcommit.ps1)
+
+pre-commit の auto-fix（`end-of-file-fixer` / `mixed-line-ending` / `ruff` 等）で
+commit が中断する問題を根本回避するためのラッパー。
+
+### 使い方
+
+``````powershell
+# 基本（stage → pre-commit run → re-stage → commit）
+.\tools\gcommit.ps1 "commit message"
+
+# push まで
+.\tools\gcommit.ps1 "commit message" -Push
+
+# amend（メッセージ修正）
+.\tools\gcommit.ps1 "corrected message" -Amend
+
+# 特定ファイルだけ stage
+.\tools\gcommit.ps1 "msg" -Files HANDOFF_MVP1_2.md,README.md
+
+# 緊急時（pre-commit をスキップ）
+.\tools\gcommit.ps1 "wip" -SkipPrecommit
+``````
+
+### 動作
+
+| ステップ | 内容 |
+|---------|------|
+| 1/5 stage | `git add -A`（または `-Files` 指定時は特定ファイル） |
+| 2/5 pre-commit run | auto-fix を先に実行（中断しない） |
+| 3/5 re-stage | auto-fix された変更を再 add |
+| 4/5 commit | `git commit -m`（`-Amend` で `--amend`） |
+| 5/5 push | `-Push` 指定時のみ `git push` |
+
+### 変更がない場合
+
+stage 対象が無ければ `[INFO] nothing staged, exiting` で正常終了（exit 0）。
+
+### プロファイル登録（推奨）
+
+どこからでも `gcommit` で呼べるようにする:
+
+``````powershell
+notepad $PROFILE
+# 以下を追記:
+function gcommit { & C:\dev\PowerSimBuilder\tools\gcommit.ps1 @args }
+``````
+
+以後、任意のディレクトリから:
+
+``````powershell
+gcommit "feat: add foo" -Push
+``````
+
+### 生成パッチの規約（重要）
+
+すべての生成パッチで以下を必ず適用:
+
+``````powershell
+# 末尾改行を1つに正規化（end-of-file-fixer 対策）
+$content = $content.TrimEnd("`r", "`n") + "`n"
+[System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
+``````
+
+### 関連コミット
+
+- `23b73c1` (amend 前) → `chore(tools): add gcommit.ps1 (pre-commit safe commit wrapper)` (amend 後)
