@@ -1,0 +1,19 @@
+﻿name: Feedthrough
+source:
+  type: fmu
+  file: source/Feedthrough.fmu
+interface:
+  fmi_type: CoSimulation
+  inputs:
+    Float64_continuous_input: Float64_continuous_input
+    Float64_discrete_input: Float64_discrete_input
+    Int32_input: Int32_input
+    Boolean_input: Boolean_input
+    String_input: String_input
+    Enumeration_input: Enumeration_input
+  outputs:
+  parameters: {}
+units: {}
+timing:
+  mode: fixed_step
+  dt_internal: 0.001

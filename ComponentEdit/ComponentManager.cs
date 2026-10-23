@@ -66,6 +66,7 @@ namespace PowerSimBuilder
             }
 
             var editorForm = new PythonEditorForm(null, false, initialCode);
+            editorForm.ComponentType = descriptor.Type ?? "";
             if (existing != null)
             {
                 editorForm.SuggestedFileName = System.IO.Path.GetFileName(existing);

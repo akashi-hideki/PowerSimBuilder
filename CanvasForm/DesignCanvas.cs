@@ -271,6 +271,38 @@ namespace PowerSimBuilder
         {
             HandleComponentMouseUp(sender, e);
         }
+
+        /// <summary>
+        /// Component double-click handler.
+        /// Reuses the existing Edit Python flow (EditPythonCodeItem_Click),
+        /// which handles ControllerBox specially and other components via
+        /// ComponentManager.GeneratePythonComponent.
+        /// </summary>
+        private void ComponentControl_DoubleClicked(object sender, EventArgs e)
+        {
+            if (!(sender is ComponentControl component)) return;
+            if (component.Descriptor == null) return;
+
+            // Cancel any in-flight drag state from the preceding clicks.
+            _isDragging = false;
+            _draggedComponent = null;
+
+            // Ensure selection reflects the double-clicked component.
+            if (SelectedComponent != component)
+            {
+                HandleComponentSelectedChanged(component);
+            }
+
+            // Delegate to the existing Edit Python handler.
+            EditPythonCodeItem_Click(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Component double-click handler.
+        /// Reuses the existing Edit Python flow (EditPythonCodeItem_Click),
+        /// which handles ControllerBox specially and other components via
+        /// ComponentManager.GeneratePythonComponent.
+        /// </summary>
         #endregion
 
         #region 公開メソッド
@@ -1154,6 +1186,8 @@ private void ClearCanvas()
             component.MouseDown += ComponentControl_MouseDown;
             component.MouseMove += ComponentControl_MouseMove;
             component.MouseUp += ComponentControl_MouseUp;
+            component.DoubleClicked += ComponentControl_DoubleClicked;
+            component.DoubleClicked += ComponentControl_DoubleClicked;
         }
 
         /// <summary>
@@ -1168,6 +1202,8 @@ private void ClearCanvas()
             component.MouseDown -= ComponentControl_MouseDown;
             component.MouseMove -= ComponentControl_MouseMove;
             component.MouseUp -= ComponentControl_MouseUp;
+            component.DoubleClicked -= ComponentControl_DoubleClicked;
+            component.DoubleClicked -= ComponentControl_DoubleClicked;
         }
         #endregion
 

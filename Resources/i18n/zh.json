@@ -222,4 +222,18 @@
   "PhysicsImport.Name": "模型名称",
   "PhysicsImport.UnsupportedFmiType": "此 FMU 不是协同仿真类型，请重新导出为 CoSimulation。",
   "PhysicsImport.File": "FMU 文件"
+,
+  "EditPanel.BtnPhysics": "Add Physics"
+,
+  "EditPanel.MsgPhysicsControllerBox": "Physics models cannot be attached to StaTable-imported ControllerBox components."
+,
+  "EditPanel.MsgPhysicsAlreadyExists": "Physics model already inserted: {0}"
+,
+  "EditPanel.MsgPhysicsInserted": "Physics model inserted: {0}"
+,
+  "EditPanel.MsgPhysicsInsertFail": "Physics model insertion failed."
+,
+  "EditPanel.MsgPhysicsInsertedAtLines": "Yii physics model inserted: {0} (lines {1}-{2})"
+,
+  "EditPanel.MsgPhysicsInsertedAtLinesBoth": "Yii physics model: {0} (init {1}-{2}, update {3}-{4})"
 }

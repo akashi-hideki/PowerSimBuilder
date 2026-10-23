@@ -14,6 +14,7 @@ namespace PowerSimBuilder.ComponentEdit
         private System.Windows.Forms.Button btnOverride;
         private System.Windows.Forms.Button btnAdapter;
         private System.Windows.Forms.Button btnImportC;
+        private System.Windows.Forms.Button btnPhysics;
 
         protected override void Dispose(bool disposing)
         {
@@ -37,6 +38,7 @@ namespace PowerSimBuilder.ComponentEdit
             this.btnOverride = new System.Windows.Forms.Button();
             this.btnAdapter = new System.Windows.Forms.Button();
             this.btnImportC = new System.Windows.Forms.Button();
+            this.btnPhysics = new System.Windows.Forms.Button();
             this.tableLayout.SuspendLayout();
             this.grpComponents.SuspendLayout();
             this.grpRoleFunctions.SuspendLayout();
@@ -102,6 +104,7 @@ namespace PowerSimBuilder.ComponentEdit
             this.panelButtons.Controls.Add(this.btnOverride);
             this.panelButtons.Controls.Add(this.btnAdapter);
             this.panelButtons.Controls.Add(this.btnImportC);
+            this.panelButtons.Controls.Add(this.btnPhysics);
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelButtons.Name = "panelButtons";
             this.panelButtons.TabIndex = 2;
@@ -110,25 +113,33 @@ namespace PowerSimBuilder.ComponentEdit
             //
             this.btnOverride.Location = new System.Drawing.Point(4, 6);
             this.btnOverride.Name = "btnOverride";
-            this.btnOverride.Size = new System.Drawing.Size(85, 26);
+            this.btnOverride.Size = new System.Drawing.Size(55, 26);
             this.btnOverride.TabIndex = 0;
             this.btnOverride.UseVisualStyleBackColor = true;
             //
             // btnAdapter
             //
-            this.btnAdapter.Location = new System.Drawing.Point(95, 6);
+            this.btnAdapter.Location = new System.Drawing.Point(62, 6);
             this.btnAdapter.Name = "btnAdapter";
-            this.btnAdapter.Size = new System.Drawing.Size(85, 26);
+            this.btnAdapter.Size = new System.Drawing.Size(55, 26);
             this.btnAdapter.TabIndex = 1;
             this.btnAdapter.UseVisualStyleBackColor = true;
             //
             // btnImportC
             //
-            this.btnImportC.Location = new System.Drawing.Point(186, 6);
+            this.btnImportC.Location = new System.Drawing.Point(120, 6);
             this.btnImportC.Name = "btnImportC";
-            this.btnImportC.Size = new System.Drawing.Size(85, 26);
+            this.btnImportC.Size = new System.Drawing.Size(55, 26);
             this.btnImportC.TabIndex = 2;
             this.btnImportC.UseVisualStyleBackColor = true;
+            //
+            // btnPhysics
+            //
+            this.btnPhysics.Location = new System.Drawing.Point(178, 6);
+            this.btnPhysics.Name = "btnPhysics";
+            this.btnPhysics.Size = new System.Drawing.Size(90, 26);
+            this.btnPhysics.TabIndex = 3;
+            this.btnPhysics.UseVisualStyleBackColor = true;
             //
             // EditPanel
             //

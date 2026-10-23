@@ -19,6 +19,7 @@ namespace PowerSimBuilder.ComponentEdit
         public event EventHandler<ComponentInfo> OverrideRequested;
         public event EventHandler AdapterRequested;
         public event EventHandler ImportCRequested;
+        public event EventHandler PhysicsRequested;
 
         public string ProjectDir { get; set; }
 
@@ -36,6 +37,7 @@ namespace PowerSimBuilder.ComponentEdit
             btnOverride.Text      = I18n.T("EditPanel.BtnOverride");
             btnAdapter.Text       = I18n.T("EditPanel.BtnAdapter");
             btnImportC.Text       = I18n.T("EditPanel.BtnImportC");
+            btnPhysics.Text       = I18n.T("EditPanel.BtnPhysics");
             UpdateRoleCountLabel(0, 0);
         }
 
@@ -80,6 +82,7 @@ namespace PowerSimBuilder.ComponentEdit
             btnOverride.Click += OnOverrideClick;
             btnAdapter.Click += (s, e) => AdapterRequested?.Invoke(this, EventArgs.Empty);
             btnImportC.Click += (s, e) => ImportCRequested?.Invoke(this, EventArgs.Empty);
+            btnPhysics.Click += (s, e) => PhysicsRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void OnOverrideClick(object sender, EventArgs e)
@@ -222,5 +225,8 @@ namespace PowerSimBuilder.ComponentEdit
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Button Test_ImportCButton { get { return btnImportC; } }
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public Button Test_PhysicsButton { get { return btnPhysics; } }
     }
 }

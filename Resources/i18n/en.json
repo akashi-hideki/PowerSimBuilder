@@ -223,4 +223,18 @@
   "PhysicsImport.Name": "Model name",
   "PhysicsImport.UnsupportedFmiType": "This FMU is not Co-Simulation. Please re-export as CoSimulation.",
   "PhysicsImport.File": "FMU file"
+,
+  "EditPanel.BtnPhysics": "Add Physics"
+,
+  "EditPanel.MsgPhysicsControllerBox": "Physics models cannot be attached to StaTable-imported ControllerBox components."
+,
+  "EditPanel.MsgPhysicsAlreadyExists": "Physics model already inserted: {0}"
+,
+  "EditPanel.MsgPhysicsInserted": "Physics model inserted: {0}"
+,
+  "EditPanel.MsgPhysicsInsertFail": "Physics model insertion failed."
+,
+  "EditPanel.MsgPhysicsInsertedAtLines": "Physics model inserted: {0} (lines {1}-{2})"
+,
+  "EditPanel.MsgPhysicsInsertedAtLinesBoth": "Physics model inserted: {0} (init {1}-{2}, update {3}-{4})"
 }

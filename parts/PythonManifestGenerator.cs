@@ -129,4 +129,20 @@ public static class PythonManifestGenerator
         sb.AppendLine("fmu.close()");
         return sb.ToString();
     }
+    /// <summary>
+    /// Write usage_example.py into the model directory.
+    /// Returns the full path to the written .py file.
+    /// </summary>
+    public static string WriteUsageExample(
+        string modelDir,
+        IReadOnlyList<FmuVariable> selected)
+    {
+        if (!Directory.Exists(modelDir))
+            throw new DirectoryNotFoundException(modelDir);
+
+        var pyPath = Path.Combine(modelDir, "usage_example.py");
+        var sample = BuildPythonSample(modelDir, selected);
+        File.WriteAllText(pyPath, sample, new UTF8Encoding(false));
+        return pyPath;
+    }
 }
