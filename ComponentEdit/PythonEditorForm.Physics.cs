@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -11,14 +12,13 @@ public partial class PythonEditorForm
 {
     private bool _physicsWired;
 
-    /// <summary>
-    /// Background color used for physics block highlighting.
-    /// </summary>
     private static readonly Color PhysicsHighlightColor = Color.FromArgb(220, 235, 255);
 
-    /// <summary>
-    /// Component type (e.g., "FirstOrderLag", "ControllerBox").
-    /// </summary>
+    private readonly Dictionary<string, FmuInfo> _physicsCache =
+        new(StringComparer.Ordinal);
+
+    private string? _statusBeforePhysics;
+
     public string ComponentType { get; set; } = "";
 
     public void SetPythonCode(string code)
@@ -36,9 +36,46 @@ public partial class PythonEditorForm
     private void EnsurePhysicsWired()
     {
         if (_physicsWired) return;
-        if (editPanel == null) return;
-        editPanel.PhysicsRequested += OnPhysicsRequested;
+        if (editPanel != null)
+            editPanel.PhysicsRequested += OnPhysicsRequested;
+        if (textEditor != null)
+            textEditor.SelectionChanged += OnEditorSelectionChanged;
         _physicsWired = true;
+    }
+
+    private void OnEditorSelectionChanged(object? sender, EventArgs e)
+    {
+        if (textEditor == null || lblStatus == null) return;
+
+        var hit = PhysicsInsertionHighlighter.FindBlockAtPosition(
+            textEditor.Text, textEditor.SelectionStart);
+
+        if (hit is null)
+        {
+            if (_statusBeforePhysics != null)
+            {
+                lblStatus.Text = _statusBeforePhysics;
+                _statusBeforePhysics = null;
+            }
+            return;
+        }
+
+        if (_statusBeforePhysics == null)
+            _statusBeforePhysics = lblStatus.Text;
+
+        if (_physicsCache.TryGetValue(hit.ModelName, out var info))
+        {
+            lblStatus.Text = string.Format(
+                "Physics: {0} ({1} in, {2} out, FMI {3}) 窶・{4} L{5}-{6}",
+                hit.ModelName, info.Inputs.Count, info.Outputs.Count,
+                info.FmiVersion, hit.Kind, hit.StartLine, hit.EndLine);
+        }
+        else
+        {
+            lblStatus.Text = string.Format(
+                "Physics: {0} 窶・{1} L{2}-{3}",
+                hit.ModelName, hit.Kind, hit.StartLine, hit.EndLine);
+        }
     }
 
     private bool IsControllerBox()
@@ -91,6 +128,9 @@ public partial class PythonEditorForm
             return;
         }
 
+        // Cache model info for status bar (D)
+        _physicsCache[picker.SelectedModel.Info.ModelName] = picker.SelectedModel.Info;
+
         textEditor.Text = result.NewCode!;
         RefreshEditPanel();
 
@@ -102,7 +142,6 @@ public partial class PythonEditorForm
         {
             HighlightBlocks(initBounds, updateBounds);
 
-            // Scroll to init block (top of insertion)
             if (initBounds is not null)
             {
                 textEditor.SelectionStart = initBounds.Start;

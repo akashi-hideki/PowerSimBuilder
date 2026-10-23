@@ -13,8 +13,10 @@ public sealed record FmuInfo(
     IReadOnlyList<string> Inputs,
     IReadOnlyList<string> Outputs,
     IReadOnlyList<FmuParameter> Parameters,
-    FmuTiming? Timing);
+    FmuTiming? Timing,
+    IReadOnlyDictionary<string, string>? InputTypes = null,
+    IReadOnlyDictionary<string, string>? OutputTypes = null);
 
-public sealed record FmuParameter(string Name, string StartValue);
+public sealed record FmuParameter(string Name, string StartValue, string Type = "Real");
 
 public sealed record FmuTiming(double? StartTime, double? StopTime, double? StepSize);

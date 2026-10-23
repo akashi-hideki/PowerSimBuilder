@@ -45,20 +45,24 @@ public static class PhysicsSnippetBuilder
     public static string BuildInsertionBlock(
         FmuInfo info,
         string modelRelativePath,
-        string indent = "        ")
+        string indent = "        ",
+        PhysicsPortMapping? mapping = null)
     {
         if (info == null) throw new ArgumentNullException(nameof(info));
         if (string.IsNullOrWhiteSpace(modelRelativePath))
             throw new ArgumentException("modelRelativePath is required", nameof(modelRelativePath));
+        mapping ??= PhysicsPortMapping.Identity;
 
         var varName = ToPythonIdentifier(info.ModelName);
 
         var sb = new StringBuilder();
         sb.AppendLine(indent + MarkerBegin(info.ModelName));
+        sb.AppendLine(indent + "# model     : " + info.ModelName);
+        sb.AppendLine(indent + "# fmu_file  : " + GetFileName(modelRelativePath));
         sb.AppendLine(indent + "# source    : user_physics_models/" + modelRelativePath);
         sb.AppendLine(indent + "# fmi       : " + info.FmiVersion + " (" + info.FmiType + ")");
-        sb.AppendLine(indent + "# inputs    : " + JoinOrDash(info.Inputs));
-        sb.AppendLine(indent + "# outputs   : " + JoinOrDash(info.Outputs));
+        sb.AppendLine(indent + "# inputs    : " + JoinMappingSummary(info.Inputs, info.InputTypes, mapping.Inputs));
+        sb.AppendLine(indent + "# outputs   : " + JoinMappingSummary(info.Outputs, info.OutputTypes, mapping.Outputs));
         sb.AppendLine(indent + "# parameters: " + FormatParameterSummary(info.Parameters));
         sb.AppendLine(indent + "# timing    : " + FormatTiming(info.Timing));
         sb.AppendLine(indent + "self." + varName + " = load_fmu(" + HelperFunctionName
@@ -68,7 +72,8 @@ public static class PhysicsSnippetBuilder
         foreach (var p in info.Parameters)
         {
             if (p.StartValue == "# TODO")
-                sb.AppendLine(indent + "# TODO: set(\"" + p.Name + "\", <value>)  # non-Real parameter");
+                sb.AppendLine(indent + "# TODO: set(\"" + p.Name + "\", <value>)  # "
+                    + p.Type + " parameter");
             else
                 sb.AppendLine(indent + "self." + varName + ".set(\""
                     + p.Name + "\", " + p.StartValue + ")");
@@ -82,49 +87,144 @@ public static class PhysicsSnippetBuilder
 
     public static string BuildUpdateBlock(
         FmuInfo info,
-        string indent = "        ")
+        string indent = "        ",
+        PhysicsPortMapping? mapping = null)
     {
         if (info == null) throw new ArgumentNullException(nameof(info));
+        mapping ??= PhysicsPortMapping.Identity;
 
         var varName = ToPythonIdentifier(info.ModelName);
 
         var sb = new StringBuilder();
         sb.AppendLine(indent + UpdateMarkerBegin(info.ModelName));
         sb.AppendLine(indent + "# inputs -> FMU, FMU -> outputs");
+
         foreach (var input in info.Inputs)
         {
-            sb.AppendLine(indent + "self." + varName + ".set(\"" + input + "\", "
-                + "self.inputs.get(\"" + input + "\", 0.0))");
+            var fmuType = LookupType(info.InputTypes, input);
+            var comp    = mapping.ComponentPortFor(input);
+            sb.AppendLine(indent + BuildSetLine(varName, input, comp, fmuType));
         }
+
+        // Timing warning before step
+        if (info.Timing?.StepSize is double step && step > 0)
+        {
+            sb.AppendLine(indent + "# timing check: FMU stepSize=" + FormatDouble(step));
+            sb.AppendLine(indent + "if abs(dt - " + FormatDouble(step) + ") > 1e-9:");
+            sb.AppendLine(indent + "    import warnings");
+            sb.AppendLine(indent + "    warnings.warn(");
+            sb.AppendLine(indent + "        \"physics: dt (%.6g) differs from FMU stepSize (%.6g)\"");
+            sb.AppendLine(indent + "        % (dt, " + FormatDouble(step) + "), RuntimeWarning)");
+        }
+
         sb.AppendLine(indent + "self." + varName + ".doStep(self._" + varName + "_time, dt)");
         sb.AppendLine(indent + "self._" + varName + "_time += dt");
+
         foreach (var output in info.Outputs)
         {
-            sb.AppendLine(indent + "self.outputs[\"" + output + "\"] = self."
-                + varName + ".get(\"" + output + "\")");
+            var fmuType = LookupType(info.OutputTypes, output);
+            var comp    = mapping.ComponentOutputFor(output);
+            sb.AppendLine(indent + BuildGetLine(varName, output, comp, fmuType));
         }
+
         sb.AppendLine(indent + UpdateMarkerEnd(info.ModelName));
         return sb.ToString();
     }
 
-    private static string JoinOrDash(IReadOnlyList<string> items)
-        => items.Count == 0 ? "(none)" : string.Join(", ", items);
+    private static string BuildSetLine(string varName, string fmuPort, string compPort, string type)
+    {
+        var defaultSrc = "self.inputs.get(\"" + compPort + "\", " + DefaultValueFor(type) + ")";
+        switch (type)
+        {
+            case "Real":
+                return "self." + varName + ".set(\"" + fmuPort + "\", float(" + defaultSrc + "))";
+            case "Integer":
+                return "self." + varName + ".set(\"" + fmuPort + "\", int(" + defaultSrc + "))";
+            case "Boolean":
+                return "self." + varName + ".set(\"" + fmuPort + "\", bool(" + defaultSrc + "))";
+            case "String":
+                return "self." + varName + ".set(\"" + fmuPort + "\", str(" + defaultSrc + "))";
+            default:
+                return "# TODO: set(\"" + fmuPort + "\", <" + type + ">)";
+        }
+    }
+
+    private static string BuildGetLine(string varName, string fmuPort, string compPort, string type)
+    {
+        var getSrc = "self." + varName + ".get(\"" + fmuPort + "\")";
+        switch (type)
+        {
+            case "Real":
+                return "self.outputs[\"" + compPort + "\"] = float(" + getSrc + ")";
+            case "Integer":
+                return "self.outputs[\"" + compPort + "\"] = int(" + getSrc + ")";
+            case "Boolean":
+                return "self.outputs[\"" + compPort + "\"] = bool(" + getSrc + ")";
+            case "String":
+                return "self.outputs[\"" + compPort + "\"] = str(" + getSrc + ")";
+            default:
+                return "# TODO: self.outputs[\"" + compPort + "\"] = self." + varName
+                    + ".get(\"" + fmuPort + "\")  # " + type;
+        }
+    }
+
+    private static string DefaultValueFor(string type) => type switch
+    {
+        "Real"    => "0.0",
+        "Integer" => "0",
+        "Boolean" => "False",
+        "String"  => "\"\"",
+        _         => "0.0",
+    };
+
+    private static string LookupType(IReadOnlyDictionary<string, string>? types, string name)
+    {
+        if (types != null && types.TryGetValue(name, out var t) && !string.IsNullOrEmpty(t))
+            return t;
+        return "Real";
+    }
+
+    private static string JoinMappingSummary(
+        IReadOnlyList<string> names,
+        IReadOnlyDictionary<string, string>? types,
+        IReadOnlyDictionary<string, string> mapping)
+    {
+        if (names.Count == 0) return "(none)";
+        return string.Join(", ", names.Select(n =>
+        {
+            var t = LookupType(types, n);
+            var comp = mapping.TryGetValue(n, out var c) && !string.IsNullOrEmpty(c) ? c : n;
+            return n == comp
+                ? n + ":" + t
+                : n + ":" + t + "->" + comp;
+        }));
+    }
 
     private static string FormatParameterSummary(IReadOnlyList<FmuParameter> parameters)
     {
         if (parameters.Count == 0) return "(none)";
         return string.Join(", ", parameters.Select(p =>
-            p.StartValue == "# TODO" ? p.Name + "=?" : p.Name + "=" + p.StartValue));
+            p.StartValue == "# TODO" ? p.Name + "(" + p.Type + ")=?" : p.Name + "=" + p.StartValue));
     }
 
     private static string FormatTiming(FmuTiming? timing)
     {
         if (timing == null) return "(none)";
         var parts = new List<string>();
-        if (timing.StartTime.HasValue) parts.Add("start=" + timing.StartTime.Value.ToString("G", CultureInfo.InvariantCulture));
-        if (timing.StopTime.HasValue) parts.Add("stop=" + timing.StopTime.Value.ToString("G", CultureInfo.InvariantCulture));
-        if (timing.StepSize.HasValue) parts.Add("step=" + timing.StepSize.Value.ToString("G", CultureInfo.InvariantCulture));
+        if (timing.StartTime.HasValue) parts.Add("start=" + FormatDouble(timing.StartTime.Value));
+        if (timing.StopTime.HasValue)  parts.Add("stop="  + FormatDouble(timing.StopTime.Value));
+        if (timing.StepSize.HasValue)  parts.Add("step="  + FormatDouble(timing.StepSize.Value));
         return parts.Count == 0 ? "(none)" : string.Join(", ", parts);
+    }
+
+    private static string FormatDouble(double v)
+        => v.ToString("G", CultureInfo.InvariantCulture);
+
+    private static string GetFileName(string relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath)) return "";
+        var slash = relativePath.LastIndexOf('/') ;
+        return slash >= 0 ? relativePath.Substring(slash + 1) : relativePath;
     }
 
     private static string ToPythonIdentifier(string name)

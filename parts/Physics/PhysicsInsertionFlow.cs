@@ -4,9 +4,6 @@ using System.IO;
 
 namespace PowerSimBuilder.Physics;
 
-/// <summary>
-/// Result of a single insertion attempt.
-/// </summary>
 public sealed record PhysicsInsertionResult(
     InsertOutcome Outcome,
     string? NewCode,
@@ -15,16 +12,8 @@ public sealed record PhysicsInsertionResult(
     public bool Succeeded => ErrorMessage == null && Outcome == InsertOutcome.Inserted;
 }
 
-/// <summary>
-/// Orchestrates insertion with validation and error handling,
-/// kept free of UI dependencies so it can be unit-tested.
-/// </summary>
 public static class PhysicsInsertionFlow
 {
-    /// <summary>
-    /// Physics models must not be attached to StaTable-imported components
-    /// (Type == "ControllerBox"). Returns true for all other types.
-    /// </summary>
     public static bool IsPhysicsTarget(string? componentType)
         => !string.Equals(componentType, "ControllerBox", StringComparison.Ordinal);
 
@@ -32,15 +21,8 @@ public static class PhysicsInsertionFlow
         string? currentCode,
         PhysicsModelEntry? entry)
     {
-        if (currentCode == null)
-            return Fail("Current Python code is null.");
-        if (entry == null)
-            return Fail("No physics model was selected.");
-
-        if (!IsPhysicsTarget(entry.Info.FmiType) && false)
-        {
-            // placeholder: FMI type filter applied elsewhere
-        }
+        if (currentCode == null) return Fail("Current Python code is null.");
+        if (entry == null) return Fail("No physics model was selected.");
 
         if (!File.Exists(entry.FmuPath))
             return Fail("FMU file not found: " + entry.FmuPath);
@@ -51,8 +33,18 @@ public static class PhysicsInsertionFlow
 
         try
         {
-            var (outcome, code) = PhysicsSnippetInserter.InsertFromFmu(
-                currentCode, entry.FmuPath, entry.FmuRelativePath);
+            var modelYamlPath = Path.Combine(entry.ModelDirectory, "model.yaml");
+            var mapping = ModelYaml.ReadPortMapping(modelYamlPath);
+
+            var info = entry.Info;
+            var helper = PhysicsSnippetBuilder.BuildHelper();
+            var initBlock = PhysicsSnippetBuilder.BuildInsertionBlock(
+                info, entry.FmuRelativePath, mapping: mapping);
+            var updateBlock = PhysicsSnippetBuilder.BuildUpdateBlock(
+                info, mapping: mapping);
+
+            var (outcome, code) = PhysicsSnippetInserter.Insert(
+                currentCode, info.ModelName, initBlock, helper, updateBlock);
 
             return new PhysicsInsertionResult(outcome, code, null);
         }

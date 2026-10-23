@@ -9,11 +9,6 @@ using System.Xml.Linq;
 
 namespace PowerSimBuilder.Physics;
 
-/// <summary>
-/// Reads FMU metadata (modelDescription.xml) into an <see cref="FmuInfo"/>.
-/// Extends PhysicsImportForm.ParseFmu with modelName, fmiVersion,
-/// parameter start values, and DefaultExperiment timing.
-/// </summary>
 public static class FmuInfoReader
 {
     public static FmuInfo Read(string fmuPath)
@@ -35,9 +30,11 @@ public static class FmuInfoReader
         var fmiVersion = (string?)root.Attribute("fmiVersion") ?? "";
         var fmiType    = (string?)root.Attribute("fmiType")    ?? GuessFmiType(root);
 
-        var inputs     = new List<string>();
-        var outputs    = new List<string>();
-        var parameters = new List<FmuParameter>();
+        var inputs        = new List<string>();
+        var outputs       = new List<string>();
+        var parameters    = new List<FmuParameter>();
+        var inputTypes    = new Dictionary<string, string>(StringComparer.Ordinal);
+        var outputTypes   = new Dictionary<string, string>(StringComparer.Ordinal);
 
         var modelVariables = root.Elements()
             .FirstOrDefault(e => e.Name.LocalName == "ModelVariables");
@@ -50,17 +47,20 @@ public static class FmuInfoReader
                 var name = (string?)sv.Attribute("name") ?? "";
                 if (string.IsNullOrEmpty(name)) continue;
                 var causality = (string?)sv.Attribute("causality") ?? "local";
+                var typeName  = ReadTypeName(sv);
 
                 switch (causality)
                 {
                     case "input":
                         inputs.Add(name);
+                        inputTypes[name] = typeName;
                         break;
                     case "output":
                         outputs.Add(name);
+                        outputTypes[name] = typeName;
                         break;
                     case "parameter":
-                        parameters.Add(new FmuParameter(name, ReadStartValue(sv)));
+                        parameters.Add(new FmuParameter(name, ReadStartValue(sv), typeName));
                         break;
                 }
             }
@@ -73,7 +73,15 @@ public static class FmuInfoReader
             inputs,
             outputs,
             parameters,
-            ReadTiming(root));
+            ReadTiming(root),
+            inputTypes,
+            outputTypes);
+    }
+
+    private static string ReadTypeName(XElement scalarVariable)
+    {
+        var typed = scalarVariable.Elements().FirstOrDefault();
+        return typed?.Name.LocalName ?? "Real";
     }
 
     private static string ReadStartValue(XElement scalarVariable)
@@ -84,7 +92,10 @@ public static class FmuInfoReader
         var typeName = typed.Name.LocalName;
         var start = (string?)typed.Attribute("start");
 
-        if (typeName == "Real" || typeName == "Integer")
+        if (typeName == "Real")
+            return string.IsNullOrEmpty(start) ? "0.0" : start!;
+
+        if (typeName == "Integer")
             return string.IsNullOrEmpty(start) ? "0" : start!;
 
         if (typeName == "Boolean")
@@ -93,7 +104,6 @@ public static class FmuInfoReader
         if (typeName == "String")
             return start == null ? "\"\"" : "\"" + start.Replace("\"", "\\\"") + "\"";
 
-        // Enumeration and unsupported types -> caller decides (TODO).
         return "# TODO";
     }
 

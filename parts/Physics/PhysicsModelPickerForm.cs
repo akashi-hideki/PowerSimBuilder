@@ -1,27 +1,28 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using PowerSimBuilder.Physics;
 
 namespace PowerSimBuilder;
 
-/// <summary>
-/// Picks a physics model from user_physics_models and returns it via SelectedModel.
-/// </summary>
 public sealed class PhysicsModelPickerForm : Form
 {
     private readonly ListView _list = new();
     private readonly Button _btnInsert = new();
     private readonly Button _btnCancel = new();
+    private readonly Button _btnOpenFolder = new();
     private readonly Label _lblStatus = new();
+    private readonly TextBox _txtDetail = new();
     private readonly List<PhysicsModelEntry> _entries;
 
     public PhysicsModelEntry? SelectedModel { get; private set; }
 
-    public PhysicsModelPickerForm() : this(DefaultRoot()) { }
+    public PhysicsModelPickerForm() : this(PhysicsModelCatalog.DefaultRoot()) { }
 
     public PhysicsModelPickerForm(string userPhysicsRoot)
         : this(PhysicsModelCatalog.Scan(userPhysicsRoot)) { }
@@ -33,8 +34,6 @@ public sealed class PhysicsModelPickerForm : Form
         Populate();
     }
 
-    public static string DefaultRoot() => PhysicsModelCatalog.DefaultRoot();
-
     private void InitializeUi()
     {
         Text = "Add Physics Model";
@@ -42,22 +41,41 @@ public sealed class PhysicsModelPickerForm : Form
         FormBorderStyle = FormBorderStyle.Sizable;
         MinimizeBox = false;
         MaximizeBox = false;
-        ClientSize = new Size(640, 380);
-        MinimumSize = new Size(480, 280);
+        ClientSize = new Size(820, 520);
+        MinimumSize = new Size(700, 400);
         Font = new Font("Segoe UI", 9F);
+
+        var split = new SplitContainer
+        {
+            Dock = DockStyle.Fill,
+            Orientation = Orientation.Vertical,
+            SplitterDistance = 500,
+            SplitterWidth = 6,
+        };
 
         _list.Dock = DockStyle.Fill;
         _list.View = View.Details;
         _list.FullRowSelect = true;
         _list.MultiSelect = false;
         _list.HideSelection = false;
-        _list.Columns.Add("Model", 240);
-        _list.Columns.Add("Inputs", 60, HorizontalAlignment.Right);
-        _list.Columns.Add("Outputs", 60, HorizontalAlignment.Right);
-        _list.Columns.Add("FMI", 100);
+        _list.Columns.Add("Model", 220);
+        _list.Columns.Add("In", 40, HorizontalAlignment.Right);
+        _list.Columns.Add("Out", 40, HorizontalAlignment.Right);
+        _list.Columns.Add("FMI", 120);
         _list.DoubleClick += (s, e) => AcceptIfSelected();
+        _list.SelectedIndexChanged += (s, e) => UpdateDetail();
 
-        var bottom = new Panel { Dock = DockStyle.Bottom, Height = 48 };
+        _txtDetail.Dock = DockStyle.Fill;
+        _txtDetail.Multiline = true;
+        _txtDetail.ReadOnly = true;
+        _txtDetail.ScrollBars = ScrollBars.Vertical;
+        _txtDetail.Font = new Font("Consolas", 9F);
+        _txtDetail.BackColor = Color.White;
+
+        split.Panel1.Controls.Add(_list);
+        split.Panel2.Controls.Add(_txtDetail);
+
+        var bottom = new Panel { Dock = DockStyle.Bottom, Height = 56 };
         _lblStatus.AutoSize = false;
         _lblStatus.Dock = DockStyle.Fill;
         _lblStatus.TextAlign = ContentAlignment.MiddleLeft;
@@ -69,13 +87,21 @@ public sealed class PhysicsModelPickerForm : Form
         _btnInsert.Enabled = false;
         _btnInsert.Click += (s, e) => AcceptIfSelected();
 
+        _btnOpenFolder.Text = "Open Folder";
+        _btnOpenFolder.Dock = DockStyle.Right;
+        _btnOpenFolder.Width = 110;
+        _btnOpenFolder.Enabled = false;
+        _btnOpenFolder.Click += (s, e) => OpenSelectedFolder();
+
         _btnCancel.Text = "Cancel";
         _btnCancel.Dock = DockStyle.Right;
         _btnCancel.Width = 100;
         _btnCancel.DialogResult = DialogResult.Cancel;
 
-        var rightPanel = new Panel { Dock = DockStyle.Right, Width = 210 };
+        var rightPanel = new Panel { Dock = DockStyle.Right, Width = 330 };
         rightPanel.Controls.Add(_btnInsert);
+        rightPanel.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 6 });
+        rightPanel.Controls.Add(_btnOpenFolder);
         rightPanel.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 6 });
         rightPanel.Controls.Add(_btnCancel);
 
@@ -83,9 +109,13 @@ public sealed class PhysicsModelPickerForm : Form
         bottom.Controls.Add(rightPanel);
 
         _list.SelectedIndexChanged += (s, e) =>
-            _btnInsert.Enabled = _list.SelectedItems.Count > 0;
+        {
+            var hasSelection = _list.SelectedItems.Count > 0;
+            _btnInsert.Enabled = hasSelection;
+            _btnOpenFolder.Enabled = hasSelection;
+        };
 
-        Controls.Add(_list);
+        Controls.Add(split);
         Controls.Add(bottom);
         AcceptButton = _btnInsert;
         CancelButton = _btnCancel;
@@ -107,11 +137,83 @@ public sealed class PhysicsModelPickerForm : Form
         if (_entries.Count == 0)
         {
             _lblStatus.Text = "No physics models found under user_physics_models.";
+            _txtDetail.Text = "(no models)";
         }
         else
         {
             _lblStatus.Text = _entries.Count + " model(s) available.";
             _list.Items[0].Selected = true;
+        }
+    }
+
+    private void UpdateDetail()
+    {
+        if (_list.SelectedItems.Count == 0) { _txtDetail.Text = ""; return; }
+        if (_list.SelectedItems[0].Tag is not PhysicsModelEntry entry) { _txtDetail.Text = ""; return; }
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Model     : " + entry.Info.ModelName);
+        sb.AppendLine("FMI       : " + entry.Info.FmiVersion + " (" + entry.Info.FmiType + ")");
+        sb.AppendLine("Directory : " + entry.ModelDirectory);
+        sb.AppendLine("FMU       : " + entry.FmuPath);
+        sb.AppendLine();
+
+        sb.AppendLine("Inputs (" + entry.Info.Inputs.Count + "):");
+        foreach (var name in entry.Info.Inputs)
+        {
+            var t = entry.Info.InputTypes != null && entry.Info.InputTypes.TryGetValue(name, out var tt) ? tt : "Real";
+            sb.AppendLine("  " + name + " : " + t);
+        }
+        sb.AppendLine();
+
+        sb.AppendLine("Outputs (" + entry.Info.Outputs.Count + "):");
+        foreach (var name in entry.Info.Outputs)
+        {
+            var t = entry.Info.OutputTypes != null && entry.Info.OutputTypes.TryGetValue(name, out var tt) ? tt : "Real";
+            sb.AppendLine("  " + name + " : " + t);
+        }
+        sb.AppendLine();
+
+        sb.AppendLine("Parameters (" + entry.Info.Parameters.Count + "):");
+        foreach (var p in entry.Info.Parameters)
+        {
+            var startText = p.StartValue == "# TODO" ? "?" : p.StartValue;
+            sb.AppendLine("  " + p.Name + " : " + p.Type + " = " + startText);
+        }
+        sb.AppendLine();
+
+        if (entry.Info.Timing is { } t2)
+        {
+            sb.AppendLine("Timing:");
+            if (t2.StartTime.HasValue) sb.AppendLine("  startTime : " + t2.StartTime.Value);
+            if (t2.StopTime.HasValue)  sb.AppendLine("  stopTime  : " + t2.StopTime.Value);
+            if (t2.StepSize.HasValue)  sb.AppendLine("  stepSize  : " + t2.StepSize.Value);
+        }
+        else
+        {
+            sb.AppendLine("Timing: (none)");
+        }
+
+        _txtDetail.Text = sb.ToString();
+    }
+
+    private void OpenSelectedFolder()
+    {
+        if (_list.SelectedItems.Count == 0) return;
+        if (_list.SelectedItems[0].Tag is not PhysicsModelEntry entry) return;
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = entry.ModelDirectory,
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, "Open folder failed",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 

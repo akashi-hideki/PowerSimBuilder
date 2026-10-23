@@ -63,7 +63,7 @@ public class PhysicsSnippetInserterTests
         Assert.Contains("# === physics: PMSM (auto-inserted) ===", code);
         Assert.Contains("# === physics: PMSM (auto-inserted in update) ===", code);
         Assert.Contains("self.pmsm.doStep(self._pmsm_time, dt)", code);
-        Assert.Contains("self.outputs[\"i_d\"] = self.pmsm.get(\"i_d\")", code);
+        Assert.Contains("self.outputs[\"i_d\"] = float(self.pmsm.get(\"i_d\"))", code);
     }
 
     [Fact]
