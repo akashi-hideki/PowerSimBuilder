@@ -212,3 +212,6 @@ user_physics_models/Dahlquist/
 
 # Test/debug artifacts
 test-output*.txt
+
+# Release notes (generated per-release)
+RELEASE_NOTES_v*.md
