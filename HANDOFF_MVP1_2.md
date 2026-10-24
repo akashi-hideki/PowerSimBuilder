@@ -267,3 +267,78 @@ HANDOFF_MVP1_2.md を読んで、次タスクに着手してください。
 ---
 
 *Apache 2.0. Windows-only. Companion to StaTable.*
+
+## 付録F: リリースツール (tools/release.py, v1.2.5 で追加)
+
+`tools/release.py` = **タグ付け + リリースノート生成 + GitHub Release** を 1 コマンドで実行。
+
+### 使い方
+
+```powershell
+# 明示バージョン指定
+python tools\release.py v1.2.6
+
+# 最新タグから自動 bump (patch / minor / major)
+python tools\release.py --auto minor
+
+# 追加ノートをファイルから読み込み
+python tools\release.py v1.2.6 --notes RELEASE_NOTES.md
+
+# Dry run (変更せず計画表示)
+python tools\release.py v1.2.6 --dry-run
+```
+
+### 動作 (5 ステップ)
+
+| ステップ | 内容 |
+|---------|------|
+| 1. version | 引数 or 最新タグから自動 bump (既定: patch) |
+| 2. pre-flight | uncommitted 変更なし / main ブランチ / origin/main と同期 を検証 |
+| 3. notes | `<last-tag>..HEAD` のコミットを Conventional Commits で分類 |
+| 4. tag | `git tag -a <version>` + `git push origin <version>` |
+| 5. release | `gh release create --notes-file <temp>` |
+
+### Conventional Commits 分類
+
+| prefix | セクション |
+|--------|-----------|
+| `feat` | Features |
+| `fix` | Bug Fixes |
+| `docs` | Documentation |
+| `test` | Tests |
+| `ci` | CI |
+| `refactor` | Refactoring |
+| `perf` | Performance |
+| `style` / `build` / `chore` | そのまま |
+| その他 | Other |
+
+### オプション
+
+| オプション | 内容 |
+|-----------|------|
+| `--auto {major,minor,patch}` | version 省略時の bump 種別 (既定: patch) |
+| `--notes <file>` | 追加の Markdown ノート |
+| `--title <str>` | Release タイトル (既定: version) |
+| `--dry-run` | 変更せず計画表示のみ |
+| `--skip-checks` | pre-flight をスキップ (自動化用) |
+
+### 注意事項
+
+- **既存タグは上書きしない** (エラーで停止)
+- **`--dry-run` 推奨** (実行前に計画確認)
+- **notes の末尾**: `_Released on YYYY-MM-DD_` が自動付与
+- **`gh release create` にはタグが origin に必要** (`push_tag` が先に実行される)
+- **テスト**: `tests/python/tools/test_release.py` (13 tests)
+
+### リリースフロー (推奨)
+
+```powershell
+# 1. 開発 → テスト → コミット → push
+git push origin main
+
+# 2. dry-run で確認
+python tools\release.py --auto patch --dry-run
+
+# 3. 実行 (タグ + Release が一発で完了)
+python tools\release.py --auto patch
+```
