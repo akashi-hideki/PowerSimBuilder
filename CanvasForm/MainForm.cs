@@ -490,7 +490,10 @@ namespace PowerSimBuilder
         {
             try
             {
+                Test_Log("Test_LoadProjectFromPath START: " + path);
                 var json = File.ReadAllText(path);
+                Test_Log("JSON read OK: " + json.Length + " chars");
+
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true,
@@ -498,18 +501,50 @@ namespace PowerSimBuilder
                 };
 
                 var model = JsonSerializer.Deserialize<CanvasModel>(json, options);
+                Test_Log("Deserialize OK: Components=" + (model?.Components?.Count ?? -1));
+
                 _canvasManager.LoadModel(model);
+                Test_Log("LoadModel OK");
+
                 RepairGeneratedPaths(_canvasManager);
                 designCanvas1.ArrangeComponents();
                 UpdateSaveStatus();
                 UpdateUndoRedoButtons();
                 UpdateDeleteButton();
+                Test_Log("Test_LoadProjectFromPath COMPLETE");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(I18n.T("MainForm.MsgLoadFail", ex.Message), I18n.T("Common.MsgTitleError"),
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Test_Log("Test_LoadProjectFromPath FAILED: " + ex.ToString());
+                if (!Test_IsTestMode())
+                {
+                    MessageBox.Show(I18n.T("MainForm.MsgLoadFail", ex.Message), I18n.T("Common.MsgTitleError"),
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
+        }
+
+        private static bool Test_IsTestMode()
+        {
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "--test-project") return true;
+            }
+            return false;
+        }
+
+        internal static void Test_Log(string message)
+        {
+            try
+            {
+                var logPath = System.IO.Path.Combine(
+                    System.IO.Path.GetTempPath(),
+                    "PowerSimBuilder_TestLoad.log");
+                System.IO.File.AppendAllText(logPath,
+                    DateTime.Now.ToString("HH:mm:ss.fff") + " " + message + Environment.NewLine);
+            }
+            catch { }
         }
 
         private void Test_HandleCommandLineProject()

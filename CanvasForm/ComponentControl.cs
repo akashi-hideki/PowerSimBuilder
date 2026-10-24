@@ -47,7 +47,20 @@ namespace PowerSimBuilder
         /// インスタンス名
         /// 注意点: シミュレーションコード内で使用
         /// </summary>
-        public string InstanceName { get; set; } = "comp";
+        private string _instanceName = "comp";
+        public string InstanceName
+        {
+            get { return _instanceName; }
+            set
+            {
+                _instanceName = value;
+                if (!string.IsNullOrEmpty(value))
+                {
+                    this.Name = value;
+                    this.AccessibleName = value;
+                }
+            }
+        }
 
         /// <summary>
         /// 選択状態

@@ -1,0 +1,23 @@
+{
+  "Components": [
+    {
+      "Descriptor": {
+        "Name": "First Order Lag",
+        "Type": "FirstOrderLag",
+        "Category": "Control",
+        "Parameters": [
+          { "Name": "time_constant", "Type": "double", "DefaultValue": 1.0 },
+          { "Name": "initial_output", "Type": "double", "DefaultValue": 0.0 }
+        ],
+        "InputPorts": ["input"],
+        "OutputPorts": ["output"]
+      },
+      "Parameters": {},
+      "Location": { "X": 100, "Y": 100 },
+      "InstanceName": "firstOrderLag1"
+    }
+  ],
+  "Connections": [],
+  "SelectedComponentIndex": -1,
+  "SelectedConnectionIndex": -1
+}

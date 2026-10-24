@@ -342,6 +342,7 @@ namespace PowerSimBuilder
                     Location = compModel.Location,
                     InstanceName = compModel.InstanceName
                 };
+                component.Name = component.InstanceName;
 
                 // パラメータ復元
                 foreach (var param in compModel.Parameters)
@@ -445,6 +446,7 @@ namespace PowerSimBuilder
                     Location = compModel.Location,
                     InstanceName = compModel.InstanceName
                 };
+                component.Name = component.InstanceName;
 
                 // パラメータ復元
                 foreach (var param in compModel.Parameters)
