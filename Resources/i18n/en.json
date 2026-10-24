@@ -300,6 +300,8 @@
   "PhysicsRemove.MenuItem": "Remove Physics Model...",
   "PhysicsRemove.BtnTooltip": "Remove a physics model from the current file",
   "NetworkAccess.Title": "Network Access Confirmation",
+  "PhysicsImport.TabFile": "File",
+  "PhysicsImport.TabUrl": "URL",
   "NetworkAccess.Prompt": "Download the file from the URL below?",
   "NetworkAccess.LblUrl": "Download source:",
   "NetworkAccess.LblFile": "File:",

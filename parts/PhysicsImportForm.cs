@@ -31,6 +31,9 @@ public partial class PhysicsImportForm : Form
         InitializeComponent();
         ApplyI18n();
         Name = "PhysicsImportForm";
+
+        // MVP-β Phase 3: wrap in TabControl (File + URL)
+        WrapInTabs();
     }
 
     private void ApplyI18n()

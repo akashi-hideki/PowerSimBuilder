@@ -300,6 +300,8 @@
   "PhysicsRemove.MenuItem": "删除物理模型...",
   "PhysicsRemove.BtnTooltip": "从当前文件中删除物理模型",
   "NetworkAccess.Title": "网络访问确认",
+  "PhysicsImport.TabFile": "文件",
+  "PhysicsImport.TabUrl": "URL",
   "NetworkAccess.Prompt": "是否从以下 URL 下载文件？",
   "NetworkAccess.LblUrl": "下载来源:",
   "NetworkAccess.LblFile": "文件:",
