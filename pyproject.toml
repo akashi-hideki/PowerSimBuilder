@@ -16,7 +16,7 @@ dependencies = [
 [tool.pytest.ini_options]
 testpaths = ["tests/python", "tests/integration"]
 pythonpath = [".", "src"]
-addopts = "-ra -q"
+addopts = "-ra -q --basetemp=tmp/pytest"
 filterwarnings = [
     "ignore:FigureCanvasAgg is non-interactive:UserWarning",
 ]
