@@ -58,6 +58,63 @@
 | pre-commit | 全 9 フック Passed |
 | ビルド警告 | 0（C#） |
 
+## v1.6.0 完了（Catalog Sources dropdown + Release asset）
+
+**Catalog タブに Sources ドロップダウンを追加。`release.py --with-catalog` でカタログを Release asset として自動配布。**
+
+### Task A: FMI 2.0 / win64 優先ソート（`523c3d8`）
+
+| 変更 | 内容 |
+|------|------|
+| `build_cross_check_catalog.py` | `_sort_key()` 追加。FMI 2.0 > 3.0 > 1.0、win64 > linux64 > darwin64 > c-code の順 |
+| tests | 3 tests 追加（`test_sort_key_handles_short_paths` 等）。9 passed |
+
+**実証**: 先頭 10 件がすべて `FMI 2.0 / cs / win64`（旧: FMI 1.0 / c-code が先頭）
+
+### Task B: `release.py --with-catalog`（`523c3d8`）
+
+| 変更 | 内容 |
+|------|------|
+| `release.py` | `--with-catalog` フラグ追加。カタログビルド → `gh release upload` で asset 添付 |
+| dry-run 対応 | `[DRY] gh release upload v1.6.0 Resources\generated_catalog.json` を表示 |
+
+### Task C: Release asset URL 登録（`523c3d8`）
+
+| 変更 | 内容 |
+|------|------|
+| `catalog_sources.json` | `fmi-cross-check-release` 追加 |
+| URL | `https://github.com/akashi-hideki/PowerSimBuilder/releases/latest/download/generated_catalog.json` |
+
+### Task D: Sources ドロップダウン UI（`2507628`）
+
+| 変更 | 内容 |
+|------|------|
+| `CatalogTab.cs` | `lblSource`（Label）→ `_cmbCatalogSource`（ComboBox） |
+| `LoadSourceList()` | `Resources/catalog_sources.json` を読んで ComboBox を populate |
+| `OnCatalogSourceChanged()` | 選択された source の URL を `_txtCatalogUrl` に自動セット。Custom 選択時は空文字でクリア |
+| `CatalogSourceItem` | ネストクラス（Url + Label） |
+| `csproj` | `catalog_sources.json` を `Content` + `CopyToOutputDirectory=PreserveNewest` で出力にコピー |
+| i18n | `PhysicsCatalog.SourceCustom`（en: "Custom URL" / zh: "自定义 URL"）。346 keys |
+
+### 動作確認済み
+
+| 項目 | 結果 |
+|------|------|
+| ComboBox 5 項目表示（Custom + 4 sources） | OK |
+| source 選択で URL 自動セット | OK |
+| Custom 選択で URL クリア | OK |
+| `dotnet build` | 成功 |
+| Python テスト | 42 passed |
+
+### v1.6.0 リリースコマンド
+
+```powershell
+python tools\release.py --auto minor --with-catalog
+```
+
+これで v1.5.1 以来の全コミット（v1.5.2 + v1.6.0 A/B/C/D）が含まれ、
+`generated_catalog.json` が Release asset として自動添付される。
+
 ## v1.5.2 完了（FMU カタログビルダー）
 
 **実 URL カタログの生成ツール 3 本 + テスト + 罠 #31 恒久対策**。
@@ -422,6 +479,8 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 33 | **PowerShell パッチのインデント想定が外れる**（4 スペース vs 8 スペース） | 行番号ベース（`ReadAllLines` + brace depth 追跡）、または `Get-Content` で事前に実ファイル確認 |
 | 34 | **Python 3.9 未満で `tuple[int, bytes]` / `str \| None` が syntax error**（`from __future__ import annotations` では不十分） | 型ヒントは素の `tuple` / 注釈なしに後退。3.9+ 必須なら環境依存を明記 |
 | 35 | **`$text.Contains('\| NN \|')` で罠 ID を判定すると、本文中の表（ファイル数・テスト数）に誤マッチ**（`\| CanvasForm/ \| 34 \|` 等） | 行頭一致 `-match '^\| NN \|'` で判定、または罠の固有文言を併用 |
+| 36 | **PowerShell の `@()` 内でパイプライン式を書くと結果がフラット化**され、verify メッセージが空欄になる | パイプライン結果を一度変数に受け、`[bool]` で明示的に boolean 化してから `@()` に格納 |
+| 37 | **PS 5.1 は BOM なし UTF-8 を CP932 として誤認**し、日本語文字列がクォート/括弧を壊す（`finalize_v150.ps1` / `finalize_v152_handoff.ps1` で再発） | VSCode 保存時に「Save with Encoding → UTF-8 with BOM」を選択。保存後 `[System.IO.File]::ReadAllBytes($p)[0..2]` で `EF BB BF` を確認 |
 
 ## 次タスク候補
 
