@@ -77,6 +77,49 @@ tests/
 | UI テストフィクスチャ | `tests\PowerSimBuilder.UITests\Fixtures\` |
 | Physics ソース | `parts\Physics\` |
 | 参照 FMU | `tmp\Reference-FMUs\2.0\` |
+## L3 FlaUI スモークテスト（v1.2.1 で追加、Test 1 のみ緑）
+
+`tests\PowerSimBuilder.UITests\` に FlaUI UIA3 ベースの L3 スモークテストを追加。
+
+| テスト | 状態 | 備考 |
+|--------|------|------|
+| `LaunchApp_ShowsMainWindow` | Pass | 起動・MainForm 認識（AutomationId=MainForm）・タイトル検証 |
+| `DoubleClick_OpensEditor` | Skip | UIA3 `Mouse.DoubleClick` が WinForms UserControl の `WM_LBUTTONDBLCLK` を発火しない |
+| `AddPhysics_InsertsCode` | Skip | 上記に依存 |
+
+実行: `dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"`
+結果: `Passed: 1, Skipped: 2`（緑で着地）
+
+### 判明した事実（次スレッドで再挑戦する場合）
+
+| 項目 | 確認済み |
+|------|---------|
+| `firstOrderLag1` は UIA3 の `AutomationId` で見える（`AccessibleName` + `AccessibleRole.Pane` + `CreateAccessibilityInstance` 追加で露出） |
+| `DesignCanvas` も `AutomationId` で見える |
+| `SetForeground` + `Mouse.DoubleClick` でもイベント発火しない |
+| `component.DoubleClick()` (FlaUI API) でも同様 |
+| `ComponentControl` は `MouseDown`/`MouseUp` でドラッグ処理 → ダブルクリック検出を妨害している可能性 |
+| `--test-project <path>` コマンドライン引数でプロジェクトロード可能（`MainForm.OnLoad` 末尾の `Test_HandleCommandLineProject()`） |
+
+### 次スレッドの選択肢（優先度順）
+
+| # | 選択肢 | 規模 |
+|---|--------|------|
+| 1 | `ComponentControl` のドラッグ処理を修正（`Capture` の扱い、`ClickCount` 使用等）→ 根本原因解決 | M |
+| 2 | アプリに `--test-open-editor <instanceName>` 引数を追加 → 起動時にエディタを開く。ダブルクリック自体はテストしない | S |
+| 3 | FlaUI を諦め、L2 テスト（既存 15 tests）でカバレッジ維持 | - |
+
+### 学んだ罠（v1.2.1 追加分）
+
+| # | 罠 | 対策 |
+|---|-----|------|
+| 1 | **FlaUI 5.0.0 は .NET Framework 専用** → net10.0 から参照で NU1701 | **FlaUI 4.0.0**（net6.0-windows 同梱）を使う |
+| 2 | **メイン csproj の glob 罠**: `tests/` を追加すると `**/*.cs` に拾われ、`obj/**` が二重定義で CS0579 | csproj に `<Compile Remove="tests\**\*.cs" />` 等を追加 |
+| 3 | **PowerShell 5.1 は式中の `if` 式 (ternary) 非対応** | `$nl = if (...) { "a" } else { "b" }` は OK、`($x -replace 'y', (if ...))` は NG |
+| 4 | **`ByName` vs `ByAutomationId`**: FlaUI の `ByName` は UIA `Name`(=WinForms `Text`)、`ByAutomationId` は `Control.Name` | 用途に応じて使い分け |
+| 5 | **UserControl は UIA3 に自動露出しない** | `AccessibleName` + `CreateAccessibilityInstance` + `AccessibleRole.Pane` で露出 |
+| 6 | **`Application` 名前衝突**: `UseWindowsForms=true` で `System.Windows.Forms.Application` と FlaUI の `Application` が曖昧 | `FlaUI.Core.Application` 完全修飾 |
+| 7 | **`dotnet new xunit` の TFM 既定は `net10.0`（Windows なし）** | `net10.0-windows` + `UseWindowsForms` に変更 |
 ## 現在の状態（2026-10-23 時点）
 
 | 項目 | 値 |
