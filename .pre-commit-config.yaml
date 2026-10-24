@@ -1,4 +1,14 @@
 repos:
+  # Runs FIRST so auto-fix happens before validation (traps #24).
+  - repo: local
+    hooks:
+      - id: i18n-check
+        name: i18n JSON auto-fix
+        entry: python tools/i18n_check.py --fix
+        language: system
+        files: ^Resources/i18n/.*\.json$
+        pass_filenames: false
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -12,6 +22,8 @@ repos:
         files: \.(yml|yaml)$
       - id: check-toml
         files: \.toml$
+      - id: check-json
+        files: ^Resources/i18n/.*\.json$
       - id: check-added-large-files
         args: ["--maxkb=500"]
       - id: mixed-line-ending
