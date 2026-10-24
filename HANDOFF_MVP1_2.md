@@ -7,6 +7,76 @@
 - **v1.2.0 リリース済み**（tag: `v1.2.0` = `e6364cf`）
 - L2 GUI テストは `387dd7f` で追加済み（v1.2.1 予定）
 
+## プロジェクト構成（重要）
+
+> **罠**: メインの `.csproj` は **ルート直下**（`src\` 配下ではない）。
+> 過去スレッドで `src\PowerSimBuilder\PowerSimBuilder.csproj` を前提にして
+> `dotnet add reference` が失敗した事例あり。`src/` ディレクトリは存在するが
+> csproj を含まない（レガシー / 実験用）。
+
+### ソリューション / プロジェクト
+
+| パス | TFM | 役割 |
+|------|-----|------|
+| `PowerSimBuilder.sln` | - | ソリューション（唯一） |
+| `PowerSimBuilder.csproj` | net10.0-windows | メインアプリ（WinForms） |
+| `PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj` | net10.0-windows | L1/L2 xUnit テスト |
+| `tests\PowerSimBuilder.UITests\PowerSimBuilder.UITests.csproj` | net10.0-windows | L3 FlaUI スモークテスト（v1.2.1 で追加） |
+
+### ルートディレクトリ（C# ソースを含む）
+
+| ディレクトリ | .cs 数 | 内容 |
+|-------------|-------|------|
+| `CanvasForm/` | 34 | DesignCanvas, キャンバス描画 |
+| `ComponentEdit/` | 13 | EditPanel, PythonEditorForm, ComponentManager |
+| `parts/` | 36 | シミュレーション部品。`parts/Physics/` に Physics レイヤー（9 ファイル） |
+| `Services/` | 5 | AppServices など共通サービス |
+| `SimPartsManege/` | 2 | 部品管理（※スペル "Manege"） |
+| `SimulationGenerate/` | 2 | ComponentCodeGenerator |
+| `StaTableIntegration/` | 7 | StaTable 取り込み |
+| `Resources/` | 0 | i18n JSON（`en.json` / `zh.json`） |
+
+### 非 C# ディレクトリ
+
+| ディレクトリ | 内容 |
+|-------------|------|
+| `pythonlib/` | Python runtime バインディング（`datatas/` サブあり ※スペル） |
+| `powersimbuilder_runtime.egg-info/` | Python パッケージメタデータ |
+| `generated/` | 生成コード出力先 |
+| `user_physics_models/` | FMU + `model.yaml`（Dahlquist / Feedthrough / PMSM） |
+| `user_components/` | ユーザー部品（現在空） |
+| `templates/` | テンプレート（現在空） |
+| `examples/` | サンプル |
+| `tests/` | data / integration / python / PowerSimBuilder.UITests |
+| `tmp/` | 参照 FMU（`tmp\Reference-FMUs\2.0\`） |
+| `tools/` | `gcommit.ps1` など |
+| `docs/`, `MD/` | ドキュメント |
+| `previou_files/` | 旧ファイル退避（※スペル "previou"） |
+| `src/` | 空またはレガシー。**メイン csproj はここに無い** |
+
+### tests/ サブレイアウト
+
+```
+tests/
+  data/scenarios/{cooking_heater, fault_short_circuit, generator_load,
+                  heater_overheat, motor_drive, rectifier_motor}/
+  integration/                # pytest
+  python/                     # pytest
+  PowerSimBuilder.UITests/    # L3 FlaUI（v1.2.1 で追加）
+    Fixtures/                 # .psb + FMU（今後追加予定）
+```
+
+### よく使うパス
+
+| 用途 | パス |
+|------|------|
+| メイン exe（Debug） | `bin\Debug\net10.0-windows\PowerSimBuilder.exe` |
+| メイン exe（Release） | `bin\Release\net10.0-windows\PowerSimBuilder.exe` |
+| L1/L2 テスト | `PowerSimBuilder.Tests\` |
+| L3 UI テスト | `tests\PowerSimBuilder.UITests\` |
+| UI テストフィクスチャ | `tests\PowerSimBuilder.UITests\Fixtures\` |
+| Physics ソース | `parts\Physics\` |
+| 参照 FMU | `tmp\Reference-FMUs\2.0\` |
 ## 現在の状態（2026-10-23 時点）
 
 | 項目 | 値 |
