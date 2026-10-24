@@ -320,6 +320,7 @@
   "PhysicsCatalog.SizeUnknown": "-",
   "PhysicsCatalog.LicenseUnknown": "-",
   "PhysicsCatalog.DescUnknown": "-",
+  "PhysicsCatalog.SourceCustom": "閾ｪ螳壻ｹ・URL",
   "NetworkAccess.Prompt": "是否从以下 URL 下载文件？",
   "NetworkAccess.LblUrl": "下载来源:",
   "NetworkAccess.LblFile": "文件:",

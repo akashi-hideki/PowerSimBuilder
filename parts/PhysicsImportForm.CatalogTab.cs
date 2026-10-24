@@ -22,6 +22,7 @@ public partial class PhysicsImportForm
     private Button? _btnCatalogDownload;
     private ListView? _lstCatalog;
     private Label? _lblCatalogStatus;
+    private ComboBox? _cmbCatalogSource;
     private readonly List<CatalogItem> _catalogItems = new();
 
     private void BuildCatalogTabUi()
@@ -43,11 +44,12 @@ public partial class PhysicsImportForm
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-        var lblSource = new Label { Text = I18n.T("PhysicsCatalog.LblSource"), AutoSize = true, Anchor = AnchorStyles.Left };
+        _cmbCatalogSource = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList, Name = "CmbCatalogSource" };
+        _cmbCatalogSource.SelectedIndexChanged += (s, e) => OnCatalogSourceChanged();
         _txtCatalogUrl = new TextBox { Dock = DockStyle.Fill, Name = "TxtCatalogUrl" };
         _btnCatalogLoad = new Button { Text = I18n.T("PhysicsCatalog.BtnLoad"), Dock = DockStyle.Fill, Name = "BtnCatalogLoad" };
         _btnCatalogLoad.Click += async (s, e) => await LoadCatalogAsync();
-        root.Controls.Add(lblSource, 0, 0);
+        root.Controls.Add(_cmbCatalogSource, 0, 0);
         root.Controls.Add(_txtCatalogUrl, 1, 0);
         root.Controls.Add(_btnCatalogLoad, 2, 0);
 
@@ -98,7 +100,67 @@ public partial class PhysicsImportForm
         root.Controls.Add(bottom, 0, 3);
         root.SetColumnSpan(bottom, 3);
 
+        LoadSourceList();
         _tabCatalog.Controls.Add(root);
+    }
+
+    private void LoadSourceList()
+    {
+        if (_cmbCatalogSource == null) return;
+        _cmbCatalogSource.Items.Clear();
+        _cmbCatalogSource.Items.Add(new CatalogSourceItem(null, I18n.T("PhysicsCatalog.SourceCustom")));
+        try
+        {
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "catalog_sources.json");
+            if (!System.IO.File.Exists(path))
+            {
+                var alt = System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Resources", "catalog_sources.json");
+                if (System.IO.File.Exists(alt)) path = alt;
+            }
+            if (System.IO.File.Exists(path))
+            {
+                var json = System.IO.File.ReadAllText(path);
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("sources", out var sources))
+                {
+                    foreach (var s in sources.EnumerateArray())
+                    {
+                        var label = s.TryGetProperty("label", out var lbl) ? lbl.GetString() : null;
+                        var url = s.TryGetProperty("url", out var u) ? u.GetString() : null;
+                        var id = s.TryGetProperty("id", out var i) ? i.GetString() : null;
+                        if (!string.IsNullOrEmpty(url))
+                        {
+                            _cmbCatalogSource.Items.Add(new CatalogSourceItem(url, label ?? id ?? url));
+                        }
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Ignore: fall back to Custom URL only.
+        }
+        _cmbCatalogSource.SelectedIndex = 0;
+    }
+
+    private void OnCatalogSourceChanged()
+    {
+        if (_cmbCatalogSource?.SelectedItem is CatalogSourceItem item && !string.IsNullOrEmpty(item.Url))
+        {
+            if (_txtCatalogUrl != null) _txtCatalogUrl.Text = item.Url;
+        }
+    }
+
+    private sealed class CatalogSourceItem
+    {
+        public string? Url { get; }
+        public string Label { get; }
+        public CatalogSourceItem(string? url, string label)
+        {
+            Url = url;
+            Label = label;
+        }
+        public override string ToString() => Label;
     }
 
     private async Task LoadCatalogAsync()
@@ -216,5 +278,6 @@ public partial class PhysicsImportForm
     public Button? Test_BtnCatalogDownload => _btnCatalogDownload;
     public ListView? Test_LstCatalog => _lstCatalog;
     public Label? Test_LblCatalogStatus => _lblCatalogStatus;
+    public ComboBox? Test_CmbCatalogSource => _cmbCatalogSource;
     internal IReadOnlyList<CatalogItem> Test_CatalogItems => _catalogItems;
 }

@@ -320,6 +320,7 @@
   "PhysicsCatalog.SizeUnknown": "-",
   "PhysicsCatalog.LicenseUnknown": "-",
   "PhysicsCatalog.DescUnknown": "-",
+  "PhysicsCatalog.SourceCustom": "Custom URL",
   "NetworkAccess.Prompt": "Download the file from the URL below?",
   "NetworkAccess.LblUrl": "Download source:",
   "NetworkAccess.LblFile": "File:",
