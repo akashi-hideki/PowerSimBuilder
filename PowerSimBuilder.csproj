@@ -31,6 +31,9 @@
   <!-- SDK-style auto-glob excludes: non-project source folders -->
   <ItemGroup>
     <Compile Remove="PowerSimBuilder.Tests\**\*.cs" />
+    <Compile Remove="tests\**\*.cs" />
+    <Compile Remove="**\obj\**\*.cs" />
+    <Compile Remove="**\bin\**\*.cs" />
     <Compile Remove="_backup_*\**\*.cs" />
     <Compile Remove="previou_files\**\*.cs" />
 
