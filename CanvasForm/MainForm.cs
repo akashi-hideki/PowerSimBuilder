@@ -193,6 +193,7 @@ namespace PowerSimBuilder
             // レイアウトを再開
             this.ResumeLayout(true);
             this.PerformLayout();
+            Test_HandleCommandLineProject();
         }
 
         // ダブルバッファリングを設定するヘルパーメソッド
@@ -481,28 +482,45 @@ namespace PowerSimBuilder
                 dialog.DefaultExt = ".json";
                 dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                Test_LoadProjectFromPath(dialog.FileName);
+            }
+        }
 
-                try
+        internal void Test_LoadProjectFromPath(string path)
+        {
+            try
+            {
+                var json = File.ReadAllText(path);
+                var options = new JsonSerializerOptions
                 {
-                    var json = File.ReadAllText(dialog.FileName);
-                    var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                        Converters = { new PointJsonConverter() }
-                    };
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new PointJsonConverter() }
+                };
 
-                    var model = JsonSerializer.Deserialize<CanvasModel>(json, options);
-                    _canvasManager.LoadModel(model);
-                    RepairGeneratedPaths(_canvasManager);  // Task 3-C-10: データ汚染自動修復
-                    designCanvas1.ArrangeComponents();
-                    UpdateSaveStatus();
-                    UpdateUndoRedoButtons();
-                    UpdateDeleteButton();
-                }
-                catch (Exception ex)
+                var model = JsonSerializer.Deserialize<CanvasModel>(json, options);
+                _canvasManager.LoadModel(model);
+                RepairGeneratedPaths(_canvasManager);
+                designCanvas1.ArrangeComponents();
+                UpdateSaveStatus();
+                UpdateUndoRedoButtons();
+                UpdateDeleteButton();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(I18n.T("MainForm.MsgLoadFail", ex.Message), I18n.T("Common.MsgTitleError"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void Test_HandleCommandLineProject()
+        {
+            var cmdArgs = Environment.GetCommandLineArgs();
+            for (int i = 0; i < cmdArgs.Length - 1; i++)
+            {
+                if (cmdArgs[i] == "--test-project" && File.Exists(cmdArgs[i + 1]))
                 {
-                    MessageBox.Show(I18n.T("MainForm.MsgLoadFail", ex.Message), I18n.T("Common.MsgTitleError"),
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Test_LoadProjectFromPath(cmdArgs[i + 1]);
+                    return;
                 }
             }
         }
