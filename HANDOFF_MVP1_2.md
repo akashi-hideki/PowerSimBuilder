@@ -58,6 +58,33 @@
 | pre-commit | 全 9 フック Passed |
 | ビルド警告 | 0（C#） |
 
+## v1.5.1 完了（catalog_probe.py + catalog_sources.json）
+
+**手動 CLI プローブ + ホワイトリスト型ソースレジストリ**を追加。アプリ起動時の自動通信は**しない**（企業プロキシ配慮）。
+
+### 追加ファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `Resources/catalog_sources.json` | ホワイトリスト型ソースレジストリ（local / github / ghproxy） |
+| `tools/catalog_probe.py` | 手動 CLI プローブ（stdlib のみ、GUI 非依存） |
+| `tests/python/tools/test_catalog_probe.py` | 7 tests（urllib モック、オフライン実行可） |
+
+### 実測結果（2026-10-24）
+
+| source | 結果 | 備考 |
+|--------|------|------|
+| `local-demo` | [NG] | HTTP サーバー未起動（正常） |
+| `github-reference-fmus` | [OK] 200 / 0 model(s) | Reference-FMUs は zip のみ |
+| `ghproxy-reference-fmus` | [OK] 200 / 0 model(s) | CN フォールバック、この環境では生存 |
+
+**2/3 reachable** — 到達性と内容有無を分離表示できることを実証。
+
+### 次の課題（v1.6.0）
+
+- Reference-FMUs の zip 問題 → `FmuDownloader` zip 展開対応（解決策 B）
+- Catalog タブ Sources ドロップダウン（解決策 D）
+
 ## v1.5.0 完了（MVP-γ Catalog タブ）
 
 **JSON カタログ / GitHub リポジトリの自動判別 → モデル一覧 → DL** が完成。
@@ -338,6 +365,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 31 | **Windows で pytest cleanup が `PermissionError`**（`pytest-of-user\pytest-current` がロック） | `--basetemp=tmp/pytest` でプロジェクト内 temp を使用。pre-commit 設定は対応済み |
 | 32 | **`check-json` が重複キーを検出**（Python `json.load` は後勝ちで見逃す） | 重複キーは手動削除。`Common.MsgTitleWarning` 事例あり |
 | 33 | **PowerShell パッチのインデント想定が外れる**（4 スペース vs 8 スペース） | 行番号ベース（`ReadAllLines` + brace depth 追跡）、または `Get-Content` で事前に実ファイル確認 |
+| 34 | **Python 3.9 未満で `tuple[int, bytes]` / `str \| None` が syntax error**（`from __future__ import annotations` では不十分） | 型ヒントは素の `tuple` / 注釈なしに後退。3.9+ 必須なら環境依存を明記 |
 
 ## 次タスク候補
 
