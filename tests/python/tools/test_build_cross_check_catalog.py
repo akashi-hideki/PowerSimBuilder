@@ -57,3 +57,25 @@ def test_build_catalog_url_format():
         "https://raw.githubusercontent.com/modelica/fmi-cross-check/master/fmus/"
     )
     assert models[0]["url"].endswith(".fmu")
+
+
+def test_build_catalog_prioritizes_fmi2_over_fmi1():
+    paths = [
+        "fmus/1.0/cs/win64/Dymola/2019/A/A.fmu",
+        "fmus/2.0/cs/win64/Dymola/2019/B/B.fmu",
+    ]
+    models = b.build_catalog(paths, ["win64"], 0)
+    assert models[0]["name"] == "B"
+
+
+def test_build_catalog_prioritizes_win64_over_c_code():
+    paths = [
+        "fmus/2.0/cs/c-code/Dymola/2019/A/A.fmu",
+        "fmus/2.0/cs/win64/Dymola/2019/B/B.fmu",
+    ]
+    models = b.build_catalog(paths, ["win64", "c-code"], 0)
+    assert models[0]["name"] == "B"
+
+
+def test_sort_key_handles_short_paths():
+    assert b._sort_key("fmus/2.0/X.fmu")[0] == 9

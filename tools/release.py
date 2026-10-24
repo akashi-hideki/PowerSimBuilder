@@ -234,7 +234,19 @@ def main() -> int:
     parser.add_argument("--title", help="Release title (default: version).")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--skip-checks", action="store_true")
+    parser.add_argument("--with-catalog", action="store_true", help="Build and attach FMU catalog to release.")
     args = parser.parse_args()
+
+    catalog_assets = None
+    if args.with_catalog:
+        print("[INFO] Building FMU catalog...")
+        rc = subprocess.run(
+            [sys.executable, "tools/build_cross_check_catalog.py", "--output", "Resources/generated_catalog.json"]
+        ).returncode
+        if rc != 0:
+            print("[ERR] Catalog build failed", file=sys.stderr)
+            return 1
+        catalog_assets = [Path("Resources/generated_catalog.json")]
 
     version = resolve_version(args)
     print(f"[INFO] Target version: {version}")
@@ -280,6 +292,13 @@ def main() -> int:
     if args.dry_run:
         print("[DRY] No changes made.")
     # (create_release already printed "[OK] Released ...")
+
+    if catalog_assets:
+        if args.dry_run:
+            print(f"[DRY] gh release upload {version} {" ".join(str(a) for a in catalog_assets)}")
+        else:
+            run(["gh", "release", "upload", version, *[str(a) for a in catalog_assets]])
+            print(f"[OK] Catalog uploaded: {", ".join(str(a) for a in catalog_assets)}")
     return 0
 
 

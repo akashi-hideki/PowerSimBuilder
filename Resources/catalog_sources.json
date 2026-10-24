@@ -1,27 +1,34 @@
-{
-  "version": 1,
-  "_comment": "Reference-FMUs publishes zip only, so github/ghproxy sources return 0 models. This is expected behavior.",
-  "sources": [
-    {
-      "id": "local-demo",
-      "label": "Local demo (HTTP server)",
-      "url": "http://localhost:8765/test_catalog.json",
-      "region": "local",
-      "kind": "json"
-    },
-    {
-      "id": "github-reference-fmus",
-      "label": "GitHub Releases (modelica/Reference-FMUs)",
-      "url": "https://github.com/modelica/Reference-FMUs",
-      "region": "global",
-      "kind": "github"
-    },
-    {
-      "id": "ghproxy-reference-fmus",
-      "label": "GitHub via ghproxy (modelica/Reference-FMUs)",
-      "url": "https://ghproxy.com/https://github.com/modelica/Reference-FMUs",
-      "region": "cn",
-      "kind": "github"
-    }
-  ]
+﻿{
+    "version":  1,
+    "_comment":  "Reference-FMUs publishes zip only, so github/ghproxy sources return 0 models. This is expected behavior.",
+    "sources":  [
+                    {
+                        "id":  "local-demo",
+                        "label":  "Local demo (HTTP server)",
+                        "url":  "http://localhost:8765/test_catalog.json",
+                        "region":  "local",
+                        "kind":  "json"
+                    },
+                    {
+                        "id":  "github-reference-fmus",
+                        "label":  "GitHub Releases (modelica/Reference-FMUs)",
+                        "url":  "https://github.com/modelica/Reference-FMUs",
+                        "region":  "global",
+                        "kind":  "github"
+                    },
+                    {
+                        "id":  "ghproxy-reference-fmus",
+                        "label":  "GitHub via ghproxy (modelica/Reference-FMUs)",
+                        "url":  "https://ghproxy.com/https://github.com/modelica/Reference-FMUs",
+                        "region":  "cn",
+                        "kind":  "github"
+                    },
+                    {
+                        "id":  "fmi-cross-check-release",
+                        "label":  "FMI Cross Check (Latest)",
+                        "url":  "https://github.com/akashi-hideki/PowerSimBuilder/releases/latest/download/generated_catalog.json",
+                        "region":  "global",
+                        "kind":  "json"
+                    }
+                ]
 }

@@ -55,11 +55,26 @@ def list_paths(clone_dir: Path) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def _sort_key(p: str) -> tuple:
+    """Prioritize FMI 2.0 over 1.0, win64 over c-code, then alphabetical.
+
+    Path format: fmus/{fmi_ver}/{fmi_type}/{platform}/{tool}/{version}/{model}/{file}.fmu
+    """
+    parts = p.split("/")
+    if len(parts) < 7:
+        return (9, 9, 9, p)
+    fmi_ver = parts[1]
+    platform = parts[3]
+    ver_rank = {"2.0": 0, "3.0": 1, "1.0": 2}.get(fmi_ver, 8)
+    plat_rank = {"win64": 0, "linux64": 1, "darwin64": 2, "c-code": 3}.get(platform, 8)
+    return (ver_rank, plat_rank, p)
+
+
 def build_catalog(paths: list[str], platforms: list[str], max_models: int) -> list[dict]:
     models: list[dict] = []
     seen: set[tuple[str, str, str]] = set()
     platform_set = set(platforms)
-    for p in paths:
+    for p in sorted(paths, key=_sort_key):
         if not p.lower().endswith(".fmu"):
             continue
         parts = p.split("/")
