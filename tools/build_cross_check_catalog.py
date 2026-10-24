@@ -15,6 +15,7 @@ import json
 import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -23,6 +24,27 @@ DEFAULT_CLONE_DIR = "tmp/fmi-cross-check-meta"
 DEFAULT_OUTPUT = "Resources/generated_catalog.json"
 DEFAULT_PLATFORMS = ["win64", "c-code"]
 
+
+def _safe_rmtree(path: Path, retries: int = 3) -> bool:
+    """Best-effort removal. Returns True if path is gone. Handles Windows file locks."""
+    if not path.exists():
+        return True
+    for attempt in range(retries):
+        try:
+            shutil.rmtree(path)
+            return True
+        except (PermissionError, OSError) as exc:
+            print(f"[WARN] rmtree attempt {attempt+1}/{retries} failed: {exc}")
+            if attempt < retries - 1:
+                time.sleep(0.5 * (attempt + 1))
+    try:
+        stale = path.with_name(f"{path.name}.stale.{int(time.time())}")
+        path.rename(stale)
+        print(f"[WARN] renamed to {stale} (will not retry rmtree)")
+        return True
+    except OSError as exc:
+        print(f"[NG] rename fallback failed: {exc}")
+        return False
 
 def ensure_clone(clone_dir: Path) -> Path:
     if clone_dir.exists() and (clone_dir / ".git").exists():
@@ -49,9 +71,9 @@ def ensure_clone(clone_dir: Path) -> Path:
             print(f"[WARN] clone is empty (interrupted), removing: {clone_dir}")
         except subprocess.CalledProcessError:
             print(f"[WARN] stale clone detected, removing: {clone_dir}")
-        shutil.rmtree(clone_dir, ignore_errors=True)
+        _safe_rmtree(clone_dir)
     if clone_dir.exists():
-        shutil.rmtree(clone_dir)
+        _safe_rmtree(clone_dir)
     clone_dir.parent.mkdir(parents=True, exist_ok=True)
     cmd = [
         "git", "clone",
@@ -156,7 +178,7 @@ def main(argv: list[str]) -> int:
     print(f"[OK] wrote {len(models)} model(s) to {out}")
 
     if not args.keep_clone:
-        shutil.rmtree(clone_dir, ignore_errors=True)
+        _safe_rmtree(clone_dir)
         print(f"[INFO] removed clone: {clone_dir}")
     return 0
 
