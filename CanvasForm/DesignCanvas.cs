@@ -326,6 +326,7 @@ namespace PowerSimBuilder
             var control = new ComponentControl(descriptor) { Location = location };
             // InstanceNameを設定するコードを追加
             control.InstanceName = GenerateUniqueInstanceName(descriptor.Name);
+            control.Name = control.InstanceName;
             AddComponentInternal(control);
         }
         /// <summary>

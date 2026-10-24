@@ -111,6 +111,11 @@ public sealed class PhysicsModelPickerForm : Form
         Controls.Add(split);
         Controls.Add(bottom);
         AcceptButton = _btnInsert;
+        Name = "PhysicsModelPickerForm";
+        _list.Name = "ListViewModels";
+        _btnInsert.Name = "BtnInsert";
+        _btnCancel.Name = "BtnCancel";
+        _btnOpenFolder.Name = "BtnOpenFolder";
         CancelButton = _btnCancel;
     }
 
