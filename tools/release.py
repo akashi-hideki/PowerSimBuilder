@@ -279,8 +279,7 @@ def main() -> int:
 
     if args.dry_run:
         print("[DRY] No changes made.")
-    else:
-        print(f"[OK] Released {version}")
+    # (create_release already printed "[OK] Released ...")
     return 0
 
 
