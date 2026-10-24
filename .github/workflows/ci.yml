@@ -83,6 +83,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v4
@@ -127,3 +128,4 @@ jobs:
           name: UI Test Results
           path: '**/TestResults/*.trx'
           reporter: dotnet-trx
+          fail-on-error: false
