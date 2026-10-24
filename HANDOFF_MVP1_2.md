@@ -106,6 +106,19 @@
 | `dotnet build` | 成功 |
 | Python テスト | 42 passed |
 
+### カタログ公開配布: 保留中
+
+`fmi-cross-check-release` の URL（`releases/latest/download/generated_catalog.json`）は、
+**リポジトリが private のため未認証アクセスで 404** になる（GitHub 仕様）。
+
+公開配布の再開条件:
+1. IP 問題の解決（コード公開前の知財確認）
+2. シミュレーションサンプルテスト完了
+3. リポジトリを public に変更
+
+それまでの間、GUI 動作確認は `local-dev-cross-check` source
+（`http://localhost:8765/Resources/generated_catalog.json`）で実施可能。
+
 ### v1.6.0 リリースコマンド
 
 ```powershell

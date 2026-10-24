@@ -29,6 +29,13 @@
                         "url":  "https://github.com/akashi-hideki/PowerSimBuilder/releases/latest/download/generated_catalog.json",
                         "region":  "global",
                         "kind":  "json"
+                    },
+                    {
+                        "id":  "local-dev-cross-check",
+                        "label":  "FMI Cross Check (local dev)",
+                        "url":  "http://localhost:8765/Resources/generated_catalog.json",
+                        "region":  "local",
+                        "kind":  "json"
                     }
                 ]
 }
