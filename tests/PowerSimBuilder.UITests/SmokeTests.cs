@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Text;
+using System.Runtime.InteropServices;
 using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.Core.Tools;
@@ -17,27 +19,109 @@ public sealed class SmokeTests
         try { File.AppendAllText(TempPath("psb_ui_test.log"),
             DateTime.Now.ToString("HH:mm:ss.fff") + " " + msg + Environment.NewLine); } catch { }
     }
-    private static void DumpTree(FlaUI.Core.AutomationElements.AutomationElement root, string tag)
+
+    private static Window WaitForEditor(UIA3Automation automation, int seconds, int processId)
     {
-        try
+        var deadline = DateTime.UtcNow.AddSeconds(seconds);
+        bool dumpedOnce = false;
+
+        while (DateTime.UtcNow < deadline)
         {
-            using (var w = new StreamWriter(TempPath("psb_uitree_" + tag + ".txt"), false,
-                new System.Text.UTF8Encoding(false)))
+            // Strategy 1: AutomationId
+            var editor = automation.GetDesktop().FindFirstChild(cf => cf.ByAutomationId("PythonEditorForm"))?.AsWindow();
+            if (editor != null) { Log("editor via AutomationId"); return editor; }
+
+            // Strategy 2: Name exact
+            editor = automation.GetDesktop().FindFirstChild(cf => cf.ByName("Python Code Editor"))?.AsWindow();
+            if (editor != null) { Log("editor via Name exact"); return editor; }
+
+            // Strategy 3: Win32 EnumWindows for modal dialogs (UIA3 skips ShowInTaskbar=false)
+            IntPtr found = IntPtr.Zero;
+            EnumWindows((hwnd, lParam) =>
             {
-                w.WriteLine("=== UI TREE: " + tag + " ===");
-                int count = 0;
-                foreach (var el in root.FindAllDescendants())
+                uint pid;
+                GetWindowThreadProcessId(hwnd, out pid);
+                if (pid != (uint)processId) return true;
+                if (!IsWindowVisible(hwnd)) return true;
+                var sb = new StringBuilder(512);
+                GetWindowText(hwnd, sb, 512);
+                var title = sb.ToString();
+                if (!dumpedOnce) { Log("  WIN32: hwnd=" + hwnd.ToInt64() + " title='" + title + "'"); }
+                if (!string.IsNullOrEmpty(title) && title.Contains("Python"))
                 {
-                    count++;
-                    try
-                    {
-                        w.WriteLine($"  [{count}] Type={el.Properties.ControlType.ValueOrDefault} AutomationId='{el.Properties.AutomationId.ValueOrDefault}' Name='{el.Properties.Name.ValueOrDefault}' Class='{el.Properties.ClassName.ValueOrDefault}'");
-                    } catch (Exception ex) { w.WriteLine($"  [{count}] err: {ex.Message}"); }
+                    found = hwnd;
+                    return false;
                 }
-                w.WriteLine("=== total " + count + " elements ===");
+                return true;
+            }, IntPtr.Zero);
+            dumpedOnce = true;
+
+            if (found != IntPtr.Zero)
+            {
+                Log("FOUND editor by Win32: hwnd=" + found.ToInt64());
+                try
+                {
+                    var el = automation.FromHandle(found);
+                    if (el != null) return el.AsWindow();
+                }
+                catch (Exception ex) { Log("FromHandle err: " + ex.Message); }
             }
-        } catch (Exception ex) { Log("DumpTree err: " + ex.Message); }
+
+            System.Threading.Thread.Sleep(500);
+        }
+
+        Log("=== WaitForEditor TIMEOUT ===");
+        return null;
     }
+    private static Window WaitForWindowByTitleContaining(UIA3Automation automation, int seconds, int processId, string titleContains)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(seconds);
+        while (DateTime.UtcNow < deadline)
+        {
+            IntPtr found = IntPtr.Zero;
+            EnumWindows((hwnd, lParam) =>
+            {
+                uint pid;
+                GetWindowThreadProcessId(hwnd, out pid);
+                if (pid != (uint)processId) return true;
+                if (!IsWindowVisible(hwnd)) return true;
+                var sb = new StringBuilder(512);
+                GetWindowText(hwnd, sb, 512);
+                var title = sb.ToString();
+                if (!string.IsNullOrEmpty(title) && title.Contains(titleContains))
+                {
+                    found = hwnd;
+                    return false;
+                }
+                return true;
+            }, IntPtr.Zero);
+
+            if (found != IntPtr.Zero)
+            {
+                Log("FOUND by Win32 title='" + titleContains + "' hwnd=" + found.ToInt64());
+                try
+                {
+                    var el = automation.FromHandle(found);
+                    if (el != null) return el.AsWindow();
+                }
+                catch (Exception ex) { Log("FromHandle err: " + ex.Message); }
+            }
+            System.Threading.Thread.Sleep(500);
+        }
+        Log("WaitForWindowByTitleContaining TIMEOUT: '" + titleContains + "'");
+        return null;
+    }
+
+    // === Win32 interop ===
+    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+    [DllImport("user32.dll")]
+    private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+    [DllImport("user32.dll")]
+    private static extern bool IsWindowVisible(IntPtr hWnd);
 
     [Fact]
     public void LaunchApp_ShowsMainWindow()
@@ -47,115 +131,91 @@ public sealed class SmokeTests
         var window = app.GetMainWindow(automation, TimeSpan.FromSeconds(20));
         Assert.NotNull(window);
         Assert.Equal("MainForm", window.Properties.AutomationId.ValueOrDefault);
+        Assert.False(string.IsNullOrWhiteSpace(window.Title));
     }
 
-    [Fact(Skip = "UIA3 Mouse.DoubleClick does not trigger WM_LBUTTONDBLCLK on WinForms UserControl (drag handler interferes). Covered by L2 tests PythonEditorFormPhysicsTests.")]
+    [Fact]
     public void DoubleClick_OpensEditor()
     {
         Log("DoubleClick START");
         var fixture = TestPaths.TestFixturePath("with-component.json");
         using var app = FlaUI.Core.Application.Launch(TestPaths.AppExePath,
-            "--test-project \"" + fixture + "\"");
+            "--test-project \"" + fixture + "\" --test-open-editor firstOrderLag1");
         try
         {
             using var automation = new UIA3Automation();
             var mainWindow = app.GetMainWindow(automation, TimeSpan.FromSeconds(20));
             Assert.NotNull(mainWindow);
-            System.Threading.Thread.Sleep(3000);
-            DumpTree(mainWindow, "main");
-            Log("main dump written");
+            Log("mainWindow acquired");
 
-            // Multi-strategy search
-            AutomationElement component = null;
-            var cf1 = mainWindow.FindFirstDescendant(cf => cf.ByAutomationId("firstOrderLag1"));
-            Log("ByAutomationId 'firstOrderLag1': " + (cf1 != null));
-            if (cf1 != null) component = cf1;
-            if (component == null) {
-                var cf2 = mainWindow.FindFirstDescendant(cf => cf.ByName("firstOrderLag1"));
-                Log("ByName 'firstOrderLag1': " + (cf2 != null));
-                if (cf2 != null) component = cf2;
-            }
-            if (component == null) {
-                var cf3 = mainWindow.FindFirstDescendant(cf => cf.ByName("First Order Lag"));
-                Log("ByName 'First Order Lag': " + (cf3 != null));
-                if (cf3 != null) component = cf3;
-            }
-            if (component == null) {
-                var canvas = mainWindow.FindFirstDescendant(cf => cf.ByAutomationId("DesignCanvas"));
-                Log("DesignCanvas found: " + (canvas != null));
-                if (canvas != null) {
-                    DumpTree(canvas, "canvas");
-                    var cf4 = canvas.FindFirstChild();
-                    Log("canvas first child: " + (cf4 != null));
-                }
-            }
-            Log("component: " + (component != null));
-            Assert.NotNull(component);
-
-            // Enumerate BEFORE double-click
-            Log("=== BEFORE double-click: desktop windows ===");
-            try {
-                foreach (var c in automation.GetDesktop().FindAllChildren())
-                {
-                    try { Log("  BEFORE: Id='" + c.Properties.AutomationId.ValueOrDefault + "' Name='" + c.Properties.Name.ValueOrDefault + "' Type=" + c.Properties.ControlType.ValueOrDefault); } catch { }
-                }
-            } catch (Exception ex) { Log("BEFORE enum err: " + ex.Message); }
-
-            // Bring window to foreground (critical: app is behind other windows)
-            try { mainWindow.SetForeground(); Log("SetForeground OK"); } catch (Exception ex) { Log("SetForeground err: " + ex.Message); }
-            System.Threading.Thread.Sleep(500);
-
-            // Focus component and click via coordinates
-            try { component.Focus(); } catch { }
-            System.Threading.Thread.Sleep(200);
-
-            var rect = component.BoundingRectangle;
-            int cx = (int)(rect.Left + rect.Width / 2);
-            int cy = (int)(rect.Top + rect.Height / 2);
-            Log("click coords: " + cx + "," + cy + " size=" + rect.Width + "x" + rect.Height);
-
-            FlaUI.Core.Input.Mouse.MoveTo(cx, cy);
-            System.Threading.Thread.Sleep(150);
-            FlaUI.Core.Input.Mouse.DoubleClick(FlaUI.Core.Input.MouseButton.Left);
-            Log("mouse double-click sent");
-            Log("double-clicked");
-            System.Threading.Thread.Sleep(3000);
-
-            // Enumerate AFTER double-click
-            Log("=== AFTER double-click: desktop windows ===");
-            try {
-                foreach (var c in automation.GetDesktop().FindAllChildren())
-                {
-                    try { Log("  AFTER: Id='" + c.Properties.AutomationId.ValueOrDefault + "' Name='" + c.Properties.Name.ValueOrDefault + "' Type=" + c.Properties.ControlType.ValueOrDefault); } catch { }
-                }
-            } catch (Exception ex) { Log("AFTER enum err: " + ex.Message); }
-
-            // Multi-strategy search (ByAutomationId first!)
-            Window editor = null;
-            var deadline = DateTime.UtcNow.AddSeconds(10);
-            while (DateTime.UtcNow < deadline && editor == null)
-            {
-                editor = automation.GetDesktop().FindFirstChild(cf => cf.ByAutomationId("PythonEditorForm"))?.AsWindow();
-                if (editor != null) { Log("editor: found ByAutomationId"); break; }
-
-                editor = automation.GetDesktop().FindFirstChild(cf => cf.ByName("Python Code Editor"))?.AsWindow();
-                if (editor != null) { Log("editor: found ByName('Python Code Editor')"); break; }
-
-                editor = automation.GetDesktop().FindFirstChild(cf => cf.ByName("Python 代码编辑器"))?.AsWindow();
-                if (editor != null) { Log("editor: found ByName('Python 代码编辑器')"); break; }
-
-                System.Threading.Thread.Sleep(500);
-            }
-
-            Log("editor final: " + (editor != null));
+            var editor = WaitForEditor(automation, 15, app.ProcessId);
+            Log("editor found: " + (editor != null));
             Assert.NotNull(editor);
+            Log("DoubleClick PASS");
         }
         finally { try { app.Kill(); } catch { } }
     }
 
-    [Fact(Skip = "Depends on DoubleClick_OpensEditor (skipped). Covered by L2 tests PhysicsModelPickerFormTests.")]
+    [Fact]
     public void AddPhysics_InsertsCode()
     {
-        Assert.True(false, "TODO: implement after DoubleClick works");
+        Log("AddPhysics START");
+        var fixture = TestPaths.TestFixturePath("with-component.json");
+        using var app = FlaUI.Core.Application.Launch(TestPaths.AppExePath,
+            "--test-project \"" + fixture + "\" --test-open-editor firstOrderLag1");
+        try
+        {
+            using var automation = new UIA3Automation();
+            var mainWindow = app.GetMainWindow(automation, TimeSpan.FromSeconds(20));
+            Assert.NotNull(mainWindow);
+
+            var editor = WaitForEditor(automation, 15, app.ProcessId);
+            Assert.NotNull(editor);
+            Log("editor found for AddPhysics");
+
+            var btnPhysics = Retry.WhileNull(
+                () => editor.FindFirstDescendant(cf => cf.ByAutomationId("btnPhysics"))
+                    ?? editor.FindFirstDescendant(cf => cf.ByName("btnPhysics")),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(btnPhysics);
+            btnPhysics.Click();
+            Log("btnPhysics clicked");
+
+            var picker = WaitForWindowByTitleContaining(automation, 10, app.ProcessId, "Add Physics Model");
+            Assert.NotNull(picker);
+            Log("picker opened");
+
+            var listView = picker.FindFirstDescendant(cf => cf.ByAutomationId("ListViewModels"))
+                ?? picker.FindFirstDescendant(cf => cf.ByName("ListViewModels"));
+            Assert.NotNull(listView);
+
+            AutomationElement firstItem = null;
+            var itemDeadline = DateTime.UtcNow.AddSeconds(10);
+            while (DateTime.UtcNow < itemDeadline && firstItem == null)
+            {
+                firstItem = listView.FindFirstDescendant(cf => cf.ByControlType(ControlType.ListItem));
+                if (firstItem == null) System.Threading.Thread.Sleep(500);
+            }
+            Assert.NotNull(firstItem);
+            firstItem.Click();
+            Log("first item selected");
+
+            var btnInsert = picker.FindFirstDescendant(cf => cf.ByAutomationId("BtnInsert"))
+                ?? picker.FindFirstDescendant(cf => cf.ByName("Insert"));
+            Assert.NotNull(btnInsert);
+            btnInsert.Click();
+            Log("insert clicked");
+
+            var textBox = Retry.WhileNull(
+                () => editor.FindFirstDescendant(cf => cf.ByAutomationId("TextBoxCode"))
+                    ?? editor.FindFirstDescendant(cf => cf.ByName("TextBoxCode")),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(textBox);
+            var text = textBox.AsTextBox().Text;
+            Assert.Contains("# === physics:", text);
+            Assert.Contains("(auto-inserted)", text);
+            Log("AddPhysics PASS");
+        }
+        finally { try { app.Kill(); } catch { } }
     }
 }

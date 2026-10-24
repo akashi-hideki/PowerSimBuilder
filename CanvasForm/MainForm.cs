@@ -550,13 +550,90 @@ namespace PowerSimBuilder
         private void Test_HandleCommandLineProject()
         {
             var cmdArgs = Environment.GetCommandLineArgs();
+            string projectPath = null;
+            string openEditorInstance = null;
             for (int i = 0; i < cmdArgs.Length - 1; i++)
             {
                 if (cmdArgs[i] == "--test-project" && File.Exists(cmdArgs[i + 1]))
                 {
-                    Test_LoadProjectFromPath(cmdArgs[i + 1]);
+                    projectPath = cmdArgs[i + 1];
+                }
+                else if (cmdArgs[i] == "--test-open-editor" && !string.IsNullOrEmpty(cmdArgs[i + 1]))
+                {
+                    openEditorInstance = cmdArgs[i + 1];
+                }
+            }
+            if (projectPath != null)
+            {
+                Test_LoadProjectFromPath(projectPath);
+            }
+            if (openEditorInstance != null)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    System.Threading.Thread.Sleep(500);
+                    Test_OpenEditorForInstance(openEditorInstance);
+                }));
+            }
+        }
+
+        internal void Test_OpenEditorForInstance(string instanceName)
+        {
+            if (string.IsNullOrEmpty(instanceName)) return;
+            Test_Log("Test_OpenEditorForInstance START: " + instanceName);
+            try
+            {
+                var components = _canvasManager.GetAllComponents();
+                if (components == null) { Test_Log("  components is null"); return; }
+                ComponentControl target = null;
+                foreach (var c in components)
+                {
+                    if (c != null && c.InstanceName == instanceName) { target = c; break; }
+                }
+                if (target == null)
+                {
+                    Test_Log("  instance not found: " + instanceName);
                     return;
                 }
+                Test_Log("  found, opening editor");
+                Test_Log("  BEFORE: OpenForms count=" + System.Windows.Forms.Application.OpenForms.Count);
+                foreach (System.Windows.Forms.Form f in System.Windows.Forms.Application.OpenForms)
+                {
+                    Test_Log("    form: name='" + f.Name + "' handle=" + f.Handle + " visible=" + f.Visible);
+                }
+
+                // Diagnostic: monitor OpenForms during ShowDialog
+                var monitor = new System.Windows.Forms.Timer { Interval = 1000 };
+                int tickCount = 0;
+                monitor.Tick += (s, e) =>
+                {
+                    tickCount++;
+                    try
+                    {
+                        var forms = System.Windows.Forms.Application.OpenForms;
+                        Test_Log("  [MON " + tickCount + "] OpenForms=" + forms.Count);
+                        foreach (System.Windows.Forms.Form f in forms)
+                        {
+                            string name = ""; string text = ""; bool vis = false; long h = 0;
+                            try { name = f.Name ?? ""; } catch { }
+                            try { text = f.Text ?? ""; } catch { }
+                            try { vis = f.Visible; } catch { }
+                            try { h = f.Handle.ToInt64(); } catch { }
+                            Test_Log("    MON form: name='" + name + "' text='" + text + "' handle=" + h + " visible=" + vis);
+                        }
+                    }
+                    catch (Exception ex) { Test_Log("  MON err: " + ex.Message); }
+                    if (tickCount >= 15) { try { monitor.Stop(); monitor.Dispose(); } catch { } }
+                };
+                monitor.Start();
+
+                designCanvas1.Test_OpenEditorForComponent(target);
+                Test_Log("  editor closed (ticks=" + tickCount + ")");
+                try { monitor.Stop(); monitor.Dispose(); } catch { }
+            }
+            catch (Exception ex)
+            {
+                Test_Log("  FAILED: " + ex.ToString());
             }
         }
 

@@ -2020,5 +2020,20 @@ private void ClearCanvas()
 #endif
         }
         #endregion
+        /// <summary>
+        /// Test hook: open editor for a component by instance name (no mouse double-click).
+        /// Used by L3 FlaUI smoke tests to bypass UIA3/WinForms double-click limitation.
+        /// </summary>
+        internal void Test_OpenEditorForComponent(ComponentControl component)
+        {
+            if (component == null || component.Descriptor == null) return;
+            _isDragging = false;
+            _draggedComponent = null;
+            if (SelectedComponent != component)
+            {
+                HandleComponentSelectedChanged(component);
+            }
+            EditPythonCodeItem_Click(this, EventArgs.Empty);
+        }
     }
 }

@@ -1,18 +1,15 @@
-# PowerSimBuilder 引き継ぎ: MVP-1.2 (Physics Model Integration + L2 GUI tests)
+# PowerSimBuilder 引き継ぎ: MVP-1.2 → v1.2.3 (L3 FlaUI 完全解決)
 
 ## プロジェクト概要
 - PowerSimBuilder: StaTable のシミュレーション・コンパニオン
 - .NET 10 WinForms + Python runtime（`fmpy` で FMU 実行）
 - リポジトリ: C:\dev\PowerSimBuilder
-- **v1.2.0 リリース済み**（tag: `v1.2.0` = `e6364cf`）
-- L2 GUI テストは `387dd7f` で追加済み（v1.2.1 予定）
+- **v1.2.3 リリース予定**（L3 FlaUI 全 3 テスト緑）
 
 ## プロジェクト構成（重要）
 
 > **罠**: メインの `.csproj` は **ルート直下**（`src\` 配下ではない）。
-> 過去スレッドで `src\PowerSimBuilder\PowerSimBuilder.csproj` を前提にして
-> `dotnet add reference` が失敗した事例あり。`src/` ディレクトリは存在するが
-> csproj を含まない（レガシー / 実験用）。
+> `src/` ディレクトリは存在するが csproj を含まない（レガシー / 実験用）。
 
 ### ソリューション / プロジェクト
 
@@ -21,385 +18,158 @@
 | `PowerSimBuilder.sln` | - | ソリューション（唯一） |
 | `PowerSimBuilder.csproj` | net10.0-windows | メインアプリ（WinForms） |
 | `PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj` | net10.0-windows | L1/L2 xUnit テスト |
-| `tests\PowerSimBuilder.UITests\PowerSimBuilder.UITests.csproj` | net10.0-windows | L3 FlaUI スモークテスト（v1.2.1 で追加） |
+| `tests\PowerSimBuilder.UITests\PowerSimBuilder.UITests.csproj` | net10.0-windows | L3 FlaUI スモークテスト |
 
-### ルートディレクトリ（C# ソースを含む）
+### ルートディレクトリ（C# ソース）
 
 | ディレクトリ | .cs 数 | 内容 |
 |-------------|-------|------|
-| `CanvasForm/` | 34 | DesignCanvas, キャンバス描画 |
+| `CanvasForm/` | 34 | DesignCanvas, MainForm, CanvasManager |
 | `ComponentEdit/` | 13 | EditPanel, PythonEditorForm, ComponentManager |
-| `parts/` | 36 | シミュレーション部品。`parts/Physics/` に Physics レイヤー（9 ファイル） |
-| `Services/` | 5 | AppServices など共通サービス |
+| `parts/` | 36 | シミュレーション部品。`parts/Physics/` に Physics レイヤー |
+| `Services/` | 5 | AppServices 等 |
 | `SimPartsManege/` | 2 | 部品管理（※スペル "Manege"） |
 | `SimulationGenerate/` | 2 | ComponentCodeGenerator |
 | `StaTableIntegration/` | 7 | StaTable 取り込み |
 | `Resources/` | 0 | i18n JSON（`en.json` / `zh.json`） |
 
-### 非 C# ディレクトリ
-
-| ディレクトリ | 内容 |
-|-------------|------|
-| `pythonlib/` | Python runtime バインディング（`datatas/` サブあり ※スペル） |
-| `powersimbuilder_runtime.egg-info/` | Python パッケージメタデータ |
-| `generated/` | 生成コード出力先 |
-| `user_physics_models/` | FMU + `model.yaml`（Dahlquist / Feedthrough / PMSM） |
-| `user_components/` | ユーザー部品（現在空） |
-| `templates/` | テンプレート（現在空） |
-| `examples/` | サンプル |
-| `tests/` | data / integration / python / PowerSimBuilder.UITests |
-| `tmp/` | 参照 FMU（`tmp\Reference-FMUs\2.0\`） |
-| `tools/` | `gcommit.ps1` など |
-| `docs/`, `MD/` | ドキュメント |
-| `previou_files/` | 旧ファイル退避（※スペル "previou"） |
-| `src/` | 空またはレガシー。**メイン csproj はここに無い** |
-
-### tests/ サブレイアウト
-
-```
-tests/
-  data/scenarios/{cooking_heater, fault_short_circuit, generator_load,
-                  heater_overheat, motor_drive, rectifier_motor}/
-  integration/                # pytest
-  python/                     # pytest
-  PowerSimBuilder.UITests/    # L3 FlaUI（v1.2.1 で追加）
-    Fixtures/                 # .psb + FMU（今後追加予定）
-```
-
 ### よく使うパス
 
 | 用途 | パス |
 |------|------|
-| メイン exe（Debug） | `bin\Debug\net10.0-windows\PowerSimBuilder.exe` |
-| メイン exe（Release） | `bin\Release\net10.0-windows\PowerSimBuilder.exe` |
+| メイン exe | `bin\Debug\net10.0-windows\PowerSimBuilder.exe` |
 | L1/L2 テスト | `PowerSimBuilder.Tests\` |
 | L3 UI テスト | `tests\PowerSimBuilder.UITests\` |
 | UI テストフィクスチャ | `tests\PowerSimBuilder.UITests\Fixtures\` |
 | Physics ソース | `parts\Physics\` |
 | 参照 FMU | `tmp\Reference-FMUs\2.0\` |
-## L3 FlaUI スモークテスト（v1.2.1 で追加、Test 1 のみ緑）
 
-`tests\PowerSimBuilder.UITests\` に FlaUI UIA3 ベースの L3 スモークテストを追加。
-
-| テスト | 状態 | 備考 |
-|--------|------|------|
-| `LaunchApp_ShowsMainWindow` | Pass | 起動・MainForm 認識（AutomationId=MainForm）・タイトル検証 |
-| `DoubleClick_OpensEditor` | Skip | UIA3 `Mouse.DoubleClick` が WinForms UserControl の `WM_LBUTTONDBLCLK` を発火しない |
-| `AddPhysics_InsertsCode` | Skip | 上記に依存 |
-
-実行: `dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"`
-結果: `Passed: 1, Skipped: 2`（緑で着地）
-
-### 判明した事実（次スレッドで再挑戦する場合）
-
-| 項目 | 確認済み |
-|------|---------|
-| `firstOrderLag1` は UIA3 の `AutomationId` で見える（`AccessibleName` + `AccessibleRole.Pane` + `CreateAccessibilityInstance` 追加で露出） |
-| `DesignCanvas` も `AutomationId` で見える |
-| `SetForeground` + `Mouse.DoubleClick` でもイベント発火しない |
-| `component.DoubleClick()` (FlaUI API) でも同様 |
-| `ComponentControl` は `MouseDown`/`MouseUp` でドラッグ処理 → ダブルクリック検出を妨害している可能性 |
-| `--test-project <path>` コマンドライン引数でプロジェクトロード可能（`MainForm.OnLoad` 末尾の `Test_HandleCommandLineProject()`） |
-
-### 次スレッドの選択肢（優先度順）
-
-| # | 選択肢 | 規模 |
-|---|--------|------|
-| 1 | `ComponentControl` のドラッグ処理を修正（`Capture` の扱い、`ClickCount` 使用等）→ 根本原因解決 | M |
-| 2 | アプリに `--test-open-editor <instanceName>` 引数を追加 → 起動時にエディタを開く。ダブルクリック自体はテストしない | S |
-| 3 | FlaUI を諦め、L2 テスト（既存 15 tests）でカバレッジ維持 | - |
-
-### 学んだ罠（v1.2.1 追加分）
-
-| # | 罠 | 対策 |
-|---|-----|------|
-| 1 | **FlaUI 5.0.0 は .NET Framework 専用** → net10.0 から参照で NU1701 | **FlaUI 4.0.0**（net6.0-windows 同梱）を使う |
-| 2 | **メイン csproj の glob 罠**: `tests/` を追加すると `**/*.cs` に拾われ、`obj/**` が二重定義で CS0579 | csproj に `<Compile Remove="tests\**\*.cs" />` 等を追加 |
-| 3 | **PowerShell 5.1 は式中の `if` 式 (ternary) 非対応** | `$nl = if (...) { "a" } else { "b" }` は OK、`($x -replace 'y', (if ...))` は NG |
-| 4 | **`ByName` vs `ByAutomationId`**: FlaUI の `ByName` は UIA `Name`(=WinForms `Text`)、`ByAutomationId` は `Control.Name` | 用途に応じて使い分け |
-| 5 | **UserControl は UIA3 に自動露出しない** | `AccessibleName` + `CreateAccessibilityInstance` + `AccessibleRole.Pane` で露出 |
-| 6 | **`Application` 名前衝突**: `UseWindowsForms=true` で `System.Windows.Forms.Application` と FlaUI の `Application` が曖昧 | `FlaUI.Core.Application` 完全修飾 |
-| 7 | **`dotnet new xunit` の TFM 既定は `net10.0`（Windows なし）** | `net10.0-windows` + `UseWindowsForms` に変更 |
-## 現在の状態（2026-10-23 時点）
+## 現在の状態（v1.2.3 時点）
 
 | 項目 | 値 |
 |------|-----|
-| HEAD | `387dd7f` (test: add L2 GUI tests, picker + editor integration via mock picker) |
-| origin/main | `387dd7f`（**push 済み・同期済み**） |
-| tag v1.2.0 | `e6364cf`（L2 テストを含まない） |
-| tag v1.2.1 | 未作成（次スレッドで検討） |
-| GitHub Release | https://github.com/akashi-hideki/PowerSimBuilder/releases/tag/v1.2.0 |
-| Physics tests | **81 passed** |
-| C# tests（全体） | 330 + 81 ≒ 411 passed（`xUnit2013` 警告 1件のみ） |
+| **最新タグ** | **v1.2.3**（予定、L3 全 3 テスト緑） |
+| v1.2.2 | L3 smoke tests (Test 1 のみ緑、Test 2/3 Skip) |
+| v1.2.1 | L2 GUI tests + handoff |
+| v1.2.0 | Physics Model Integration (MVP-1.2) |
+| Physics tests | 81 passed |
+| C# tests（全体） | 330 + 81 ≒ 411 passed |
+| **L3 UI tests** | **3 passed（全緑）** |
 | pre-commit | 全 9 フック Passed |
-| pre-push | 全 10 フック Passed（pytest 含む） |
-| ビルド警告 | 0（C#）、既存 `xUnit2013` 1件のみ |
+| ビルド警告 | 0（C#） |
 
-## 今回のスレッド成果（Step 1 → 6c + L2）
+## L3 FlaUI スモークテスト完全解決（v1.2.3）
 
-### 実装概要（13 機能）
+**全 3 テスト Pass 達成**（`Passed: 3, Skipped: 0`）。
 
-| # | 機能 | クラス / 場所 |
-|---|------|---------------|
-| 1 | FMU 読取（modelName / FmiVersion / inputs / outputs / params / timing / 型） | `parts/Physics/FmuInfoReader.cs` |
-| 2 | データレコード | `parts/Physics/FmuInfo.cs` |
-| 3 | スニペット生成（init / update、英語コメント） | `parts/Physics/PhysicsSnippetBuilder.cs` |
-| 4 | マーカー挿入（重複防止 / CRLF 保持 / indent 自動検出） | `parts/Physics/PhysicsSnippetInserter.cs` |
-| 5 | 挿入フロー（CoSimulation チェック / ControllerBox 除外） | `parts/Physics/PhysicsInsertionFlow.cs` |
-| 6 | モデル一覧カタログ | `parts/Physics/PhysicsModelCatalog.cs` |
-| 7 | モデル選択ダイアログ（詳細パネル + Open Folder） | `parts/Physics/PhysicsModelPickerForm.cs` |
-| 8 | 挿入位置ハイライト（init/update 両方 / カーソル検出） | `parts/Physics/PhysicsInsertionHighlighter.cs` |
-| 9 | yaml ポートマッピング | `parts/Physics/ModelYaml.cs` |
-| 10 | EditPanel **Add Physics** ボタン | `ComponentEdit/EditPanel.cs` + `.Designer.cs` |
-| 11 | ダブルクリック → エディタ起動 | `CanvasForm/DesignCanvas.cs` |
-| 12 | PythonEditorForm 統合 | `ComponentEdit/PythonEditorForm.Physics.cs` |
-| 13 | 非Real型 set/get、タイムステップ警告 | `PhysicsSnippetBuilder.cs`（内部） |
+| テスト | 状態 |
+|--------|------|
+| `LaunchApp_ShowsMainWindow` | ✅ Pass |
+| `DoubleClick_OpensEditor` | ✅ Pass |
+| `AddPhysics_InsertsCode` | ✅ Pass |
 
-### コミット履歴（今回のスレッド）
+### 解決策: Win32 `EnumWindows` フォールバック
 
-| コミット | 内容 |
-|---------|------|
-| `7b3d575` | MVP-1.2 WIP - FMU info reader, snippet builder/inserter, picker, EditPanel integration |
-| `ca6e92d` | MVP-1.2 - typed set/get, yaml mapping, timing warning, FMU info UI |
-| `e6364cf` | docs: expand README for MVP-1.2 physics integration (← v1.2.0 タグ) |
-| `387dd7f` | test(physics): add L2 GUI tests (picker + editor integration via mock picker) |
+WinForms の `ShowDialog()` で開くモーダルダイアログは既定で `ShowInTaskbar=false` のため、**UIA3 のデスクトップツリーに現れない**（`GetDesktop().FindAllChildren()` に含まれない）。これを `EnumWindows` + `Automation.FromHandle` で解決。
 
-### テストファイル（81 tests）
+```csharp
+IntPtr found = IntPtr.Zero;
+EnumWindows((hwnd, lParam) => {
+    uint pid;
+    GetWindowThreadProcessId(hwnd, out pid);
+    if (pid != (uint)processId) return true;
+    if (!IsWindowVisible(hwnd)) return true;
+    var sb = new StringBuilder(512);
+    GetWindowText(hwnd, sb, 512);
+    var title = sb.ToString();
+    if (!string.IsNullOrEmpty(title) && title.Contains(titleContains)) {
+        found = hwnd;
+        return false;
+    }
+    return true;
+}, IntPtr.Zero);
 
-| テストファイル | 件数 |
-|---------------|------|
-| `FmuInfoReaderTests.cs` | 3 |
-| `PhysicsSnippetBuilderTests.cs` | 9 |
-| `PhysicsSnippetBuilderMappingTests.cs` | 5 |
-| `PhysicsSnippetBuilderModelInfoTests.cs` | 2 |
-| `PhysicsSnippetInserterTests.cs` | 9 |
-| `PhysicsInsertionFlowTests.cs` | 12 |
-| `PhysicsModelCatalogTests.cs` | 7 |
-| `PhysicsInsertionHighlighterTests.cs` | 9 |
-| `PhysicsInsertionHighlighterCursorTests.cs` | 6 |
-| `ModelYamlTests.cs` | 5 |
-| `EditPanelPhysicsTests.cs` | 3 |
-| `PhysicsModelPickerFormTests.cs` | 8（L2） |
-| `PythonEditorFormPhysicsTests.cs` | 7（L2） |
-| **合計** | **81** |
-
-## GUI テストのレベル分類
-
-| レベル | ツール | 対象 | 状態 |
-|--------|--------|------|------|
-| **L1 ロジック** | xUnit | FmuInfoReader / SnippetBuilder / Inserter / ModelYaml / InsertionFlow | ✅ 完了 |
-| **L2 フォーム配線** | xUnit + WinForms | Picker 選択/Insert、Editor 挿入/Mock、status bar | ✅ 完了（15 tests） |
-| **L3 GUI E2E** | FlaUI（未導入） | 実 exe 起動、マウス操作 | ❌ 未着手 |
-| **L4 Python** | pytest | Python runtime | ✅ 既存 |
-
-### L2 の主要テスト
-
-| カテゴリ | テスト |
-|---------|--------|
-| Picker: 一覧表示/空状態 | 2 |
-| Picker: 選択→ボタン有効化 | 2 |
-| Picker: 詳細パネル（型付き） | 1 |
-| Picker: Insert/Null | 2 |
-| Picker: 列数 | 1 |
-| Editor: コード設定 | 1 |
-| Editor: Mock Picker 挿入 | 1 |
-| Editor: キャンセル | 1 |
-| Editor: キャッシュ登録 | 1 |
-| Editor: 重複防止 | 1 |
-| Editor: カーソル status | 2 |
-| **合計** | **15** |
-
-## 生成コードのサンプル
-
-### `__init__` への挿入
-
-```python
-# === physics: PMSM (auto-inserted) ===
-# model     : PMSM
-# fmu_file  : model.fmu
-# source    : user_physics_models/PMSM/source/model.fmu
-# fmi       : 2.0 (CoSimulation)
-# inputs    : u_d:Real, u_q:Real
-# outputs   : i_d:Real, i_q:Real, torque:Real
-# parameters: R=0.5, Ld=0.001
-# timing    : start=0, stop=1, step=0.001
-self.pmsm = load_fmu(_psb_resolve_fmu("PMSM/source/model.fmu"))
-self.pmsm.enter_initialization_mode()
-self.pmsm.set("R", 0.5)
-self.pmsm.set("Ld", 0.001)
-self.pmsm.exit_initialization_mode()
-self._pmsm_time = 0.0
-# === /physics: PMSM ===
+if (found != IntPtr.Zero) {
+    var el = automation.FromHandle(found);
+    return el?.AsWindow();
+}
 ```
 
-### `update()` への挿入
+### アプリ側の追加（テスト専用フック、既存挙動不変）
 
-```python
-# === physics: PMSM (auto-inserted in update) ===
-# inputs -> FMU, FMU -> outputs
-self.pmsm.set("u_d", float(self.inputs.get("u_d", 0.0)))
-self.pmsm.set("u_q", float(self.inputs.get("u_q", 0.0)))
-# timing check: FMU stepSize=0.001
-if abs(dt - 0.001) > 1e-9:
-    import warnings
-    warnings.warn(
-        "physics: dt (%.6g) differs from FMU stepSize (%.6g)"
-        % (dt, 0.001), RuntimeWarning)
-self.pmsm.doStep(self._pmsm_time, dt)
-self._pmsm_time += dt
-self.outputs["i_d"] = float(self.pmsm.get("i_d"))
-self.outputs["i_q"] = float(self.pmsm.get("i_q"))
-self.outputs["torque"] = float(self.pmsm.get("torque"))
-# === /physics: PMSM ===
+| ファイル | 追加内容 |
+|---------|---------|
+| `CanvasForm/MainForm.cs` | `Test_OpenEditorForInstance(instanceName)` + `--test-open-editor <name>` 引数 + `PowerSimBuilder_TestLoad.log` 出力 |
+| `CanvasForm/DesignCanvas.cs` | `Test_OpenEditorForComponent(component)` |
+| `CanvasForm/CanvasManager.cs` | `LoadModel` で `component.Name = component.InstanceName` |
+| `CanvasForm/ComponentControl.cs` | `InstanceName` setter で `Name` + `AccessibleName` 設定、`CreateAccessibilityInstance()` override |
+| `ComponentEdit/PythonEditorForm.Designer.cs` | `textEditor.Name = "TextBoxCode"` |
+| `parts/Physics/PhysicsModelPickerForm.cs` | `Name = "PhysicsModelPickerForm"` + `_list.Name = "ListViewModels"` + `_btnInsert.Name = "BtnInsert"` |
+| `tests/PowerSimBuilder.UITests/SmokeTests.cs` | 3 テスト（`WaitForEditor` / `WaitForWindowByTitleContaining` ヘルパー含む） |
+| `tests/PowerSimBuilder.UITests/TestPaths.cs` | exe パス解決 |
+| `tests/PowerSimBuilder.UITests/Fixtures/with-component.json` | FirstOrderLag 1 個のフィクスチャ |
+
+### テストコマンド
+
+```powershell
+# 全 UI テスト
+dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
+# -> Passed: 3, Skipped: 0
+
+# Physics テスト
+dotnet test --filter "FullyQualifiedName~Physics"
+# -> 81 passed
 ```
 
-### ファイル先頭（1回だけ挿入）
+## 学んだ罠（累積）
 
-```python
-from fmpy import load_fmu
+| # | 罠 | 対策 |
+|---|-----|------|
+| 1 | `@"` verbatim 文字列が PowerShell here-string で誤解釈 | C# 内では `"..." + "..."` 連結で書く |
+| 2 | 複数行アンカーの改行コード不一致 | 単一行アンカー + `Get-Nl()` で自動検出 |
+| 3 | メソッド重複定義（CS0111） | パッチ前に `Select-String` で既存定義を確認 |
+| 4 | pre-commit auto-fix 後の再 add 忘れ | `gcommit.ps1` 経由で必ずコミット |
+| 5 | PowerShell 5.1 のエンコーディング | スクリプトは ASCII のみ |
+| 6 | `@'...'@` 内の JSON 挿入 | `LastIndexOf('}')` で最終波括弧探索 |
+| 7 | 既存 EditPanel に Tab が無い | 4 ボタン構成（`btnPhysics` 追加済み） |
+| 8 | **FlaUI 5.0.0 は .NET Framework 専用** → net10.0 から参照で NU1701 | **FlaUI 4.0.0**（net6.0-windows 同梱）を使う |
+| 9 | **メイン csproj の glob 罠**: `tests/` 追加で `**/*.cs` に拾われ CS0579 | csproj に `<Compile Remove="tests\**\*.cs" />` 等を追加 |
+| 10 | **PowerShell 5.1 は式中の `if` 式非対応** | `$nl = if (...) { "a" } else { "b" }` は OK、式中は NG |
+| 11 | **`ByName` vs `ByAutomationId`** | `ByName` = UIA `Name`(=WinForms `Text`)、`ByAutomationId` = `Control.Name` |
+| 12 | **UserControl は UIA3 に自動露出しない** | `AccessibleName` + `CreateAccessibilityInstance` + `AccessibleRole.Pane` |
+| 13 | **`Application` 名前衝突** | `FlaUI.Core.Application` 完全修飾 |
+| 14 | **`dotnet new xunit` の既定 TFM は `net10.0`** | `net10.0-windows` + `UseWindowsForms` に変更 |
+| 15 | **UIA3 はモーダル `ShowDialog()` を検出しない**（`ShowInTaskbar=false`） | Win32 `EnumWindows` + `GetWindowThreadProcessId` + `IsWindowVisible` + `GetWindowText` + `FromHandle` |
+| 16 | **`#32770` クラスは他プロセスも含む** | `GetWindowThreadProcessId` で自プロセスに限定 |
+| 17 | **`Application.OpenForms` は UI スレッドのみ** | `Timer.Tick` or UI スレッドで参照 |
+| 18 | **`ShowDialog` を `OnLoad` 内で呼ぶとブロック** | `BeginInvoke` + `Thread.Sleep(500)` |
+| 19 | **`[System.IO.File]::WriteAllText` は CWD が system32** | 既存ファイル: `(Resolve-Path).Path`、新規: `Join-Path $PWD.Path` |
+| 20 | **HANDOFF 等の長い here-string は貼り付けで壊れる** | VSCode 等で直接編集、または小さく分割 |
 
-# --- physics helper (auto-inserted once) ---
-def _psb_resolve_fmu(relative_path: str) -> str:
-    """Resolve an FMU path under user_physics_models."""
-    from pathlib import Path
-    here = Path(__file__).resolve()
-    for base in [here.parent, *here.parents]:
-        candidate = base / "user_physics_models" / relative_path
-        if candidate.is_file():
-            return str(candidate)
-    raise FileNotFoundError(
-        "FMU not found under user_physics_models: " + relative_path
-    )
-# --- /physics helper ---
-```
+## 次タスク候補
 
-## アーキテクチャ（Physics レイヤー）
+### 🔴 最優先（このスレッドの残作業）
 
-```
-UI 層
-  ├ EditPanel (btnPhysics)          → PhysicsRequested イベント
-  ├ PythonEditorForm.Physics.cs     → picker 起動、挿入、ハイライト、status
-  │   ├ IPhysicsPicker (interface)  → 本番: WinFormsPhysicsPicker
-  │   │                               テスト: MockPicker
-  │   └ _physicsCache               → status bar 用の FmuInfo キャッシュ
-  └ PhysicsModelPickerForm          → モデル選択、詳細パネル
-
-フロー層
-  └ PhysicsInsertionFlow            → ControllerBox 除外、CoSimulation チェック
-        ├ ModelYaml.ReadPortMapping → yaml パース
-        └ PhysicsSnippetInserter
-              ├ PhysicsSnippetBuilder  → init/update ブロック生成
-              └ PhysicsInsertionHighlighter → 位置検出
-
-データ層
-  ├ FmuInfoReader   → modelDescription.xml パース
-  ├ FmuInfo         → レコード
-  └ PhysicsModelCatalog → user_physics_models スキャン
-```
-
-## 使い方（E2E）
-
-1. キャンバスに **FirstOrderLag** など配置
-2. **ダブルクリック** → PythonEditorForm が開く
-3. 左パネル **Add Physics** 押下 → Picker 起動
-4. モデル選択（右側に詳細表示）→ **Insert**
-5. `__init__` と `update()` に自動挿入、両方ハイライト
-6. カーソルをブロック内に置くと status bar にモデル名 + 行範囲表示
-7. Ctrl+S → Run で実行
-
-## 既知の制限（MVP-1.2）
-
-| 制限 | 備考 |
-|------|------|
-| CoSimulation のみ | ModelExchange は明示的に拒否 |
-| Enumeration 型 | `# TODO` コメント |
-| ポートマッピング | `model.yaml` 手書きのみ |
-| 削除 UI | なし（マーカー範囲を手動で削除） |
-| 複数モデル順序 | 挿入順（依存解決なし） |
-| 既存ファイルを開いた場合 | `_physicsCache` 未登録 |
-
-## 重要な設計判断
-
-| 項目 | 決定 | 理由 |
-|------|------|------|
-| ControllerBox 除外判定 | `Type == "ControllerBox"` | StaTable 取り込み時のみこの Type |
-| コメント言語 | 英語 | コードベース全体が英語 |
-| 情報源 | FMU 内 `modelDescription.xml`（C# パース） | yaml 依存を減らす |
-| マーカー書式 | `# === physics: <name> (auto-inserted) ===` | 既存 `STABLE_USER_CODE_*` と同系統 |
-| パス解決 | `_psb_resolve_fmu()` で `__file__` 上方向探索 | インストール先・cwd 非依存 |
-| 挿入位置 | `__init__` / `update()` の body 末尾 | `ComponentCodeGenerator` の出力形式に合わせる |
-| indent | body 先頭行から自動検出 | 4/8スペース両対応 |
-| 改行コード | 元ファイルの CRLF/LF を保持 | 既存コードを壊さない |
-| 型対応 | Real=float / Integer=int / Boolean=bool / String=str | Enum は TODO |
-| タイムステップ警告 | `warnings.warn` インライン | 実行時ガード |
-| 重複挿入 | マーカー検出で `AlreadyExists` | 安全側 |
-| **Picker 注入** | `IPhysicsPicker` インターフェース | L2 テストでモーダルなしでテスト可能 |
-| **STA スレッド** | `RunOnSta` ヘルパー | WinForms コントロールは STA 必須 |
-
-## 学んだ罠
-
-### 1. `@"` verbatim 文字列が PowerShell here-string で誤解釈
-C# コード内では `@"..."` を使わず、`"..." + "..."` 連結で書く。
-
-### 2. 複数行アンカーの改行コード不一致
-単一行アンカーで `Replace-Opt` を使い、改行コードは `Get-Nl()` で自動検出。
-
-### 3. メソッドの重複定義（`CS0111`）
-パッチ前に `Select-String` で既存定義を確認。重複発生時は全削除→1つだけ残すパッチを書く。
-
-### 4. pre-commit auto-fix 後の再 add
-`git add -A` → 再 `git commit`。
-
-### 5. PowerShell 5.1 のエンコーディング
-スクリプトは **ASCII のみ（英語コメント）**。
-
-### 6. `@'...'@` 内の JSON 挿入
-`LastIndexOf('}')` で最終波括弧を探し、カンマ有無を自動判定。
-
-### 7. 既存 EditPanel に Tab が無い（HANDOFF_MVP1_1 との差異）
-`TabControl` は存在せず、`panelButtons`（3ボタン）のみ。4つ目のボタン `btnPhysics` を追加。
-
-### 8. ボタンラベルの切れ
-`btnPhysics` を 90px に、他を 55px に縮めて合計 268px（EditPanel 280px 内）。
-
-### 9. **L2 テスト：ヘッドレス ListView 選択が反映されない**
-`ListView.Items[0].Selected = true` でも `SelectedItems.Count == 0` のまま。
-→ `Test_SelectFirst()` で `SelectedIndices.Add(0)` を追加、ボタン Enabled と詳細テキストを直接設定。
-
-### 10. **L2 テスト：`Button.PerformClick()` がフォーム非表示時に発火しない**
-→ `Test_InvokeInsert()` フックで `AcceptIfSelected()` を直接呼ぶ。
-
-### 11. **L2 テスト：`PhysicsInsertionFlow.TryInsert` が実在 FMU を要求**
-→ `TempDir` ヘルパーで temp に最小 FMU（`modelDescription.xml` のみ zip）を生成。
-
-### 12. **L2 テスト：`AppServices.MessageBox` が headless でブロック**
-→ `PickerProvider` に `MockPicker` を注入。`MessageBox` 経由のパスは L3（FlaUI）でカバー。
-
-
-### 13. `end-of-file-fixer` で commit 中断（HANDOFF 生成時）
-- 症状: 末尾改行が 0 個 or 2個以上だと発火
-- 対策: 生成スクリプトで `$content.TrimEnd("\r","\n") + "\n"` を必ず使う
-- 自動化: **`tools/gcommit.ps1`** を導入済み（add → pre-commit run → add → commit を1コマンドで実行）
-
-## 次タスク候補（優先度付き）
+| # | タスク | 内容 |
+|---|--------|------|
+| 1 | **HANDOFF 更新コミット** | この内容で `HANDOFF_MVP1_2.md` を更新 |
+| 2 | **v1.2.3 タグ + Release** | L3 全緑を記念 |
+| 3 | **CI 設定** | `Category!=UI` をデフォルト、`Category=UI` は main push のみ |
 
 ### 🟠 中優先（MVP-1.3 候補）
 
 | # | タスク | 規模 |
 |---|--------|------|
-| 1 | **v1.2.1 タグ付け**（L2 テストのみのパッチリリース） | S |
-| 2 | **L3 FlaUI スモークテスト**（実 exe 起動 3 tests） | M |
-| 3 | **物理モデル削除 UI**（マーカー範囲を選択→削除） | M |
-| 4 | **既存ファイルを開いた時の `_physicsCache` 復元** | S |
-| 5 | **挿入前の確認ダイアログ** | S |
+| 4 | 物理モデル削除 UI | M |
+| 5 | 既存ファイルを開いた時の `_physicsCache` 復元 | S |
+| 6 | 挿入前の確認ダイアログ | S |
+| 7 | Picker に検索/フィルタ | S |
 
 ### 🟡 低優先
 
 | # | タスク |
 |---|--------|
-| 6 | Picker に検索/フィルタ |
-| 7 | ハイライト色の設定化 |
-| 8 | マーカーの色分け |
+| 8 | ハイライト色の設定化 |
 | 9 | `model.yaml` エディタ UI |
 | 10 | `AppServices.MessageBox` のモック化（`IMessageBox`） |
 
@@ -407,9 +177,9 @@ C# コード内では `@"..."` を使わず、`"..." + "..."` 連結で書く。
 
 | # | タスク |
 |---|--------|
-| 11 | **`.whl` / `.zip`（Python パッケージ取り込み）** → MVP-2 |
-| 12 | **非 Real 型 FMU の完全対応** → MVP-2 |
-| 13 | **Modelica `.mo` ソース取り込み** → MVP-3 |
+| 11 | `.whl` / `.zip`（Python パッケージ取り込み）→ MVP-2 |
+| 12 | 非 Real 型 FMU の完全対応 → MVP-2 |
+| 13 | Modelica `.mo` ソース取り込み → MVP-3 |
 | 14 | サブプロセス分離（FMU 実行）→ MVP-4 |
 
 ## スコープ外（当面やらない）
@@ -430,183 +200,41 @@ git status --short
 git log --oneline -5
 git tag -l "v1.2.*"
 
-# 2. Physics テスト実行（81 passed を確認）
+# 2. 全テスト実行
 dotnet test --filter "FullyQualifiedName~Physics"
+dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 
-# 3. 全体テスト（任意）
-dotnet test
-
-# 4. GUI 起動
+# 3. GUI 起動
 Start-Process .\bin\Debug\net10.0-windows\PowerSimBuilder.exe
 ```
 
 ## 開始プロンプト（次スレッド用）
 
 ```
-PowerSimBuilder v1.2.0（+ L2 テスト）の続きです。
+PowerSimBuilder v1.2.3（L3 FlaUI 全緑）の続きです。
 HANDOFF_MVP1_2.md を読んで、次タスクに着手してください。
 
 現状:
-- HEAD: 387dd7f（origin/main と同期済み）
-- tag: v1.2.0 = e6364cf（L2 テストは含まず）
-- Physics tests: 81 passed（L2 15 tests 含む）
-- pre-commit / pre-push 全フック Passed
+- L3 FlaUI スモークテスト 3/3 Pass（v1.2.3 予定）
+- 解決策: Win32 EnumWindows + FromHandle（ShowInTaskbar=false 対策）
+- Physics tests: 81 passed
+- L3 UI tests: 3 passed
 
 次タスク候補（優先度順）:
-1. v1.2.1 タグ付け（L2 テストのみのパッチリリース）
-2. L3 FlaUI スモークテスト（実 exe 起動 3 tests）
-3. 物理モデル削除 UI
-4. 既存ファイルを開いた時の _physicsCache 復元
-
-まず L3 FlaUI スモークテストに着手したい。
-FlaUI.UIA3 パッケージを導入し、以下 3 テストを設計:
-- LaunchApp_ShowsMainWindow
-- DoubleClick_OpensEditor
-- AddPhysics_InsertsCode
-
-CI では [Trait("Category", "UI")] で分離してください。
+1. HANDOFF 更新コミット（この内容を反映）
+2. v1.2.3 タグ + GitHub Release
+3. CI 設定: Category!=UI デフォルト、Category=UI は main push のみ
+4. MVP-1.3: 物理モデル削除 UI、既存ファイル _physicsCache 復元
 
 パッチ運用の注意:
-- スクリプトは ASCII のみ
-- C# コードに @"..." を使わない
-- 単一行アンカー + Get-Nl()
-- 適用前に Select-String で既存定義を確認
-- ヘッドレステストは Test_ フックで代替
-```
+- PowerShell 5.1 では式中に if を書かない
+- FlaUI は 4.0.0（5.0.0 は .NET Framework 専用）
+- 長い here-string は貼り付けで壊れる → VSCode 直接編集推奨
+- .NET 静的メソッドは絶対パス必須（Resolve-Path / Join-Path）
 
-## 付録A: 主要ファイル一覧
-
-### 新規作成（parts/Physics/）
-
-| ファイル | サイズ |
-|---------|-------|
-| `FmuInfo.cs` | 706 bytes |
-| `FmuInfoReader.cs` | 4,757 bytes |
-| `ModelYaml.cs` | 3,842 bytes |
-| `PhysicsInsertionFlow.cs` | 2,052 bytes |
-| `PhysicsInsertionHighlighter.cs` | 4,222 bytes |
-| `PhysicsModelCatalog.cs` | 2,180 bytes |
-| `PhysicsModelPickerForm.cs` | 10,375 bytes |
-| `PhysicsSnippetBuilder.cs` | 10,231 bytes |
-| `PhysicsSnippetInserter.cs` | 9,725 bytes |
-
-### 既存修正
-
-| ファイル | 変更内容 |
-|---------|---------|
-| `ComponentEdit/EditPanel.cs` | `PhysicsRequested` イベント、`btnPhysics` 配線 |
-| `ComponentEdit/EditPanel.Designer.cs` | `btnPhysics` 追加、4ボタン再配置 |
-| `ComponentEdit/PythonEditorForm.Physics.cs` | 新規 partial（統合 + IPhysicsPicker + Test hooks） |
-| `ComponentEdit/ComponentManager.cs` | `editorForm.ComponentType` 設定 |
-| `CanvasForm/DesignCanvas.cs` | `DoubleClicked` イベント配線 |
-| `Resources/i18n/en.json` / `zh.json` | 6キー追加 |
-| `README.md` | +142行（v1.2.0 セクション） |
-
-## 付録B: テスト実行コマンド集
-
-```powershell
-# Physics 全体（81 tests）
-dotnet test --filter "FullyQualifiedName~Physics"
-
-# L2 GUI のみ（15 tests）
-dotnet test --filter "FullyQualifiedName~PhysicsModelPickerFormTests|FullyQualifiedName~PythonEditorFormPhysicsTests"
-
-# 全テスト
-dotnet test
-```
-
-## 付録C: Reference FMU
-
-| モデル | パス | 特徴 |
-|--------|------|------|
-| Dahlquist | `tmp\Reference-FMUs\2.0\Dahlquist.fmu` | input なし、output x |
-| Feedthrough | `tmp\Reference-FMUs\2.0\Feedthrough.fmu` | 変数名が `Float64_continuous_input` 等 |
-| VanDerPol | `tmp\Reference-FMUs\2.0\VanDerPol.fmu` | 非線形発振器 |
-
-## 付録D: user_physics_models の構成
-
-```
-user_physics_models/
-  PMSM/
-    model.yaml
-    README.md
-    source/
-      model.fmu
-  Feedthrough/
-    model.yaml
-    README.md
-    source/
-      Feedthrough.fmu
+まず HANDOFF 更新コミット → v1.2.3 タグ付けから着手してください。
 ```
 
 ---
 
 *Apache 2.0. Windows-only. Companion to StaTable.*
-
-## 付録E: 開発ツール (tools/gcommit.ps1)
-
-pre-commit の auto-fix（`end-of-file-fixer` / `mixed-line-ending` / `ruff` 等）で
-commit が中断する問題を根本回避するためのラッパー。
-
-### 使い方
-
-``````powershell
-# 基本（stage → pre-commit run → re-stage → commit）
-.\tools\gcommit.ps1 "commit message"
-
-# push まで
-.\tools\gcommit.ps1 "commit message" -Push
-
-# amend（メッセージ修正）
-.\tools\gcommit.ps1 "corrected message" -Amend
-
-# 特定ファイルだけ stage
-.\tools\gcommit.ps1 "msg" -Files HANDOFF_MVP1_2.md,README.md
-
-# 緊急時（pre-commit をスキップ）
-.\tools\gcommit.ps1 "wip" -SkipPrecommit
-``````
-
-### 動作
-
-| ステップ | 内容 |
-|---------|------|
-| 1/5 stage | `git add -A`（または `-Files` 指定時は特定ファイル） |
-| 2/5 pre-commit run | auto-fix を先に実行（中断しない） |
-| 3/5 re-stage | auto-fix された変更を再 add |
-| 4/5 commit | `git commit -m`（`-Amend` で `--amend`） |
-| 5/5 push | `-Push` 指定時のみ `git push` |
-
-### 変更がない場合
-
-stage 対象が無ければ `[INFO] nothing staged, exiting` で正常終了（exit 0）。
-
-### プロファイル登録（推奨）
-
-どこからでも `gcommit` で呼べるようにする:
-
-``````powershell
-notepad $PROFILE
-# 以下を追記:
-function gcommit { & C:\dev\PowerSimBuilder\tools\gcommit.ps1 @args }
-``````
-
-以後、任意のディレクトリから:
-
-``````powershell
-gcommit "feat: add foo" -Push
-``````
-
-### 生成パッチの規約（重要）
-
-すべての生成パッチで以下を必ず適用:
-
-``````powershell
-# 末尾改行を1つに正規化（end-of-file-fixer 対策）
-$content = $content.TrimEnd("`r", "`n") + "`n"
-[System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
-``````
-
-### 関連コミット
-
-- `23b73c1` (amend 前) → `chore(tools): add gcommit.ps1 (pre-commit safe commit wrapper)` (amend 後)
