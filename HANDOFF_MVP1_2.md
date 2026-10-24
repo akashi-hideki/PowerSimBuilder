@@ -217,6 +217,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 24 | **i18n JSON 追加時、末尾キーにカンマを付け忘れる**（本スレッドで 3 回再発） | 追加キーの最後に必ずカンマ。`python -c "import json; json.load(...)"` で検証 |
 | 25 | `release.py` の pre-flight が uncommitted changes で停止 | リリース前に `git status --short` でクリーン確認 |
 | 26 | `dotnet test` ソリューションレベルで `Category!=UI` を実行すると exit -1 | プロジェクト指定（`PowerSimBuilder.Tests/PowerSimBuilder.Tests.csproj`）で実行 |
+| 27 | **新規 Form 追加時に I18n.T() を忘れる** | `I18nComplianceTests.T3_AllForms_UseI18nForTitle` が予算超過で検出。新規 Form は必ず `Text = I18n.T("...Title")` を設定 |
 
 ## 次タスク候補
 
