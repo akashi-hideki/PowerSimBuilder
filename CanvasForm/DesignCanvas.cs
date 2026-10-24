@@ -1694,6 +1694,9 @@ private void ClearCanvas()
         {
             using (var editorForm = new PythonEditorForm(filePath, false))
             {
+                // Only called from the ControllerBox branch of EditPythonCodeItem_Click.
+                // Suppress the "Add Physics" button (physics cannot be attached to StaTable-generated controllers).
+                editorForm.ComponentType = "ControllerBox";
                 editorForm.ProjectDir = System.IO.Path.GetDirectoryName(filePath);
                 editorForm.Executor = new PythonExecutor();
                 editorForm.ShowDialog(this);

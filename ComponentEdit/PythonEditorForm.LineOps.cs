@@ -71,6 +71,13 @@ namespace PowerSimBuilder
                 return true;
             }
 
+            // Ctrl+Shift+P -> open physics removal picker
+            if (ctrl && shift && !alt && key == Keys.P && textEditor.Focused)
+            {
+                ShowPhysicsRemovePicker();
+                return true;
+            }
+
             // F1 -> show keyboard shortcuts
             if (!ctrl && !shift && !alt && key == Keys.F1 && textEditor.Focused)
             {
@@ -344,6 +351,8 @@ namespace PowerSimBuilder
             var shortcuts = new ToolStripMenuItem(I18n.T("PythonEditor.MenuKeyboardShortcuts") + "\tF1");
             shortcuts.Click += (s, e) => ShowKeyboardShortcuts();
             menu.Items.Add(shortcuts);
+
+            AppendPhysicsRemoveMenuItem(menu);
         }
 
         // ================================================================

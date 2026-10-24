@@ -64,6 +64,12 @@ public partial class PythonEditorForm
             editPanel.PhysicsRequested += OnPhysicsRequested;
         if (textEditor != null)
             textEditor.SelectionChanged += OnEditorSelectionChanged;
+
+        // Hide Add Physics button for StaTable-generated ControllerBox
+        // (physics models cannot be attached; button would be a no-op)
+        if (IsControllerBox() && editPanel != null)
+            editPanel.SetPhysicsVisible(false);
+
         _physicsWired = true;
     }
 
@@ -104,16 +110,33 @@ public partial class PythonEditorForm
 
     private bool IsControllerBox()
     {
-        if (string.Equals(ComponentType, "ControllerBox", StringComparison.Ordinal))
+        // Signal 1: ComponentType (set by ComponentManager or StaTableImportForm)
+        if (!string.IsNullOrEmpty(ComponentType) &&
+            string.Equals(ComponentType, "ControllerBox", StringComparison.OrdinalIgnoreCase))
             return true;
+
+        // Signal 2: filename normalized (handles ControllerBox.py, controller_box.py, etc.)
         var path = _filePath;
         if (!string.IsNullOrEmpty(path))
         {
             var name = Path.GetFileNameWithoutExtension(path);
-            if (name != null &&
-                name.EndsWith("ControllerBox", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(name))
+            {
+                var normalized = name.Replace("_", "").Replace("-", "").Replace(" ", "");
+                if (normalized.EndsWith("ControllerBox", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+        }
+
+        // Signal 3: file content (fallback)
+        try
+        {
+            var text = textEditor?.Text;
+            if (!string.IsNullOrEmpty(text) && text.Contains("class ControllerBox"))
                 return true;
         }
+        catch { }
+
         return false;
     }
 
@@ -231,4 +254,62 @@ public partial class PythonEditorForm
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public void Test_RaiseSelectionChanged() => OnEditorSelectionChanged(this, EventArgs.Empty);
+    // ========================================================================
+    // Physics removal (MVP-1.3 Phase 4)
+    // ========================================================================
+    private void AppendPhysicsRemoveMenuItem(ContextMenuStrip? menu)
+    {
+        if (menu == null) return;
+        menu.Items.Add(new ToolStripSeparator());
+
+        var item = new ToolStripMenuItem(I18n.T("PhysicsRemove.MenuItem") + "\tCtrl+Shift+P");
+        item.Name = "MenuRemovePhysics";
+        item.Click += (s, e) => ShowPhysicsRemovePicker();
+        menu.Items.Add(item);
+    }
+
+    internal void ShowPhysicsRemovePicker()
+    {
+        var code = textEditor.Text ?? "";
+        var blocks = PhysicsBlockDetector.FindAll(code);
+        if (blocks.Count == 0)
+        {
+            MessageBox.Show(this,
+                I18n.T("PhysicsRemove.StatusNoModels"),
+                I18n.T("PhysicsRemove.Title"),
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        PhysicsBlockInfo? selected = null;
+        using (var picker = new PhysicsBlockPickerForm(code))
+        {
+            if (picker.ShowDialog(this) != DialogResult.OK) return;
+            selected = picker.SelectedBlock;
+        }
+        if (selected == null) return;
+
+        var confirm = MessageBox.Show(this,
+            I18n.T("PhysicsRemove.ConfirmMessage", selected.ModelName),
+            I18n.T("PhysicsRemove.ConfirmTitle"),
+            MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+        if (confirm != DialogResult.OK) return;
+
+        var result = PhysicsBlockRemover.Remove(code, selected.ModelName);
+        if (!result.Success)
+        {
+            MessageBox.Show(this,
+                I18n.T("PhysicsRemove.Fail", result.ErrorMessage ?? ""),
+                I18n.T("PhysicsRemove.Title"),
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        textEditor.Text = result.NewCode ?? code;
+        RefreshEditPanel();
+        MessageBox.Show(this,
+            I18n.T("PhysicsRemove.Success", selected.ModelName),
+            I18n.T("PhysicsRemove.Title"),
+            MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
 }

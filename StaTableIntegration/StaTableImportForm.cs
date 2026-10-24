@@ -208,6 +208,7 @@ namespace PowerSimBuilder
             {
                 using (var editorForm = new PythonEditorForm(filePath, false))
                 {
+                    editorForm.ComponentType = "ControllerBox"; // suppress Add Physics (StaTable-generated)
                     editorForm.ProjectDir = System.IO.Path.GetDirectoryName(filePath);
                     editorForm.Executor = new PythonExecutor();
                     editorForm.ShowDialog(this);

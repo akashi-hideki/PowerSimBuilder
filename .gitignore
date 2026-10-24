@@ -215,3 +215,6 @@ test-output*.txt
 
 # Release notes (generated per-release)
 RELEASE_NOTES_v*.md
+
+# StaTable generated outputs (regenerated on import)
+generated/*_powersim.py

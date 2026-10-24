@@ -121,6 +121,8 @@ namespace PowerSimBuilder.ComponentEdit
                     if (!defMatch.Success) continue;
                     string defName = defMatch.Groups["name"].Value;
                     if (defName == "__init__" || defName == "update" || defName == "reset") continue;
+                    // Skip physics helper functions (internal use, not user-editable)
+                    if (defName != null && defName.StartsWith("_psb_", StringComparison.Ordinal)) continue;
                     string indent = defMatch.Groups["indent"].Value;
                     int bodyEnd = FindBodyEnd(lines, lineIdx + 1, lines.Length - 1, indent);
                     bool isStub = IsStubBody(lines, lineIdx + 1, bodyEnd);

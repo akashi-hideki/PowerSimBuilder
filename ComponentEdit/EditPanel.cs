@@ -207,6 +207,18 @@ namespace PowerSimBuilder.ComponentEdit
             }
         }
 
+        /// <summary>
+        /// Shows or hides the Add Physics button.
+        /// Used to hide the button for StaTable-generated ControllerBox
+        /// components, where physics insertion is not supported.
+        /// </summary>
+        public void SetPhysicsVisible(bool visible)
+        {
+            if (btnPhysics == null) return;
+            btnPhysics.Visible = visible;
+            btnPhysics.Enabled = visible;
+        }
+
         // -------- Test hooks (not for production use) --------
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TreeView Test_ComponentsTree { get { return treeComponents; } }
