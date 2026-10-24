@@ -58,6 +58,32 @@
 | pre-commit | 全 9 フック Passed |
 | ビルド警告 | 0（C#） |
 
+## v1.3.1 完了（MVP-1.3 物理モデル削除 UI）
+
+| Phase | 内容 | コミット |
+|-------|------|---------|
+| 1+2 | `PhysicsBlockDetector` + `PhysicsBlockRemover`（14 tests） | `eabb52a` |
+| 3 | `PhysicsBlockPickerForm` + i18n 14 キー（6 tests） | `dcd999f` |
+| 4 | 削除 UI 統合（右クリック + `Ctrl+Shift+P`）+ ControllerBox UX（3 パス） | `cfe1b4b` |
+| Fix | `_psb_*` Role Functions 除外 + `#nullable enable` 追加 | 同 `cfe1b4b` |
+| tag | v1.3.1 | - |
+
+### 完成した物理モデルライフサイクル
+
+| 操作 | UI | 実装 |
+|------|-----|------|
+| **Insert** | Add Physics → Picker → FMU 選択 | `PhysicsInsertionFlow.TryInsert` |
+| **Edit** | エディタで直接編集 | - |
+| **Remove** | 右クリック / `Ctrl+Shift+P` → Picker → 削除 | `PhysicsBlockRemover.Remove` |
+
+### ControllerBox の `Add Physics` 非表示（3 パス）
+
+| パス | 修正箇所 |
+|------|---------|
+| StaTable Import（新規） | `StaTableImportForm.OpenGeneratedInEditor` |
+| パレット再追加 | `DesignCanvas.OpenPythonEditor` |
+| XML/プロジェクトロード後ダブルクリック | `DesignCanvas.OpenPythonEditor`（同上） |
+
 ## 現在の状態（v1.3.0 時点）
 
 | 項目 | 値 |
@@ -218,6 +244,9 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 25 | `release.py` の pre-flight が uncommitted changes で停止 | リリース前に `git status --short` でクリーン確認 |
 | 26 | `dotnet test` ソリューションレベルで `Category!=UI` を実行すると exit -1 | プロジェクト指定（`PowerSimBuilder.Tests/PowerSimBuilder.Tests.csproj`）で実行 |
 | 27 | **新規 Form 追加時に I18n.T() を忘れる** | `I18nComplianceTests.T3_AllForms_UseI18nForTitle` が予算超過で検出。新規 Form は必ず `Text = I18n.T("...Title")` を設定 |
+| 28 | **`dotnet build \| Select-String "error CS"` がマッチ0で exit 1** | フル出力を `Select-Object -Last` で確認、または `$LASTEXITCODE` を直接確認 |
+| 29 | **ビルド成功でも起動中アプリは古い DLL のまま** | ビルド前に `Get-Process PowerSimBuilder \| Stop-Process -Force` |
+| 30 | **`#nullable enable` 追加時、`ReadAllText` → `WriteAllText` で先頭1文字消失**（`using` の `u` が消えた事例） | `ReadAllLines` / `WriteAllLines` で行単位操作 |
 
 ## 次タスク候補
 
@@ -255,6 +284,38 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 13 | Modelica `.mo` ソース取り込み → MVP-3 |
 | 14 | サブプロセス分離（FMU 実行）→ MVP-4 |
 
+### 次スレッド最優先: MVP-β（モデルダウンロード補助）
+
+**v1.4.0 目標**。詳細仕様: `docs/PHYSICS_MODEL_DOWNLOAD.md` の MVP-β 章。
+
+#### 4 フェーズ計画
+
+| Phase | 内容 | 規模 |
+|-------|------|------|
+| **1** | `AppSettings` 拡張 + `FmuDownloader` + 5 tests（HTTP モック） | M |
+| **2** | `NetworkAccessDialog`（ダウンロード前の明示同意）+ 3 tests | S |
+| **3** | `PhysicsImportForm` に `TabControl`（File + URL）統合 | M |
+| **4** | i18n キー追加 + 手動確認 + v1.4.0 リリース | S |
+
+#### MVP-β スコープ（中国企業環境への配慮）
+
+| 機能 | MVP-β | MVP-γ |
+|------|-------|-------|
+| URL 入力 | OK | - |
+| ネットワーク確認ダイアログ | OK | - |
+| タイムアウト設定 | OK | - |
+| プロキシ設定（手動） | OK | - |
+| コミュニティミラー | - | OK |
+| カタログ（同梱 JSON） | - | OK |
+| 企業プロキシ自動検出 | - | OK |
+
+#### ダウンロード前の必須 UI（コンプライアンス）
+
+- **全 URL ダウンロードで `NetworkAccessDialog` を必ず表示**
+- 「常に許可」チェック時のみ `AppSettings.AllowedUrls` に追加
+- 設定画面で `AllowedUrls` を個別削除可能
+- レジストリに `sha256` がある場合、検証失敗で中止
+
 ### MVP-β / MVP-γ（v1.3.0 で計画化）
 
 | フェーズ | 内容 | 規模 |
@@ -263,6 +324,31 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | **MVP-γ**（v1.5.0） | Catalog タブ + DownloadSourceSettingsForm + ミラー/プロキシ設定 | M |
 
 設計方針: GitHub 公式を優先、企業プロキシ / コミュニティミラーはオプション。中国企業環境では Session 0 / ネットワークポリシー考慮。
+
+### 新規問題（別スレッド予定）: プロジェクト JSON 保存欠落
+
+v1.3.1 検証中に発見。MVP-β / MVP-γ 完了後に対処予定。
+
+#### 症状
+
+- プロジェクト保存（`system.json` 等）に **ControllerBox** や **物理モデル** の情報が保存されない
+- 保存 → 再オープンで情報欠落の可能性
+
+#### 調査対象
+
+| # | 対象 | ファイル |
+|---|------|---------|
+| 1 | `SaveModel` / `LoadModel` | `CanvasForm/CanvasManager.cs` |
+| 2 | `ComponentModel.Descriptor` シリアライズ | 同上 |
+| 3 | `ComponentDescriptor.PhysicsModelPath` / `FmiType` の `[JsonIgnore]` 有無 | `CanvasForm/PalletteDataDefine.cs` |
+| 4 | `RepairGeneratedPaths` の往復 | `CanvasForm/MainForm.cs` |
+| 5 | `PointJsonConverter` の往復 | `CanvasForm/PointJsonConverter.cs` |
+
+#### 再現手順（次スレッドで実施）
+
+1. ControllerBox を配置 → 保存 → JSON を開いて `generated_path` を確認
+2. 物理モデル挿入 → 保存 → JSON を開いて `PhysicsModelPath` / マーカー情報を確認
+3. 各ケースで欠落フィールドを特定
 
 ## スコープ外（当面やらない）
 
