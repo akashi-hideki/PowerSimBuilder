@@ -34,16 +34,17 @@ public class PhysicsImportFormUrlTabTests
     }
 
     [Fact]
-    public void Form_HasTabControlWithFileAndUrlTabs()
+    public void Form_HasTabControlWithFileUrlAndCatalogTabs()
     {
         RunSta(() =>
         {
             using var form = new PhysicsImportForm();
             var tabs = FindByType<TabControl>(form);
             Assert.NotNull(tabs);
-            Assert.Equal(2, tabs!.TabPages.Count);
+            Assert.Equal(3, tabs!.TabPages.Count);
             Assert.Equal("TabFile", tabs.TabPages[0].Name);
             Assert.Equal("TabUrl", tabs.TabPages[1].Name);
+            Assert.Equal("TabCatalog", tabs.TabPages[2].Name);
         });
     }
 

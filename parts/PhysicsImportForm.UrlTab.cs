@@ -36,14 +36,17 @@ public partial class PhysicsImportForm
         _tabs = new TabControl { Dock = DockStyle.Fill, Name = "TabControl" };
         _tabFile = new TabPage(I18n.T("PhysicsImport.TabFile")) { Name = "TabFile", Padding = new Padding(4) };
         _tabUrl = new TabPage(I18n.T("PhysicsImport.TabUrl")) { Name = "TabUrl", Padding = new Padding(4) };
+        _tabCatalog = new TabPage(I18n.T("PhysicsImport.TabCatalog")) { Name = "TabCatalog", Padding = new Padding(4) };
 
         foreach (var c in existing)
             _tabFile.Controls.Add(c);
 
         BuildUrlTabUi();
+        BuildCatalogTabUi();
 
         _tabs.TabPages.Add(_tabFile);
         _tabs.TabPages.Add(_tabUrl);
+        _tabs.TabPages.Add(_tabCatalog);
         Controls.Add(_tabs);
     }
 
