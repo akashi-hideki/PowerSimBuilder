@@ -58,6 +58,54 @@
 | pre-commit | 全 9 フック Passed |
 | ビルド警告 | 0（C#） |
 
+## MVP-β Phase 1 + i18n ツール完了（v1.3.2 予定）
+
+### Phase 1: AppSettings 拡張 + FmuDownloader（`902e72e`）
+
+| 項目 | 内容 |
+|------|------|
+| `AppSettings` | `DownloadTimeoutSeconds` / `ProxyHost` / `ProxyPort` / `AllowedUrls`（+2 tests） |
+| `FmuDownloader` | HTTP DL + タイムアウト + プロキシ + 進捗 + キャンセル（6 tests） |
+| テスト | 454 → **462 passed**（+8） |
+
+### i18n ツール統合（`40ffd44`）
+
+| 項目 | 内容 |
+|------|------|
+| `tools/i18n_check.py` | JSON 検証 + カンマ自動修復（6 tests） |
+| pre-commit | `i18n-check` を**最優先フック**として登録 + `check-json` 追加 |
+| 検出・修復 | カンマ欠落、末尾カンマ（**5 回再発した罠 #24 を完全封止**） |
+| 検出のみ | en/zh キー不一致、重複キー（`check-json` 経由） |
+
+### 現在の i18n 状態
+
+- **325 keys** in both en.json / zh.json（完全一致）
+- `NetworkAccess.*` / `UrlTab.*` 17 キー追加済み（Phase 2 準備完了）
+- 重複キー `Common.MsgTitleWarning`（en.json line 160）を削除
+
+### 未完了（Phase 2b〜4）
+
+| Step | 内容 | 状態 |
+|------|------|------|
+| 2a | i18n キー追加（17 keys × 2） | ✅ 完了 |
+| 2b | `NetworkAccessDialog.cs` + 4 tests | ⏳ VSCode で作成待ち |
+| 3 | `PhysicsImportForm` に TabControl（File + URL） | ⏳ |
+| 4 | 手動確認 + v1.4.0 リリース | ⏳ |
+
+### 次スレッドの開始手順
+
+```powershell
+# 1. 状態確認
+git log --oneline -3
+python tools/i18n_check.py
+
+# 2. NetworkAccessDialog.cs を作成（VSCode）
+code "parts\Physics\NetworkAccessDialog.cs"
+
+# 3. NetworkAccessDialogTests.cs を作成（VSCode）
+code "PowerSimBuilder.Tests\Physics\NetworkAccessDialogTests.cs"
+```
+
 ## v1.3.1 完了（MVP-1.3 物理モデル削除 UI）
 
 | Phase | 内容 | コミット |
@@ -240,13 +288,15 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 21 | Session 0（非対話セッション）で FlaUI GUI テストが不安定（詳細は CI 設定章） | `continue-on-error: true` |
 | 22 | `dorny/test-reporter` デフォルト `fail-on-error: true`（詳細は CI 設定章） | `fail-on-error: false` を明示 |
 | 23 | CI で `AddPhysics_InsertsCode` のみ失敗（詳細は CI 設定章） | 要調査: Release build の cwd 解決 |
-| 24 | **i18n JSON 追加時、末尾キーにカンマを付け忘れる**（本スレッドで 3 回再発） | 追加キーの最後に必ずカンマ。`python -c "import json; json.load(...)"` で検証 |
+| 24 | **i18n JSON 追加時、末尾キーにカンマを付け忘れる**（**5 回再発**） | **`python tools/i18n_check.py --fix`** で自動修復。pre-commit hook が commit 時に自動実行 |
 | 25 | `release.py` の pre-flight が uncommitted changes で停止 | リリース前に `git status --short` でクリーン確認 |
 | 26 | `dotnet test` ソリューションレベルで `Category!=UI` を実行すると exit -1 | プロジェクト指定（`PowerSimBuilder.Tests/PowerSimBuilder.Tests.csproj`）で実行 |
 | 27 | **新規 Form 追加時に I18n.T() を忘れる** | `I18nComplianceTests.T3_AllForms_UseI18nForTitle` が予算超過で検出。新規 Form は必ず `Text = I18n.T("...Title")` を設定 |
 | 28 | **`dotnet build \| Select-String "error CS"` がマッチ0で exit 1** | フル出力を `Select-Object -Last` で確認、または `$LASTEXITCODE` を直接確認 |
 | 29 | **ビルド成功でも起動中アプリは古い DLL のまま** | ビルド前に `Get-Process PowerSimBuilder \| Stop-Process -Force` |
 | 30 | **`#nullable enable` 追加時、`ReadAllText` → `WriteAllText` で先頭1文字消失**（`using` の `u` が消えた事例） | `ReadAllLines` / `WriteAllLines` で行単位操作 |
+| 31 | **Windows で pytest cleanup が `PermissionError`**（`pytest-of-user\pytest-current` がロック） | `--basetemp=tmp/pytest` でプロジェクト内 temp を使用。pre-commit 設定は対応済み |
+| 32 | **`check-json` が重複キーを検出**（Python `json.load` は後勝ちで見逃す） | 重複キーは手動削除。`Common.MsgTitleWarning` 事例あり |
 
 ## 次タスク候補
 
@@ -404,6 +454,44 @@ HANDOFF_MVP1_2.md を読んで、次タスクに着手してください。
 ```
 
 ---
+
+## 付録G: i18n JSON 検証ツール (tools/i18n_check.py)
+
+**目的**: i18n JSON のカンマ問題を **commit 時に自動修復** し、罠 #24 の再発を完全に封止する。
+
+### 機能
+
+| モード | 動作 |
+|--------|------|
+| （なし） | 検証のみ。不正なら exit 1 |
+| `--fix` | カンマ欠落・末尾カンマを自動修復 → 再検証 |
+| `--quiet` | 成功時の出力を抑制 |
+
+### 検出・修復可能
+
+- カンマ欠落（`"key": "value"\n"next": ...`）
+- 末尾カンマ（`"key": "value",\n}`）
+
+### 検出のみ
+
+- en/zh キー集合の不一致
+- 構文エラー全般（line:col 付き）
+
+### 使い方
+
+```powershell
+python tools/i18n_check.py              # 検証
+python tools/i18n_check.py --fix        # 自動修復
+pre-commit run i18n-check --all-files   # pre-commit 経由
+```
+
+### テスト
+
+`tests/python/tools/test_i18n_check.py`（6 tests）
+
+### 関連コミット
+
+- `40ffd44` feat(tools): add i18n_check.py + pre-commit hook
 
 *Apache 2.0. Windows-only. Companion to StaTable.*
 
