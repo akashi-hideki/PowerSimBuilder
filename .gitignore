@@ -209,3 +209,6 @@ executor_trace.log
 
 # --- FMU E2E test artifact (regenerate via Import dialog) ---
 user_physics_models/Dahlquist/
+
+# Test/debug artifacts
+test-output*.txt
