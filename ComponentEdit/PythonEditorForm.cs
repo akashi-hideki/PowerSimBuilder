@@ -199,6 +199,7 @@ namespace PowerSimBuilder
                 menuItemComment
             });
 
+            AppendLineOpsMenuItems(contextMenu);
             textEditor.ContextMenuStrip = contextMenu;
         }
 

@@ -1188,7 +1188,6 @@ private void ClearCanvas()
             component.MouseMove += ComponentControl_MouseMove;
             component.MouseUp += ComponentControl_MouseUp;
             component.DoubleClicked += ComponentControl_DoubleClicked;
-            component.DoubleClicked += ComponentControl_DoubleClicked;
         }
 
         /// <summary>
@@ -1203,7 +1202,6 @@ private void ClearCanvas()
             component.MouseDown -= ComponentControl_MouseDown;
             component.MouseMove -= ComponentControl_MouseMove;
             component.MouseUp -= ComponentControl_MouseUp;
-            component.DoubleClicked -= ComponentControl_DoubleClicked;
             component.DoubleClicked -= ComponentControl_DoubleClicked;
         }
         #endregion
