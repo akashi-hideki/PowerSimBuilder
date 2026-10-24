@@ -58,6 +58,46 @@
 | pre-commit | 全 9 フック Passed |
 | ビルド警告 | 0（C#） |
 
+## v1.5.0 完了（MVP-γ Catalog タブ）
+
+**JSON カタログ / GitHub リポジトリの自動判別 → モデル一覧 → DL** が完成。
+
+### Phase 1: ロジック層（`81c5bb2`）
+
+| クラス | 役割 | tests |
+|--------|------|-------|
+| `PhysicsCatalogRegistry` | JSON カタログパーサー + URL 取得 | 8 |
+| `GitHubReleaseClient` | GitHub Releases API 統合（.fmu asset 抽出） | 8 |
+| `PhysicsCatalogSource` | URL からソース種別を自動判別 | 10 |
+| `PhysicsCatalogModel` | `CatalogItem` / `CatalogLoadResult` / `CatalogSourceInfo` | - |
+
+### Phase 2: Catalog タブ UI（今回）
+
+| 機能 | 内容 |
+|------|------|
+| Catalog タブ | 3 タブ目として追加（File / URL / Catalog） |
+| URL 自動判別 | `.json` → JSON catalog、`github.com/...` → GitHub API |
+| ListView | Name / Size / License / Description |
+| エンドツーエンド | 選択 → URL タブ切替 → NetworkAccessDialog → FmuDownloader → File タブ切替 → ParseFmu |
+| i18n | 18 キー × 2 言語（en / zh） |
+
+### GUI テスト結果（v1.5.0 時点）
+
+| テスト | 結果 |
+|--------|------|
+| 3 タブ表示（File / URL / Catalog） | OK |
+| Catalog UI（URL / Load / ListView / Download） | OK |
+| エラーケース（空 URL / 不正 URL / GitHub zip のみ） | OK |
+| JSON カタログ E2E（local HTTP server） | OK |
+| 中国語モード（`文件` / `URL` / `目录`） | OK |
+
+### テスト数
+
+| スイート | 結果 |
+|---------|------|
+| L2（`Category!=UI`） | **496 passed** |
+| L3（FlaUI） | 5 passed |
+
 ## MVP-β Phase 1 + i18n ツール完了（v1.3.2 予定）
 
 ### Phase 1: AppSettings 拡張 + FmuDownloader（`902e72e`）
@@ -297,6 +337,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 30 | **`#nullable enable` 追加時、`ReadAllText` → `WriteAllText` で先頭1文字消失**（`using` の `u` が消えた事例） | `ReadAllLines` / `WriteAllLines` で行単位操作 |
 | 31 | **Windows で pytest cleanup が `PermissionError`**（`pytest-of-user\pytest-current` がロック） | `--basetemp=tmp/pytest` でプロジェクト内 temp を使用。pre-commit 設定は対応済み |
 | 32 | **`check-json` が重複キーを検出**（Python `json.load` は後勝ちで見逃す） | 重複キーは手動削除。`Common.MsgTitleWarning` 事例あり |
+| 33 | **PowerShell パッチのインデント想定が外れる**（4 スペース vs 8 スペース） | 行番号ベース（`ReadAllLines` + brace depth 追跡）、または `Get-Content` で事前に実ファイル確認 |
 
 ## 次タスク候補
 
@@ -492,6 +533,43 @@ pre-commit run i18n-check --all-files   # pre-commit 経由
 ### 関連コミット
 
 - `40ffd44` feat(tools): add i18n_check.py + pre-commit hook
+
+## 付録H: Catalog テスト用 JSON サンプル
+
+ローカル HTTP サーバーで Catalog タブの E2E テストを行うためのサンプル。
+
+### 1. HTTP サーバー起動
+
+```powershell
+cd C:\dev\PowerSimBuilder\tmp\Reference-FMUs\2.0
+python -m http.server 8765
+```
+
+### 2. test_catalog.json 配置
+
+`tmp\Reference-FMUs\2.0\test_catalog.json`:
+
+```json
+{
+  "version": 1,
+  "models": [
+    { "name": "Dahlquist", "url": "http://localhost:8765/Dahlquist.fmu", "sizeBytes": 184603, "license": "BSD-2-Clause", "description": "Simple test FMU" },
+    { "name": "Feedthrough", "url": "http://localhost:8765/Feedthrough.fmu", "sizeBytes": 191904, "license": "BSD-2-Clause" },
+    { "name": "VanDerPol", "url": "http://localhost:8765/VanDerPol.fmu", "sizeBytes": 192300, "license": "BSD-2-Clause" }
+  ]
+}
+```
+
+### 3. アプリ操作
+
+1. Import Physics Model -> **Catalog** タブ
+2. URL: `http://localhost:8765/test_catalog.json` -> **Load**
+3. 3 models 表示 -> 選択 -> **Download**
+4. URL タブ -> NetworkAccessDialog -> Allow -> 完了後 File タブへ自動切替
+
+### 4. GitHub URL の注意
+
+`https://github.com/modelica/Reference-FMUs` は **zip のみ配布**のため、Catalog タブで **0 models**（正常動作）。GitHub Releases に個別 `.fmu` asset がある repo のみ一覧表示されます。
 
 *Apache 2.0. Windows-only. Companion to StaTable.*
 
