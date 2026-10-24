@@ -26,8 +26,30 @@ DEFAULT_PLATFORMS = ["win64", "c-code"]
 
 def ensure_clone(clone_dir: Path) -> Path:
     if clone_dir.exists() and (clone_dir / ".git").exists():
-        print(f"[SKIP] clone exists: {clone_dir}")
-        return clone_dir
+        # Verify the clone actually has a valid HEAD (detect interrupted clones)
+        try:
+            subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=str(clone_dir),
+                capture_output=True,
+                check=True,
+                text=True,
+            )
+            # Also check the tree has content
+            result = subprocess.run(
+                ["git", "ls-tree", "-r", "HEAD", "--name-only"],
+                cwd=str(clone_dir),
+                capture_output=True,
+                check=True,
+                text=True,
+            )
+            if result.stdout.strip():
+                print(f"[SKIP] clone exists: {clone_dir}")
+                return clone_dir
+            print(f"[WARN] clone is empty (interrupted), removing: {clone_dir}")
+        except subprocess.CalledProcessError:
+            print(f"[WARN] stale clone detected, removing: {clone_dir}")
+        shutil.rmtree(clone_dir, ignore_errors=True)
     if clone_dir.exists():
         shutil.rmtree(clone_dir)
     clone_dir.parent.mkdir(parents=True, exist_ok=True)
