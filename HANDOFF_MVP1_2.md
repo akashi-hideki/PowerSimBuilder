@@ -58,6 +58,19 @@
 | pre-commit | 全 9 フック Passed |
 | ビルド警告 | 0（C#） |
 
+## 現在の状態（v1.3.0 時点）
+
+| 項目 | 値 |
+|------|-----|
+| **HEAD** | `7f4425f`（v1.3.0 タグ後の .gitignore 更新） |
+| **origin/main** | `7f4425f`（同期済み） |
+| **tag v1.3.0** | `070a9ea`（Full i18n 対応） |
+| tag v1.2.5 | `68a396c`（行単位編集 + release.py） |
+| L2 tests | **431 passed**（+ 2 skipped） |
+| L3 tests（FlaUI） | **5 passed** |
+| Python tests | 13 passed（tools/release.py） |
+| CI | build-and-test 緑、ui-tests は continue-on-error |
+
 ## L3 FlaUI スモークテスト完全解決（v1.2.3）
 
 **全 3 テスト Pass 達成**（`Passed: 3, Skipped: 0`）。
@@ -121,6 +134,30 @@ dotnet test --filter "FullyQualifiedName~Physics"
 # -> 81 passed
 ```
 
+## i18n 完全対応（v1.3.0）
+
+英語 / 中国語の両言語で全 UI が表示される。日本語は明示的スコープ外（`DetectOsLanguage` が `ja` を返さない設計）。
+
+| 画面 / 機能 | キー数 | 状態 |
+|-------------|--------|------|
+| MainForm ツールバー + Tools メニュー | 3 | 完了 |
+| PhysicsModelPickerForm | 13 | 完了 |
+| PhysicsImportForm | 28 | 完了 |
+| PythonEditor 右クリックメニュー | 7 | 完了 |
+| KeyboardShortcutsForm（F1） | 15 | 完了 |
+| zh.json 翻訳漏れ修正 | 7 | 完了 |
+| **合計** | **約 73** | - |
+
+### UI 改善（同時実施）
+
+- Picker ボタン重なり解消: `rightPanel.Width` 460 → **720**、`ClientSize` 820 → **920**
+- ツールチップ追加: Import Model / Open Model Folder にホバー説明
+- zh.json 翻訳漏れ修正: `EditPanel.BtnPhysics` → `添加物理` 等
+
+### 言語切替方法
+
+`%APPDATA%\PowerSimBuilder\settings.json` の `"language"` を `"en"` または `"zh"` に設定 → アプリ再起動。
+
 ## CI 設定（v1.2.4）
 
 `.github/workflows/ci.yml` の構成:
@@ -174,6 +211,12 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 18 | **`ShowDialog` を `OnLoad` 内で呼ぶとブロック** | `BeginInvoke` + `Thread.Sleep(500)` |
 | 19 | **`[System.IO.File]::WriteAllText` は CWD が system32** | 既存ファイル: `(Resolve-Path).Path`、新規: `Join-Path $PWD.Path` |
 | 20 | **HANDOFF 等の長い here-string は貼り付けで壊れる** | VSCode 等で直接編集、または小さく分割 |
+| 21 | Session 0（非対話セッション）で FlaUI GUI テストが不安定（詳細は CI 設定章） | `continue-on-error: true` |
+| 22 | `dorny/test-reporter` デフォルト `fail-on-error: true`（詳細は CI 設定章） | `fail-on-error: false` を明示 |
+| 23 | CI で `AddPhysics_InsertsCode` のみ失敗（詳細は CI 設定章） | 要調査: Release build の cwd 解決 |
+| 24 | **i18n JSON 追加時、末尾キーにカンマを付け忘れる**（本スレッドで 3 回再発） | 追加キーの最後に必ずカンマ。`python -c "import json; json.load(...)"` で検証 |
+| 25 | `release.py` の pre-flight が uncommitted changes で停止 | リリース前に `git status --short` でクリーン確認 |
+| 26 | `dotnet test` ソリューションレベルで `Category!=UI` を実行すると exit -1 | プロジェクト指定（`PowerSimBuilder.Tests/PowerSimBuilder.Tests.csproj`）で実行 |
 
 ## 次タスク候補
 
@@ -210,6 +253,15 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 12 | 非 Real 型 FMU の完全対応 → MVP-2 |
 | 13 | Modelica `.mo` ソース取り込み → MVP-3 |
 | 14 | サブプロセス分離（FMU 実行）→ MVP-4 |
+
+### MVP-β / MVP-γ（v1.3.0 で計画化）
+
+| フェーズ | 内容 | 規模 |
+|---------|------|------|
+| **MVP-β**（v1.4.0） | PhysicsImportForm に TabControl（File + URL）追加 + NetworkAccessDialog | M |
+| **MVP-γ**（v1.5.0） | Catalog タブ + DownloadSourceSettingsForm + ミラー/プロキシ設定 | M |
+
+設計方針: GitHub 公式を優先、企業プロキシ / コミュニティミラーはオプション。中国企業環境では Session 0 / ネットワークポリシー考慮。
 
 ## スコープ外（当面やらない）
 
