@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
@@ -18,6 +19,12 @@ namespace PowerSimBuilder
 
         public static string Language { get; set; } = "";
 
+        // ---- MVP-β (v1.4.0) download settings ----
+        public static int DownloadTimeoutSeconds { get; set; } = 30;
+        public static string ProxyHost { get; set; } = "";
+        public static int ProxyPort { get; set; } = 0;
+        public static List<string> AllowedUrls { get; set; } = new();
+
         public static void Load()
         {
             try
@@ -30,6 +37,40 @@ namespace PowerSimBuilder
                 {
                     Language = langProp.GetString() ?? "";
                 }
+
+                // MVP-β (v1.4.0) download settings (backwards compatible)
+                var root = doc.RootElement;
+                if (root.TryGetProperty("downloadTimeoutSeconds", out var tProp)
+                    && tProp.ValueKind == JsonValueKind.Number
+                    && tProp.TryGetInt32(out var timeout) && timeout > 0)
+                {
+                    DownloadTimeoutSeconds = timeout;
+                }
+                if (root.TryGetProperty("proxyHost", out var phProp)
+                    && phProp.ValueKind == JsonValueKind.String)
+                {
+                    ProxyHost = phProp.GetString() ?? "";
+                }
+                if (root.TryGetProperty("proxyPort", out var ppProp)
+                    && ppProp.ValueKind == JsonValueKind.Number
+                    && ppProp.TryGetInt32(out var port) && port >= 0)
+                {
+                    ProxyPort = port;
+                }
+                if (root.TryGetProperty("allowedUrls", out var urlsProp)
+                    && urlsProp.ValueKind == JsonValueKind.Array)
+                {
+                    var list = new List<string>();
+                    foreach (var item in urlsProp.EnumerateArray())
+                    {
+                        if (item.ValueKind == JsonValueKind.String)
+                        {
+                            var s = item.GetString();
+                            if (!string.IsNullOrEmpty(s)) list.Add(s);
+                        }
+                    }
+                    AllowedUrls = list;
+                }
             }
             catch { /* best-effort */ }
         }
@@ -41,7 +82,14 @@ namespace PowerSimBuilder
                 var dir = Path.GetDirectoryName(_settingsPath);
                 if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
-                var json = JsonSerializer.Serialize(new { language = Language });
+                var json = JsonSerializer.Serialize(new
+                {
+                    language = Language,
+                    downloadTimeoutSeconds = DownloadTimeoutSeconds,
+                    proxyHost = ProxyHost ?? "",
+                    proxyPort = ProxyPort,
+                    allowedUrls = AllowedUrls ?? new List<string>()
+                });
                 File.WriteAllText(_settingsPath, json);
             }
             catch { /* best-effort */ }

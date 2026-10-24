@@ -60,5 +60,22 @@ namespace PowerSimBuilder.Tests.Gui
                 I18n.SetLanguage(original);
             }
         }
+        [Fact]
+        public void AppSettings_HasDownloadSettings()
+        {
+            var t = typeof(AppSettings);
+            Assert.NotNull(t.GetProperty("DownloadTimeoutSeconds"));
+            Assert.NotNull(t.GetProperty("ProxyHost"));
+            Assert.NotNull(t.GetProperty("ProxyPort"));
+            Assert.NotNull(t.GetProperty("AllowedUrls"));
+        }
+
+        [Fact]
+        public void AppSettings_DownloadDefaults_AreSensible()
+        {
+            Assert.True(AppSettings.DownloadTimeoutSeconds >= 1);
+            Assert.NotNull(AppSettings.ProxyHost);
+            Assert.NotNull(AppSettings.AllowedUrls);
+        }
     }
 }
