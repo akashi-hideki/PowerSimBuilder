@@ -11,7 +11,7 @@ namespace PowerSimBuilder
     {
         public KeyboardShortcutsForm()
         {
-            Text = "Keyboard Shortcuts";
+            Text = I18n.T("KeyboardShortcutsForm.Title");
             Name = "KeyboardShortcutsForm";
             StartPosition = FormStartPosition.CenterParent;
             Size = new System.Drawing.Size(560, 420);
@@ -28,12 +28,12 @@ namespace PowerSimBuilder
                 HeaderStyle = ColumnHeaderStyle.Nonclickable,
                 Name = "ListViewShortcuts"
             };
-            list.Columns.Add("Key", 220);
-            list.Columns.Add("Action", 320);
+            list.Columns.Add(I18n.T("KeyboardShortcutsForm.ColKey"), 220);
+            list.Columns.Add(I18n.T("KeyboardShortcutsForm.ColAction"), 320);
 
             var btnOk = new Button
             {
-                Text = "OK",
+                Text = I18n.T("KeyboardShortcutsForm.OK"),
                 DialogResult = DialogResult.OK,
                 Dock = DockStyle.Bottom,
                 Height = 32,
@@ -45,17 +45,17 @@ namespace PowerSimBuilder
             AcceptButton = btnOk;
             CancelButton = btnOk;
 
-            AddSection(list, "Line Operations");
-            AddRow(list, "Ctrl+C (no selection)", "Copy current line");
-            AddRow(list, "Ctrl+X (no selection)", "Cut current line");
-            AddRow(list, "Ctrl+D", "Duplicate current line");
-            AddRow(list, "Ctrl+Shift+K", "Delete current line(s)");
-            AddRow(list, "Alt+Up", "Move line up");
-            AddRow(list, "Alt+Down", "Move line down");
-            AddRow(list, "Ctrl+/", "Toggle line comment");
-            AddRow(list, "Ctrl+L", "Select current line");
-            AddSection(list, "Help");
-            AddRow(list, "F1", "Show this dialog");
+            AddSection(list, I18n.T("KeyboardShortcutsForm.SectionLineOps"));
+            AddRow(list, "Ctrl+C (no selection)", I18n.T("KeyboardShortcutsForm.CopyLine"));
+            AddRow(list, "Ctrl+X (no selection)", I18n.T("KeyboardShortcutsForm.CutLine"));
+            AddRow(list, "Ctrl+D", I18n.T("KeyboardShortcutsForm.DuplicateLine"));
+            AddRow(list, "Ctrl+Shift+K", I18n.T("KeyboardShortcutsForm.DeleteLine"));
+            AddRow(list, "Alt+Up", I18n.T("KeyboardShortcutsForm.MoveUp"));
+            AddRow(list, "Alt+Down", I18n.T("KeyboardShortcutsForm.MoveDown"));
+            AddRow(list, "Ctrl+/", I18n.T("KeyboardShortcutsForm.ToggleComment"));
+            AddRow(list, "Ctrl+L", I18n.T("KeyboardShortcutsForm.SelectLine"));
+            AddSection(list, I18n.T("KeyboardShortcutsForm.SectionHelp"));
+            AddRow(list, "F1", I18n.T("KeyboardShortcutsForm.ShowDialog"));
 
             Test_ListView = list;
         }

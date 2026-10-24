@@ -58,7 +58,7 @@ public partial class MainForm
         var btn = new ToolStripButton
         {
             Name = "_btnImportPhysics",
-            Text = "Import Physics Model",
+            Text = I18n.T("PhysicsImport.ToolbarButton"),
             DisplayStyle = ToolStripItemDisplayStyle.Text,
         };
         btn.Click += OnImportPhysicsClick;
@@ -67,8 +67,8 @@ public partial class MainForm
 
     private void AddMenuButton(MenuStrip ms)
     {
-        var top = new ToolStripMenuItem("&Tools");
-        var item = new ToolStripMenuItem("Import Physics Model...");
+        var top = new ToolStripMenuItem(I18n.T("MainForm.MenuTools"));
+        var item = new ToolStripMenuItem(I18n.T("PhysicsImport.MenuItem"));
         item.Click += OnImportPhysicsClick;
         top.DropDownItems.Add(item);
         ms.Items.Add(top);

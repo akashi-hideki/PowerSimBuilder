@@ -16,6 +16,7 @@ public sealed class PhysicsModelPickerForm : Form
     private readonly Button _btnInsert = new();
     private readonly Button _btnCancel = new();
     private readonly Button _btnOpenFolder = new();
+    private readonly Button _btnImportModel = new();
     private readonly Label _lblStatus = new();
     private readonly TextBox _txtDetail = new();
     private readonly List<PhysicsModelEntry> _entries;
@@ -36,12 +37,12 @@ public sealed class PhysicsModelPickerForm : Form
 
     private void InitializeUi()
     {
-        Text = "Add Physics Model";
+        Text = I18n.T("PhysicsPicker.Title");
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.Sizable;
         MinimizeBox = false;
         MaximizeBox = false;
-        ClientSize = new Size(820, 520);
+        ClientSize = new Size(920, 520);
         MinimumSize = new Size(700, 400);
         Font = new Font("Segoe UI", 9F);
 
@@ -58,10 +59,10 @@ public sealed class PhysicsModelPickerForm : Form
         _list.FullRowSelect = true;
         _list.MultiSelect = false;
         _list.HideSelection = false;
-        _list.Columns.Add("Model", 220);
-        _list.Columns.Add("In", 40, HorizontalAlignment.Right);
-        _list.Columns.Add("Out", 40, HorizontalAlignment.Right);
-        _list.Columns.Add("FMI", 120);
+        _list.Columns.Add(I18n.T("PhysicsPicker.ColModel"), 220);
+        _list.Columns.Add(I18n.T("PhysicsPicker.ColIn"), 40, HorizontalAlignment.Right);
+        _list.Columns.Add(I18n.T("PhysicsPicker.ColOut"), 40, HorizontalAlignment.Right);
+        _list.Columns.Add(I18n.T("PhysicsPicker.ColFmi"), 120);
         _list.DoubleClick += (s, e) => AcceptIfSelected();
         _list.SelectedIndexChanged += (s, e) => OnListSelectionChanged();
 
@@ -81,35 +82,47 @@ public sealed class PhysicsModelPickerForm : Form
         _lblStatus.TextAlign = ContentAlignment.MiddleLeft;
         _lblStatus.Padding = new Padding(8, 0, 8, 0);
 
-        _btnInsert.Text = "Insert";
+        _btnInsert.Text = I18n.T("PhysicsPicker.BtnInsert");
         _btnInsert.Dock = DockStyle.Right;
         _btnInsert.Width = 100;
         _btnInsert.Enabled = false;
         _btnInsert.Click += (s, e) => AcceptIfSelected();
 
-        _btnOpenFolder.Text = "Open Folder";
+        _btnOpenFolder.Text = I18n.T("PhysicsPicker.BtnOpenFolder");
         _btnOpenFolder.Dock = DockStyle.Right;
         _btnOpenFolder.Width = 110;
         _btnOpenFolder.Enabled = false;
         _btnOpenFolder.Click += (s, e) => OpenSelectedFolder();
 
-        _btnCancel.Text = "Cancel";
+        _btnCancel.Text = I18n.T("PhysicsPicker.BtnCancel");
         _btnCancel.Dock = DockStyle.Right;
         _btnCancel.Width = 100;
         _btnCancel.DialogResult = DialogResult.Cancel;
 
-        var rightPanel = new Panel { Dock = DockStyle.Right, Width = 330 };
+        var rightPanel = new Panel { Dock = DockStyle.Right, Width = 720 };
         rightPanel.Controls.Add(_btnInsert);
         rightPanel.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 6 });
         rightPanel.Controls.Add(_btnOpenFolder);
         rightPanel.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 6 });
         rightPanel.Controls.Add(_btnCancel);
+        rightPanel.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 6 });
+        rightPanel.Controls.Add(_btnImportModel);
 
         bottom.Controls.Add(_lblStatus);
         bottom.Controls.Add(rightPanel);
 
         Controls.Add(split);
         Controls.Add(bottom);
+        _btnImportModel.Text = I18n.T("PhysicsImport.PickerImportButton");
+        _btnImportModel.Width = 120;
+        _btnImportModel.Dock = DockStyle.Right;
+        _btnImportModel.Click += OnImportModelClick;
+        _btnImportModel.Name = "BtnImportModel";
+
+        var tips = new ToolTip();
+        tips.SetToolTip(_btnImportModel, I18n.T("PhysicsPicker.BtnImportTooltip"));
+        tips.SetToolTip(_btnOpenFolder, I18n.T("PhysicsPicker.BtnOpenFolderTooltip"));
+
         AcceptButton = _btnInsert;
         Name = "PhysicsModelPickerForm";
         _list.Name = "ListViewModels";
@@ -134,12 +147,12 @@ public sealed class PhysicsModelPickerForm : Form
 
         if (_entries.Count == 0)
         {
-            _lblStatus.Text = "No physics models found under user_physics_models.";
+            _lblStatus.Text = I18n.T("PhysicsPicker.StatusNoModels");
             _txtDetail.Text = "(no models)";
         }
         else
         {
-            _lblStatus.Text = _entries.Count + " model(s) available.";
+            _lblStatus.Text = I18n.T("PhysicsPicker.StatusAvailable", _entries.Count);
             _list.Items[0].Selected = true;
         }
     }
@@ -296,4 +309,31 @@ public sealed class PhysicsModelPickerForm : Form
         _btnOpenFolder.Enabled = true;
         _txtDetail.Text = BuildDetailText(_entries[0]);
     }
+        private void OnImportModelClick(object? sender, EventArgs e)
+        {
+            var root = Path.Combine(Directory.GetCurrentDirectory(), "user_physics_models");
+            using (var dlg = new PhysicsImportForm(root))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK && !string.IsNullOrEmpty(dlg.ImportedModelDirectory))
+                {
+                    ReloadModels();
+                }
+            }
+        }
+        private void ReloadModels()
+        {
+            try
+            {
+                var catalogType = typeof(PhysicsModelPickerForm).Assembly
+                    .GetType("PowerSimBuilder.PhysicsModelCatalog");
+                if (catalogType != null)
+                {
+                    var scan = catalogType.GetMethod("Scan", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                    scan?.Invoke(null, null);
+                }
+                var refresh = GetType().GetMethod("RefreshModelList", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+                refresh?.Invoke(this, null);
+            }
+            catch { }
+        }
 }

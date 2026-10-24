@@ -29,8 +29,29 @@ public partial class PhysicsImportForm : Form
     {
         _userPhysicsRoot = userPhysicsRoot;
         InitializeComponent();
+        ApplyI18n();
+        Name = "PhysicsImportForm";
     }
 
+    private void ApplyI18n()
+    {
+        this.Text = I18n.T("PhysicsImport.Title");
+        _lblFile.Text = I18n.T("PhysicsImport.File");
+        _btnBrowse.Text = I18n.T("PhysicsImport.Browse");
+        _lblName.Text = I18n.T("PhysicsImport.Name");
+        _lblFmiType.Text = I18n.T("PhysicsImport.FmiType");
+        _lblVariables.Text = I18n.T("PhysicsImport.Variables");
+        _colUse.HeaderText = I18n.T("PhysicsImport.ColUse");
+        _colPort.HeaderText = I18n.T("PhysicsImport.ColPort");
+        _colVar.HeaderText = I18n.T("PhysicsImport.ColVar");
+        _colDir.HeaderText = I18n.T("PhysicsImport.ColDir");
+        _colType.HeaderText = I18n.T("PhysicsImport.ColType");
+        _btnImport.Text = I18n.T("PhysicsImport.Import");
+        _btnCancel.Text = I18n.T("PhysicsImport.Cancel");
+        _btnCopySample.Text = I18n.T("PhysicsImport.BtnCopySample");
+        _btnOpenFolder.Text = I18n.T("PhysicsImport.BtnOpenFolder");
+        _btnShowReadme.Text = I18n.T("PhysicsImport.BtnShowReadme");
+    }
     public static FmuParseResult ParseFmu(string fmuPath)
     {
         if (!File.Exists(fmuPath))
@@ -103,7 +124,7 @@ public partial class PhysicsImportForm : Form
         using var dlg = new OpenFileDialog
         {
             Filter = "Functional Mock-up Unit (*.fmu)|*.fmu",
-            Title = "Select FMU",
+            Title = I18n.T("PhysicsImport.SelectFmuTitle"),
             CheckFileExists = true,
         };
         if (dlg.ShowDialog(this) != DialogResult.OK) return;
@@ -113,8 +134,8 @@ public partial class PhysicsImportForm : Form
             if (parsed.FmiType != "CoSimulation")
             {
                 MessageBox.Show(this,
-                    "This FMU is not Co-Simulation. Please re-export as CoSimulation.",
-                    "Unsupported FMI type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    I18n.T("PhysicsImport.UnsupportedFmiType"),
+                    I18n.T("PhysicsImport.MsgUnsupportedFmiTitle"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             _fmuPath = dlg.FileName;
@@ -130,11 +151,11 @@ public partial class PhysicsImportForm : Form
                 int idx = _gridVars.Rows.Add(v.Causality == "input", v.Name, v.Name, v.Causality, v.Type);
                 _gridVars.Rows[idx].Tag = v;
             }
-            _lblStatus.Text = "Parsed " + parsed.Variables.Count + " variables.";
+            _lblStatus.Text = I18n.T("PhysicsImport.StatusParsed", parsed.Variables.Count);
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "Import error",
+            MessageBox.Show(this, ex.Message, I18n.T("PhysicsImport.MsgImportErrorTitle"),
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
@@ -143,15 +164,15 @@ public partial class PhysicsImportForm : Form
     {
         if (_fmuPath is null)
         {
-            MessageBox.Show(this, "Please choose an .fmu file first.",
-                "Missing file", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, I18n.T("PhysicsImport.MsgSelectFile"),
+                I18n.T("PhysicsImport.MsgSelectFileTitle"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
         var name = _txtName.Text.Trim();
         if (string.IsNullOrEmpty(name))
         {
-            MessageBox.Show(this, "Please enter a model name.",
-                "Missing name", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, I18n.T("PhysicsImport.MsgNameRequired"),
+                I18n.T("PhysicsImport.MsgNameRequiredTitle"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
         try
@@ -161,7 +182,7 @@ public partial class PhysicsImportForm : Form
                 .Select(r => (FmuVariable)r.Tag!)
                 .ToList();
             if (selected.Count == 0)
-                throw new InvalidOperationException("Select at least one input or output.");
+                throw new InvalidOperationException(I18n.T("PhysicsImport.MsgSelectAtLeastOne"));
             var yaml = BuildModelYaml(name, Path.GetFileName(_fmuPath), _fmiType, selected);
             var modelDir = Path.Combine(_userPhysicsRoot, Sanitize(name));
             var sourceDir = Path.Combine(modelDir, "source");
@@ -173,7 +194,7 @@ public partial class PhysicsImportForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "Import failed",
+            MessageBox.Show(this, ex.Message, I18n.T("PhysicsImport.MsgImportFailedTitle"),
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
@@ -206,25 +227,25 @@ public partial class PhysicsImportForm : Form
             File.WriteAllText(readmePath, readme, Encoding.UTF8);
         }
 
-        _lblSuccessPath.Text = "Imported to: " + modelDir;
+        _lblSuccessPath.Text = I18n.T("PhysicsImport.LblSuccessPath", modelDir);
         _txtPythonSample.Text = PythonManifestGenerator.BuildPythonSample(modelDir, selected);
         _pnlSuccess.Visible = true;
         _btnImport.Enabled = false;
-        _btnCancel.Text = "Close";
+        _btnCancel.Text = I18n.T("PhysicsImport.BtnClose");
         _btnCancel.DialogResult = DialogResult.OK;
-        _lblStatus.Text = "Import succeeded. See panel below.";
+        _lblStatus.Text = I18n.T("PhysicsImport.StatusImportSucceeded");
     }
 
     private void OnCopySampleClick(object? sender, EventArgs e)
     {
         if (string.IsNullOrEmpty(_txtPythonSample.Text)) return;
         Clipboard.SetText(_txtPythonSample.Text);
-        _lblStatus.Text = "Python sample copied to clipboard.";
+        _lblStatus.Text = I18n.T("PhysicsImport.StatusSampleCopied");
     }
 
     private void OnOpenFolderClick(object? sender, EventArgs e)
     {
-        var folderPath = _lblSuccessPath.Text.Replace("Imported to: ", "");
+        var folderPath = ImportedModelDirectory ?? "";
         if (Directory.Exists(folderPath))
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -237,7 +258,7 @@ public partial class PhysicsImportForm : Form
 
     private void OnShowReadmeClick(object? sender, EventArgs e)
     {
-        var folderPath = _lblSuccessPath.Text.Replace("Imported to: ", "");
+        var folderPath = ImportedModelDirectory ?? "";
         var readmePath = Path.Combine(folderPath, "README.md");
         if (File.Exists(readmePath))
         {
@@ -249,8 +270,8 @@ public partial class PhysicsImportForm : Form
         }
         else
         {
-            MessageBox.Show(this, "README.md not found in " + folderPath,
-                "Not found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, I18n.T("PhysicsImport.MsgReadmeNotFound", folderPath),
+                I18n.T("PhysicsImport.MsgReadmeNotFoundTitle"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 }

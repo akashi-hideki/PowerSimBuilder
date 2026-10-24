@@ -312,36 +312,36 @@ namespace PowerSimBuilder
             if (menu == null) return;
             menu.Items.Add(new ToolStripSeparator());
 
-            var dup = new ToolStripMenuItem("Duplicate Line\tCtrl+D");
+            var dup = new ToolStripMenuItem(I18n.T("PythonEditor.MenuDuplicateLine") + "\tCtrl+D");
             dup.Click += (s, e) => { if (textEditor.Focused) DuplicateCurrentLine(); };
             menu.Items.Add(dup);
 
-            var del = new ToolStripMenuItem("Delete Line\tCtrl+Shift+K");
+            var del = new ToolStripMenuItem(I18n.T("PythonEditor.MenuDeleteLine") + "\tCtrl+Shift+K");
             del.Click += (s, e) => { if (textEditor.Focused) DeleteSelectedLines(); };
             menu.Items.Add(del);
 
             menu.Items.Add(new ToolStripSeparator());
 
-            var up = new ToolStripMenuItem("Move Line Up\tAlt+Up");
+            var up = new ToolStripMenuItem(I18n.T("PythonEditor.MenuMoveLineUp") + "\tAlt+Up");
             up.Click += (s, e) => { if (textEditor.Focused) MoveCurrentLineUp(); };
             menu.Items.Add(up);
 
-            var down = new ToolStripMenuItem("Move Line Down\tAlt+Down");
+            var down = new ToolStripMenuItem(I18n.T("PythonEditor.MenuMoveLineDown") + "\tAlt+Down");
             down.Click += (s, e) => { if (textEditor.Focused) MoveCurrentLineDown(); };
             menu.Items.Add(down);
 
             menu.Items.Add(new ToolStripSeparator());
 
-            var comment = new ToolStripMenuItem("Toggle Line Comment\tCtrl+/");
+            var comment = new ToolStripMenuItem(I18n.T("PythonEditor.MenuToggleComment") + "\tCtrl+/");
             comment.Click += (s, e) => { if (textEditor.Focused) ToggleLineComment(); };
             menu.Items.Add(comment);
 
-            var selectLine = new ToolStripMenuItem("Select Line\tCtrl+L");
+            var selectLine = new ToolStripMenuItem(I18n.T("PythonEditor.MenuSelectLine") + "\tCtrl+L");
             selectLine.Click += (s, e) => { if (textEditor.Focused) SelectCurrentLine(false); };
             menu.Items.Add(selectLine);
 
             menu.Items.Add(new ToolStripSeparator());
-            var shortcuts = new ToolStripMenuItem("Keyboard Shortcuts...\tF1");
+            var shortcuts = new ToolStripMenuItem(I18n.T("PythonEditor.MenuKeyboardShortcuts") + "\tF1");
             shortcuts.Click += (s, e) => ShowKeyboardShortcuts();
             menu.Items.Add(shortcuts);
         }

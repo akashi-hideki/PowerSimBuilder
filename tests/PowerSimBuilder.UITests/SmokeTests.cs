@@ -218,4 +218,79 @@ public sealed class SmokeTests
         }
         finally { try { app.Kill(); } catch { } }
     }
+    [Fact]
+    public void Picker_ShowsImportModelButton()
+    {
+        Log("PickerImportButton START");
+        var fixture = TestPaths.TestFixturePath("with-component.json");
+        using var app = FlaUI.Core.Application.Launch(TestPaths.AppExePath,
+            "--test-project \"" + fixture + "\" --test-open-editor firstOrderLag1");
+        try
+        {
+            using var automation = new UIA3Automation();
+            var editor = WaitForEditor(automation, 20, app.ProcessId);
+            Assert.NotNull(editor);
+            Log("editor opened");
+
+            var btnPhysics = Retry.WhileNull(
+                () => editor.FindFirstDescendant(cf => cf.ByAutomationId("btnPhysics"))
+                    ?? editor.FindFirstDescendant(cf => cf.ByName("btnPhysics")),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(btnPhysics);
+            btnPhysics.Click();
+            Log("btnPhysics clicked");
+
+            var picker = WaitForWindowByTitleContaining(automation, 10, app.ProcessId, "Physics Model");
+            if (picker == null)
+                picker = WaitForWindowByTitleContaining(automation, 5, app.ProcessId, "\u7269\u7406\u6a21\u578b");
+            Assert.NotNull(picker);
+            Log("picker opened");
+
+            var btnImport = Retry.WhileNull(
+                () => picker.FindFirstDescendant(cf => cf.ByAutomationId("BtnImportModel")),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(btnImport);
+            Log("BtnImportModel found");
+        }
+        finally { try { app.Kill(); } catch { } }
+    }
+
+    [Fact]
+    public void ImportButton_OpensPhysicsImportForm()
+    {
+        Log("ImportButton Opens Form START");
+        var fixture = TestPaths.TestFixturePath("with-component.json");
+        using var app = FlaUI.Core.Application.Launch(TestPaths.AppExePath,
+            "--test-project \"" + fixture + "\" --test-open-editor firstOrderLag1");
+        try
+        {
+            using var automation = new UIA3Automation();
+            var editor = WaitForEditor(automation, 20, app.ProcessId);
+            Assert.NotNull(editor);
+
+            var btnPhysics = Retry.WhileNull(
+                () => editor.FindFirstDescendant(cf => cf.ByAutomationId("btnPhysics"))
+                    ?? editor.FindFirstDescendant(cf => cf.ByName("btnPhysics")),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(btnPhysics);
+            btnPhysics.Click();
+
+            var picker = WaitForWindowByTitleContaining(automation, 10, app.ProcessId, "Physics Model");
+            if (picker == null)
+                picker = WaitForWindowByTitleContaining(automation, 5, app.ProcessId, "\u7269\u7406\u6a21\u578b");
+            Assert.NotNull(picker);
+
+            var btnImport = picker.FindFirstDescendant(cf => cf.ByAutomationId("BtnImportModel"));
+            Assert.NotNull(btnImport);
+            btnImport.Click();
+            Log("BtnImportModel clicked");
+
+            var importForm = WaitForWindowByTitleContaining(automation, 10, app.ProcessId, "Import Physics Model");
+            if (importForm == null)
+                importForm = WaitForWindowByTitleContaining(automation, 5, app.ProcessId, "\u5bfc\u5165\u7269\u7406\u6a21\u578b");
+            Assert.NotNull(importForm);
+            Log("PhysicsImportForm opened");
+        }
+        finally { try { app.Kill(); } catch { } }
+    }
 }
