@@ -58,6 +58,61 @@
 | pre-commit | 全 9 フック Passed |
 | ビルド警告 | 0（C#） |
 
+## v1.5.2 完了（FMU カタログビルダー）
+
+**実 URL カタログの生成ツール 3 本 + テスト + 罠 #31 恒久対策**。
+GUI Catalog タブで FMI Cross Check の 50 モデル表示 → Download → File タブ切替まで**実 URL で実証済み**。
+
+### 追加ファイル配置
+
+| パス | 役割 | tests |
+|------|------|-------|
+| `tools/build_cross_check_catalog.py` | FMI Cross Check から `.fmu` を抽出（`git ls-tree` 方式、API 不要） | 6 |
+| `tools/fmu_catalog_builder.py` | 汎用 GitHub リポジトリから `.fmu` を抽出（Trees API + Contents フォールバック） | 7 |
+| `tools/setup_github_token.py` | GUI ダイアログでトークン入力 → `~/.powersimbuilder/github_token` に保存 | - |
+| `tools/verify_catalog_gui.ps1` | カタログ疎通レポート（HEAD チェック + レポート出力） | - |
+| `tests/python/tools/test_build_cross_check_catalog.py` | ls-tree 方式のパス解析・重複排除 | - |
+| `tests/python/tools/test_fmu_catalog_builder.py` | Trees API 方式の URL 生成 | - |
+| `Resources/generated_catalog.json` | 生成物（**gitignore**、`build_cross_check_catalog.py` で再生成） | - |
+| `user_physics_models/` | GUI の Download 先（**gitignore**、ユーザーデータ） | - |
+
+### ツール使い分け
+
+| ツール | 用途 | API/レート制限 | 推奨 |
+|--------|------|---------------|------|
+| `build_cross_check_catalog.py` | FMI Cross Check 専用 | **なし**（git clone --filter=blob:none） | ✅ 標準 |
+| `fmu_catalog_builder.py` | 任意の GitHub リポジトリ | あり（60 req/h / token で 5000 req/h） | 汎用 |
+
+### 実証結果（2026-10-24）
+
+| 項目 | 結果 |
+|------|------|
+| `.fmu` 検出（`modelica/fmi-cross-check`） | **1638 件** |
+| 生成カタログ | **50 モデル**（FMI 1.0 / c-code + win64） |
+| URL HEAD チェック | **3/3 OK** |
+| GUI Catalog タブ | **50 models 表示** |
+| Download → NetworkAccessDialog | **OK** |
+| File タブ自動切替 | **OK** |
+
+### 罠 #31 恒久対策
+
+- `pyproject.toml` の `[tool.pytest.ini_options]` に `--basetemp=tmp/pytest` を追加
+- `addopts = "-ra -q --basetemp=tmp/pytest"` に統合（既存設定は保持）
+- 効果: `PermissionError: [WinError 5] pytest-current` が消え、`39 passed in 0.38s` で安定
+
+### 次の課題（v1.6.0）
+
+| # | 内容 | 規模 |
+|---|------|------|
+| 1 | `release.py` に `build_cross_check_catalog.py` 呼び出し追加 → Release asset として `generated_catalog.json` を自動添付 | S |
+| 2 | `catalog_sources.json` に Release asset URL 登録（`releases/latest/download/generated_catalog.json`） | S |
+| 3 | Catalog タブに Sources ドロップダウン実装 | M |
+| 4 | FMI 2.0 / win64 優先ソート（現在は FMI 1.0 が先頭） | S |
+
+**方針**: 別ツール維持 + リリース経由配布（Option C）。アプリ本体にカタログ生成ロジックは持たせない（git 依存回避）。
+
+**タグ**: v1.5.2 はタグ未作成（v1.6.0 と同時リリース予定）
+
 ## v1.5.1 完了（catalog_probe.py + catalog_sources.json）
 
 **手動 CLI プローブ + ホワイトリスト型ソースレジストリ**を追加。アプリ起動時の自動通信は**しない**（企業プロキシ配慮）。
@@ -366,6 +421,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 32 | **`check-json` が重複キーを検出**（Python `json.load` は後勝ちで見逃す） | 重複キーは手動削除。`Common.MsgTitleWarning` 事例あり |
 | 33 | **PowerShell パッチのインデント想定が外れる**（4 スペース vs 8 スペース） | 行番号ベース（`ReadAllLines` + brace depth 追跡）、または `Get-Content` で事前に実ファイル確認 |
 | 34 | **Python 3.9 未満で `tuple[int, bytes]` / `str \| None` が syntax error**（`from __future__ import annotations` では不十分） | 型ヒントは素の `tuple` / 注釈なしに後退。3.9+ 必須なら環境依存を明記 |
+| 35 | **`$text.Contains('\| NN \|')` で罠 ID を判定すると、本文中の表（ファイル数・テスト数）に誤マッチ**（`\| CanvasForm/ \| 34 \|` 等） | 行頭一致 `-match '^\| NN \|'` で判定、または罠の固有文言を併用 |
 
 ## 次タスク候補
 
