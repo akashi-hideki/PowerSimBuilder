@@ -42,7 +42,7 @@ jobs:
         run: dotnet build ${{ env.SOLUTION_FILE }} -c Release --no-restore -v:minimal
 
       - name: Run Tests
-        run: dotnet test ${{ env.TEST_PROJECT }} -c Release --no-build --logger "trx;LogFileName=test-results.trx" --verbosity minimal
+        run: dotnet test ${{ env.TEST_PROJECT }} -c Release --no-build --filter "Category!=UI" --logger "trx;LogFileName=test-results.trx" --verbosity minimal
 
       - name: Upload Test Results
         if: always()
@@ -77,3 +77,53 @@ jobs:
 
       - name: Build with Warnings as Errors
         run: dotnet build ${{ env.SOLUTION_FILE }} -c Release --no-restore -p:WarningLevel=4 -v:minimal
+
+  ui-tests:
+    name: L3 UI Tests (FlaUI, Windows)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_FILE }}
+
+      - name: Build (Release)
+        run: dotnet build ${{ env.SOLUTION_FILE }} -c Release --no-restore -v:minimal
+
+      - name: Run L3 UI Tests
+        env:
+          PSB_APP_EXE: ${{ github.workspace }}\bin\Release\net10.0-windows\PowerSimBuilder.exe
+        run: dotnet test tests/PowerSimBuilder.UITests -c Release --no-build --filter "Category=UI" --logger "trx;LogFileName=ui-test-results.trx" --verbosity minimal
+
+      - name: Upload UI Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: '**/TestResults/*.trx'
+
+      - name: Publish UI Test Report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: UI Test Results
+          path: '**/TestResults/*.trx'
+          reporter: dotnet-trx
