@@ -138,6 +138,57 @@
 
 「テストがある」「UI がある」だけで「実装済み」と書かず、**E2E 検証の有無を明記**する。
 
+## v1.7.0 完了
+
+INSERT_BODY_START
+**HANDOFF 更新を GUI で完結させるツール。罠 #35 / #44 / #45 の再発防止を構造的に担保。**
+
+### tools/handoff_editor.py（3 モード GUI）
+
+| モード | 役割 | 罠対策 |
+|--------|------|--------|
+| Section insert | 最上位バージョンセクションの上に新規挿入 | 手作業の section 並べ替えミス防止 |
+| Trap row | 罠テーブル末尾に自動 ID で追記 | 罠 #35 をセクション限定 + 行頭アンカーで回避 |
+| Free edit | 全文 textarea 編集 | 一括置換・整形用 |
+
+### 設計
+
+| 層 | 内容 |
+|----|------|
+| HandoffDocument | 純粋ロジック。tkinter 非依存。headless テスト可能 |
+| run_gui() | tkinter 依存はここだけ。--dry-run で GUI なし検証 |
+
+### 罠対策の構造化
+
+| 罠 | 従来 | handoff_editor.py |
+|----|------|-------------------|
+| #35 | 手作業 grep、都度ミス | 学んだ罠セクション限定 + 行頭アンカー正規表現 |
+| #20 | PowerShell 貼り付け | Path I/O のみ、シェル経由なし |
+| #19 | Resolve-Path / Join-Path | Path(__file__).parent.parent で絶対パス |
+| #45 | 未対策 | read_text(encoding='utf-8') 強制 |
+
+### テスト（11 tests）
+
+全 11 テスト緑。`test_trap_table_isolation` が罠 #35 の回帰テスト（次タスク表の `| 1 |` を誤検出しないこと）。
+
+### 実装時に検出・修正したバグ
+
+- `insert_section` の `v` プレフィックス二重付与（v1.8.0 → vv1.8.0）→ テストで検出・修正済み
+
+### ドッグフーディング実績
+
+- この v1.7.0 セクション自体を `handoff_editor.py` の Section insert モードで追加
+- 罠 #45 を Trap row モードで追加（このリリース内で）
+
+### メトリクス
+
+| 項目 | 値 |
+|------|-----|
+| Python テスト | 42 → 53（+11） |
+| C# テスト | 496 passed / 2 skipped（変化なし） |
+| tools/ スクリプト | 4 → 5 |
+END_INSERT_BODY
+
 ## v1.6.1 完了（docs/ip + 死コード削除 + NuGet スリム化）
 
 **2026-10-25 リリース。タグ `v1.6.1`（`fa09edc`）。README 更新 `290ce29`（21,041 → 22,552 bytes）。**
@@ -696,6 +747,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 42 | **弁護士相談文書で「実装済み」と「設計中」を混同**すると信頼性低下・特許相談の前提崩壊（例: fmpy は将来の依存、シミュレーションは未実装） | 文書作成前に `Select-String` でコードベースを実測。`fmpy` / `Simulate` / `ParseFmu` の有無を確認 |
 | 43 | **同名クラスの誤検知**（`SerializableKeyValuePair` が `DictionaryFile.cs` の nested と `PalletteDataDefine.cs` の top-level に存在） | `grep '^\s+public class'` でインデント（nested vs top-level）を確認。完全修飾 `Namespace.OuterClass.InnerClass` で検索。あるいは `Type.FullName` ベースのスキャンに切替 |
 | 44 | **PowerShell の関数内で `$var = ...` はローカル変数を作成**し、スクリプトスコープの同名変数を更新しない（`Try-Replace` 関数内で `$content.Replace(...)` を書いたが呼び出し元に反映されなかった） | 親スコープを更新するには `$script:var = ...`。読み取りは自動で親スコープにフォールバック（`$var` のままで OK）。関数内での代入は要確認 |
+| 45 | Path.read_text() / write_text() を encoding 指定なしで呼ぶと、Windows では locale (cp932) で読み書きされ、日本語を含む HANDOFF で UnicodeDecodeError | Path.read_text(encoding='utf-8') / write_text(encoding='utf-8') を必ず明示。Python 3.15 の UTF-8 default 化までは必須 |
 
 ## 次タスク候補
 
