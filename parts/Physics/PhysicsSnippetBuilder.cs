@@ -127,6 +127,25 @@ public static class PhysicsSnippetBuilder
             sb.AppendLine(indent + BuildGetLine(varName, output, comp, fmuType));
         }
 
+        // v1.8.0 bug #5: when the FMU exposes exactly one output whose mapped
+        // name differs from "output", ALSO write it under outputs["output"] so
+        // standard components (FirstOrderLag: outputs={"output":0.0}) and
+        // demo_main.py see the FMU value. Triggered when either:
+        //   - the mapping is empty (Identity), or
+        //   - the mapping is a self-map (e.g. "x" -> "x", from model.yaml).
+        // Explicit mappings to a different name are left untouched; multi-output
+        // FMUs are ignored (ambiguous).
+        if (info.Outputs.Count == 1 && info.Outputs[0] != "output")
+        {
+            var onlyOut = info.Outputs[0];
+            var onlyComp = mapping.ComponentOutputFor(onlyOut);
+            if (onlyComp == onlyOut)
+            {
+                sb.AppendLine(indent + "# Auto-fallback: expose FMU output under standard name 'output'");
+                sb.AppendLine(indent + "self.outputs[\"output\"] = self.outputs[\"" + onlyOut + "\"]");
+            }
+        }
+
         sb.AppendLine(indent + UpdateMarkerEnd(info.ModelName));
         return sb.ToString();
     }

@@ -1,7 +1,7 @@
 """
 First Order Lagコンポーネント
 自動生成コード
-生成日時: 2026/10/25 14:49:34
+生成日時: 2026/10/25 15:28:11
 """
 
 import math
@@ -115,6 +115,8 @@ class FirstOrderLag(Component):
         self.dahlquist.doStep(self._dahlquist_time, dt)
         self._dahlquist_time += dt
         self.outputs["x"] = float(self.dahlquist.get("x"))
+        # Auto-fallback: expose FMU output under standard name 'output'
+        self.outputs["output"] = self.outputs["x"]
         # === /physics: Dahlquist ===
 
 
