@@ -138,6 +138,69 @@
 
 「テストがある」「UI がある」だけで「実装済み」と書かず、**E2E 検証の有無を明記**する。
 
+## 2026-10-25-fmu-e2e 完了
+
+**パス B（FMU 統合 E2E）の基盤完成。本日の実測で 4 バグを発見、#1/#4 を修正。`outputs["x"]` に Dahlquist の減衰値が出力されることを E2E 実証。**
+
+### 発見した 4 バグ
+
+| # | バグ | 対処 | 状態 |
+|---|------|------|:---:|
+| 1 | `from fmpy import load_fmu` は PyFMI の API（FMPy に存在しない） | `src/python_runtime/fmu_wrapper.py` 新設（FMPy `FMU2Slave` ラッパー）+ C# import 変更 | ✅ 修正済 (`88a8701` + `d9ba1b3` 系) |
+| 2 | `demo_main.py` が `python_runtime.components` を import（生成 FMU 版を使わない） | 未着手（v1.8.0 タスク） | ⚠️ |
+| 3 | Create Simulation 再実行で FMU 注入が消える（4800→2940 bytes） | 再現せず。別操作（パレット再配置等）が原因と判明 | ✅ 未発生 |
+| 4 | FMU コードが try/except フォールバック `Component`（インデント 8）に注入され、`FirstOrderLag` 本体（インデント 4）が空のまま | `PhysicsSnippetInserter.FindClassMethodDef` 新設。トップレベルクラス直下のみ対象化 | ✅ 修正済 (`d9ba1b3`) |
+
+### バグ #4 の詳細
+
+`FindInitDefLine` / `FindUpdateDefLine` が `TrimStart()` + `StartsWith("def __init__")` の単純検索だったため、生成コード冒頭の `try: from component_base import Component / except ImportError: class Component:` 内の最初の `def __init__`（インデント 8）を誤選択していた。
+
+修正後は `IsTopLevelClassMethod` で「インデント 0 の `class` 直下」のみを対象化。フォールバッククラスを自動スキップ。
+
+### パス B E2E 実証結果
+
+`tmp/test_first_order_lag_e2e.py` の実行結果:
+
+has dahlquist attr: True
+fmu type: _FmuWrapper
+=== update loop ===
+t=0.0 outputs={'output': 0.0, 'x': 0.9}
+t=0.1 outputs={'output': 0.0, 'x': 0.81}
+t=0.2 outputs={'output': 0.0, 'x': 0.729}
+t=0.3 outputs={'output': 0.0, 'x': 0.6561}
+t=0.4 outputs={'output': 0.0, 'x': 0.59049}
+=== DONE ===
+
+Dahlquist（`der(x) = -k*x`, k=1）の Euler 積分が FMPy `FMU2Slave.doStep()` 経由で正しく動作。
+
+**残る問題（バグ #5）**: FMU 出力名 `x` と標準出力名 `output` の不一致。`PhysicsPortMapping.Identity`（デフォルト）が変換しないため `outputs["output"]` は 0.0 のまま。`outputs["x"]` に FMU 値が入る。
+
+### python_runtime 構造訂正（罠 #42 応用: 文書と実装の実測乖離）
+
+旧記載「`src/` はレガシー」は誤り。実測:
+
+| 旧記載 | 実測 |
+|--------|------|
+| `python_runtime` はルート直下 | **`src/python_runtime/` が実体**（`pip install -e` で `site-packages` にリンク） |
+| `components.py`（単一ファイル） | `components/` パッケージ（`first_order_lag.py` 等） |
+| `src/` はレガシー | **実行時モジュールの実体。触るときは要警戒** |
+
+`python_runtime.__file__` = `src\python_runtime\__init__.py` で確認済み。
+
+### 明日（10/26）のタスク
+
+| # | タスク | 規模 | 備考 |
+|---|--------|:---:|------|
+| 5 | `PhysicsPortMapping` の `Identity` 時 auto-fallback（単一出力なら自動マップ） | S | `parts/Physics/ModelYaml.cs` |
+| 2 | `demo_main.py` import 戦略（`generated.<Name>` 優先、なければ `python_runtime.components`） | M | `SimulationGenerate/*.cs` |
+| 2b | パス B 完全 E2E（Create Simulation → demo_main.py 実行 → PNG 生成） | S | 2 完了後 |
+
+### 新規罠候補（#46）
+
+**Python コードを PowerShell に直接貼ると `from` が予約語エラーになる**。`python -c "..."` は引用符エスケープ問題（罠 #1 系）もある。→ **Python スクリプトは必ず `.py` ファイルに保存して `python ファイル.py` で実行**。
+
+本日、`_patch_v180_bug4.py` の内容を PowerShell プロンプトに貼ってしまい、大量の ParserError を誘発（ファイルは無傷、時間損失のみ）。
+
 ## v1.7.0 完了
 
 INSERT_BODY_START
@@ -748,6 +811,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 43 | **同名クラスの誤検知**（`SerializableKeyValuePair` が `DictionaryFile.cs` の nested と `PalletteDataDefine.cs` の top-level に存在） | `grep '^\s+public class'` でインデント（nested vs top-level）を確認。完全修飾 `Namespace.OuterClass.InnerClass` で検索。あるいは `Type.FullName` ベースのスキャンに切替 |
 | 44 | **PowerShell の関数内で `$var = ...` はローカル変数を作成**し、スクリプトスコープの同名変数を更新しない（`Try-Replace` 関数内で `$content.Replace(...)` を書いたが呼び出し元に反映されなかった） | 親スコープを更新するには `$script:var = ...`。読み取りは自動で親スコープにフォールバック（`$var` のままで OK）。関数内での代入は要確認 |
 | 45 | Path.read_text() / write_text() を encoding 指定なしで呼ぶと、Windows では locale (cp932) で読み書きされ、日本語を含む HANDOFF で UnicodeDecodeError | Path.read_text(encoding='utf-8') / write_text(encoding='utf-8') を必ず明示。Python 3.15 の UTF-8 default 化までは必須 |
+| 46 | Python コードを PowerShell プロンプトに直接貼ると from / if / OLD / NEW 等が ParserError になる。python -c "..." は引用符エスケープ問題も重なる | Python スクリプトは必ず .py ファイルに保存して python ファイル.py で実行。python -c の長い式は避ける |
 
 ## 次タスク候補
 
