@@ -58,6 +58,82 @@
 | pre-commit | 全 9 フック Passed |
 | ビルド警告 | 0（C#） |
 
+## v1.6.0 以降の作業（v1.6.1 予定）
+
+**docs/ip/ 整備 + 死コード削除。v1.6.1 タグは未作成（v1.6.1 リリース時にまとめる）。**
+
+### docs/ip/ 整備（13 ファイル）
+
+StaTable の `docs/ip/` と同等の構成に到達。
+
+| # | ファイル | Git | 内容 |
+|---|---------|:---:|------|
+| 1 | `FAQ.md` | ✅ | 想定質問と回答（StaTable 連携、Windows 専用、シミュレーション開発中） |
+| 2 | `OSS_COMPLIANCE.md` | ✅ | Apache-2.0、GPL/AGPL 混入なし、環境分離注記 |
+| 3 | `WHITE_PAPER.md` | ✅ | 技術白書（骨格） |
+| 4 | `licenses_full.csv` | ✅ | 23 ランタイム依存（NuGet 5 + fmpy 18） |
+| 5 | `licenses_nuget.csv` | ✅ | NuGet 内訳 |
+| 6 | `licenses_python_fmpy.csv` | ✅ | fmpy 内訳 |
+| 7 | `nuget_packages.json` | ✅ | 生データ |
+| 8 | `git_log.txt` | ✅ | 全履歴 346 件（`--all`） |
+| 9 | `git_branches.txt` | ✅ | 4 ブランチ |
+| 10 | `git_tags.txt` | ✅ | 31 タグ（peeled commit ハッシュ） |
+| 11 | `git_stats.txt` | ✅ | 346 commits / 2025-08-07〜2026-10-25 / 31 tags |
+| 12 | `LAWYER_CANDIDATES.md` | ✅ | 弁護士候補（StaTable 参照ベース） |
+| 13 | `LAWYER_CONSULTATION.md` | ❌ **ローカルのみ** | 知財相談書面（会社名含む、`.gitignore` で除外） |
+
+### 死コード削除（9 ファイル / 2,072 行）
+
+`scan_parts_deadcode.ps1` で参照カウント → `check_delete_candidates.ps1` で外部参照判定 → 1 ファイルずつ削除。
+
+| # | ファイル | 型 |
+|---|---------|-----|
+| 1 | `parts/HtmlViewer.cs` | `HtmlViewer` |
+| 2 | `parts/SearchComboBox.cs` | `SearchComboBox` |
+| 3 | `parts/RegistryManager.cs` | `RegistryManager` |
+| 4 | `parts/ListDictionaryConverter.cs` | `CustomConverter`, `ListDictionaryConverter`, `MappingTable`, `Person`, `PropertyConversion`, `Employee`（サンプルコード） |
+| 5 | `parts/CsvFolderReader.cs` | `CsvFolderReader` |
+| 6 | `parts/TextTabs.cs` | `TextTabs` |
+| 7 | `parts/FormulaCalculator.cs` | `FormulaCalculator` |
+| 8 | `parts/SingleInstanceApp.cs` | `SingleInstanceApp` |
+| 9 | `parts/DictionaryFile.cs` | `DictionaryFile`, nested `SerializableDictionary`, `SerializableKeyValuePair` |
+
+**KEEP**: `parts/DataGridViewGeneric.cs`（`TabControlManager.cs` から 11 箇所使用）。
+
+**`parts/` のファイル数**: 39 → **30**。
+
+### 実証済み事項（削除後の GUI 実機確認）
+
+| 項目 | 結果 |
+|------|------|
+| `dotnet build` | succeeded（既知の警告 4 件のみ） |
+| `dotnet test` | **496 passed / 2 skipped / 0 failed** |
+| 二重起動 | **2 プロセス**（`SingleInstanceApp` 未使用を実証） |
+| プロジェクト保存 → 再読込 | OK（`DictionaryFile.cs` 削除の影響なし） |
+| Import Physics Model / Catalog タブ | OK（3 タブ / ComboBox 5 項目 / 226 models） |
+
+### 保留事項
+
+| # | 項目 | トリガー |
+|---|------|---------|
+| 1 | **リポジトリ public 化** | IP 問題解決 + シミュレーションサンプルテスト完了後 |
+| 2 | **カタログ公開配布の再開** | 上記と連動 |
+| 3 | **`LAWYER_CONSULTATION.md` はローカルのみ** | 弁護士送付時は直接送付（GitHub 経由不可） |
+
+### v1.6.1 タスク
+
+| # | 内容 | 規模 |
+|---|------|------|
+| 1 | HANDOFF 更新（このセクション + 罠 #38〜#43） | S |
+| 2 | `python tools/release.py --auto patch` で v1.6.1 リリース | S |
+
+### v1.7.0 候補
+
+| # | 内容 | 規模 |
+|---|------|------|
+| 1 | `tools/handoff_editor.py`（GUI 化、3 モード） | M |
+| 2 | **MVP-2: シミュレーション実行**（`fmpy` 統合） | L |
+
 ## v1.6.0 完了（Catalog Sources dropdown + Release asset）
 
 **Catalog タブに Sources ドロップダウンを追加。`release.py --with-catalog` でカタログを Release asset として自動配布。**
@@ -494,6 +570,12 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 35 | **`$text.Contains('\| NN \|')` で罠 ID を判定すると、本文中の表（ファイル数・テスト数）に誤マッチ**（`\| CanvasForm/ \| 34 \|` 等） | 行頭一致 `-match '^\| NN \|'` で判定、または罠の固有文言を併用 |
 | 36 | **PowerShell の `@()` 内でパイプライン式を書くと結果がフラット化**され、verify メッセージが空欄になる | パイプライン結果を一度変数に受け、`[bool]` で明示的に boolean 化してから `@()` に格納 |
 | 37 | **PS 5.1 は BOM なし UTF-8 を CP932 として誤認**し、日本語文字列がクォート/括弧を壊す（`finalize_v150.ps1` / `finalize_v152_handoff.ps1` で再発） | VSCode 保存時に「Save with Encoding → UTF-8 with BOM」を選択。保存後 `[System.IO.File]::ReadAllBytes($p)[0..2]` で `EF BB BF` を確認 |
+| 38 | **PS 5.1 の `>` / `Out-File` で git 出力が行損失**（346 → 304 行に減少、`-Width` 折り返しと UTF-16 変換が原因） | `git log --output=<file>` で git 自身に書かせる。または `@(git ...)` でキャプチャ → `[System.IO.File]::WriteAllLines` で絶対パス書き込み |
+| 39 | **`git for-each-ref` は `--output=<file>` 非対応**（`git log` 専用オプション） | `$raw = @(git for-each-ref ...)` で変数キャプチャ → `[System.IO.File]::WriteAllLines` で書き込み |
+| 40 | **`%(objectname)` は annotated tag の場合タグオブジェクトのハッシュ**（`git tag -a` で作成したタグ） | `%(*objectname)`（peeled）で実コミットを取得。lightweight は `%(if)%(*objectname)%(then)%(*objectname:short)%(else)%(objectname:short)%(end)` で分岐 |
+| 41 | **公開リポジトリの `.gitignore` を後から設定しても既コミットは履歴に残る** | 機密ファイルは最初から `.gitignore`。既存追跡は `git rm --cached` + `git filter-repo`（履歴書き換え）が必要 |
+| 42 | **弁護士相談文書で「実装済み」と「設計中」を混同**すると信頼性低下・特許相談の前提崩壊（例: fmpy は将来の依存、シミュレーションは未実装） | 文書作成前に `Select-String` でコードベースを実測。`fmpy` / `Simulate` / `ParseFmu` の有無を確認 |
+| 43 | **同名クラスの誤検知**（`SerializableKeyValuePair` が `DictionaryFile.cs` の nested と `PalletteDataDefine.cs` の top-level に存在） | `grep '^\s+public class'` でインデント（nested vs top-level）を確認。完全修飾 `Namespace.OuterClass.InnerClass` で検索。あるいは `Type.FullName` ベースのスキャンに切替 |
 
 ## 次タスク候補
 
