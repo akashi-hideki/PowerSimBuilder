@@ -1,0 +1,346 @@
+6bd1157 | 2026-10-25 09:41:19 +0900 | HIdeki.Akashi | docs(ip): initial IP documentation (FAQ + OSS compliance + licenses)
+40cb4bd | 2026-10-25 08:50:55 +0900 | HIdeki.Akashi | docs(v1.6.0): defer public catalog distribution until public repo + local dev source
+6cd71b3 | 2026-10-25 08:27:15 +0900 | HIdeki.Akashi | fix(tools): safe clone cleanup with retry + rename fallback
+72d7274 | 2026-10-25 08:20:51 +0900 | HIdeki.Akashi | fix(tools): auto-remove interrupted clones in build_cross_check_catalog
+d176e7d | 2026-10-25 08:05:44 +0900 | HIdeki.Akashi | docs(handoff): v1.6.0 completion (Sources dropdown + Release asset) + trap #36/#37
+2507628 | 2026-10-25 07:58:48 +0900 | HIdeki.Akashi | feat(v1.6.0): Catalog tab Sources dropdown
+523c3d8 | 2026-10-25 07:45:57 +0900 | HIdeki.Akashi | feat(v1.6.0): FMI 2.0 priority + catalog release asset pipeline
+fc3ef77 | 2026-10-25 07:33:30 +0900 | HIdeki.Akashi | docs(handoff): v1.5.2 completion (FMU catalog builders) + file layout + trap #35
+18e3c95 | 2026-10-25 07:27:44 +0900 | HIdeki.Akashi | feat(tools): add FMU catalog builders (ls-tree + GitHub API)
+53824a7 | 2026-10-24 21:47:50 +0900 | HIdeki.Akashi | docs(handoff): v1.5.1 completion (catalog_probe) + trap #34
+410d387 | 2026-10-24 21:21:25 +0900 | HIdeki.Akashi | feat(tools): add catalog_probe.py + catalog_sources.json (v1.5.1)
+46540e5 | 2026-10-24 21:10:39 +0900 | HIdeki.Akashi | docs(handoff): v1.5.0 completion (Catalog tab) + trap #33 + appendix H
+59e0bc4 | 2026-10-24 20:55:51 +0900 | HIdeki.Akashi | feat(physics): add Catalog tab (JSON + GitHub auto-detect) (MVP-γ Phase 2)
+81c5bb2 | 2026-10-24 20:40:05 +0900 | HIdeki.Akashi | feat(physics): add catalog registry + GitHub release client (MVP-γ Phase 1)
+c8f270c | 2026-10-24 20:19:49 +0900 | HIdeki.Akashi | feat(physics): add TabControl (File + URL) to PhysicsImportForm (MVP-β Phase 3)
+881891f | 2026-10-24 19:55:19 +0900 | HIdeki.Akashi | feat(physics): add NetworkAccessDialog + tests (MVP-β Phase 2b)
+7c3fb22 | 2026-10-24 19:49:30 +0900 | HIdeki.Akashi | docs(handoff): MVP-β Phase 1 + i18n_check.py tool + traps #31-32 + 付録G
+40ffd44 | 2026-10-24 19:45:33 +0900 | HIdeki.Akashi | feat(tools): add i18n_check.py + pre-commit hook (auto-fix comma traps #24)
+902e72e | 2026-10-24 19:31:20 +0900 | HIdeki.Akashi | feat(physics): add AppSettings download fields + FmuDownloader (MVP-β Phase 1)
+91dc993 | 2026-10-24 19:23:28 +0900 | HIdeki.Akashi | docs(handoff): v1.3.1 completion + traps #28-#30 + MVP-β plan + JSON issue
+cfe1b4b | 2026-10-24 19:10:27 +0900 | HIdeki.Akashi | feat(physics): MVP-1.3 Phase 4 - removal UI integration + ControllerBox UX (3 paths)
+dcd999f | 2026-10-24 18:00:55 +0900 | HIdeki.Akashi | feat(physics): add PhysicsBlockPickerForm + i18n keys (MVP-1.3 Phase 3)
+eabb52a | 2026-10-24 17:52:16 +0900 | HIdeki.Akashi | feat(physics): add PhysicsBlockDetector + PhysicsBlockRemover (MVP-1.3 Phase 1+2)
+65fda90 | 2026-10-24 17:40:21 +0900 | HIdeki.Akashi | docs(handoff): add trap #27 - i18n compliance test catches new forms
+72fe498 | 2026-10-24 17:39:16 +0900 | HIdeki.Akashi | test(i18n): add I18n compliance regression tests (JSON key parity + reference validity + Form title budget)
+ed5df6b | 2026-10-24 17:29:12 +0900 | HIdeki.Akashi | docs(handoff): update to v1.3.0 - i18n + pitfalls #21-#26 + MVP-β/γ plan
+7f4425f | 2026-10-24 17:18:34 +0900 | HIdeki.Akashi | chore: ignore RELEASE_NOTES_v*.md
+070a9ea | 2026-10-24 17:16:48 +0900 | HIdeki.Akashi | docs: add release notes for v1.3.0
+326fd12 | 2026-10-24 17:12:56 +0900 | HIdeki.Akashi | feat(i18n): localize PythonEditor context menu + KeyboardShortcutsForm + MainForm toolbar + picker + import form
+37ec7bc | 2026-10-24 15:37:00 +0900 | HIdeki.Akashi | fix(tools): remove duplicate '[OK] Released' print in release.py
+68a396c | 2026-10-24 15:34:47 +0900 | HIdeki.Akashi | docs(handoff): add appendix F - release.py usage
+ee0f716 | 2026-10-24 15:26:13 +0900 | HIdeki.Akashi | fix(tools): suppress stderr in tag_exists + fix dry-run title + 13 tests + HANDOFF appendix F
+db6c8b1 | 2026-10-24 15:14:40 +0900 | HIdeki.Akashi | fix(canvas): remove duplicate DoubleClicked subscription + add 3 regression tests
+6045649 | 2026-10-24 13:28:35 +0900 | HIdeki.Akashi | docs(handoff): add CI section + traps #21-#23 (Session 0 GUI limitation)
+8fedc3f | 2026-10-24 13:23:50 +0900 | HIdeki.Akashi | ci: tolerate ui-tests failure on GitHub Actions (Session 0 GUI limitation)
+b2f7141 | 2026-10-24 13:18:41 +0900 | HIdeki.Akashi | ci: exclude UI tests from default job; add ui-tests job on main push only
+84c3eae | 2026-10-24 13:10:40 +0900 | HIdeki.Akashi | docs(handoff): v1.2.3 L3 FlaUI full resolution + 20 pitfalls
+d7ff8d1 | 2026-10-24 10:10:02 +0900 | HIdeki.Akashi | docs(handoff): document L3 FlaUI smoke test results + 7 pitfalls from v1.2.1
+824d191 | 2026-10-24 10:09:29 +0900 | HIdeki.Akashi | chore: remove test-output.txt from git; ignore test-output*.txt
+7373897 | 2026-10-24 10:08:30 +0900 | HIdeki.Akashi | test(ui): keep L3 test #1 green; skip #2/#3 with documented FlaUI/WinForms limitation
+46a23cb | 2026-10-24 09:31:30 +0900 | HIdeki.Akashi | test(ui): add L3 FlaUI smoke test #1 (LaunchApp_ShowsMainWindow)
+f9d8836 | 2026-10-24 09:26:39 +0900 | HIdeki.Akashi | feat(testability): extract Test_LoadProjectFromPath + add --test-project command-line hook
+4eae6c2 | 2026-10-24 09:19:44 +0900 | HIdeki.Akashi | feat(testability): add AutomationId (Name) for picker/editor/canvas controls
+0d34e91 | 2026-10-24 09:10:51 +0900 | HIdeki.Akashi | fix(build): exclude tests/** and **/obj,bin/** from main csproj glob; remove template UnitTest1.cs
+55ddb3f | 2026-10-24 09:03:01 +0900 | HIdeki.Akashi | docs(handoff): add project structure section (csproj is at root, not src/)
+63db625 | 2026-10-24 08:39:51 +0900 | HIdeki.Akashi | docs(handoff): add 付録E gcommit tool + trap #13
+7040ffa | 2026-10-24 08:35:32 +0900 | HIdeki.Akashi | chore(tools): add gcommit.ps1 (pre-commit safe commit wrapper)
+1ab941b | 2026-10-24 08:28:52 +0900 | HIdeki.Akashi | docs: add HANDOFF_MVP1_2.md for next session
+387dd7f | 2026-10-24 08:07:27 +0900 | HIdeki.Akashi | test(physics): add L2 GUI tests (picker + editor integration via mock picker)
+e6364cf | 2026-10-23 22:27:48 +0900 | HIdeki.Akashi | docs: expand README for MVP-1.2 physics integration
+ca6e92d | 2026-10-23 22:19:13 +0900 | HIdeki.Akashi | feat(physics): MVP-1.2 - typed set/get, yaml mapping, timing warning, FMU info UI
+7b3d575 | 2026-10-23 21:55:45 +0900 | HIdeki.Akashi | feat(physics): MVP-1.2 WIP - FMU info reader, snippet builder/inserter, picker, EditPanel integration
+3205494 | 2026-10-22 21:24:38 +0900 | HIdeki.Akashi | feat(physics): import success panel with Python sample (MVP-1.1 part 2)
+9057400 | 2026-10-22 21:13:52 +0900 | HIdeki.Akashi | feat(physics): generate README.md with Python usage guide (MVP-1.1 part 1)
+1ebd2c0 | 2026-10-22 20:41:10 +0900 | HIdeki.Akashi | feat(physics): FMU import MVP-1 (Co-Simulation adapter + import dialog)
+852bf00 | 2026-10-20 21:32:32 +0900 | HIdeki.Akashi | docs(v1.1.0): HANDOFF ## 97 + README v1.1.0 + C→Python reference
+b8cf737 | 2026-10-20 21:21:55 +0900 | HIdeki.Akashi | chore(ci): use --basetemp for pytest pre-push hook
+f93042c | 2026-10-20 21:20:05 +0900 | HIdeki.Akashi | feat(v1.1.0): Edit First flow + File Structure panel
+c8805ec | 2026-10-20 19:57:14 +0900 | HIdeki.Akashi | feat(v1.1.0): emit STABLE_USER_CODE markers from ComponentCodeGenerator
+a7fe31c | 2026-10-20 19:35:07 +0900 | HIdeki.Akashi | chore: remove stray files created by shell error output
+51de1f9 | 2026-10-20 19:34:07 +0900 | HIdeki.Akashi | test(v1.1.0): P0 GUI diagnostics - modal services abstraction + 7 headless tests
+cee5dfd | 2026-10-19 20:51:59 +0900 | HIdeki.Akashi | feat(v1.1.0): P0 - RoleFunction/Component edit assist + Generate Python Component
+dcc4617 | 2026-10-18 18:00:17 +0900 | HIdeki.Akashi | docs(handoff): BUG-007 is CLOSED, not WORKAROUND (## 96)
+6247d4d | 2026-10-18 17:51:45 +0900 | HIdeki.Akashi | docs(handoff): record v0.9.0 release + Chinese UI (## 95)
+f3b3c2c | 2026-10-18 17:48:22 +0900 | HIdeki.Akashi | chore: release v0.9.0 (Simplified Chinese UI)
+fac1476 | 2026-10-18 17:45:23 +0900 | HIdeki.Akashi | feat(i18n): CJK font fallback for mixed JP+ZH matplotlib labels
+cc38204 | 2026-10-18 17:34:51 +0900 | HIdeki.Akashi | feat(i18n): toolbar language menu with Restart confirm dialog
+6d86457 | 2026-10-18 17:10:45 +0900 | HIdeki.Akashi | feat(i18n): Chinese (zh) translation + persistent language setting
+7d36871 | 2026-10-18 16:39:25 +0900 | HIdeki.Akashi | docs(handoff): record A-2 completion + v1.0.0 readiness (## 94)
+81f905f | 2026-10-18 16:38:22 +0900 | HIdeki.Akashi | docs(readme): refresh for v0.7.3 release (badge + What's New)
+85d7463 | 2026-10-18 16:32:33 +0900 | HIdeki.Akashi | docs(handoff): record Save/Load round-trip tests + v1.0.0 blocker progress (## 93)
+23d8edc | 2026-10-18 16:26:35 +0900 | HIdeki.Akashi | test(canvas): Save/Load JSON round-trip (11 tests)
+d96ca73 | 2026-10-18 14:21:56 +0900 | HIdeki.Akashi | docs(handoff): record Python UX fix + test sufficiency (## 92)
+19f485d | 2026-10-18 14:17:44 +0900 | HIdeki.Akashi | feat(ux): detect missing Python at startup + friendly error
+4eee110 | 2026-10-18 14:00:35 +0900 | HIdeki.Akashi | docs(readme): update C# test count 227 -> 265
+43d1d54 | 2026-10-18 13:54:28 +0900 | HIdeki.Akashi | test(python): add edge case tests for error paths and boundaries
+cc5bb75 | 2026-10-18 13:38:19 +0900 | HIdeki.Akashi | test(canvas): add regression coverage for v0.7.1-v0.7.3 fixes
+c66fa0a | 2026-10-18 13:30:53 +0900 | HIdeki.Akashi | docs(handoff): record v0.7.3 release + GUI Bug Hunt Phase 3 (## 91)
+7db2100 | 2026-10-18 13:29:56 +0900 | HIdeki.Akashi | fix(canvas): validate connection direction, self-connection, duplicates (v0.7.3)
+af0eb6c | 2026-10-18 13:16:51 +0900 | HIdeki.Akashi | docs(handoff): record v0.7.2 release + GUI Bug Hunt Phase 1-2 (## 90)
+b14c079 | 2026-10-18 13:15:36 +0900 | HIdeki.Akashi | fix(canvas): selection consistency + headless GUI test suite (v0.7.2)
+0f9e29c | 2026-10-18 12:51:00 +0900 | HIdeki.Akashi | docs(handoff): record v0.7.1 release + backup cleanup (## 89)
+b99aaad | 2026-10-18 12:46:08 +0900 | HIdeki.Akashi | chore: ignore *.bak* (cover both .bak. and .bak_ patterns)
+eebfad3 | 2026-10-18 12:32:33 +0900 | HIdeki.Akashi | chore: release v0.7.1
+78c9de0 | 2026-10-18 12:25:38 +0900 | HIdeki.Akashi | fix(canvas): ignore right-click in mouse-down handlers (context menu mis-target, S3)
+e49fd44 | 2026-10-18 11:39:43 +0900 | HIdeki.Akashi | docs(handoff): record i18n Phase 1 completion + v0.7.0 release
+17c8bee | 2026-10-18 11:23:52 +0900 | HIdeki.Akashi | chore: release v0.7.0 (English-only UI)
+ddf8a9e | 2026-10-18 11:18:42 +0900 | HIdeki.Akashi | i18n: complete English-only UI (Phase 1-A/B/C)
+317fcef | 2026-10-18 10:54:29 +0900 | HIdeki.Akashi | i18n: English-only UI (Phase 1-A complete)
+17c4f5a | 2026-10-18 09:26:18 +0900 | HIdeki.Akashi | docs: i18n policy - English-only UI (Chinese deferred)
+24c1203 | 2026-10-18 09:17:44 +0900 | HIdeki.Akashi | docs: mark PNG auto-open as not needed (user decision)
+4276bee | 2026-10-18 09:12:05 +0900 | HIdeki.Akashi | docs: append v0.6.0 release handover (## 85)
+5d7d8bd | 2026-10-18 09:07:00 +0900 | HIdeki.Akashi | chore: release v0.6.0
+7cdc4d0 | 2026-10-18 09:05:00 +0900 | HIdeki.Akashi | docs: rewrite README for v0.6.0 (StaTable companion positioning)
+e23c49d | 2026-10-18 08:54:39 +0900 | HIdeki.Akashi | chore: ignore Task 3-C-13 GUI/executor debug artifacts
+d9aac8d | 2026-10-18 08:36:40 +0900 | akashi-hideki | Merge pull request #1 from akashi-hideki/feat/dotnet10-migration
+1bfcde9 | 2026-10-18 08:29:05 +0900 | HIdeki.Akashi | fix(gui): HasExited-based double-launch guard + remove redundant MessageBox
+34c16f4 | 2026-10-18 08:28:45 +0900 | HIdeki.Akashi | fix(pythoneditor): remove double-subscription of run/reload buttons
+d8277bf | 2026-10-18 01:16:11 +0900 | HIdeki.Akashi | docs: append .NET 10 + L1/L2 handover (## 81-84)
+81701dd | 2026-10-18 01:13:41 +0900 | HIdeki.Akashi | fix(mainform): auto-repair corrupted generated_path on project load
+84f776d | 2026-10-18 01:12:19 +0900 | HIdeki.Akashi | fix(codegen): pass explicit input_globals/output_globals to ControllerBox
+45ae2ca | 2026-10-18 00:22:56 +0900 | HIdeki.Akashi | feat(build): migrate to .NET 10 (net10.0-windows, SDK-style csproj)
+30e5380 | 2026-10-18 00:03:01 +0900 | HIdeki.Akashi | docs: append publication Phase 1 handover (## 76-80)
+1749676 | 2026-10-17 23:59:08 +0900 | HIdeki.Akashi | chore: publication readiness Phase 1 (quick wins + audit)
+6f0916e | 2026-10-17 23:46:01 +0900 | HIdeki.Akashi | docs: fix test count in v0.5.2 CHANGELOG + append v0.5.2 handover
+2035b66 | 2026-10-17 23:44:30 +0900 | HIdeki.Akashi | chore: release v0.5.2
+5878457 | 2026-10-17 23:42:22 +0900 | HIdeki.Akashi | feat(statable): B'-bare - auto-prefix bare RoleFunction calls
+880eebc | 2026-10-17 23:33:48 +0900 | HIdeki.Akashi | feat(statable): B'-warn - classify cross-layer vs truly-missing RoleFunctions
+7bac900 | 2026-10-17 23:16:57 +0900 | HIdeki.Akashi | docs: mark Task 3-C-9 as complete (implemented in v0.5.0)
+449008f | 2026-10-17 23:11:09 +0900 | HIdeki.Akashi | chore: release v0.5.1
+c35d2a8 | 2026-10-17 23:00:43 +0900 | HIdeki.Akashi | chore(designcanvas): gate scroll/port diagnostics behind [Conditional]
+7a3a695 | 2026-10-17 21:43:19 +0900 | HIdeki.Akashi | feat(statable): auto-derive ControllerBox ports for new projects (A+C+α)
+b448fe1 | 2026-10-17 20:42:14 +0900 | HIdeki.Akashi | docs: append v0.5.0 release session handover (## 63-69)
+430457b | 2026-10-17 20:39:40 +0900 | HIdeki.Akashi | chore: release v0.5.0
+d88e855 | 2026-10-17 20:36:54 +0900 | HIdeki.Akashi | feat(test): add 3-F component E2E scenarios (Task 3-G, 1/1)
+822d25f | 2026-10-17 20:33:02 +0900 | HIdeki.Akashi | docs: append v0.4.2 release session handover (## 55-62)
+94f7bfd | 2026-10-17 20:23:33 +0900 | HIdeki.Akashi | chore: release v0.4.2
+032c2eb | 2026-10-17 20:19:44 +0900 | HIdeki.Akashi | chore(pre-commit): add pre-push hook running pytest tests/python
+f907335 | 2026-10-17 20:16:51 +0900 | HIdeki.Akashi | docs: append Task 3-F completion (6/7, Welder excluded by design)
+417b74c | 2026-10-17 20:15:22 +0900 | HIdeki.Akashi | fix(sim): allow InductionMotor to produce torque at standstill
+4b1d3d7 | 2026-10-17 20:14:00 +0900 | HIdeki.Akashi | feat(sim): add DiodeBridge + InductionMotor components (Task 3-F, 5-6/7)
+cfa1749 | 2026-10-17 20:13:37 +0900 | HIdeki.Akashi | feat(sim): add Engine + Generator components (Task 3-F, 3-4/7)
+376b48f | 2026-10-17 20:03:17 +0900 | HIdeki.Akashi | docs: append session handover for v0.4.1 / 3-F(2/7) / CI fixes
+0072b0c | 2026-10-17 20:01:36 +0900 | HIdeki.Akashi | feat(sim): add PowerSource + FaultDevice components (Task 3-F, 2/7)
+0d416c4 | 2026-10-17 19:55:56 +0900 | HIdeki.Akashi | chore(gitignore): explicitly track scenario system.json files
+2bc61b2 | 2026-10-17 19:54:41 +0900 | HIdeki.Akashi | fix(test): track scenario system.json files in git (Task 3-E follow-up)
+de09ae6 | 2026-10-17 19:51:48 +0900 | HIdeki.Akashi | fix(ci): make POC integration test independent of editable install
+6f23474 | 2026-10-17 19:35:03 +0900 | HIdeki.Akashi | chore: release v0.4.1
+b1379d7 | 2026-10-17 19:32:23 +0900 | HIdeki.Akashi | docs: append session handover for v0.4.0 / 3-C-9-a / 3-E
+e1e292e | 2026-10-17 19:21:36 +0900 | HIdeki.Akashi | feat(test): externalize scenarios to tests/data/scenarios (Task 3-E)
+f57ee8e | 2026-10-17 19:04:09 +0900 | HIdeki.Akashi | refactor(canvas): extract ParameterTypeHelper for type classification (Task 3-C-9-a)
+f77545a | 2026-10-17 18:53:59 +0900 | HIdeki.Akashi | chore: release v0.4.0
+54d0344 | 2026-10-17 18:06:08 +0900 | HIdeki.Akashi | feat(canvas): ParametersEditorForm for dictionary parameter editing (Task 3-C-9)
+7f81b66 | 2026-10-17 17:45:09 +0900 | HIdeki.Akashi | docs(statable): append Task 3-C-8 completion to HANDOFF
+0c57d57 | 2026-10-17 17:43:02 +0900 | HIdeki.Akashi | chore: ignore Task 3-C-8 E2E test artifacts
+6e932b8 | 2026-10-17 17:42:01 +0900 | HIdeki.Akashi | chore: add file-based debug logger (Program.DBG) and ignore debug.log
+c15fe08 | 2026-10-17 17:40:05 +0900 | HIdeki.Akashi | fix(statable): correct component IDs and runtime parameters in generated main.py (Task 3-C-8)
+853079b | 2026-10-17 17:39:44 +0900 | HIdeki.Akashi | fix(ui): unify port coordinates and prevent double-fire (Task 3-C-7c)
+011893e | 2026-10-17 15:56:20 +0900 | HIdeki.Akashi | fix(statable): stop overwriting thermistor_* in F_ReadSensorsMovingAvg (Task 3-D)
+09b83ac | 2026-10-17 15:51:06 +0900 | HIdeki.Akashi | fix(statable): resolve delete-reimport bug + auto-suggest save destination (Task 3-C-7)
+57ea068 | 2026-10-17 15:31:02 +0900 | HIdeki.Akashi | docs(statable): append Task 3-C completion to HANDOFF
+ab403ae | 2026-10-17 15:28:56 +0900 | HIdeki.Akashi | feat(statable): dynamic ControllerBox descriptors per project (Task 3-C-6)
+e2b6a4b | 2026-10-17 14:59:16 +0900 | HIdeki.Akashi | feat(statable): end-to-end demo with auto_events + XML action injection (Task 3-C-4)
+66299d8 | 2026-10-17 14:44:31 +0900 | HIdeki.Akashi | feat(statable): ControllerBox lazy loading for Canvas integration (Task 3-C-3)
+4c9a4ee | 2026-10-17 14:32:25 +0900 | HIdeki.Akashi | fix(ui): improve ControllerBox palette display (Task 3-C-2 supplement)
+e5d378b | 2026-10-17 14:11:08 +0900 | HIdeki.Akashi | feat(statable): add ControllerBox component wrapper (Task 3-C-1/2)
+3dc3feb | 2026-10-17 13:46:06 +0900 | HIdeki.Akashi | chore: release v0.3.0
+59c8733 | 2026-10-17 13:42:00 +0900 | HIdeki.Akashi | docs(statable): append Task 3-A completion to HANDOFF
+7c96489 | 2026-10-17 13:40:14 +0900 | HIdeki.Akashi | feat(statable): implement Mw* RoleFunctions (Task 3-A-3)
+0198bdd | 2026-10-17 13:37:16 +0900 | HIdeki.Akashi | feat(statable): implement Application RoleFunctions (Task 3-A-2-B)
+a7f974c | 2026-10-17 13:31:00 +0900 | HIdeki.Akashi | feat(statable): implement DriverOutput RoleFunctions (Task 3-A-2-A)
+ba99ae1 | 2026-10-17 13:27:05 +0900 | HIdeki.Akashi | feat(statable): implement DriverInput RoleFunctions (Task 3-A-1)
+20e0b41 | 2026-10-17 13:19:17 +0900 | HIdeki.Akashi | feat(statable): preserve user code across regeneration (Task 3-0)
+51fa6e2 | 2026-10-17 13:07:58 +0900 | HIdeki.Akashi | chore: ignore work directories
+524604e | 2026-10-17 13:07:03 +0900 | HIdeki.Akashi | docs(statable): append Phase 2 extension and Phase 3 preparation to HANDOFF
+963ee8a | 2026-10-17 12:25:42 +0900 | HIdeki.Akashi | fix(ui): use file dialogs for project load/save
+d4913c4 | 2026-10-17 12:23:06 +0900 | HIdeki.Akashi | feat(ui): add StaTable import button to MainForm toolbar
+9f2b73a | 2026-10-17 11:48:27 +0900 | HIdeki.Akashi | feat(statable): Phase 2-B''-prefix - normalize RoleFunction names with F_ prefix
+98e6c52 | 2026-10-17 11:47:58 +0900 | HIdeki.Akashi | chore: ignore Task B''-prefix work directories
+52ba7a6 | 2026-10-17 11:38:07 +0900 | HIdeki.Akashi | feat(statable): Phase 2-B'' - ternary operator (a ? b : c) support
+5291533 | 2026-10-17 11:37:33 +0900 | HIdeki.Akashi | chore: ignore Task 2-B'' work directories
+4e0faab | 2026-10-17 11:27:11 +0900 | HIdeki.Akashi | chore: ignore Task B' work directories
+1f39047 | 2026-10-17 11:23:54 +0900 | HIdeki.Akashi | feat(statable): Phase 2-B' - auto-generate no-op stubs for undefined F_xxx
+3a5f5fd | 2026-10-17 11:02:50 +0900 | HIdeki.Akashi | docs(statable): update HANDOFF_STATABLE.md for Phase 2 completion
+ccb208a | 2026-10-17 10:51:49 +0900 | HIdeki.Akashi | feat(statable): Phase 2-B-3 - batch mode CLI + E2E verification
+d8ae834 | 2026-10-17 10:18:24 +0900 | HIdeki.Akashi | feat(statable): Phase 2-B-2 - condition/action eval with sandbox
+002198a | 2026-10-17 10:04:11 +0900 | HIdeki.Akashi | feat(statable): Phase 2-B-1 - ncalc to Python expression converter
+fd30e72 | 2026-10-17 09:53:36 +0900 | HIdeki.Akashi | feat(statable): Phase 2-A - queue event cross-layer delivery
+00fbea3 | 2026-10-17 08:06:43 +0900 | HIdeki.Akashi | feat(statable): Phase 1 - StaTable XML integration
+b4814ff | 2026-10-15 20:13:25 +0900 | HIdeki.Akashi | ci: add pip install -e . to python-tests workflow
+e3df326 | 2026-10-15 19:55:13 +0900 | HIdeki.Akashi | test: expand test suite to 328 tests (Python 265 + C# 63)
+8001051 | 2026-10-13 21:18:23 +0900 | HIdeki.Akashi | release: v0.2.3
+ac9bb3a | 2026-10-13 21:15:36 +0900 | HIdeki.Akashi | feat(palette): register 15 new components in C# palette
+2cb45e6 | 2026-10-13 21:10:23 +0900 | HIdeki.Akashi | style: apply ruff-format and configure N806 ignores
+429a35c | 2026-10-13 21:03:37 +0900 | HIdeki.Akashi | feat(runtime): add 15 new components + tests
+98dbbe8 | 2026-10-13 20:38:44 +0900 | HIdeki.Akashi | release: v0.2.2
+5128873 | 2026-10-13 20:28:46 +0900 | HIdeki.Akashi | chore: update git_ops.txt after v0.2.1
+720b3f0 | 2026-10-13 20:26:36 +0900 | HIdeki.Akashi | release: v0.2.1
+bf39bee | 2026-10-13 20:24:17 +0900 | HIdeki.Akashi | test(e2e): add C# -> Python code generation E2E tests
+65f8bee | 2026-10-13 20:08:25 +0900 | HIdeki.Akashi | release: v0.2.0
+2c4dc56 | 2026-10-13 20:04:59 +0900 | HIdeki.Akashi | test(integration): add E2E regression suite for Python runtime
+0a82197 | 2026-10-12 17:59:21 +0900 | HIdeki.Akashi | chore(quality): Phase 14 - mypy + coverage 100% + pre-commit
+2805080 | 2026-10-12 17:23:39 +0900 | HIdeki.Akashi | feat(csharp): retarget Python code generation to python_runtime
+f22e5a7 | 2026-10-12 16:36:35 +0900 | HIdeki.Akashi | docs(runtime): add Python runtime documentation
+00c3141 | 2026-10-12 16:31:30 +0900 | HIdeki.Akashi | fix(examples): correct scenario_c state transition
+c9fef7a | 2026-10-12 16:17:39 +0900 | HIdeki.Akashi | feat(runtime): add Phase 11 logic components
+b3de4e9 | 2026-10-12 16:13:28 +0900 | HIdeki.Akashi | chore: remove obsolete bootstrap_phase10.ps1
+f4c2383 | 2026-10-12 16:10:53 +0900 | HIdeki.Akashi | feat(runtime): add Phase 10 I/O components (Digital/Analog In/Out)
+3bc0f8a | 2026-10-12 15:53:25 +0900 | HIdeki.Akashi | chore: extend .gitignore for business files and AI artifacts
+8f2cfa8 | 2026-10-12 15:28:34 +0900 | HIdeki.Akashi | feat(runtime): add Phase 9 Python runtime base with tests and CI
+9935b2a | 2026-10-12 15:05:40 +0900 | HIdeki.Akashi | docs: add HANDOFF.md for next thread continuation
+834797c | 2026-10-12 14:58:04 +0900 | HIdeki.Akashi | chore: update git_ops.txt for Phase 4
+5bef580 | 2026-10-12 14:58:04 +0900 | HIdeki.Akashi | chore: update git_ops.txt for Phase 4
+b180912 | 2026-10-12 14:56:21 +0900 | HIdeki.Akashi | docs: add CHANGELOG, CONTRIBUTING, and .editorconfig
+d9fbc18 | 2026-10-12 14:56:21 +0900 | HIdeki.Akashi | docs: add CHANGELOG, CONTRIBUTING, and .editorconfig
+2080b8e | 2026-10-12 14:44:05 +0900 | HIdeki.Akashi | docs: move spec to docs/specs and add README, LICENSE, and Actions checker
+5cfc38b | 2026-10-12 14:44:05 +0900 | HIdeki.Akashi | docs: move spec to docs/specs and add README, LICENSE, and Actions checker
+75b12be | 2026-10-12 14:24:49 +0900 | HIdeki.Akashi | chore: ignore setup backup files and dev utilities
+1b09fc2 | 2026-10-12 14:24:49 +0900 | HIdeki.Akashi | chore: ignore setup backup files and dev utilities
+4e6c54e | 2026-10-12 14:22:03 +0900 | HIdeki.Akashi | build: add test project, fix logcat bug, and CI workflow
+406dee4 | 2026-10-12 14:22:03 +0900 | HIdeki.Akashi | build: add test project, fix logcat bug, and CI workflow
+904c8e1 | 2026-10-12 13:28:31 +0900 | HIdeki.Akashi | chore: remove build artifacts and IDE state from tracking
+ccbd68d | 2026-10-12 13:28:31 +0900 | HIdeki.Akashi | chore: remove build artifacts and IDE state from tracking
+f9744ba | 2026-10-12 13:15:24 +0900 | HIdeki.Akashi | chore: snapshot before OneDrive migration
+1966f8a | 2026-10-12 13:15:24 +0900 | HIdeki.Akashi | chore: snapshot before OneDrive migration
+2800df8 | 2025-10-07 23:59:36 +0900 | akashi-hideki | 修正版
+ffa8bba | 2025-09-15 16:29:01 +0900 | akashi-hideki | コンポーネントの名前を表示する様に修正
+c77114f | 2025-09-15 16:29:01 +0900 | akashi-hideki | コンポーネントの名前を表示する様に修正
+fcc6fdd | 2025-09-15 09:05:01 +0900 | akashi-hideki | デザインキャンバスリファクタリング
+4210165 | 2025-09-15 09:05:01 +0900 | akashi-hideki | デザインキャンバスリファクタリング
+764a2eb | 2025-09-15 08:24:44 +0900 | akashi-hideki | リファクタリング
+1a45917 | 2025-09-15 08:24:44 +0900 | akashi-hideki | リファクタリング
+df175be | 2025-09-15 08:06:21 +0900 | akashi-hideki | コンポーネント削除の問題解決
+c109821 | 2025-09-15 08:06:21 +0900 | akashi-hideki | コンポーネント削除の問題解決
+9610fc3 | 2025-09-14 13:41:24 +0900 | akashi-hideki | 修正内容コミット
+13bf96f | 2025-09-14 13:41:24 +0900 | akashi-hideki | 修正内容コミット
+840a78e | 2025-09-14 09:21:25 +0900 | akashi-hideki | 修正
+fd3ad5b | 2025-09-14 09:21:25 +0900 | akashi-hideki | 修正
+0f81eb3 | 2025-09-14 09:07:33 +0900 | akashi-hideki | 接続線削除関連修正
+fd858ae | 2025-09-14 09:07:33 +0900 | akashi-hideki | 接続線削除関連修正
+d10a3e5 | 2025-09-13 11:25:52 +0900 | akashi-hideki | 不要線の削除
+b896a92 | 2025-09-13 11:25:52 +0900 | akashi-hideki | 不要線の削除
+02c3c99 | 2025-09-10 22:34:17 +0900 | akashi-hideki | 出力修正
+65ca2e4 | 2025-09-10 22:34:17 +0900 | akashi-hideki | 出力修正
+82429c6 | 2025-09-07 10:14:45 +0900 | akashi-hideki | テンプレートPython作成クラスコメント追加
+9d72d49 | 2025-09-07 10:14:45 +0900 | akashi-hideki | テンプレートPython作成クラスコメント追加
+d72fbcf | 2025-09-07 10:05:54 +0900 | akashi-hideki | 新規Python追加機能修正
+56a4b3a | 2025-09-07 10:05:54 +0900 | akashi-hideki | 新規Python追加機能修正
+fba68cc | 2025-09-07 09:41:04 +0900 | akashi-hideki | 修正コミット
+b090844 | 2025-09-07 09:41:04 +0900 | akashi-hideki | 修正コミット
+dd38970 | 2025-09-07 07:37:07 +0900 | akashi-hideki | PythonEditor修正
+77e0e45 | 2025-09-07 07:37:07 +0900 | akashi-hideki | PythonEditor修正
+453b050 | 2025-09-07 07:33:57 +0900 | akashi-hideki | Python編集フォーム修正
+dfc635b | 2025-09-07 07:33:57 +0900 | akashi-hideki | Python編集フォーム修正
+3ec599a | 2025-09-06 23:23:27 +0900 | akashi-hideki | Python編集画面修正
+3e4bb81 | 2025-09-06 23:23:27 +0900 | akashi-hideki | Python編集画面修正
+d6f295f | 2025-09-06 21:51:14 +0900 | akashi-hideki | シュミレータコード出力パス生成
+31e0656 | 2025-09-06 21:51:14 +0900 | akashi-hideki | シュミレータコード出力パス生成
+8e5a648 | 2025-09-06 21:50:38 +0900 | akashi-hideki | シュミレータコード
+3bea4dc | 2025-09-06 21:50:38 +0900 | akashi-hideki | シュミレータコード
+331a8ff | 2025-09-06 18:08:54 +0900 | akashi-hideki | プロットの動的生成まで
+854f0f7 | 2025-09-06 18:08:54 +0900 | akashi-hideki | プロットの動的生成まで
+2e0005c | 2025-09-06 17:06:44 +0900 | akashi-hideki | データプロットコード生成コード追加
+a7b7d76 | 2025-09-06 17:06:44 +0900 | akashi-hideki | データプロットコード生成コード追加
+de1182c | 2025-09-06 16:50:58 +0900 | akashi-hideki | シュミレータ生成クラス作成
+3d55bed | 2025-09-06 16:50:58 +0900 | akashi-hideki | シュミレータ生成クラス作成
+6d2170b | 2025-09-06 14:37:31 +0900 | akashi-hideki | 追加
+65376bc | 2025-09-06 14:37:31 +0900 | akashi-hideki | 追加
+6664877 | 2025-08-31 15:14:44 +0900 | akashi-hideki | ちらつき防止
+ed0f37c | 2025-08-31 15:14:44 +0900 | akashi-hideki | ちらつき防止
+4797a9b | 2025-08-31 13:49:27 +0900 | akashi-hideki | パネルデータ追加
+050d813 | 2025-08-31 13:49:27 +0900 | akashi-hideki | パネルデータ追加
+15e3e91 | 2025-08-31 13:37:55 +0900 | akashi-hideki | シュミレータ画面拡大
+41ea77c | 2025-08-31 13:37:55 +0900 | akashi-hideki | シュミレータ画面拡大
+105827d | 2025-08-30 11:32:39 +0900 | akashi-hideki | 仕様書更新
+9068500 | 2025-08-30 11:07:42 +0900 | akashi-hideki | 仕様書アップデート
+a51df99 | 2025-08-29 20:18:51 +0900 | akashi-hideki | it
+37d7e24 | 2025-08-29 20:18:51 +0900 | akashi-hideki | it
+e16d3ec | 2025-08-23 23:05:42 +0900 | akashi-hideki | #if false 削除
+727fb68 | 2025-08-23 23:05:42 +0900 | akashi-hideki | #if false 削除
+cc9f707 | 2025-08-23 17:35:27 +0900 | akashi-hideki | フォーム修正
+f788d0b | 2025-08-23 17:35:27 +0900 | akashi-hideki | フォーム修正
+e6696a8 | 2025-08-17 21:57:13 +0900 | akashi-hideki | 一旦コミット
+8b782c7 | 2025-08-17 21:57:13 +0900 | akashi-hideki | 一旦コミット
+636a756 | 2025-08-17 18:05:34 +0900 | akashi-hideki | パレット削除ボタンを修正
+f12907b | 2025-08-17 18:05:34 +0900 | akashi-hideki | パレット削除ボタンを修正
+6741ba0 | 2025-08-17 15:48:05 +0900 | akashi-hideki | 不要ボタン削除
+f99f320 | 2025-08-17 15:48:05 +0900 | akashi-hideki | 不要ボタン削除
+cdb9624 | 2025-08-17 14:23:00 +0900 | akashi-hideki | リソース
+93f8596 | 2025-08-17 14:23:00 +0900 | akashi-hideki | リソース
+ba9fba1 | 2025-08-17 13:39:11 +0900 | akashi-hideki | パレットの編集ドラッグ操作修正
+2138d01 | 2025-08-17 13:39:11 +0900 | akashi-hideki | パレットの編集ドラッグ操作修正
+785b5e8 | 2025-08-17 13:05:17 +0900 | akashi-hideki | 選択編集は可能になった。ただし右ボタンのみでドラッグ
+50d5a09 | 2025-08-17 13:05:17 +0900 | akashi-hideki | 選択編集は可能になった。ただし右ボタンのみでドラッグ
+b9ce76d | 2025-08-17 10:09:24 +0900 | akashi-hideki | 一旦コミット
+348cca3 | 2025-08-17 10:09:24 +0900 | akashi-hideki | 一旦コミット
+60483c4 | 2025-08-17 09:01:23 +0900 | akashi-hideki | 一旦保存
+d89891d | 2025-08-17 09:01:23 +0900 | akashi-hideki | 一旦保存
+f76534f | 2025-08-17 07:39:51 +0900 | akashi-hideki | 一旦コミット
+6f931df | 2025-08-17 07:39:51 +0900 | akashi-hideki | 一旦コミット
+ba661e1 | 2025-08-15 21:37:09 +0900 | akashi-hideki | 追加コンポーネントのセーブ追加
+c591886 | 2025-08-15 21:37:09 +0900 | akashi-hideki | 追加コンポーネントのセーブ追加
+779f6e8 | 2025-08-15 15:58:12 +0900 | akashi-hideki | XMLファイルからパレットデータロードOK
+5c5f341 | 2025-08-15 15:58:12 +0900 | akashi-hideki | XMLファイルからパレットデータロードOK
+7ecf0f9 | 2025-08-15 15:28:49 +0900 | akashi-hideki | パレットストレージ機能追加
+2d36048 | 2025-08-15 15:28:49 +0900 | akashi-hideki | パレットストレージ機能追加
+bacf089 | 2025-08-15 14:54:41 +0900 | akashi-hideki | 不要ファイル削除
+9778e17 | 2025-08-15 14:54:41 +0900 | akashi-hideki | 不要ファイル削除
+77ee437 | 2025-08-15 14:41:04 +0900 | akashi-hideki | データ形式をXMLを考慮した形とした。
+a82bba9 | 2025-08-15 14:41:04 +0900 | akashi-hideki | データ形式をXMLを考慮した形とした。
+3a69b8e | 2025-08-15 13:49:32 +0900 | akashi-hideki | Dictionayデータ化成功
+e2e6ad9 | 2025-08-15 13:49:32 +0900 | akashi-hideki | Dictionayデータ化成功
+a48731c | 2025-08-14 18:25:27 +0900 | akashi-hideki | もとに戻す
+026dcbf | 2025-08-14 18:25:27 +0900 | akashi-hideki | もとに戻す
+7407ec0 | 2025-08-14 13:45:16 +0900 | akashi-hideki | 一旦コミット
+58a2895 | 2025-08-14 13:45:16 +0900 | akashi-hideki | 一旦コミット
+89964b0 | 2025-08-13 20:29:49 +0900 | akashi-hideki | パネル表示まではOK
+1d4ff38 | 2025-08-13 20:29:49 +0900 | akashi-hideki | パネル表示まではOK
+c5339fc | 2025-08-13 15:59:18 +0900 | akashi-hideki | コンパイルエラーは解消
+c3a91f8 | 2025-08-13 15:59:18 +0900 | akashi-hideki | コンパイルエラーは解消
+08bbe10 | 2025-08-13 14:50:39 +0900 | akashi-hideki | 一旦コミット
+b862bc0 | 2025-08-13 14:50:39 +0900 | akashi-hideki | 一旦コミット
+63f2180 | 2025-08-13 09:35:53 +0900 | akashi-hideki | 不要削除
+c963479 | 2025-08-13 09:35:53 +0900 | akashi-hideki | 不要削除
+b850772 | 2025-08-13 09:35:06 +0900 | akashi-hideki | パーツのXMLファイルの追加
+0c4ccef | 2025-08-13 09:35:06 +0900 | akashi-hideki | パーツのXMLファイルの追加
+459cd5f | 2025-08-13 08:02:27 +0900 | akashi-hideki | 一旦コミット
+037b75f | 2025-08-13 08:02:27 +0900 | akashi-hideki | 一旦コミット
+fd963b3 | 2025-08-13 07:24:23 +0900 | akashi-hideki | Python生成コードをMainFormから分離
+e49bb6e | 2025-08-13 07:24:23 +0900 | akashi-hideki | Python生成コードをMainFormから分離
+06ddcee | 2025-08-13 06:41:11 +0900 | akashi-hideki | Python生成部分離
+8a80bbe | 2025-08-13 06:41:11 +0900 | akashi-hideki | Python生成部分離
+e81ef87 | 2025-08-12 23:38:17 +0900 | akashi-hideki | コネクタ精度アップ
+ea3f846 | 2025-08-12 23:38:17 +0900 | akashi-hideki | コネクタ精度アップ
+e4f0e87 | 2025-08-12 20:49:02 +0900 | akashi-hideki | コメント追加終了
+94e1c92 | 2025-08-12 20:49:02 +0900 | akashi-hideki | コメント追加終了
+4d8d87f | 2025-08-12 20:23:21 +0900 | akashi-hideki | コメント追加
+032a4d5 | 2025-08-12 20:23:21 +0900 | akashi-hideki | コメント追加
+d20c716 | 2025-08-12 19:37:52 +0900 | akashi-hideki | 表示面は修正完了
+8ee1007 | 2025-08-12 19:37:52 +0900 | akashi-hideki | 表示面は修正完了
+a4cc437 | 2025-08-12 15:09:23 +0900 | akashi-hideki | 一旦コミット
+74d6085 | 2025-08-12 15:09:23 +0900 | akashi-hideki | 一旦コミット
+aedb585 | 2025-08-12 01:50:37 +0900 | akashi-hideki | connection　Form追加
+cc2bc9b | 2025-08-12 01:50:37 +0900 | akashi-hideki | connection　Form追加
+b03da8b | 2025-08-10 17:07:33 +0900 | akashi-hideki | ListDictionaryConverter追加
+8d11c62 | 2025-08-10 17:07:33 +0900 | akashi-hideki | ListDictionaryConverter追加
+7e838da | 2025-08-10 12:34:23 +0900 | akashi-hideki | 仕様書追加
+ac9eb0d | 2025-08-10 12:34:23 +0900 | akashi-hideki | 仕様書追加
+42b9476 | 2025-08-10 11:43:57 +0900 | akashi-hideki | コメントアップデート
+31396b2 | 2025-08-10 11:43:57 +0900 | akashi-hideki | コメントアップデート
+fb2b23f | 2025-08-10 11:33:45 +0900 | akashi-hideki | コメントアップデート
+6c3b9ab | 2025-08-10 11:33:45 +0900 | akashi-hideki | コメントアップデート
+56b35a2 | 2025-08-10 10:19:25 +0900 | akashi-hideki | UIほぼ完成
+bd65b10 | 2025-08-10 10:19:25 +0900 | akashi-hideki | UIほぼ完成
+5bb77e1 | 2025-08-10 08:40:38 +0900 | akashi-hideki | デザイナーのエラーを解消
+b56e59f | 2025-08-10 08:40:38 +0900 | akashi-hideki | デザイナーのエラーを解消
+c408ac1 | 2025-08-10 02:41:21 +0900 | akashi-hideki | フォーム追加
+b80c4dd | 2025-08-10 02:35:25 +0900 | akashi-hideki | 更新
+a6af9d5 | 2025-08-10 02:35:25 +0900 | akashi-hideki | 更新
+37ff0cb | 2025-08-10 01:36:42 +0900 | akashi-hideki | ファイル更新
+2cf3b3b | 2025-08-10 01:36:42 +0900 | akashi-hideki | ファイル更新
+427a5c1 | 2025-08-10 00:16:13 +0900 | akashi-hideki | CanvasForm追加
+e8aff58 | 2025-08-10 00:12:56 +0900 | akashi-hideki | 追加
+b80b394 | 2025-08-10 00:12:56 +0900 | akashi-hideki | 追加
+8202a14 | 2025-08-07 23:37:14 +0900 | akashi-hideki | 新規作成
+77d1d49 | 2025-08-07 23:29:08 +0900 | akashi-hideki | Initial commit
