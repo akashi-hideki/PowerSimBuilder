@@ -786,8 +786,53 @@ namespace PowerSimBuilder
             else
             {
                 // 接続情報がない場合のデフォルト信号
-                AddLineToSection("plot_config", "        {'name': 'engine_torque', 'component': 'engine', 'port': 'torque', 'enabled': True, 'color': '#FF5733', 'line_style': '-'},");
-                AddLineToSection("plot_config", "        {'name': 'generator_voltage', 'component': 'generator', 'port': 'voltage', 'enabled': True, 'color': '#33FF57', 'line_style': '-'},");
+                // v1.8.0 task 6a (v2): no connections but components exist.
+                // ComponentInstances is List<ComponentControl> with InstanceName.
+                // Components is List<ComponentDescriptor> (no instance name), so
+                // we must use ComponentInstances for the demo_main key.
+                // FMU-enhanced components expose FMU values via 'output'
+                // thanks to the bug #5 auto-fallback in PhysicsSnippetBuilder.
+                if (ComponentInstances != null && ComponentInstances.Count > 0)
+                {
+                    var compColors = new List<string>
+                    {
+                        "#FF5733", "#33FF57", "#3357FF", "#F333FF",
+                        "#FF33F3", "#33FFF3", "#F3FF33", "#5733FF"
+                    };
+                    int compColorIdx = 0;
+                    foreach (var comp in ComponentInstances)
+                    {
+                        if (string.IsNullOrEmpty(comp.InstanceName)) continue;
+                        var compKey = comp.InstanceName.ToLower();
+                        var compColor = compColors[compColorIdx % compColors.Count];
+                        AddLineToSection("plot_config",
+                            $"        {{'name': '{compKey}_output', 'component': '{compKey}', 'port': 'output', 'enabled': True, 'color': '{compColor}', 'line_style': '-'}},");
+                        compColorIdx++;
+                    }
+                }
+                else if (Components != null && Components.Count > 0)
+                {
+                    // Fallback: no ComponentInstances populated.
+                    // (Should not happen in normal GUI flow, but keep for safety.)
+                    var compColors = new List<string>
+                    {
+                        "#FF5733", "#33FF57", "#3357FF", "#F333FF"
+                    };
+                    int compColorIdx = 0;
+                    foreach (var comp in Components)
+                    {
+                        if (string.IsNullOrEmpty(comp.Name)) continue;
+                        var compKey = comp.Name.ToLower();
+                        var compColor = compColors[compColorIdx % compColors.Count];
+                        AddLineToSection("plot_config",
+                            $"        {{'name': '{compKey}_output', 'component': '{compKey}', 'port': 'output', 'enabled': True, 'color': '{compColor}', 'line_style': '-'}},");
+                        compColorIdx++;
+                    }
+                }
+                else
+                {
+                    AddLineToSection("plot_config", "        # no signals: no connections and no components");
+                }
             }
 
             AddLineToSection("plot_config", "    ],");
@@ -867,14 +912,14 @@ namespace PowerSimBuilder
             AddLineToSection("plotting_functions", "    # レイアウト調整");
             AddLineToSection("plotting_functions", "    plt.tight_layout()");
             AddLineToSection("plotting_functions", "    ");
-            AddLineToSection("plotting_functions", "    # グラフを表示");
-            AddLineToSection("plotting_functions", "    plt.show()");
-            AddLineToSection("plotting_functions", "    ");
             AddLineToSection("plotting_functions", "    # グラフを保存");
             AddLineToSection("plotting_functions", "    save_format = settings['save_format']");
             AddLineToSection("plotting_functions", "    dpi = settings['dpi']");
-            AddLineToSection("plotting_functions", "    plt.savefig(f'simulation_signals.{save_format}', bbox_inches='tight', dpi=dpi)");
+            AddLineToSection("plotting_functions", "    plt.savefig(f'simulation_signals.{save_format}', bbox_inches='tight', dpi=dpi, facecolor='white', edgecolor='white')");
             AddLineToSection("plotting_functions", "    print(f\"グラフを 'simulation_signals.{save_format}' に保存しました\")");
+            AddLineToSection("plotting_functions", "    ");
+            AddLineToSection("plotting_functions", "    # Graph display (after savefig)");
+            AddLineToSection("plotting_functions", "    plt.show()");
             AddLineToSection("plotting_functions", "");
             AddLineToSection("plotting_functions", "");
             AddLineToSection("plotting_functions", "def toggle_signal(plot_config, signal_name, enabled=None):");
