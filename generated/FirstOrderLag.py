@@ -1,7 +1,7 @@
 """
 First Order Lagコンポーネント
 自動生成コード
-生成日時: 2026/10/20 20:24:37
+生成日時: 2026/10/25 14:49:34
 """
 
 import math
@@ -37,39 +37,8 @@ except ImportError:
             self.outputs = {}
             self.parameters = {}
 
-            # === physics: Dahlquist (auto-inserted) ===
-            # model     : Dahlquist
-            # fmu_file  : Dahlquist.fmu
-            # source    : user_physics_models/Dahlquist/source/Dahlquist.fmu
-            # fmi       : 2.0 (CoSimulation)
-            # inputs    : (none)
-            # outputs   : x:Real
-            # parameters: k=1
-            # timing    : start=0, stop=10, step=0.1
-            self.dahlquist = load_fmu(_psb_resolve_fmu("Dahlquist/source/Dahlquist.fmu"))
-            self.dahlquist.enter_initialization_mode()
-            self.dahlquist.set("k", 1)
-            self.dahlquist.exit_initialization_mode()
-            self._dahlquist_time = 0.0
-            # === /physics: Dahlquist ===
-
-
         def update(self, t: float, dt: float, sim_data: Any = None):
             pass
-
-            # === physics: Dahlquist (auto-inserted in update) ===
-            # inputs -> FMU, FMU -> outputs
-            # timing check: FMU stepSize=0.1
-            if abs(dt - 0.1) > 1e-9:
-                import warnings
-                warnings.warn(
-                    "physics: dt (%.6g) differs from FMU stepSize (%.6g)"
-                    % (dt, 0.1), RuntimeWarning)
-            self.dahlquist.doStep(self._dahlquist_time, dt)
-            self._dahlquist_time += dt
-            self.outputs["x"] = float(self.dahlquist.get("x"))
-            # === /physics: Dahlquist ===
-
 
 @dataclass
 class FirstOrderLagParameters:
@@ -103,6 +72,23 @@ class FirstOrderLag(Component):
         # 内部状態変数
         self._last_update_time = 0.0
 
+        # === physics: Dahlquist (auto-inserted) ===
+        # model     : Dahlquist
+        # fmu_file  : Dahlquist.fmu
+        # source    : user_physics_models/Dahlquist/source/Dahlquist.fmu
+        # fmi       : 2.0 (CoSimulation)
+        # inputs    : (none)
+        # outputs   : x:Real
+        # parameters: k=1
+        # timing    : start=0, stop=10, step=0.1
+        self.dahlquist = load_fmu(_psb_resolve_fmu("Dahlquist/source/Dahlquist.fmu"))
+        self.dahlquist.enter_initialization_mode()
+        self.dahlquist.set("k", 1)
+        self.dahlquist.exit_initialization_mode()
+        self._dahlquist_time = 0.0
+        # === /physics: Dahlquist ===
+
+
     def update(self, t: float, dt: float, sim_data: Any = None) -> None:
         """コンポーネントの状態を更新"""
         # 入力値の取得
@@ -117,6 +103,20 @@ class FirstOrderLag(Component):
         self.outputs['output'] = 0.0  # 実際の計算結果に置き換える
 
         self._last_update_time = t
+
+        # === physics: Dahlquist (auto-inserted in update) ===
+        # inputs -> FMU, FMU -> outputs
+        # timing check: FMU stepSize=0.1
+        if abs(dt - 0.1) > 1e-9:
+            import warnings
+            warnings.warn(
+                "physics: dt (%.6g) differs from FMU stepSize (%.6g)"
+                % (dt, 0.1), RuntimeWarning)
+        self.dahlquist.doStep(self._dahlquist_time, dt)
+        self._dahlquist_time += dt
+        self.outputs["x"] = float(self.dahlquist.get("x"))
+        # === /physics: Dahlquist ===
+
 
     def reset(self):
         """状態をリセット"""

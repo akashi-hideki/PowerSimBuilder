@@ -190,29 +190,57 @@ public static class PhysicsSnippetInserter
     }
 
     private static int FindInitDefLine(List<string> lines)
-    {
-        for (int i = 0; i < lines.Count; i++)
-        {
-            var t = lines[i].TrimStart();
-            if (t.StartsWith("def __init__(") ||
-                t.StartsWith("def __init__ (") ||
-                t.StartsWith("async def __init__"))
-                return i;
-        }
-        return -1;
-    }
+        => FindClassMethodDef(lines, "__init__");
 
     private static int FindUpdateDefLine(List<string> lines)
+        => FindClassMethodDef(lines, "update");
+
+    // Finds the LAST occurrence of a method that is a direct child of a
+    // top-level class (indent 0 `class`). Avoids matching fallback classes
+    // nested inside try/except ImportError blocks.
+    private static int FindClassMethodDef(List<string> lines, string methodName)
     {
+        var prefix = "def " + methodName;
+        var asyncPrefix = "async def " + methodName;
+        int lastTopLevelMatch = -1;
+        int firstAnyMatch = -1;
+
         for (int i = 0; i < lines.Count; i++)
         {
-            var t = lines[i].TrimStart();
-            if (t.StartsWith("def update(") ||
-                t.StartsWith("def update (") ||
-                t.StartsWith("async def update"))
-                return i;
+            var line = lines[i];
+            var t = line.TrimStart();
+            if (!(t.StartsWith(prefix + "(") ||
+                  t.StartsWith(prefix + " (") ||
+                  t.StartsWith(asyncPrefix)))
+                continue;
+
+            if (firstAnyMatch < 0) firstAnyMatch = i;
+
+            if (IsTopLevelClassMethod(lines, i))
+                lastTopLevelMatch = i;
         }
-        return -1;
+
+        return lastTopLevelMatch >= 0 ? lastTopLevelMatch : firstAnyMatch;
+    }
+
+    private static bool IsTopLevelClassMethod(List<string> lines, int methodIdx)
+    {
+        var methodLine = lines[methodIdx];
+        var methodTrimmed = methodLine.TrimStart();
+        int methodIndent = methodLine.Length - methodTrimmed.Length;
+        if (methodIndent == 0) return false;
+
+        for (int j = methodIdx - 1; j >= 0; j--)
+        {
+            var line = lines[j];
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            var t = line.TrimStart();
+            int indent = line.Length - t.Length;
+
+            if (indent == 0)
+                return t.StartsWith("class ");
+        }
+        return false;
     }
 
     private static string? DetectBodyIndent(List<string> lines, int startFrom)
