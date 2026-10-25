@@ -58,7 +58,46 @@
 | pre-commit | 全 9 フック Passed |
 | ビルド警告 | 0（C#） |
 
-## v1.6.0 以降の作業（v1.6.1 予定）
+## v1.6.1 完了（docs/ip + 死コード削除 + NuGet スリム化）
+
+**2026-10-25 リリース。タグ `v1.6.1`（`fa09edc`）。README 更新 `290ce29`（21,041 → 22,552 bytes）。**
+
+### リリースメタデータ
+
+| 項目 | 値 |
+|------|-----|
+| タグ | `v1.6.1`（`fa09edc`） |
+| リリースノート | Documentation 6 + Chores 2 |
+| `--with-catalog` | なし（v1.6.0 の Release asset を継続使用） |
+| README 更新 | `290ce29`（badge / What's New v1.6.0+v1.6.1 / test count / docs table） |
+
+### 含まれる変更（v1.5.1 タグ以降）
+
+| コミット | 内容 |
+|---------|------|
+| `9c77187` | 死コード削除 9 ファイル / 2,072 行（`parts/` 39 → 30） |
+| `094912f` | NuGet 5 → 1（`csvhelper` / `Pythonnet` / `Costura.Fody` / `Fody` 削除） |
+| `fa09edc` | licenses_full.csv 23 → 19 行、THIRD-PARTY-NOTICES.md 生成 |
+| `0183306` | HANDOFF 更新（v1.6.0 以降 + 罠 #38〜#43） |
+| `6bd1157`〜`46cae6f` | docs/ip 整備（13 ファイル） |
+| `290ce29` | README 更新（v1.6.0 / v1.6.1 反映） |
+
+### 最終メトリクス
+
+| 項目 | 値 |
+|------|-----|
+| Python テスト | 42 passed |
+| C# テスト | 496 passed / 2 skipped |
+| `parts/` | 30 ファイル |
+| NuGet | 1（NCalc のみ） |
+| `docs/ip/` | 13 ファイル（12 公開 + LAWYER_CONSULTATION.md ローカルのみ） |
+| 罠の記録 | #1〜#44 |
+| GUI | 実機確認済み（二重起動 / save-reload / Catalog タブ 226 models） |
+
+### 補足: 単一 EXE 配布
+
+`FodyWeavers.xml` は削除。将来の単一 EXE 配布は **公式の `dotnet publish -p:PublishSingleFile=true`** を使用（.NET 10 公式サポート、Fody/Costura 不要）。
+
 
 **docs/ip/ 整備 + 死コード削除。v1.6.1 タグは未作成（v1.6.1 リリース時にまとめる）。**
 
@@ -576,6 +615,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 41 | **公開リポジトリの `.gitignore` を後から設定しても既コミットは履歴に残る** | 機密ファイルは最初から `.gitignore`。既存追跡は `git rm --cached` + `git filter-repo`（履歴書き換え）が必要 |
 | 42 | **弁護士相談文書で「実装済み」と「設計中」を混同**すると信頼性低下・特許相談の前提崩壊（例: fmpy は将来の依存、シミュレーションは未実装） | 文書作成前に `Select-String` でコードベースを実測。`fmpy` / `Simulate` / `ParseFmu` の有無を確認 |
 | 43 | **同名クラスの誤検知**（`SerializableKeyValuePair` が `DictionaryFile.cs` の nested と `PalletteDataDefine.cs` の top-level に存在） | `grep '^\s+public class'` でインデント（nested vs top-level）を確認。完全修飾 `Namespace.OuterClass.InnerClass` で検索。あるいは `Type.FullName` ベースのスキャンに切替 |
+| 44 | **PowerShell の関数内で `$var = ...` はローカル変数を作成**し、スクリプトスコープの同名変数を更新しない（`Try-Replace` 関数内で `$content.Replace(...)` を書いたが呼び出し元に反映されなかった） | 親スコープを更新するには `$script:var = ...`。読み取りは自動で親スコープにフォールバック（`$var` のままで OK）。関数内での代入は要確認 |
 
 ## 次タスク候補
 
