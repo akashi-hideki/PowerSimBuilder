@@ -9,6 +9,21 @@ from typing import Dict, List, Tuple, Any
 from dataclasses import dataclass
 from enum import Enum
 from abc import ABC, abstractmethod
+from python_runtime.fmu_wrapper import load_fmu
+
+# --- physics helper (auto-inserted once) ---
+def _psb_resolve_fmu(relative_path: str) -> str:
+    """Resolve an FMU path under user_physics_models."""
+    from pathlib import Path
+    here = Path(__file__).resolve()
+    for base in [here.parent, *here.parents]:
+        candidate = base / "user_physics_models" / relative_path
+        if candidate.is_file():
+            return str(candidate)
+    raise FileNotFoundError(
+        "FMU not found under user_physics_models: " + relative_path
+    )
+# --- /physics helper ---
 
 try:
     from component_base import Component
@@ -22,8 +37,39 @@ except ImportError:
             self.outputs = {}
             self.parameters = {}
 
+            # === physics: Dahlquist (auto-inserted) ===
+            # model     : Dahlquist
+            # fmu_file  : Dahlquist.fmu
+            # source    : user_physics_models/Dahlquist/source/Dahlquist.fmu
+            # fmi       : 2.0 (CoSimulation)
+            # inputs    : (none)
+            # outputs   : x:Real
+            # parameters: k=1
+            # timing    : start=0, stop=10, step=0.1
+            self.dahlquist = load_fmu(_psb_resolve_fmu("Dahlquist/source/Dahlquist.fmu"))
+            self.dahlquist.enter_initialization_mode()
+            self.dahlquist.set("k", 1)
+            self.dahlquist.exit_initialization_mode()
+            self._dahlquist_time = 0.0
+            # === /physics: Dahlquist ===
+
+
         def update(self, t: float, dt: float, sim_data: Any = None):
             pass
+
+            # === physics: Dahlquist (auto-inserted in update) ===
+            # inputs -> FMU, FMU -> outputs
+            # timing check: FMU stepSize=0.1
+            if abs(dt - 0.1) > 1e-9:
+                import warnings
+                warnings.warn(
+                    "physics: dt (%.6g) differs from FMU stepSize (%.6g)"
+                    % (dt, 0.1), RuntimeWarning)
+            self.dahlquist.doStep(self._dahlquist_time, dt)
+            self._dahlquist_time += dt
+            self.outputs["x"] = float(self.dahlquist.get("x"))
+            # === /physics: Dahlquist ===
+
 
 @dataclass
 class FirstOrderLagParameters:

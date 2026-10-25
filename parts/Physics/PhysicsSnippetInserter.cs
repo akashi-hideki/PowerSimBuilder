@@ -57,7 +57,7 @@ public static class PhysicsSnippetInserter
         if (needLoadFmuImport || needHelper)
         {
             var preludeLines = new List<string>();
-            if (needLoadFmuImport) preludeLines.Add("from fmpy import load_fmu");
+            if (needLoadFmuImport) preludeLines.Add("from python_runtime.fmu_wrapper import load_fmu");
             if (needHelper)
             {
                 if (preludeLines.Count > 0) preludeLines.Add("");
@@ -135,7 +135,7 @@ public static class PhysicsSnippetInserter
         foreach (var line in lines)
         {
             var t = line.TrimStart();
-            if (t.StartsWith("from fmpy import") && t.Contains("load_fmu")) return true;
+            if (t.StartsWith("from python_runtime.fmu_wrapper import") && t.Contains("load_fmu")) return true;
             if (t.StartsWith("import fmpy")) return true;
         }
         return false;

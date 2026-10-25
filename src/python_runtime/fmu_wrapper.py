@@ -18,6 +18,7 @@ class _FmuWrapper:
         self._md = read_model_description(fmu_path)
         if self._md.coSimulation is None:
             raise ValueError(f"FMU has no CoSimulation interface: {fmu_path}")
+
         self._unzip_dir = extract(fmu_path)
         self._fmu = FMU2Slave(
             guid=self._md.guid,
@@ -27,9 +28,18 @@ class _FmuWrapper:
         )
         self._vr: dict[str, int] = {v.name: v.valueReference for v in self._md.modelVariables}
         self._type: dict[str, str] = {v.name: v.type for v in self._md.modelVariables}
+        # PyFMI compatibility: auto-instantiate + setup so generated code
+        # can call enter_initialization_mode() immediately after load_fmu().
+        self._instantiated = False
+        self._setup_done = False
+        self.instantiate()
+        self.setup_experiment()
 
     def instantiate(self, _visible: bool = False, _logging_on: bool = False) -> None:
+        if self._instantiated:
+            return
         self._fmu.instantiate()
+        self._instantiated = True
 
     def setup_experiment(
         self,
@@ -37,7 +47,10 @@ class _FmuWrapper:
         stop_time: float | None = None,
         tolerance: float | None = None,
     ) -> None:
+        if self._setup_done:
+            return
         self._fmu.setupExperiment(startTime=start_time, stopTime=stop_time, tolerance=tolerance)
+        self._setup_done = True
 
     def enter_initialization_mode(self) -> None:
         self._fmu.enterInitializationMode()

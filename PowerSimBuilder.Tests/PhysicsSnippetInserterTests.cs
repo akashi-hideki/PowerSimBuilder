@@ -44,7 +44,7 @@ public class PhysicsSnippetInserterTests
             Template, "PMSM", initBlock, helper);
 
         Assert.Equal(InsertOutcome.Inserted, outcome);
-        Assert.Contains("from fmpy import load_fmu", code);
+        Assert.Contains("from python_runtime.fmu_wrapper import load_fmu", code);
         Assert.Contains("def " + PhysicsSnippetBuilder.HelperFunctionName, code);
         Assert.Contains("# === physics: PMSM (auto-inserted) ===", code);
         Assert.Contains("self.pmsm = load_fmu(", code);
@@ -145,7 +145,7 @@ public class PhysicsSnippetInserterTests
         var (outcome, second) = PhysicsSnippetInserter.Insert(first, "Dahlquist", block2, helper, update2);
 
         Assert.Equal(InsertOutcome.Inserted, outcome);
-        Assert.Equal(1, CountOccurrences(second, "from fmpy import load_fmu"));
+        Assert.Equal(1, CountOccurrences(second, "from python_runtime.fmu_wrapper import load_fmu"));
         Assert.Equal(1, CountOccurrences(second, "def " + PhysicsSnippetBuilder.HelperFunctionName));
         Assert.Contains("# === physics: PMSM (auto-inserted) ===", second);
         Assert.Contains("# === physics: Dahlquist (auto-inserted) ===", second);
