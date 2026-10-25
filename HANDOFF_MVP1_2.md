@@ -239,6 +239,53 @@ GUI: FirstOrderLag 配置 → Add Physics → Dahlquist → Insert
 - 罠 #48: plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる
 - 罠 #46 再発: Python スクリプト断片を PowerShell に貼ると ParserError。GUI エディタ経由を徹底
 
+## 2026-10-25-task7 完了
+
+**GUI 完全 E2E 達成。btnRun 経路は既存実装で動作（タスク 7 = 完了）。**
+
+### タスク 7 の結論
+
+`MainForm.cs:830` で既に `new PythonEditorForm(file_path, true)`（`enableRunButtons=true`）で開かれていた。以前「btnRun 起動できない」と見えたのは、以下 3 バグの複合：
+
+| バグ | 影響 |
+|------|------|
+| #2 | `demo_main.py` が標準版 `FirstOrderLag` を import → FMU 実行されない |
+| #6a | `plot_config` が存在しない `engine`/`generator` 参照 → 白 PNG |
+| #6b | `plt.show()` が `plt.savefig()` より前 → 空 PNG 保存 |
+
+`08bd436`（#2）+ `fd990e8`（6a/6b）修正で、既存の `btnRun` 経路が「目覚めて」正常動作。
+
+### GUI 完全 E2E 実証
+
+GUI: FirstOrderLag 配置 → Add Physics → Dahlquist → Insert → Create Simulation → PythonEditorForm 起動 → btnRun 押下 → 減衰波形 PNG 生成（視覚確認済み）。
+
+### BooleanNetwork1 混入事象（解消）
+
+過去セッションで `FirstOrderLag` に BooleanNetwork1 を Add Physics した形跡が残り、`FirstOrderLag.py:100` に `self.booleannetwork1 = load_fmu(...)` が混入。エラーダイアログの traceback で判明。
+
+**解消手順**:
+1. `generated/FirstOrderLag.py` + `generated/demo_main.py` 削除
+2. GUI で新規プロジェクト（Ctrl+N）から
+3. `FirstOrderLag` 配置 → Add Physics → Dahlquist のみ Insert
+4. Create Simulation
+
+`user_physics_models/BooleanNetwork1` は存在するが、選択しなければ混入しない。
+
+### 残タスク
+
+| # | タスク | 規模 | 優先 |
+|---|--------|:---:|:---:|
+| 10 | FMU stepSize 警告（dt 0.001 vs 0.1） | S | 低 |
+| — | `.gitignore` の `generated/` 方針整理 | S | 低 |
+| — | デモシナリオ強化（公開用） | S | 中 |
+| — | 11/22 公開 | — | 高 |
+
+### 今日の学び
+
+- タスク 7 は「新規実装」ではなく「既存実装の動作確認」だった。罠 #42 の逆パターン（実装はあるが他バグで見えなかった）
+- BooleanNetwork1 混入のような「過去セッションのキャッシュ残留」は、新規プロジェクトから始めることで回避可能
+- GUI からのエラーは MessageBox を Ctrl+C で全文コピーできる（PowerShell 経由不要、罠 #46 回避）
+
 ## v1.7.0 完了
 
 INSERT_BODY_START
