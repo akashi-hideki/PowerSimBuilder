@@ -271,7 +271,54 @@ namespace PowerSimBuilder
                 .OrderBy(t => t)
                 .ToList();
 
-            return "from python_runtime.components import " + string.Join(", ", types);
+            // v1.8.0 bug #2: when a component has a FMU-enhanced file
+            // (generated/<Type>.py containing fmu_wrapper import), import from
+            // that file so the FMU runs. Otherwise fall back to python_runtime.
+            var fmuTypes = new List<string>();
+            var runtimeTypes = new List<string>();
+            foreach (var type in types)
+            {
+                if (IsFmuEnhancedComponent(type))
+                    fmuTypes.Add(type);
+                else
+                    runtimeTypes.Add(type);
+            }
+
+            var importLines = new List<string>();
+            foreach (var type in fmuTypes)
+                importLines.Add("from " + type + " import " + type);
+            if (runtimeTypes.Count > 0)
+                importLines.Add("from python_runtime.components import " + string.Join(", ", runtimeTypes));
+
+            return string.Join("\n", importLines);
+        }
+
+        /// <summary>
+        /// v1.8.0 bug #2: true when generated/<Type>.py exists and contains
+        /// "from python_runtime.fmu_wrapper import" (i.e. FMU-enhanced).
+        /// </summary>
+        private static bool IsFmuEnhancedComponent(string typeName)
+        {
+            var candidates = new[]
+            {
+                System.IO.Path.Combine("generated", typeName + ".py"),
+                typeName + ".py",
+            };
+            foreach (var candidate in candidates)
+            {
+                try
+                {
+                    if (System.IO.File.Exists(candidate) &&
+                        System.IO.File.ReadAllText(candidate)
+                            .Contains("from python_runtime.fmu_wrapper import"))
+                        return true;
+                }
+                catch
+                {
+                    // ignore IO errors; try next candidate
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -369,7 +416,9 @@ namespace PowerSimBuilder
             AddLineToSection("imports", "import matplotlib.pyplot as plt");
             AddLineToSection("imports", "");
             AddLineToSection("imports", "from python_runtime import SimulationData");
-            AddLineToSection("imports", GenerateComponentsImportLine());
+            // v1.8.0 bug #2: GenerateComponentsImportLine may return multiple lines
+            foreach (var importLine in GenerateComponentsImportLine().Split('\n'))
+                AddLineToSection("imports", importLine);
 
             if (NeedsDateTimeImport())
             {
