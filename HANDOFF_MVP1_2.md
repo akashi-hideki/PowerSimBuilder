@@ -201,6 +201,44 @@ Dahlquist（`der(x) = -k*x`, k=1）の Euler 積分が FMPy `FMU2Slave.doStep()`
 
 本日、`_patch_v180_bug4.py` の内容を PowerShell プロンプトに貼ってしまい、大量の ParserError を誘発（ファイルは無傷、時間損失のみ）。
 
+## 2026-10-25-gui-e2e 完了
+
+**GUI 起点のパス B E2E 完全動作。減衰波形がウィンドウ表示 + simulation_signals.png 保存。**
+
+### 今夜解決したバグ
+
+| # | バグ | 修正 | コミット |
+|---|------|------|---------|
+| #5 | FMU 出力 x → 標準 output の不一致 | PhysicsSnippetBuilder に auto-fallback（model.yaml の self-map も対象） | 8461c99 |
+| #2 | demo_main.py が python_runtime.components を import | PythonSimulationMainBuilder.IsFmuEnhancedComponent で generated/<Type>.py を優先 | 08bd436 |
+| #6 | plot_config 残骸 + plt.show() 順序 | 手動パッチで視覚確認（C# 恒久修正は明日） | — |
+
+### GUI E2E 実証フロー
+
+GUI: FirstOrderLag 配置 → Add Physics → Dahlquist → Insert
+  → Create Simulation
+  → demo_main.py: from FirstOrderLag import FirstOrderLag（FMU 版）
+  → python demo_main.py
+  → 減衰波形ウィンドウ表示 + simulation_signals.png 保存
+
+出力値: outputs['output'] = outputs['x'] = Dahlquist Euler 積分（1.0 → 0.005）
+
+### 残課題
+
+| # | タスク | 規模 |
+|---|--------|:---:|
+| 6 | plot_config 自動生成（実コンポーネント列挙） | M |
+| 6b | plt.show() を plt.savefig() の後ろに生成（C# テンプレート） | S |
+| 7 | GUI Run 経路 | S |
+| 10 | FMU stepSize 警告（dt 0.001 vs 0.1） | S |
+| 11 | plt.savefig に facecolor='white' 明示 | S |
+
+### 今夜の学び（罠 #47/#48 候補）
+
+- 罠 #47: plt.show() は対話 backend で figure を破棄する。plt.savefig() の前に置くと空 PNG になる
+- 罠 #48: plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる
+- 罠 #46 再発: Python スクリプト断片を PowerShell に貼ると ParserError。GUI エディタ経由を徹底
+
 ## v1.7.0 完了
 
 INSERT_BODY_START
@@ -812,6 +850,8 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 44 | **PowerShell の関数内で `$var = ...` はローカル変数を作成**し、スクリプトスコープの同名変数を更新しない（`Try-Replace` 関数内で `$content.Replace(...)` を書いたが呼び出し元に反映されなかった） | 親スコープを更新するには `$script:var = ...`。読み取りは自動で親スコープにフォールバック（`$var` のままで OK）。関数内での代入は要確認 |
 | 45 | Path.read_text() / write_text() を encoding 指定なしで呼ぶと、Windows では locale (cp932) で読み書きされ、日本語を含む HANDOFF で UnicodeDecodeError | Path.read_text(encoding='utf-8') / write_text(encoding='utf-8') を必ず明示。Python 3.15 の UTF-8 default 化までは必須 |
 | 46 | Python コードを PowerShell プロンプトに直接貼ると from / if / OLD / NEW 等が ParserError になる。python -c "..." は引用符エスケープ問題も重なる | Python スクリプトは必ず .py ファイルに保存して python ファイル.py で実行。python -c の長い式は避ける |
+| 47 | plt.show() は対話 backend で figure を破棄する。plt.savefig() の前に置くと空 PNG が保存される | plt.savefig() を必ず plt.show() より先に実行、または plt.show() を削除 |
+| 48 | plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる | plt.savefig() を必ず plt.show() より先に実行、または plt.show() を削除plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる |
 
 ## 次タスク候補
 
