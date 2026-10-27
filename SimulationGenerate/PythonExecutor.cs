@@ -87,6 +87,12 @@ namespace PowerSimBuilder
                     process.StartInfo.WorkingDirectory = scriptDir;
 
                 // Task 3-C-11: PYTHONPATH に src/ を追加
+                // Force matplotlib Agg backend (headless-safe, avoids plt.show() blocking)
+                if (SilentMode)
+                {
+                    process.StartInfo.EnvironmentVariables["MPLBACKEND"] = "Agg";
+                }
+
                 var srcDir = FindSrcDirectory();
                 if (!string.IsNullOrEmpty(srcDir))
                 {
@@ -96,19 +102,23 @@ namespace PowerSimBuilder
                 }
 
                 var stderrSb = new StringBuilder();
+                var stdoutSb = new StringBuilder();
 
                 process.OutputDataReceived += (s, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
-                        Console.WriteLine($"出力: {e.Data}");
+                    {
+                        lock (stdoutSb) { stdoutSb.AppendLine(e.Data); }
+                        if (!SilentMode) Console.WriteLine($"出力: {e.Data}");
+                    }
                 };
 
                 process.ErrorDataReceived += (s, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
                     {
-                        Console.WriteLine($"エラー: {e.Data}");
                         lock (stderrSb) { stderrSb.AppendLine(e.Data); }
+                        if (!SilentMode) Console.WriteLine($"エラー: {e.Data}");
                     }
                 };
 
@@ -122,6 +132,9 @@ namespace PowerSimBuilder
 
                         string errTail;
                         lock (stderrSb) { errTail = stderrSb.ToString(); }
+                        string outAll;
+                        lock (stdoutSb) { outAll = stdoutSb.ToString(); }
+                        try { LastOutput = outAll + errTail; } catch { }
 
                         var msg = exitCode == 0
                             ? I18n.T("PythonExecutor.MsgCompleted") : I18n.T("PythonExecutor.MsgExitedWithCode", exitCode) + "" +
@@ -129,7 +142,7 @@ namespace PowerSimBuilder
                                   ? ""
                                   : errTail.Substring(0, Math.Min(500, errTail.Length)));
 
-                        if (Application.OpenForms.Count > 0)
+                        if (!SilentMode && Application.OpenForms.Count > 0)
                         {
                             var form = Application.OpenForms[0];
                             form.BeginInvoke((Action)(() =>
@@ -165,6 +178,18 @@ namespace PowerSimBuilder
         /// Pythonスクリプトを実行する
         /// Task 3-C-12: HasExited ベースの二重起動防止（フラグ固着なし）
         /// </summary>
+        /// <summary>
+        /// Headless/test mode: suppresses MessageBox popups (Exited notification,
+        /// "still running") and sets MPLBACKEND=Agg to avoid plt.show() hanging.
+        /// </summary>
+        public bool SilentMode { get; set; } = false;
+
+        /// <summary>
+        /// Last process stdout+stderr captured by the OutputDataReceived/ErrorDataReceived handlers.
+        /// Useful for diagnosing headless runs.
+        /// </summary>
+        public string LastOutput { get; private set; } = "";
+
         public bool Run(string scriptPath)
         {
             // 前回プロセスがまだ生きていれば拒否。終了していれば許可。
@@ -176,13 +201,39 @@ namespace PowerSimBuilder
                 catch { alive = false; }  // 破棄済み等は終了扱い
                 if (alive)
                 {
-                    MessageBox.Show(
-                        I18n.T("PythonExecutor.MsgStillRunning"),
-                        I18n.T("Common.MsgTitleInfo"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (!SilentMode)
+                    {
+                        MessageBox.Show(
+                            I18n.T("PythonExecutor.MsgStillRunning"),
+                            I18n.T("Common.MsgTitleInfo"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                     return false;
                 }
             }
             return ExecuteMethod(scriptPath);
+        }
+
+        /// <summary>
+        /// Wait for the last started Python process to exit.
+        /// Returns true if the process exited with code 0 within timeout.
+        /// GUI path uses the Exited event (async); this method is for tests.
+        /// </summary>
+        public bool WaitForExit(int timeoutMs = 60000)
+        {
+            var p = _lastProcess;
+            if (p == null) return false;
+            try
+            {
+                if (!p.HasExited)
+                {
+                    if (!p.WaitForExit(timeoutMs)) return false;
+                }
+                return p.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>

@@ -758,6 +758,83 @@ namespace PowerSimBuilder
         /// Programmatic equivalent of the "Create Simulation" button.
         /// Builds demo_main.py from the current canvas without showing a dialog.
         /// </summary>
+        /// <summary>
+        /// Programmatic equivalent of the Run button: execute demo_main.py via Python.
+        /// Expects simulation_signals.png to be produced next to the script.
+        /// </summary>
+        internal void Test_RunSimulation(string scriptPath)
+        {
+            // Test_RunSimulation v2: robust with retry + detailed diagnostics
+            Test_Log("Test_RunSimulation START: " + scriptPath);
+            if (!File.Exists(scriptPath))
+                throw new FileNotFoundException("Script not found", scriptPath);
+
+            var scriptDir = Path.GetDirectoryName(scriptPath) ?? ".";
+            var pngPath = Path.Combine(scriptDir, "simulation_signals.png");
+
+            // Delete existing PNG so we verify fresh production
+            try { File.Delete(pngPath); Test_Log("Deleted old PNG: " + pngPath); } catch { }
+
+            // Log resolved Python path (diagnose PATH differences)
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "where.exe",
+                    Arguments = "python",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                };
+                using var wp = System.Diagnostics.Process.Start(psi);
+                if (wp != null)
+                {
+                    var whereOut = wp.StandardOutput.ReadToEnd().Trim();
+                    wp.WaitForExit(5000);
+                    Test_Log("where python: " + whereOut.Replace("\r\n", " | ").Replace("\n", " | "));
+                }
+            }
+            catch (Exception ex) { Test_Log("where python failed: " + ex.Message); }
+
+            var executor = new PythonExecutor { SilentMode = true };
+            var runSw = System.Diagnostics.Stopwatch.StartNew();
+            var ok = executor.Run(scriptPath);
+            Test_Log("PythonExecutor.Run returned: " + ok);
+            if (ok)
+            {
+                // 50s timeout (xUnit outer 60s cushion)
+                var exited = executor.WaitForExit(50000);
+                runSw.Stop();
+                Test_Log($"WaitForExit: {exited} ({runSw.ElapsedMilliseconds}ms)");
+                if (!exited)
+                    throw new InvalidOperationException(
+                        $"Python process did not exit 0 within timeout ({runSw.ElapsedMilliseconds}ms)");
+            }
+
+            if (!ok)
+                throw new InvalidOperationException("PythonExecutor.Run returned false");
+
+            // Retry for up to 10s (filesystem flush + slow env)
+            for (int i = 0; i < 100; i++)
+            {
+                if (File.Exists(pngPath) && new FileInfo(pngPath).Length > 0) break;
+                System.Threading.Thread.Sleep(100);
+            }
+
+            if (!File.Exists(pngPath))
+            {
+                var files = Directory.Exists(scriptDir)
+                    ? string.Join(", ", Directory.GetFiles(scriptDir).Select(Path.GetFileName))
+                    : "(dir missing)";
+                throw new FileNotFoundException(
+                    $"simulation_signals.png not produced. Files in {scriptDir}: {files}",
+                    pngPath);
+            }
+
+            var size = new FileInfo(pngPath).Length;
+            Test_Log($"Test_RunSimulation OK: png={pngPath} ({size} bytes)");
+        }
+
         internal void Test_GenerateSimulation(string outputFilePath)
         {
             Test_Log("Test_GenerateSimulation START: " + outputFilePath);

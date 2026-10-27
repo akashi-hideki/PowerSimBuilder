@@ -151,6 +151,35 @@ public sealed class ProjectRoundTripTests
         }
     }
 
+    [Fact]
+    public void CreateFmuProject_WithSimulationPng_Succeeds()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(),
+            "psb_png_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var outputPath = Path.Combine(tmpDir, "withpng.psbproj");
+            var (exitCode, log) = RunHeadless("--test-create-fmu-project", outputPath);
+
+            Assert.True(File.Exists(outputPath),
+                $"Archive not created. exit={exitCode} log=\n{log}");
+
+            using var zip = ZipFile.OpenRead(outputPath);
+            Assert.NotNull(zip.GetEntry("project.json"));
+            Assert.NotNull(zip.GetEntry("generated/demo_main.py"));
+
+            var pngEntry = zip.GetEntry("generated/simulation_signals.png");
+            Assert.NotNull(pngEntry);
+            Assert.True(pngEntry!.Length > 1000,
+                $"PNG too small: {pngEntry.Length} bytes (likely empty plot)");
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
     private static string ExtractCoreJson(string archivePath)
     {
         using var zip = ZipFile.OpenRead(archivePath);
@@ -192,12 +221,19 @@ public sealed class ProjectRoundTripTests
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true,
-            WorkingDirectory = Path.GetTempPath(),
+            WorkingDirectory = TestPaths.ProjectRoot,
         };
         foreach (var a in args) psi.ArgumentList.Add(a);
 
         using var proc = Process.Start(psi);
         if (proc == null) throw new InvalidOperationException("Failed to start exe");
+
+        // Consume stdout/stderr to prevent pipe fill (otherwise child app blocks)
+        var captured = new System.Text.StringBuilder();
+        proc.OutputDataReceived += (s, e) => { if (e.Data != null) lock (captured) captured.AppendLine(e.Data); };
+        proc.ErrorDataReceived += (s, e) => { if (e.Data != null) lock (captured) captured.AppendLine(e.Data); };
+        proc.BeginOutputReadLine();
+        proc.BeginErrorReadLine();
 
         if (!proc.WaitForExit(60_000))
         {

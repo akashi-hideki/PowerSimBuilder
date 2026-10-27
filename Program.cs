@@ -221,7 +221,9 @@ namespace PowerSimBuilder
                     Directory.CreateDirectory(genDir);
                     var demoMainPath = Path.Combine(genDir, "demo_main.py");
                     form.Test_GenerateSimulation(demoMainPath);
-                    // Save .psbproj (bundles fresh generated/demo_main.py)
+                    // Run simulation to produce simulation_signals.png
+                    form.Test_RunSimulation(demoMainPath);
+                    // Save .psbproj (bundles fresh generated/demo_main.py + PNG)
                     form.Test_SaveProjectToPath(outputPath);
                     WriteLog("CREATE_SAVE_OK: " + outputPath);
                     Environment.ExitCode = 0;
