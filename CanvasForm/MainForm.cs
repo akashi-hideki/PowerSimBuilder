@@ -665,6 +665,14 @@ namespace PowerSimBuilder
 
             _canvasManager.AddComponent(descriptor, new System.Drawing.Point(200, 100));
             var components = _canvasManager.GetAllComponents();
+            // Improve visibility: set a meaningful instance name so demo_main.py
+            // uses "first order lag" as the dictionary key (matches demo script).
+            if (components.Count > 0)
+            {
+                var added = components[components.Count - 1];
+                added.InstanceName = "first order lag";
+                added.Name = "first order lag";
+            }
             Test_Log("Added component: count=" + components.Count);
             if (components.Count > 0)
             {
