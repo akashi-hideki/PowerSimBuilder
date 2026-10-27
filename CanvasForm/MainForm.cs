@@ -498,6 +498,57 @@ namespace PowerSimBuilder
             UpdateSaveStatus();
         }
 
+        /// <summary>
+        /// Create a demo project programmatically: FirstOrderLag + Dahlquist FMU metadata.
+        /// This validates the Canvas -> Save pipeline for FMU-attached components.
+        /// Note: actual Python code generation (FMU integration) is a separate concern.
+        /// </summary>
+        internal void Test_CreateFmuDemoProject(string savePath)
+        {
+            Test_Log("Test_CreateFmuDemoProject START: " + savePath);
+
+            // 1. Resolve Dahlquist entry via catalog (no manual FmuInfo building)
+            var userPhysicsRoot = PowerSimBuilder.Physics.PhysicsModelCatalog.DefaultRoot();
+            var entries = PowerSimBuilder.Physics.PhysicsModelCatalog.Scan(userPhysicsRoot);
+            var dahlquist = entries.FirstOrDefault(e =>
+                e.DisplayName.IndexOf("Dahlquist", StringComparison.OrdinalIgnoreCase) >= 0);
+            if (dahlquist == null)
+                throw new InvalidOperationException(
+                    "Dahlquist not found in catalog under: " + userPhysicsRoot);
+            Test_Log("Catalog: Dahlquist at " + dahlquist.FmuRelativePath
+                + " / " + dahlquist.Info.FmiType);
+
+            // 2. Clone FirstOrderLag descriptor (avoid mutating the shared dictionary)
+            var original = ComponentDescriptorDictionary.Descriptors.Values
+                .FirstOrDefault(d => string.Equals(d.Type, "FirstOrderLag", StringComparison.OrdinalIgnoreCase));
+            if (original == null)
+                throw new InvalidOperationException("FirstOrderLag descriptor not found");
+
+            var descriptor = new ComponentDescriptor
+            {
+                Name = "plant",
+                Type = original.Type,
+                Category = original.Category,
+                InputPorts = original.InputPorts,
+                OutputPorts = original.OutputPorts,
+                Parameters = original.Parameters,
+                PhysicsModelPath = dahlquist.FmuRelativePath,
+                FmiType = dahlquist.Info.FmiType,
+            };
+            Test_Log("Descriptor: FirstOrderLag + " + descriptor.PhysicsModelPath);
+
+            // 3. Add to canvas
+            _canvasManager.AddComponent(descriptor, new Point(200, 150));
+            var component = _canvasManager.GetAllComponents().Last();
+            component.InstanceName = "plant";
+            component.Name = "plant";
+            Test_Log("Component added: InstanceName='" + component.InstanceName + "'");
+
+            // 4. Save to .psbproj
+            SaveProjectToPath(savePath);
+            Test_Log("Test_CreateFmuDemoProject OK: " + savePath);
+        }
+
         internal void Test_SaveProjectToPath(string filePath)
         {
             Test_Log("Test_SaveProjectToPath START: " + filePath);
@@ -703,6 +754,37 @@ namespace PowerSimBuilder
         /// Phase B: programmatically build a simulation on the canvas with an
         /// FMU-embedded component (FirstOrderLag + Dahlquist).
         /// </summary>
+        /// <summary>
+        /// Programmatic equivalent of the "Create Simulation" button.
+        /// Builds demo_main.py from the current canvas without showing a dialog.
+        /// </summary>
+        internal void Test_GenerateSimulation(string outputFilePath)
+        {
+            Test_Log("Test_GenerateSimulation START: " + outputFilePath);
+            try
+            {
+                List<ComponentDescriptor> components = _canvasManager.UsedComponentDescriptors;
+                List<ComponentControl> componentInstances = _canvasManager.GetAllComponents();
+                List<Connection> connections = _canvasManager.Connections;
+                Test_Log($"  components={components.Count}, instances={componentInstances.Count}, connections={connections.Count}");
+
+                var builder = new PythonSimulationMainBuilder();
+                builder.FilePath = outputFilePath;
+                builder.Components = components;
+                builder.ComponentInstances = componentInstances;
+                builder.Connections = connections;
+                builder.ErrorHandler = (category, message) =>
+                    Test_Log($"  GEN_ERR[{category}]: {message}");
+                builder.BuildPythonSimulationFile();
+                Test_Log("Test_GenerateSimulation OK: " + outputFilePath);
+            }
+            catch (Exception ex)
+            {
+                Test_Log("Test_GenerateSimulation FAIL: " + ex.Message);
+                throw;
+            }
+        }
+
         internal void Test_CreateDemoSimulation()
         {
             Test_Log("Test_CreateDemoSimulation START");
