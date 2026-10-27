@@ -286,6 +286,99 @@ GUI: FirstOrderLag 配置 → Add Physics → Dahlquist → Insert → Create Si
 - BooleanNetwork1 混入のような「過去セッションのキャッシュ残留」は、新規プロジェクトから始めることで回避可能
 - GUI からのエラーは MessageBox を Ctrl+C で全文コピーできる（PowerShell 経由不要、罠 #46 回避）
 
+## workspace 実装 + プロジェクトデータ完全性確定（2026-10-27）
+
+**`.psbproj` 完全性を 10 テストで確定。次に workspace フォルダ実装（選択肢 A: デモ素材作成より先）。**
+
+### プロジェクトデータ完全性（10 tests green）
+
+| Phase | 内容 | テスト数 |
+|-------|------|:---:|
+| A | `.psbproj` ZIP save/load/round-trip | 3 |
+| B | Canvas 作成 → FMU 保存 → ロード | 2 |
+| B-2 | 配線 + パラメータ + 位置 + 閉ループ | 5 |
+| 合計 | 完全性検証 | **10 passed** |
+
+#### 検証済み項目
+
+| # | 項目 | 検証内容 |
+|---|------|---------|
+| 1 | 単一コンポーネント + FMU | FirstOrderLag + Dahlquist |
+| 2 | FMU 情報保持 | `physicsModelPath` / `fmiType` |
+| 3 | 2 回往復の安定性 | 構造が同一 |
+| 4 | Canvas 作成 → 保存 | `Test_CreateDemoSimulation` |
+| 5 | 作成 → 保存 → ロード | FMU 情報完全保持 |
+| 6 | 2 コンポーネント + 配線 | `gain.output → first order lag.input` |
+| 7 | パラメータ保持 | `gain=3.7`, `time_constant=2.5` |
+| 8 | 位置保持 | `(123,456)`, `(789,321)` |
+| 9 | 閉ループ 2 配線 | controller↔plant 双方向 |
+| 10 | ZIP 同梱物診断 | headless では空、実 GUI で入る |
+
+#### 新規 CLI テストフック
+
+| 引数 | 用途 |
+|------|------|
+| `--test-save-project <path>` | 空プロジェクト保存 |
+| `--test-load-save <in> <out>` | 読込 → 再保存 |
+| `--test-create-fmu-project <path>` | FirstOrderLag + Dahlquist |
+| `--test-create-two-comp-project <path>` | 2 コンポーネント + 1 配線 |
+| `--test-create-closed-loop-project <path>` | 閉ループ 2 配線 |
+| `--test-load-save-no-arrange <in> <out>` | 位置保持検証（ArrangeComponents スキップ） |
+
+#### 重要な発見
+
+**`Test_LoadProjectFromPath` の `ArrangeComponents()` が位置を上書き**するため、位置 round-trip 検証には `--test-load-save-no-arrange` を使用。`Test_DisableArrangeOnLoad` フラグで制御。
+
+### workspace 実装（選択肢 A、今夜〜明日）
+
+**方針**: デモ素材作成より先に workspace を実装（保存先の一貫性確保）。
+
+#### フォルダ構造
+
+```
+workspace/
+├── projects/                       # プロジェクト保存先
+│   └── <name>/
+│       ├── project.psbproj         # ZIP（保存用、配布可能）
+│       ├── project.json            # 展開済み（開発用）
+│       ├── components/*.py         # 展開済み（開発用）
+│       ├── generated/demo_main.py  # 展開済み（開発用）
+│       └── README.md
+├── components/                     # 共有コンポーネント（次回実装）
+└── README.md
+```
+
+#### 実装範囲（今夜）
+
+| # | タスク | 規模 |
+|---|--------|:---:|
+| 1 | `workspace/` フォルダ + `README.md` | S |
+| 2 | `AppSettings.WorkspaceRoot` 追加 | S |
+| 3 | `ProjectArchive.SaveAndExpand`（保存時自動展開） | M |
+| 4 | `MainForm` の Save/Load を workspace 対応 | M |
+| 5 | xUnit テスト（保存 → 展開の検証） | S |
+| 6 | `workspace/components/` 共有管理 | 次回 |
+
+#### デフォルト workspace 場所
+
+`%USERPROFILE%\Documents\PowerSimBuilder\workspace`（ユーザーごと、Git 管理外）。
+
+設定画面で変更可能（次回実装）。
+
+### 配布時の注意
+
+- headless テスト: `generated/` が空 → ZIP に `components/*.py` が入らない
+- 実 GUI: `generated/FirstOrderLag.py` 等あり → ZIP に同梱される
+- **受信者は `Create Simulation` を再実行** して `components/*.py` を再生成する推奨
+
+### 次のフェーズ
+
+1. **workspace 実装**（今夜〜明日）— 選択肢 A
+2. **デモ素材作成**（明日〜）— PID + FMU 閉ループの `.psbproj`
+3. 品質保証（11/2〜11/8）
+4. 公開準備（11/9〜11/14）
+5. **11/15 公開**
+
 ## v1.7.0 完了
 
 INSERT_BODY_START

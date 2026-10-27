@@ -229,3 +229,9 @@ Resources/generated_catalog.json
 docs/ip/LAWYER_CONSULTATION.md
 
 docs/ip/LAWYER_CANDIDATES.md
+
+# --- workspace (user projects, not tracked) ---
+workspace/projects/*
+!workspace/projects/.gitkeep
+workspace/components/*
+!workspace/components/.gitkeep
