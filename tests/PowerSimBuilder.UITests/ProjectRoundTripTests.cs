@@ -136,6 +136,97 @@ public sealed class ProjectRoundTripTests
         return System.Text.Encoding.UTF8.GetString(ms.ToArray());
     }
 
+    [Fact]
+    public void CreateFmuProject_SavesFmuInfo()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(),
+            "psb_create_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var outputPath = Path.Combine(tmpDir, "created.psbproj");
+            var (exitCode, log) = RunHeadless("--test-create-fmu-project", outputPath);
+
+            Assert.True(File.Exists(outputPath),
+                $"Archive not created. exit={exitCode} log=\n{log}");
+            Assert.Contains("CREATE_SAVE_OK", log);
+
+            using var zip = ZipFile.OpenRead(outputPath);
+            var entry = zip.GetEntry("project.json");
+            Assert.NotNull(entry);
+
+            using var stream = entry!.Open();
+            using var reader = new StreamReader(stream);
+            var doc = JsonDocument.Parse(reader.ReadToEnd());
+
+            var comps = doc.RootElement.GetProperty("components");
+            Assert.Equal(1, comps.GetArrayLength());
+
+            var comp0 = comps[0];
+            var instanceName = comp0.GetProperty("instanceName").GetString();
+            Assert.False(string.IsNullOrEmpty(instanceName), "instanceName must be set");
+
+            var physics = comp0.GetProperty("physicsModelPath").GetString();
+            Assert.False(string.IsNullOrEmpty(physics), "physicsModelPath must be set");
+            Assert.Contains("Dahlquist", physics);
+            Assert.Equal("CoSimulation", comp0.GetProperty("fmiType").GetString());
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
+    [Fact]
+    public void CreateFmuProject_ThenRoundTrip_PreservesPhysics()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(),
+            "psb_create_rt_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var createdPath = Path.Combine(tmpDir, "created.psbproj");
+            var (exit1, log1) = RunHeadless("--test-create-fmu-project", createdPath);
+            Assert.True(File.Exists(createdPath), $"Create failed. log=\n{log1}");
+
+            var roundtripPath = Path.Combine(tmpDir, "roundtrip.psbproj");
+            var (exit2, log2) = RunHeadless("--test-load-save", createdPath, roundtripPath);
+            Assert.True(File.Exists(roundtripPath), $"Round-trip failed. log=\n{log2}");
+
+            Assert.Equal(
+                ExtractPhysicsInfo(createdPath),
+                ExtractPhysicsInfo(roundtripPath));
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
+    private static string ExtractPhysicsInfo(string archivePath)
+    {
+        using var zip = ZipFile.OpenRead(archivePath);
+        var entry = zip.GetEntry("project.json");
+        using var stream = entry!.Open();
+        using var reader = new StreamReader(stream);
+        var doc = JsonDocument.Parse(reader.ReadToEnd());
+
+        using var ms = new MemoryStream();
+        using var writer = new Utf8JsonWriter(ms, new JsonWriterOptions { Indented = true });
+        writer.WriteStartArray();
+        foreach (var c in doc.RootElement.GetProperty("components").EnumerateArray())
+        {
+            writer.WriteStartObject();
+            writer.WriteString("instanceName", c.GetProperty("instanceName").GetString());
+            writer.WriteString("physicsModelPath", c.GetProperty("physicsModelPath").GetString());
+            writer.WriteString("fmiType", c.GetProperty("fmiType").GetString());
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+        writer.Flush();
+        return System.Text.Encoding.UTF8.GetString(ms.ToArray());
+    }
+
     private static (int ExitCode, string Log) RunHeadless(params string[] args)
     {
         var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");

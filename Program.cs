@@ -56,6 +56,10 @@ namespace PowerSimBuilder
                 // 引数なし → GUI 起動（従来動作）
                 I18nDumpUi.InstallAutoDump(); Application.Run(new StaTableImportForm());
             }
+            else if (args.Length >= 2 && args[0] == "--test-create-fmu-project")
+            {
+                RunHeadlessCreate(args[1]);
+            }
             else if (args.Length >= 2 && args[0] == "--test-save-project")
             {
                 RunHeadlessTest(args[1], null);
@@ -77,6 +81,67 @@ namespace PowerSimBuilder
         /// <summary>
         /// Headless test entry: load (optional) → save → exit. Writes log to %TEMP%.
         /// </summary>
+        /// <summary>
+        /// Headless: build a demo simulation (FirstOrderLag + Dahlquist FMU)
+        /// programmatically, then save. Writes log to %TEMP%.
+        /// </summary>
+        private static void RunHeadlessCreate(string outputPath)
+        {
+            var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");
+            try { File.Delete(logPath); } catch { }
+
+            void WriteLog(string msg)
+            {
+                try { File.AppendAllText(logPath, msg + "\n"); } catch { }
+            }
+
+            WriteLog("=== RunHeadlessCreate START ===");
+            WriteLog("outputPath = " + outputPath);
+
+            MainForm? form = null;
+            var done = false;
+
+            void Execute()
+            {
+                if (done) return;
+                done = true;
+                try
+                {
+                    WriteLog("Execute() entered");
+                    form!.Test_CreateDemoSimulation();
+                    form.Test_SaveProjectToPath(outputPath);
+                    WriteLog("CREATE_SAVE_OK: " + outputPath);
+                    Environment.ExitCode = 0;
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("FAIL: " + ex.Message);
+                    WriteLog("STACK: " + ex.StackTrace);
+                    Environment.ExitCode = 1;
+                }
+                finally
+                {
+                    try { form!.Close(); } catch { }
+                }
+            }
+
+            try
+            {
+                form = new MainForm();
+                WriteLog("MainForm constructed");
+                var timer = new System.Windows.Forms.Timer { Interval = 1500 };
+                timer.Tick += (s, e) => { timer.Stop(); Execute(); };
+                form.Shown += (s, e) => { WriteLog("Form.Shown fired"); timer.Start(); };
+                Application.Run(form);
+                WriteLog("=== Application.Run returned ===");
+            }
+            catch (Exception ex)
+            {
+                WriteLog("OUTER FAIL: " + ex.Message);
+                Environment.ExitCode = 1;
+            }
+        }
+
         private static void RunHeadlessTest(string savePath, string? loadPath)
         {
             var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");

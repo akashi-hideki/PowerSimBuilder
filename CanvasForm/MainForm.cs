@@ -637,6 +637,46 @@ namespace PowerSimBuilder
             }
         }
 
+        /// <summary>
+        /// Phase B: programmatically build a simulation on the canvas with an
+        /// FMU-embedded component (FirstOrderLag + Dahlquist).
+        /// </summary>
+        internal void Test_CreateDemoSimulation()
+        {
+            Test_Log("Test_CreateDemoSimulation START");
+            _canvasManager.Clear();
+            Test_Log("Canvas cleared");
+
+            var descriptor = new ComponentDescriptor
+            {
+                Name = "FirstOrderLag",
+                Type = "FirstOrderLag",
+                Category = "Simulation",
+                InputPorts = new[] { "input" },
+                OutputPorts = new[] { "output" },
+                PhysicsModelPath = "Dahlquist/source/Dahlquist.fmu",
+                FmiType = "CoSimulation",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new() { Name = "time_constant", Type = "float", DefaultValue = 1.0 },
+                    new() { Name = "initial_output", Type = "float", DefaultValue = 0.0 },
+                },
+            };
+
+            _canvasManager.AddComponent(descriptor, new System.Drawing.Point(200, 100));
+            var components = _canvasManager.GetAllComponents();
+            Test_Log("Added component: count=" + components.Count);
+            if (components.Count > 0)
+            {
+                var last = components[components.Count - 1];
+                Test_Log("  InstanceName=" + (last.InstanceName ?? "(null)"));
+                Test_Log("  PhysicsModelPath=" + (last.Descriptor.PhysicsModelPath ?? "(null)"));
+                Test_Log("  FmiType=" + (last.Descriptor.FmiType ?? "(null)"));
+            }
+
+            Test_Log("Test_CreateDemoSimulation OK");
+        }
+
         internal void Test_OpenEditorForInstance(string instanceName)
         {
             if (string.IsNullOrEmpty(instanceName)) return;
