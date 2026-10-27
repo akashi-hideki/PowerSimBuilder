@@ -56,6 +56,14 @@ namespace PowerSimBuilder
                 // 引数なし → GUI 起動（従来動作）
                 I18nDumpUi.InstallAutoDump(); Application.Run(new StaTableImportForm());
             }
+            else if (args.Length >= 2 && args[0] == "--test-save-project")
+            {
+                RunHeadlessTest(args[1], null);
+            }
+            else if (args.Length >= 3 && args[0] == "--test-load-save")
+            {
+                RunHeadlessTest(args[2], args[1]);
+            }
             else
             {
                 Application.Run(new MainForm());
@@ -66,6 +74,77 @@ namespace PowerSimBuilder
         /// StaTable XML を読み込み、controller_box.py を生成するバッチ処理。
         /// 戻り値: 0=成功, 1=パースエラー, 2=ファイルなし, 3=例外
         /// </summary>
+        /// <summary>
+        /// Headless test entry: load (optional) → save → exit. Writes log to %TEMP%.
+        /// </summary>
+        private static void RunHeadlessTest(string savePath, string? loadPath)
+        {
+            var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");
+            try { File.Delete(logPath); } catch { }
+
+            void WriteLog(string msg)
+            {
+                try { File.AppendAllText(logPath, msg + "\n"); } catch { }
+            }
+
+            WriteLog("=== RunHeadlessTest START ===");
+            WriteLog("savePath = " + savePath);
+            WriteLog("loadPath = " + (loadPath ?? "(null)"));
+
+            MainForm? form = null;
+            var done = false;
+
+            void Execute()
+            {
+                if (done) return;
+                done = true;
+                try
+                {
+                    WriteLog("Execute() entered");
+                    if (!string.IsNullOrEmpty(loadPath))
+                    {
+                        form!.Test_LoadProjectFromPath(loadPath!);
+                        WriteLog("Load OK: " + loadPath);
+                    }
+                    form!.Test_SaveProjectToPath(savePath);
+                    WriteLog(loadPath == null
+                        ? "SAVE_OK: " + savePath
+                        : "LOAD_SAVE_OK: " + loadPath + " -> " + savePath);
+                    Environment.ExitCode = 0;
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("FAIL: " + ex.Message);
+                    WriteLog("STACK: " + ex.StackTrace);
+                    Environment.ExitCode = 1;
+                }
+                finally
+                {
+                    try { form!.Close(); } catch { }
+                }
+            }
+
+            try
+            {
+                form = new MainForm();
+                WriteLog("MainForm constructed");
+                var timer = new System.Windows.Forms.Timer { Interval = 1500 };
+                timer.Tick += (s, e) => { timer.Stop(); Execute(); };
+                form.Shown += (s, e) =>
+                {
+                    WriteLog("Form.Shown fired");
+                    timer.Start();
+                };
+                Application.Run(form);
+                WriteLog("=== Application.Run returned ===");
+            }
+            catch (Exception ex)
+            {
+                WriteLog("OUTER FAIL: " + ex.Message);
+                Environment.ExitCode = 1;
+            }
+        }
+
         private static int RunStaTableBatch(string xmlPath, string outPath)
         {
             try

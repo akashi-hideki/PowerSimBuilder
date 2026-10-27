@@ -440,26 +440,15 @@ namespace PowerSimBuilder
             using (var dialog = new SaveFileDialog())
             {
                 dialog.Title = I18n.T("MainForm.SaveDialogTitle");
-                dialog.Filter = I18n.T("Common.FilterSimProject");
-                dialog.DefaultExt = ".json";
-                dialog.FileName = "system.json";
+                dialog.Filter = "PowerSimBuilder Project (*.psbproj)|*.psbproj|JSON (legacy) (*.json)|*.json";
+                dialog.DefaultExt = ProjectArchive.Extension;
+                dialog.FileName = "project" + ProjectArchive.Extension;
                 dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
                 try
                 {
-                    var model = _canvasManager.SaveModel();
-                    var options = new JsonSerializerOptions
-                    {
-                        WriteIndented = true,
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                        Converters = { new PointJsonConverter() }
-                    };
-
-                    var json = JsonSerializer.Serialize(model, options);
-                    File.WriteAllText(dialog.FileName, json);
-                    _canvasManager.IsModified = false;
-                    UpdateSaveStatus();
+                    SaveProjectToPath(dialog.FileName);
                 }
                 catch (Exception ex)
                 {
@@ -467,6 +456,49 @@ namespace PowerSimBuilder
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        /// <summary>
+        /// Save current canvas to path (ZIP if .psbproj, JSON otherwise).
+        /// Extracted from saveButton_Click for headless automation.
+        /// </summary>
+        private void SaveProjectToPath(string filePath)
+        {
+            var model = _canvasManager.SaveModel();
+            var projectName = Path.GetFileNameWithoutExtension(filePath);
+
+            if (filePath.EndsWith(ProjectArchive.Extension, StringComparison.OrdinalIgnoreCase))
+            {
+                var v2 = model.FromCanvasModel(projectName);
+                var archiveOptions = new ProjectArchive.ArchiveOptions
+                {
+                    IncludeComponents = true,
+                    IncludeGenerated = true,
+                    IncludeFmu = false,
+                };
+                ProjectArchive.Save(filePath, v2, archiveOptions);
+            }
+            else
+            {
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    Converters = { new PointJsonConverter() }
+                };
+                var json = JsonSerializer.Serialize(model, options);
+                File.WriteAllText(filePath, json);
+            }
+
+            _canvasManager.IsModified = false;
+            UpdateSaveStatus();
+        }
+
+        internal void Test_SaveProjectToPath(string filePath)
+        {
+            Test_Log("Test_SaveProjectToPath START: " + filePath);
+            SaveProjectToPath(filePath);
+            Test_Log("Test_SaveProjectToPath OK: " + filePath);
         }
 
         /// <summary>
@@ -478,8 +510,8 @@ namespace PowerSimBuilder
             using (var dialog = new OpenFileDialog())
             {
                 dialog.Title = I18n.T("MainForm.LoadDialogTitle");
-                dialog.Filter = I18n.T("Common.FilterSimProject");
-                dialog.DefaultExt = ".json";
+                dialog.Filter = "PowerSimBuilder Project (*.psbproj)|*.psbproj|JSON (legacy) (*.json)|*.json|All Files (*.*)|*.*";
+                dialog.DefaultExt = ProjectArchive.Extension;
                 dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
                 Test_LoadProjectFromPath(dialog.FileName);
@@ -491,17 +523,45 @@ namespace PowerSimBuilder
             try
             {
                 Test_Log("Test_LoadProjectFromPath START: " + path);
-                var json = File.ReadAllText(path);
-                Test_Log("JSON read OK: " + json.Length + " chars");
-
-                var options = new JsonSerializerOptions
+                CanvasModel model;
+                if (path.EndsWith(ProjectArchive.Extension, StringComparison.OrdinalIgnoreCase))
                 {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new PointJsonConverter() }
-                };
+                    // New: ZIP archive
+                    var (v2, extractDir) = ProjectArchive.Load(path, extractArtifacts: true);
+                    Test_Log($"ProjectArchive.Load OK: {v2.Components.Count} components, extract={extractDir}");
+                    model = v2.ToCanvasModel();
+                    Test_Log($"ToCanvasModel OK: Components={model.Components.Count}, Connections={model.Connections.Count}");
 
-                var model = JsonSerializer.Deserialize<CanvasModel>(json, options);
-                Test_Log("Deserialize OK: Components=" + (model?.Components?.Count ?? -1));
+                    // Extract generated/demo_main.py so that Create Simulation / Run can reuse it
+                    if (!string.IsNullOrEmpty(extractDir))
+                    {
+                        var extractedDemo = Path.Combine(extractDir, "generated", "demo_main.py");
+                        if (File.Exists(extractedDemo))
+                        {
+                            var localGenerated = Path.Combine(
+                                Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".",
+                                "generated");
+                            Directory.CreateDirectory(localGenerated);
+                            File.Copy(extractedDemo, Path.Combine(localGenerated, "demo_main.py"), overwrite: true);
+                            Test_Log("Extracted demo_main.py to generated/");
+                        }
+                    }
+                }
+                else
+                {
+                    // Legacy: single JSON file
+                    var json = File.ReadAllText(path);
+                    Test_Log("JSON read OK: " + json.Length + " chars");
+
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters = { new PointJsonConverter() }
+                    };
+
+                    model = JsonSerializer.Deserialize<CanvasModel>(json, options);
+                    Test_Log("Deserialize OK: Components=" + (model?.Components?.Count ?? -1));
+                }
 
                 _canvasManager.LoadModel(model);
                 Test_Log("LoadModel OK");
