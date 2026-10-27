@@ -457,7 +457,8 @@ text
 | 優先 | タスク | 規模 |
 |:---:|--------|:---:|
 | 🔴 | 公開デモプロジェクト生成（`demo_pid_closed_loop.psbproj`） | S |
-| 🔴 | workspace 統合（`workspace/components/` + `workspace/projects/`） | M |
+| ✅ | workspace 統合（Save/Open 初期位置 + AppSettings.WorkspaceRoot） | 完了（`5d012c9` / `7cc0c0e`） |
+| 🟡 | workspace 自動抽出（ZIP ロード時の `<name>/` 展開） | コメントのみ（`ProjectArchive.cs:223`） | S |
 | 🟠 | 閉ループデモ（PID + FMU）の自動化 | S |
 | 🟡 | 11/15 公開準備（README / 告知 / 品質保証） | — |
 
