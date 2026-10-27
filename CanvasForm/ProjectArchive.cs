@@ -62,7 +62,8 @@ namespace PowerSimBuilder
             {
                 var src = options.ComponentsSourceDir
                     ?? Path.Combine(Directory.GetCurrentDirectory(), "generated");
-                AddDirectoryToZip(zip, src, ComponentsDir, "*.py", recurse: false);
+                // v1.8.0: filter out simulation artifacts (demo_*, _*, *_dbg.py, *_powersim.py)
+                AddComponentFilesToZip(zip, src, ComponentsDir);
             }
 
             if (options.IncludeGenerated)
@@ -82,6 +83,39 @@ namespace PowerSimBuilder
                 var src = options.FmuSourceDir
                     ?? Path.Combine(Directory.GetCurrentDirectory(), "user_physics_models");
                 AddDirectoryToZip(zip, src, FmuDir, "*.*", recurse: true);
+            }
+        }
+
+        /// <summary>
+        /// Save the archive, then immediately extract it into the same directory
+        /// so that project.json + components/*.py are available for direct editing
+        /// and IDE access in workspace/projects/&lt;name&gt;/.
+        /// </summary>
+        public static void SaveAndExpand(string archivePath, ProjectFileV2 project, ArchiveOptions? options = null)
+        {
+            Save(archivePath, project, options);
+
+            // v1.8.0: extract into <basename>/ for per-project isolation
+            //   demo_pid.psbproj -> demo_pid/project.json, demo_pid/components/*.py
+            var archiveDir = Path.GetDirectoryName(archivePath);
+            if (string.IsNullOrEmpty(archiveDir) || !Directory.Exists(archiveDir)) return;
+
+            var basename = Path.GetFileNameWithoutExtension(archivePath);
+            if (string.IsNullOrEmpty(basename)) return;
+
+            var projectDir = Path.Combine(archiveDir, basename);
+
+            using var zip = ZipFile.OpenRead(archivePath);
+            foreach (var entry in zip.Entries)
+            {
+                if (string.IsNullOrEmpty(entry.Name)) continue;  // directory entry
+                // v1.8.0: extract project.json too (subdirectory extraction, not same-dir)
+
+                var targetPath = Path.Combine(projectDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
+                var targetDir = Path.GetDirectoryName(targetPath);
+                if (!string.IsNullOrEmpty(targetDir)) Directory.CreateDirectory(targetDir);
+
+                entry.ExtractToFile(targetPath, overwrite: true);
             }
         }
 
@@ -132,6 +166,28 @@ namespace PowerSimBuilder
             }
 
             return (project, extractDir);
+        }
+
+        /// <summary>
+        /// v1.8.0: Add only component .py files (excluding demo_*, _*, *_dbg.py, *_powersim.py).
+        /// Components are the building blocks; simulation artifacts go into generated/.
+        /// </summary>
+        private static void AddComponentFilesToZip(ZipArchive zip, string srcDir, string zipPrefix)
+        {
+            if (!Directory.Exists(srcDir)) return;
+
+            foreach (var file in Directory.EnumerateFiles(srcDir, "*.py", SearchOption.TopDirectoryOnly))
+            {
+                var name = Path.GetFileName(file);
+                // Exclude simulation artifacts
+                if (name.StartsWith("demo_")) continue;
+                if (name.StartsWith("_")) continue;
+                if (name.EndsWith("_dbg.py")) continue;
+                if (name.EndsWith("_powersim.py")) continue;
+                if (name.StartsWith("test_")) continue;
+
+                zip.CreateEntryFromFile(file, zipPrefix + name, CompressionLevel.Optimal);
+            }
         }
 
         private static void AddDirectoryToZip(

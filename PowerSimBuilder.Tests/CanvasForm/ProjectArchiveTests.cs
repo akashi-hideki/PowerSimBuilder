@@ -94,6 +94,66 @@ namespace PowerSimBuilder.Tests.CanvasForm
         }
 
         [Fact]
+        public void SaveAndExpand_ExtractsArtifacts()
+        {
+            var tmpDir = Path.Combine(Path.GetTempPath(),
+                "psb_expand_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            Directory.CreateDirectory(tmpDir);
+            try
+            {
+                var archivePath = Path.Combine(tmpDir, "project.psbproj");
+
+                var project = new ProjectFileV2
+                {
+                    Metadata = new ProjectMetadata
+                    {
+                        Name = "expand_test",
+                        Dt = 0.01,
+                        TEnd = 10.0,
+                    },
+                    Components = new List<ComponentInstanceV2>
+                    {
+                        new ComponentInstanceV2
+                        {
+                            InstanceName = "plant",
+                            Descriptor = new ComponentDescriptor
+                            {
+                                Name = "FirstOrderLag",
+                                Type = "FirstOrderLag",
+                            },
+                            Location = new PointData { X = 100, Y = 100 },
+                        },
+                    },
+                };
+
+                ProjectArchive.SaveAndExpand(archivePath, project, new ProjectArchive.ArchiveOptions
+                {
+                    IncludeComponents = false,
+                    IncludeGenerated = false,
+                    IncludeFmu = false,
+                });
+
+                // ZIP created
+                Assert.True(File.Exists(archivePath), "ZIP should exist");
+
+                // v1.8.0: VerifyProjectJsonInSubdir - project.json extracted to <basename>/
+                var subdir = Path.Combine(tmpDir, "project");
+                Assert.True(Directory.Exists(subdir), $"Subdir should exist: {subdir}");
+                Assert.True(File.Exists(Path.Combine(subdir, "project.json")),
+                    "project.json should be extracted into <basename>/");
+
+                // Round-trip still works
+                var (loaded, _) = ProjectArchive.Load(archivePath, extractArtifacts: false);
+                Assert.Equal("expand_test", loaded.Metadata.Name);
+                Assert.Equal(1, loaded.Components.Count);
+            }
+            finally
+            {
+                try { Directory.Delete(tmpDir, recursive: true); } catch { }
+            }
+        }
+
+        [Fact]
         public void Load_ThrowsOnMissingFile()
         {
             var missing = Path.Combine(Path.GetTempPath(),

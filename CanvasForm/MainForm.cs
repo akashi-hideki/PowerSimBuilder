@@ -443,7 +443,11 @@ namespace PowerSimBuilder
                 dialog.Filter = "PowerSimBuilder Project (*.psbproj)|*.psbproj|JSON (legacy) (*.json)|*.json";
                 dialog.DefaultExt = ProjectArchive.Extension;
                 dialog.FileName = "project" + ProjectArchive.Extension;
-                dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var workspaceProjects = Path.Combine(AppSettings.WorkspaceRoot, "projects");
+                try { Directory.CreateDirectory(workspaceProjects); } catch { }
+                dialog.InitialDirectory = Directory.Exists(workspaceProjects)
+                    ? workspaceProjects
+                    : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
                 try
@@ -476,7 +480,7 @@ namespace PowerSimBuilder
                     IncludeGenerated = true,
                     IncludeFmu = false,
                 };
-                ProjectArchive.Save(filePath, v2, archiveOptions);
+                ProjectArchive.SaveAndExpand(filePath, v2, archiveOptions);
             }
             else
             {
@@ -512,7 +516,10 @@ namespace PowerSimBuilder
                 dialog.Title = I18n.T("MainForm.LoadDialogTitle");
                 dialog.Filter = "PowerSimBuilder Project (*.psbproj)|*.psbproj|JSON (legacy) (*.json)|*.json|All Files (*.*)|*.*";
                 dialog.DefaultExt = ProjectArchive.Extension;
-                dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                var workspaceProjectsLoad = Path.Combine(AppSettings.WorkspaceRoot, "projects");
+                dialog.InitialDirectory = Directory.Exists(workspaceProjectsLoad)
+                    ? workspaceProjectsLoad
+                    : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
                 Test_LoadProjectFromPath(dialog.FileName);
             }

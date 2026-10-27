@@ -25,6 +25,17 @@ namespace PowerSimBuilder
         public static int ProxyPort { get; set; } = 0;
         public static List<string> AllowedUrls { get; set; } = new();
 
+        // ---- workspace (v1.8.0) ----
+        /// <summary>
+        /// Default workspace directory for project save/load.
+        /// Defaults to %USERPROFILE%\Documents\PowerSimBuilder\workspace.
+        /// </summary>
+        public static string WorkspaceRoot { get; set; } = DefaultWorkspaceRoot;
+
+        public static string DefaultWorkspaceRoot => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "PowerSimBuilder", "workspace");
+
         public static void Load()
         {
             try
@@ -71,6 +82,13 @@ namespace PowerSimBuilder
                     }
                     AllowedUrls = list;
                 }
+                // workspace (v1.8.0)
+                if (root.TryGetProperty("workspaceRoot", out var wrProp)
+                    && wrProp.ValueKind == JsonValueKind.String)
+                {
+                    var ws = wrProp.GetString();
+                    if (!string.IsNullOrEmpty(ws)) WorkspaceRoot = ws;
+                }
             }
             catch { /* best-effort */ }
         }
@@ -88,7 +106,8 @@ namespace PowerSimBuilder
                     downloadTimeoutSeconds = DownloadTimeoutSeconds,
                     proxyHost = ProxyHost ?? "",
                     proxyPort = ProxyPort,
-                    allowedUrls = AllowedUrls ?? new List<string>()
+                    allowedUrls = AllowedUrls ?? new List<string>(),
+                    workspaceRoot = WorkspaceRoot ?? ""
                 });
                 File.WriteAllText(_settingsPath, json);
             }
