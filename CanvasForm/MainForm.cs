@@ -518,6 +518,12 @@ namespace PowerSimBuilder
             }
         }
 
+        /// <summary>
+        /// When true, Test_LoadProjectFromPath skips ArrangeComponents(),
+        /// preserving loaded positions (used for location round-trip tests).
+        /// </summary>
+        internal bool Test_DisableArrangeOnLoad { get; set; } = false;
+
         internal void Test_LoadProjectFromPath(string path)
         {
             try
@@ -567,7 +573,8 @@ namespace PowerSimBuilder
                 Test_Log("LoadModel OK");
 
                 RepairGeneratedPaths(_canvasManager);
-                designCanvas1.ArrangeComponents();
+                if (!Test_DisableArrangeOnLoad)
+                    designCanvas1.ArrangeComponents();
                 UpdateSaveStatus();
                 UpdateUndoRedoButtons();
                 UpdateDeleteButton();
@@ -735,8 +742,14 @@ namespace PowerSimBuilder
             {
                 comps[0].InstanceName = "gain";
                 comps[0].Name = "gain";
+                comps[0].Parameters["gain"] = 3.7;  // B-2c: non-default
+                comps[0].Location = new System.Drawing.Point(123, 456);  // B-2d
+
                 comps[1].InstanceName = "first order lag";
                 comps[1].Name = "first order lag";
+                comps[1].Parameters["time_constant"] = 2.5;  // B-2c: non-default
+                comps[1].Parameters["initial_output"] = 0.5;  // B-2c: non-default
+                comps[1].Location = new System.Drawing.Point(789, 321);  // B-2d
             }
 
             // Connection: gain.output -> first order lag.input
@@ -744,6 +757,78 @@ namespace PowerSimBuilder
             Test_Log("Added connection: count=" + _canvasManager.Connections.Count);
 
             Test_Log("Test_CreateTwoComponentProject OK");
+        }
+
+        /// <summary>
+        /// Phase B-2e: closed-loop project (controller + plant + 2 wires).
+        /// Verifies bidirectional wiring survives round-trip.
+        /// </summary>
+        internal void Test_CreateClosedLoopProject()
+        {
+            Test_Log("Test_CreateClosedLoopProject START");
+            _canvasManager.Clear();
+
+            // Controller (PID)
+            var ctrlDesc = new ComponentDescriptor
+            {
+                Name = "ControllerBox",
+                Type = "ControllerBox",
+                Category = "Control",
+                InputPorts = new[] { "measurement" },
+                OutputPorts = new[] { "control" },
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new() { Name = "kp", Type = "float", DefaultValue = 2.0 },
+                    new() { Name = "ki", Type = "float", DefaultValue = 0.5 },
+                    new() { Name = "kd", Type = "float", DefaultValue = 0.05 },
+                },
+            };
+            _canvasManager.AddComponent(ctrlDesc, new System.Drawing.Point(100, 100));
+
+            // Plant (FirstOrderLag + Dahlquist FMU)
+            var plantDesc = new ComponentDescriptor
+            {
+                Name = "FirstOrderLag",
+                Type = "FirstOrderLag",
+                Category = "Simulation",
+                InputPorts = new[] { "input" },
+                OutputPorts = new[] { "output" },
+                PhysicsModelPath = "Dahlquist/source/Dahlquist.fmu",
+                FmiType = "CoSimulation",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new() { Name = "time_constant", Type = "float", DefaultValue = 1.0 },
+                    new() { Name = "initial_output", Type = "float", DefaultValue = 0.0 },
+                },
+            };
+            _canvasManager.AddComponent(plantDesc, new System.Drawing.Point(400, 100));
+
+            var comps = _canvasManager.GetAllComponents();
+            Test_Log("Closed loop: components=" + comps.Count);
+            if (comps.Count >= 2)
+            {
+                comps[0].InstanceName = "controller";
+                comps[0].Name = "controller";
+                comps[0].Parameters["kp"] = 2.5;
+                comps[0].Parameters["ki"] = 0.75;
+                comps[0].Parameters["kd"] = 0.1;
+                comps[0].Location = new System.Drawing.Point(100, 200);
+
+                comps[1].InstanceName = "plant";
+                comps[1].Name = "plant";
+                comps[1].Parameters["time_constant"] = 1.5;
+                comps[1].Parameters["initial_output"] = 0.0;
+                comps[1].Location = new System.Drawing.Point(500, 200);
+            }
+
+            // Closed loop:
+            //   controller.control -> plant.input
+            //   plant.output       -> controller.measurement
+            _canvasManager.AddConnection(comps[0], "control", comps[1], "input");
+            _canvasManager.AddConnection(comps[1], "output", comps[0], "measurement");
+            Test_Log("Closed loop: connections=" + _canvasManager.Connections.Count);
+
+            Test_Log("Test_CreateClosedLoopProject OK");
         }
 
         internal void Test_OpenEditorForInstance(string instanceName)

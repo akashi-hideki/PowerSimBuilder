@@ -286,6 +286,193 @@ public sealed class ProjectRoundTripTests
         }
     }
 
+    [Fact]
+    public void ParametersRoundTrip_PreservesValues()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(),
+            "psb_param_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var createdPath = Path.Combine(tmpDir, "created.psbproj");
+            var (_, log1) = RunHeadless("--test-create-two-comp-project", createdPath);
+            Assert.True(File.Exists(createdPath), $"Create failed. log=\n{log1}");
+
+            var roundtripPath = Path.Combine(tmpDir, "roundtrip.psbproj");
+            var (_, log2) = RunHeadless("--test-load-save", createdPath, roundtripPath);
+            Assert.True(File.Exists(roundtripPath), $"Round-trip failed. log=\n{log2}");
+
+            AssertParameters(createdPath);
+            AssertParameters(roundtripPath);
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
+    private static void AssertParameters(string archivePath)
+    {
+        using var zip = ZipFile.OpenRead(archivePath);
+        var entry = zip.GetEntry("project.json");
+        using var stream = entry!.Open();
+        using var reader = new StreamReader(stream);
+        var doc = JsonDocument.Parse(reader.ReadToEnd());
+
+        var comps = doc.RootElement.GetProperty("components");
+        Assert.Equal(2, comps.GetArrayLength());
+
+        var gainParams = comps[0].GetProperty("parameters");
+        Assert.True(gainParams.TryGetProperty("gain", out var gainVal));
+        Assert.Equal(3.7, AsDouble(gainVal), 2);
+
+        var lagParams = comps[1].GetProperty("parameters");
+        Assert.True(lagParams.TryGetProperty("time_constant", out var tcVal));
+        Assert.Equal(2.5, AsDouble(tcVal), 2);
+        Assert.True(lagParams.TryGetProperty("initial_output", out var ioVal));
+        Assert.Equal(0.5, AsDouble(ioVal), 2);
+    }
+
+    private static double AsDouble(JsonElement el)
+    {
+        if (el.ValueKind == JsonValueKind.Number) return el.GetDouble();
+        if (el.ValueKind == JsonValueKind.String)
+            return double.Parse(el.GetString()!, System.Globalization.CultureInfo.InvariantCulture);
+        return 0.0;
+    }
+
+    [Fact]
+    public void LocationsRoundTrip_PreservesPositions()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(),
+            "psb_loc_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var createdPath = Path.Combine(tmpDir, "created.psbproj");
+            var (_, log1) = RunHeadless("--test-create-two-comp-project", createdPath);
+            Assert.True(File.Exists(createdPath), $"Create failed. log=\n{log1}");
+
+            var roundtripPath = Path.Combine(tmpDir, "roundtrip.psbproj");
+            // Use no-arrange variant: ArrangeComponents in load path resets positions,
+            // which is a UI behavior separate from data fidelity.
+            var (_, log2) = RunHeadless("--test-load-save-no-arrange", createdPath, roundtripPath);
+            Assert.True(File.Exists(roundtripPath), $"Round-trip failed. log=\n{log2}");
+
+            AssertLocations(createdPath);
+            AssertLocations(roundtripPath);
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
+    private static void AssertLocations(string archivePath)
+    {
+        using var zip = ZipFile.OpenRead(archivePath);
+        var entry = zip.GetEntry("project.json");
+        using var stream = entry!.Open();
+        using var reader = new StreamReader(stream);
+        var doc = JsonDocument.Parse(reader.ReadToEnd());
+
+        var comps = doc.RootElement.GetProperty("components");
+        var loc0 = comps[0].GetProperty("location");
+        Assert.Equal(123, loc0.GetProperty("x").GetInt32());
+        Assert.Equal(456, loc0.GetProperty("y").GetInt32());
+
+        var loc1 = comps[1].GetProperty("location");
+        Assert.Equal(789, loc1.GetProperty("x").GetInt32());
+        Assert.Equal(321, loc1.GetProperty("y").GetInt32());
+    }
+
+    [Fact]
+    public void ClosedLoopProject_PreservesTwoConnections()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(),
+            "psb_cl_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var createdPath = Path.Combine(tmpDir, "created.psbproj");
+            var (_, log1) = RunHeadless("--test-create-closed-loop-project", createdPath);
+            Assert.True(File.Exists(createdPath), $"Create failed. log=\n{log1}");
+
+            var roundtripPath = Path.Combine(tmpDir, "roundtrip.psbproj");
+            var (_, log2) = RunHeadless("--test-load-save", createdPath, roundtripPath);
+            Assert.True(File.Exists(roundtripPath), $"Round-trip failed. log=\n{log2}");
+
+            AssertClosedLoop(createdPath);
+            AssertClosedLoop(roundtripPath);
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
+    private static void AssertClosedLoop(string archivePath)
+    {
+        using var zip = ZipFile.OpenRead(archivePath);
+        var entry = zip.GetEntry("project.json");
+        using var stream = entry!.Open();
+        using var reader = new StreamReader(stream);
+        var doc = JsonDocument.Parse(reader.ReadToEnd());
+
+        var comps = doc.RootElement.GetProperty("components");
+        Assert.Equal(2, comps.GetArrayLength());
+        Assert.Equal("controller", comps[0].GetProperty("instanceName").GetString());
+        Assert.Equal("plant", comps[1].GetProperty("instanceName").GetString());
+
+        var conns = doc.RootElement.GetProperty("connections");
+        Assert.Equal(2, conns.GetArrayLength());
+
+        var connList = new[] {
+            (conns[0].GetProperty("from").GetString(), conns[0].GetProperty("to").GetString()),
+            (conns[1].GetProperty("from").GetString(), conns[1].GetProperty("to").GetString()),
+        };
+        Assert.Contains(("controller.control", "plant.input"), connList);
+        Assert.Contains(("plant.output", "controller.measurement"), connList);
+    }
+
+    [Fact]
+    public void Archive_IncludesComponentsIfAvailable()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(),
+            "psb_zip_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var createdPath = Path.Combine(tmpDir, "created.psbproj");
+            var (_, log1) = RunHeadless("--test-create-two-comp-project", createdPath);
+            Assert.True(File.Exists(createdPath), $"Create failed. log=\n{log1}");
+
+            using var zip = ZipFile.OpenRead(createdPath);
+            var entries = zip.Entries.Select(e => e.FullName).ToList();
+            var entryList = string.Join(", ", entries);
+
+            Assert.Contains("project.json", entries);
+
+            var componentPy = entries.Where(e => e.StartsWith("components/") && e.EndsWith(".py")).ToList();
+            var generatedPy = entries.Where(e => e.StartsWith("generated/")).ToList();
+
+            Console.WriteLine($"=== ZIP entries ({entries.Count}) ===");
+            foreach (var e in entries) Console.WriteLine($"  {e}");
+            Console.WriteLine($"components/*.py: {componentPy.Count}");
+            Console.WriteLine($"generated/*: {generatedPy.Count}");
+
+            if (generatedPy.Count > 0)
+            {
+                Assert.True(componentPy.Count > 0,
+                    $"generated/ has files but components/ is empty: {entryList}");
+            }
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
     private static (int ExitCode, string Log) RunHeadless(params string[] args)
     {
         var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");

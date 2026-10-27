@@ -56,6 +56,10 @@ namespace PowerSimBuilder
                 // 引数なし → GUI 起動（従来動作）
                 I18nDumpUi.InstallAutoDump(); Application.Run(new StaTableImportForm());
             }
+            else if (args.Length >= 2 && args[0] == "--test-create-closed-loop-project")
+            {
+                RunHeadlessCreateClosedLoop(args[1]);
+            }
             else if (args.Length >= 2 && args[0] == "--test-create-two-comp-project")
             {
                 RunHeadlessCreateTwoComp(args[1]);
@@ -67,6 +71,10 @@ namespace PowerSimBuilder
             else if (args.Length >= 2 && args[0] == "--test-save-project")
             {
                 RunHeadlessTest(args[1], null);
+            }
+            else if (args.Length >= 3 && args[0] == "--test-load-save-no-arrange")
+            {
+                RunHeadlessTest(args[2], args[1], disableArrange: true);
             }
             else if (args.Length >= 3 && args[0] == "--test-load-save")
             {
@@ -89,6 +97,51 @@ namespace PowerSimBuilder
         /// Headless: build a demo simulation (FirstOrderLag + Dahlquist FMU)
         /// programmatically, then save. Writes log to %TEMP%.
         /// </summary>
+        private static void RunHeadlessCreateClosedLoop(string outputPath)
+        {
+            var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");
+            try { File.Delete(logPath); } catch { }
+            void WriteLog(string msg) { try { File.AppendAllText(logPath, msg + "\n"); } catch { } }
+            WriteLog("=== RunHeadlessCreateClosedLoop START ===");
+
+            MainForm? form = null;
+            var done = false;
+            void Execute()
+            {
+                if (done) return;
+                done = true;
+                try
+                {
+                    WriteLog("Execute() entered");
+                    form!.Test_CreateClosedLoopProject();
+                    form.Test_SaveProjectToPath(outputPath);
+                    WriteLog("CREATE_CLOSED_LOOP_OK: " + outputPath);
+                    Environment.ExitCode = 0;
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("FAIL: " + ex.Message);
+                    WriteLog("STACK: " + ex.StackTrace);
+                    Environment.ExitCode = 1;
+                }
+                finally { try { form!.Close(); } catch { } }
+            }
+
+            try
+            {
+                form = new MainForm();
+                var timer = new System.Windows.Forms.Timer { Interval = 1500 };
+                timer.Tick += (s, e) => { timer.Stop(); Execute(); };
+                form.Shown += (s, e) => { WriteLog("Form.Shown fired"); timer.Start(); };
+                Application.Run(form);
+            }
+            catch (Exception ex)
+            {
+                WriteLog("OUTER FAIL: " + ex.Message);
+                Environment.ExitCode = 1;
+            }
+        }
+
         private static void RunHeadlessCreateTwoComp(string outputPath)
         {
             var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");
@@ -191,7 +244,7 @@ namespace PowerSimBuilder
             }
         }
 
-        private static void RunHeadlessTest(string savePath, string? loadPath)
+        private static void RunHeadlessTest(string savePath, string? loadPath, bool disableArrange = false)
         {
             var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");
             try { File.Delete(logPath); } catch { }
@@ -241,7 +294,8 @@ namespace PowerSimBuilder
             try
             {
                 form = new MainForm();
-                WriteLog("MainForm constructed");
+                form.Test_DisableArrangeOnLoad = disableArrange;
+                WriteLog("MainForm constructed (disableArrange=" + disableArrange + ")");
                 var timer = new System.Windows.Forms.Timer { Interval = 1500 };
                 timer.Tick += (s, e) => { timer.Stop(); Execute(); };
                 form.Shown += (s, e) =>
