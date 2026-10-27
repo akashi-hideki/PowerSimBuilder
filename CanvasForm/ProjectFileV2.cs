@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace PowerSimBuilder
@@ -52,7 +52,7 @@ namespace PowerSimBuilder
         public ComponentDescriptor Descriptor { get; set; } = new();
 
         [JsonPropertyName("parameters")]
-        public Dictionary<string, object?> Parameters { get; set; } = new();
+        public Dictionary<string, object> Parameters { get; set; } = new();
 
         [JsonPropertyName("location")]
         public PointData Location { get; set; } = new();
