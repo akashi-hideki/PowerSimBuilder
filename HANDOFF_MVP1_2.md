@@ -379,6 +379,96 @@ workspace/
 4. 公開準備（11/9〜11/14）
 5. **11/15 公開**
 
+## 2026-10-27-e2e-complete 完了
+
+**完全 E2E 自動テスト 5 passed。Canvas→FMU→生成→実行→PNG→保存→ロード→検証を全自動化。**
+**コミット: `2fbcab5`（Phase A+B+C 完成、174 行追加）**
+
+### 最終到達点
+xUnit test
+→ exe 起動（--test-create-fmu-project <path>）
+→ Canvas に FirstOrderLag 配置 + Dahlquist FMU メタデータ
+→ demo_main.py 生成（fresh）
+→ Python 実行（MPLBACKEND=Agg）
+→ simulation_signals.png 生成（114,526 bytes、減衰波形）
+→ .psbproj 保存（project.json + components/ + generated/ + user_physics_models/ + manifest.json）
+→ ロード → 検証
+
+text
+
+### 解決した 5 つの連鎖問題（独立ではなく連鎖）
+
+| # | 症状 | 原因 | 解決 | 修正箇所 |
+|---|------|------|------|---------|
+| 1 | `Run` が 23ms で即 return | `DefaultExecutePythonScript` が非同期設計（`Exited` イベントで後処理） | `PythonExecutor.WaitForExit(ms)` 追加 | PythonExecutor.cs |
+| 2 | PNG が 0 バイト | retry ループが `File.Exists` のみで判定、書き込み途中で通過 | `new FileInfo(path).Length > 0` で再判定 | MainForm.cs |
+| 3 | 60s ハング（最重要） | **xUnit が子プロセスの stdout を読まずパイプ満杯** → app の `Console.WriteLine` ブロック → Python の `print` も永久ブロック | xUnit 側で `BeginOutputReadLine()` + `BeginErrorReadLine()` | ProjectRoundTripTests.cs |
+| 4 | MessageBox で UI ブロック | `Exited` イベントが UI スレッドに `MessageBox.Show` を `BeginInvoke` | `PythonExecutor.SilentMode=true` で抑制 | PythonExecutor.cs |
+| 5 | `plt.show()` でハング | 非対話環境で backend 自動選択失敗 | `MPLBACKEND=Agg` 環境変数強制（SilentMode 時） | PythonExecutor.cs |
+
+**罠**: 1 つだけ修正しても解決しない。**5 つ全ての同時対応が必要**だった。
+
+### 追加された主要 API
+
+| API | 用途 | ファイル |
+|-----|------|---------|
+| `PythonExecutor.SilentMode` | MessageBox 抑制 + MPLBACKEND=Agg | PythonExecutor.cs |
+| `PythonExecutor.WaitForExit(ms)` | Python プロセス終了待ち（テスト用） | PythonExecutor.cs |
+| `PythonExecutor.LastOutput` | stdout+stderr キャプチャ（診断用） | PythonExecutor.cs |
+| `MainForm.Test_CreateDemoSimulation()` | Canvas 配置（既存） | MainForm.cs |
+| `MainForm.Test_GenerateSimulation(path)` | コード生成 | MainForm.cs |
+| `MainForm.Test_RunSimulation(path)` | Python 実行 + PNG サイズ検証 | MainForm.cs |
+| `MainForm.Test_SaveProjectToPath(path)` | ZIP 保存 | MainForm.cs |
+| `MainForm.Test_LoadProjectFromPath(path)` | ZIP/JSON ロード（ZIP 対応拡張） | MainForm.cs |
+
+### CLI 引数
+
+| 引数 | 用途 |
+|------|------|
+| `--test-create-fmu-project <path>` | Canvas→生成→実行→保存（完全 E2E） |
+| `--test-load-save <in> <out>` | ロード→保存（往復検証） |
+| `--test-save-project <path>` | 空 Canvas 保存 |
+
+### xUnit 5 テスト（ProjectRoundTripTests.cs）
+
+| テスト | 検証内容 |
+|--------|---------|
+| `Fixture_Exists_And_HasFmuInfo` | FMU 付きフィクスチャの存在 + 内容 |
+| `Load_Fixture_Then_Save_PreservesFmuInfo` | 読込→保存で FMU 情報保持 |
+| `DoubleRoundTrip_IsIdempotent` | 2 回往復で構造安定（冪等性） |
+| `CreateFmuProject_WithGeneratedCode_Succeeds` | Canvas→生成→保存→検証 |
+| `CreateFmuProject_WithSimulationPng_Succeeds` | 実行→PNG(>1000B)→ZIP 同梱確認 |
+
+### 新規罠 #49 候補
+
+**xUnit が `RedirectStandardOutput=true` で子プロセス起動する場合、必ず `BeginOutputReadLine` / `BeginErrorReadLine` で消費しないとパイプ満杯（4KB）で子プロセスが永久ブロック**。WinForms の `Console.WriteLine` が原因になりやすい。GUI では通常問題にならないが、CLI テストでは顕在化。
+
+### 修正されたファイル
+
+| ファイル | 変更内容 |
+|---------|---------|
+| `CanvasForm/MainForm.cs` | Test_GenerateSimulation / Test_RunSimulation 追加、ZIP 保存/読込 |
+| `Program.cs` | --test-create-fmu-project / --test-load-save CLI、RunHeadlessCreate |
+| `SimulationGenerate/PythonExecutor.cs` | SilentMode / WaitForExit / LastOutput / MPLBACKEND |
+| `tests/PowerSimBuilder.UITests/ProjectRoundTripTests.cs` | 5 テスト、stdout/stderr 消費 |
+
+### 次のタスク（優先度順）
+
+| 優先 | タスク | 規模 |
+|:---:|--------|:---:|
+| 🔴 | 公開デモプロジェクト生成（`demo_pid_closed_loop.psbproj`） | S |
+| 🔴 | workspace 統合（`workspace/components/` + `workspace/projects/`） | M |
+| 🟠 | 閉ループデモ（PID + FMU）の自動化 | S |
+| 🟡 | 11/15 公開準備（README / 告知 / 品質保証） | — |
+
+### テスト数推移（2026-10-27）
+
+| 時点 | テスト |
+|------|:---:|
+| 開始 | 3 passed |
+| Phase B 完了 | 4 passed |
+| **Phase C 完了（現在）** | **5 passed** |
+
 ## v1.7.0 完了
 
 INSERT_BODY_START
@@ -992,6 +1082,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 46 | Python コードを PowerShell プロンプトに直接貼ると from / if / OLD / NEW 等が ParserError になる。python -c "..." は引用符エスケープ問題も重なる | Python スクリプトは必ず .py ファイルに保存して python ファイル.py で実行。python -c の長い式は避ける |
 | 47 | plt.show() は対話 backend で figure を破棄する。plt.savefig() の前に置くと空 PNG が保存される | plt.savefig() を必ず plt.show() より先に実行、または plt.show() を削除 |
 | 48 | plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる | plt.savefig() を必ず plt.show() より先に実行、または plt.show() を削除plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる |
+| 49 | xUnit が RedirectStandardOutput=true で子プロセス起動時、BeginOutputReadLine/BeginErrorReadLine で消費しないとパイプ満杯（4KB）で子プロセスが永久ブロック。WinForms の Console.WriteLine が原因になりやすい | Process.Start 後は必ず proc.BeginOutputReadLine() / proc.BeginErrorReadLine() を呼ぶ。SilentMode 時は Console.WriteLine 自体を抑制 |
 
 ## 次タスク候補
 
