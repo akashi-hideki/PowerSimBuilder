@@ -154,6 +154,82 @@ namespace PowerSimBuilder.Tests.CanvasForm
         }
 
         [Fact]
+        public void BundleFmusByLicense_IncludesDahlquistAndManifest()
+        {
+            // Locate repo root and user_physics_models
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "PowerSimBuilder.sln")))
+                dir = dir.Parent;
+            if (dir == null) return;  // skip if repo root not found
+
+            var userPhysicsModels = Path.Combine(dir.FullName, "user_physics_models");
+            var dahlquistFmu = Path.Combine(userPhysicsModels, "Dahlquist", "source", "Dahlquist.fmu");
+            if (!File.Exists(dahlquistFmu)) return;  // skip if FMU not present
+
+            var tmpDir = Path.Combine(Path.GetTempPath(),
+                "psb_bundle_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            Directory.CreateDirectory(tmpDir);
+            try
+            {
+                var archivePath = Path.Combine(tmpDir, "bundle.psbproj");
+
+                var project = new ProjectFileV2
+                {
+                    Metadata = new ProjectMetadata { Name = "bundle_test" },
+                    Components = new List<ComponentInstanceV2>
+                    {
+                        new ComponentInstanceV2
+                        {
+                            InstanceName = "plant",
+                            Descriptor = new ComponentDescriptor
+                            {
+                                Name = "FirstOrderLag",
+                                Type = "FirstOrderLag",
+                                PhysicsModelPath = "Dahlquist/source/Dahlquist.fmu",
+                                FmiType = "CoSimulation",
+                            },
+                            PhysicsModelPath = "Dahlquist/source/Dahlquist.fmu",
+                            FmiType = "CoSimulation",
+                            Location = new PointData { X = 100, Y = 100 },
+                        },
+                    },
+                };
+
+                ProjectArchive.Save(archivePath, project, new ProjectArchive.ArchiveOptions
+                {
+                    IncludeComponents = false,
+                    IncludeGenerated = false,
+                    IncludeFmu = false,
+                    IncludeFmusByLicense = true,
+                    UserPhysicsModelsRoot = userPhysicsModels,
+                    FmuBundleMaxSizeKB = 4096,
+                });
+
+                using var zip = ZipFile.OpenRead(archivePath);
+
+                // FMU should be bundled
+                var fmuEntry = zip.GetEntry("user_physics_models/Dahlquist/source/Dahlquist.fmu");
+                Assert.NotNull(fmuEntry);
+
+                // manifest.json should exist
+                var manifestEntry = zip.GetEntry("manifest.json");
+                Assert.NotNull(manifestEntry);
+
+                using var stream = manifestEntry!.Open();
+                using var reader = new StreamReader(stream);
+                var manifestJson = reader.ReadToEnd();
+
+                Assert.Contains("Dahlquist/source/Dahlquist.fmu", manifestJson);
+                Assert.Contains("BSD-2-Clause", manifestJson);
+                Assert.Contains("Modelica Association", manifestJson);
+            }
+            finally
+            {
+                try { Directory.Delete(tmpDir, true); } catch { }
+            }
+        }
+
+        [Fact]
         public void Load_ThrowsOnMissingFile()
         {
             var missing = Path.Combine(Path.GetTempPath(),

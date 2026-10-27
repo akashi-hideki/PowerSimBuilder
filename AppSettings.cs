@@ -36,6 +36,19 @@ namespace PowerSimBuilder
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             "PowerSimBuilder", "workspace");
 
+        // ---- FMU bundling (v1.8.0) ----
+        /// <summary>
+        /// Max FMU size (KB) to bundle in .psbproj if license is redistributable.
+        /// Larger FMUs go to manifest.externalFmus with a download URL.
+        /// </summary>
+        public static int FmuBundleMaxSizeKB { get; set; } = 4096;  // 4MB
+
+        /// <summary>
+        /// User physics models root (contains subdirs like Dahlquist/).
+        /// Defaults to walking up from exe to find user_physics_models.
+        /// </summary>
+        public static string UserPhysicsModelsRoot { get; set; } = "";
+
         public static void Load()
         {
             try
@@ -89,6 +102,19 @@ namespace PowerSimBuilder
                     var ws = wrProp.GetString();
                     if (!string.IsNullOrEmpty(ws)) WorkspaceRoot = ws;
                 }
+                // FMU bundling (v1.8.0)
+                if (root.TryGetProperty("fmuBundleMaxSizeKB", out var fmuSzProp)
+                    && fmuSzProp.ValueKind == JsonValueKind.Number
+                    && fmuSzProp.TryGetInt32(out var fmuSz) && fmuSz > 0)
+                {
+                    FmuBundleMaxSizeKB = fmuSz;
+                }
+                if (root.TryGetProperty("userPhysicsModelsRoot", out var upmProp)
+                    && upmProp.ValueKind == JsonValueKind.String)
+                {
+                    var upm = upmProp.GetString();
+                    if (!string.IsNullOrEmpty(upm)) UserPhysicsModelsRoot = upm;
+                }
             }
             catch { /* best-effort */ }
         }
@@ -107,7 +133,9 @@ namespace PowerSimBuilder
                     proxyHost = ProxyHost ?? "",
                     proxyPort = ProxyPort,
                     allowedUrls = AllowedUrls ?? new List<string>(),
-                    workspaceRoot = WorkspaceRoot ?? ""
+                    workspaceRoot = WorkspaceRoot ?? "",
+                    fmuBundleMaxSizeKB = FmuBundleMaxSizeKB,
+                    userPhysicsModelsRoot = UserPhysicsModelsRoot ?? ""
                 });
                 File.WriteAllText(_settingsPath, json);
             }
