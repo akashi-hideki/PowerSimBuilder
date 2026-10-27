@@ -107,6 +107,50 @@ public sealed class ProjectRoundTripTests
         }
     }
 
+    [Fact]
+    public void CreateFmuProject_WithGeneratedCode_Succeeds()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(),
+            "psb_gen_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var outputPath = Path.Combine(tmpDir, "full.psbproj");
+            var (exitCode, log) = RunHeadless("--test-create-fmu-project", outputPath);
+
+            Assert.True(File.Exists(outputPath),
+                $"Archive not created. exit={exitCode} log=\n{log}");
+
+            using var zip = ZipFile.OpenRead(outputPath);
+            Assert.NotNull(zip.GetEntry("project.json"));
+            Assert.NotNull(zip.GetEntry("generated/demo_main.py"));
+
+            // Fresh generated code content check
+            using var pyStream = zip.GetEntry("generated/demo_main.py")!.Open();
+            using var pyReader = new StreamReader(pyStream);
+            var pyCode = pyReader.ReadToEnd();
+            Assert.Contains("FirstOrderLag", pyCode);
+            Assert.Contains("first order lag", pyCode);
+
+            // Metadata check
+            using var projStream = zip.GetEntry("project.json")!.Open();
+            using var projReader = new StreamReader(projStream);
+            var doc = JsonDocument.Parse(projReader.ReadToEnd());
+            var comps = doc.RootElement.GetProperty("components");
+            Assert.True(comps.GetArrayLength() > 0);
+            Assert.Equal("first order lag",
+                comps[0].GetProperty("instanceName").GetString());
+            Assert.Contains("Dahlquist",
+                comps[0].GetProperty("physicsModelPath").GetString());
+            Assert.Equal("CoSimulation",
+                comps[0].GetProperty("fmiType").GetString());
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
     private static string ExtractCoreJson(string archivePath)
     {
         using var zip = ZipFile.OpenRead(archivePath);
