@@ -685,6 +685,67 @@ namespace PowerSimBuilder
             Test_Log("Test_CreateDemoSimulation OK");
         }
 
+        /// <summary>
+        /// Phase B-2: programmatically build a 2-component project with one
+        /// connection (Gain.output -> FirstOrderLag.input) to verify that
+        /// name-based wiring survives round-trip.
+        /// </summary>
+        internal void Test_CreateTwoComponentProject()
+        {
+            Test_Log("Test_CreateTwoComponentProject START");
+            _canvasManager.Clear();
+            Test_Log("Canvas cleared");
+
+            // Component 1: Gain (source)
+            var gainDesc = new ComponentDescriptor
+            {
+                Name = "Gain",
+                Type = "Gain",
+                Category = "Math",
+                InputPorts = new[] { "input" },
+                OutputPorts = new[] { "output" },
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new() { Name = "gain", Type = "float", DefaultValue = 2.0 },
+                },
+            };
+            _canvasManager.AddComponent(gainDesc, new System.Drawing.Point(100, 100));
+
+            // Component 2: FirstOrderLag (plant) with Dahlquist FMU
+            var lagDesc = new ComponentDescriptor
+            {
+                Name = "FirstOrderLag",
+                Type = "FirstOrderLag",
+                Category = "Simulation",
+                InputPorts = new[] { "input" },
+                OutputPorts = new[] { "output" },
+                PhysicsModelPath = "Dahlquist/source/Dahlquist.fmu",
+                FmiType = "CoSimulation",
+                Parameters = new List<ParameterDescriptor>
+                {
+                    new() { Name = "time_constant", Type = "float", DefaultValue = 1.0 },
+                    new() { Name = "initial_output", Type = "float", DefaultValue = 0.0 },
+                },
+            };
+            _canvasManager.AddComponent(lagDesc, new System.Drawing.Point(350, 100));
+
+            var comps = _canvasManager.GetAllComponents();
+            Test_Log("Added components: count=" + comps.Count);
+            if (comps.Count >= 2)
+            {
+                comps[0].InstanceName = "gain";
+                comps[0].Name = "gain";
+                comps[1].InstanceName = "first order lag";
+                comps[1].Name = "first order lag";
+            }
+
+            // Connection: gain.output -> first order lag.input
+            _canvasManager.AddConnection(comps[0], "output", comps[1], "input");
+            Test_Log("Added connection: count=" + _canvasManager.Connections.Count);
+
+            Test_Log("Test_CreateTwoComponentProject OK");
+        }
+
         internal void Test_OpenEditorForInstance(string instanceName)
         {
             if (string.IsNullOrEmpty(instanceName)) return;

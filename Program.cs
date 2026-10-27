@@ -56,6 +56,10 @@ namespace PowerSimBuilder
                 // 引数なし → GUI 起動（従来動作）
                 I18nDumpUi.InstallAutoDump(); Application.Run(new StaTableImportForm());
             }
+            else if (args.Length >= 2 && args[0] == "--test-create-two-comp-project")
+            {
+                RunHeadlessCreateTwoComp(args[1]);
+            }
             else if (args.Length >= 2 && args[0] == "--test-create-fmu-project")
             {
                 RunHeadlessCreate(args[1]);
@@ -85,6 +89,51 @@ namespace PowerSimBuilder
         /// Headless: build a demo simulation (FirstOrderLag + Dahlquist FMU)
         /// programmatically, then save. Writes log to %TEMP%.
         /// </summary>
+        private static void RunHeadlessCreateTwoComp(string outputPath)
+        {
+            var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");
+            try { File.Delete(logPath); } catch { }
+            void WriteLog(string msg) { try { File.AppendAllText(logPath, msg + "\n"); } catch { } }
+            WriteLog("=== RunHeadlessCreateTwoComp START ===");
+
+            MainForm? form = null;
+            var done = false;
+            void Execute()
+            {
+                if (done) return;
+                done = true;
+                try
+                {
+                    WriteLog("Execute() entered");
+                    form!.Test_CreateTwoComponentProject();
+                    form.Test_SaveProjectToPath(outputPath);
+                    WriteLog("CREATE_TWO_COMP_OK: " + outputPath);
+                    Environment.ExitCode = 0;
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("FAIL: " + ex.Message);
+                    WriteLog("STACK: " + ex.StackTrace);
+                    Environment.ExitCode = 1;
+                }
+                finally { try { form!.Close(); } catch { } }
+            }
+
+            try
+            {
+                form = new MainForm();
+                var timer = new System.Windows.Forms.Timer { Interval = 1500 };
+                timer.Tick += (s, e) => { timer.Stop(); Execute(); };
+                form.Shown += (s, e) => { WriteLog("Form.Shown fired"); timer.Start(); };
+                Application.Run(form);
+            }
+            catch (Exception ex)
+            {
+                WriteLog("OUTER FAIL: " + ex.Message);
+                Environment.ExitCode = 1;
+            }
+        }
+
         private static void RunHeadlessCreate(string outputPath)
         {
             var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");

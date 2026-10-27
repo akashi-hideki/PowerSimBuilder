@@ -227,6 +227,65 @@ public sealed class ProjectRoundTripTests
         return System.Text.Encoding.UTF8.GetString(ms.ToArray());
     }
 
+    [Fact]
+    public void CreateTwoComponentProject_PreservesConnections()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(),
+            "psb_2comp_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var createdPath = Path.Combine(tmpDir, "created.psbproj");
+            var (exit1, log1) = RunHeadless("--test-create-two-comp-project", createdPath);
+            Assert.True(File.Exists(createdPath), $"Create failed. log=\n{log1}");
+
+            // Round-trip
+            var roundtripPath = Path.Combine(tmpDir, "roundtrip.psbproj");
+            var (exit2, log2) = RunHeadless("--test-load-save", createdPath, roundtripPath);
+            Assert.True(File.Exists(roundtripPath), $"Round-trip failed. log=\n{log2}");
+
+            // Verify original: 2 components, 1 connection
+            using (var zip = ZipFile.OpenRead(createdPath))
+            {
+                var entry = zip.GetEntry("project.json");
+                using var stream = entry!.Open();
+                using var reader = new StreamReader(stream);
+                var doc = JsonDocument.Parse(reader.ReadToEnd());
+
+                var comps = doc.RootElement.GetProperty("components");
+                Assert.Equal(2, comps.GetArrayLength());
+                Assert.Equal("gain", comps[0].GetProperty("instanceName").GetString());
+                Assert.Equal("first order lag", comps[1].GetProperty("instanceName").GetString());
+
+                var conns = doc.RootElement.GetProperty("connections");
+                Assert.Equal(1, conns.GetArrayLength());
+                Assert.Equal("gain.output", conns[0].GetProperty("from").GetString());
+                Assert.Equal("first order lag.input", conns[0].GetProperty("to").GetString());
+            }
+
+            // Verify round-trip preserves connections
+            using (var zip = ZipFile.OpenRead(roundtripPath))
+            {
+                var entry = zip.GetEntry("project.json");
+                using var stream = entry!.Open();
+                using var reader = new StreamReader(stream);
+                var doc = JsonDocument.Parse(reader.ReadToEnd());
+
+                var comps = doc.RootElement.GetProperty("components");
+                Assert.Equal(2, comps.GetArrayLength());
+
+                var conns = doc.RootElement.GetProperty("connections");
+                Assert.Equal(1, conns.GetArrayLength());
+                Assert.Equal("gain.output", conns[0].GetProperty("from").GetString());
+                Assert.Equal("first order lag.input", conns[0].GetProperty("to").GetString());
+            }
+        }
+        finally
+        {
+            try { Directory.Delete(tmpDir, recursive: true); } catch { }
+        }
+    }
+
     private static (int ExitCode, string Log) RunHeadless(params string[] args)
     {
         var logPath = Path.Combine(Path.GetTempPath(), "PowerSimBuilder_TestSave.log");
