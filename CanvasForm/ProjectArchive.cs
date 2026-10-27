@@ -300,6 +300,82 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
+        /// v1.8.0 Round 3: Same as Load, but also returns manifest.json if present.
+        /// </summary>
+        public static (ProjectFileV2 Project, string? ExtractDir, FmuBundleManifest? Manifest)
+            LoadWithManifest(
+                string archivePath,
+                bool extractArtifacts = false,
+                string? extractTarget = null)
+        {
+            if (!File.Exists(archivePath))
+                throw new FileNotFoundException($"Archive not found: {archivePath}");
+
+            // First do the standard load (handles project.json + optional extraction)
+            var (project, extractDir) = Load(archivePath, extractArtifacts, extractTarget);
+
+            // Then read manifest.json separately (best-effort)
+            FmuBundleManifest? manifest = null;
+            try
+            {
+                using var fs = File.OpenRead(archivePath);
+                using var zip = new ZipArchive(fs, ZipArchiveMode.Read);
+                var mEntry = zip.GetEntry(ManifestEntry);
+                if (mEntry != null)
+                {
+                    using var es = mEntry.Open();
+                    using var reader = new StreamReader(es, Encoding.UTF8);
+                    manifest = JsonSerializer.Deserialize<FmuBundleManifest>(
+                        reader.ReadToEnd(), JsonOptions);
+                }
+            }
+            catch { /* manifest is optional */ }
+
+            return (project, extractDir, manifest);
+        }
+
+        /// <summary>
+        /// v1.8.0 Round 3: Return the subset of manifest.ExternalFmus whose
+        /// files are NOT found under either extractDir/user_physics_models/
+        /// or userPhysicsModelsRoot.
+        /// </summary>
+        public static List<ExternalFmu> CheckExternalFmus(
+            FmuBundleManifest? manifest,
+            string? extractDir = null,
+            string? userPhysicsModelsRoot = null)
+        {
+            var missing = new List<ExternalFmu>();
+            if (manifest?.ExternalFmus == null || manifest.ExternalFmus.Count == 0)
+                return missing;
+
+            var searchRoots = new List<string>();
+            if (!string.IsNullOrEmpty(extractDir))
+            {
+                var local = Path.Combine(extractDir, "user_physics_models");
+                if (Directory.Exists(local)) searchRoots.Add(local);
+            }
+            if (!string.IsNullOrEmpty(userPhysicsModelsRoot))
+                searchRoots.Add(userPhysicsModelsRoot);
+            else
+                searchRoots.Add(ResolveUserPhysicsModelsRoot());
+
+            foreach (var ext in manifest.ExternalFmus)
+            {
+                if (string.IsNullOrEmpty(ext.RelativePath)) continue;
+                var safeRel = ext.RelativePath.Replace('\\', '/');
+                bool found = false;
+                foreach (var root in searchRoots)
+                {
+                    if (string.IsNullOrEmpty(root) || !Directory.Exists(root)) continue;
+                    var candidate = Path.Combine(root, safeRel.Replace('/', Path.DirectorySeparatorChar));
+                    if (File.Exists(candidate)) { found = true; break; }
+                }
+                if (!found) missing.Add(ext);
+            }
+            return missing;
+        }
+
+        /// <summary>
         /// v1.8.0: Add only component .py files (excluding demo_*, _*, *_dbg.py, *_powersim.py).
         /// Components are the building blocks; simulation artifacts go into generated/.
         /// </summary>

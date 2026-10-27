@@ -522,7 +522,41 @@ namespace PowerSimBuilder
                     : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
                 Test_LoadProjectFromPath(dialog.FileName);
+
+                // v1.8.0 Round 3: notify user of missing external FMUs
+                if (Test_LastMissingExternalFmus.Count > 0)
+                {
+                    ShowMissingExternalFmuDialog(Test_LastMissingExternalFmus);
+                }
             }
+        }
+
+        /// <summary>
+        /// v1.8.0 Round 3: Dialog listing FMUs that were excluded from the
+        /// archive (size/license) and are not present locally.
+        /// </summary>
+        private void ShowMissingExternalFmuDialog(
+            System.Collections.Generic.List<ExternalFmu> missing)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("This project references FMU(s) that were not bundled in the archive:");
+            sb.AppendLine();
+            foreach (var ext in missing)
+            {
+                sb.AppendLine($"  \u2022 {ext.RelativePath}  ({ext.Reason})");
+                if (!string.IsNullOrEmpty(ext.LicenseId))
+                    sb.AppendLine($"    License: {ext.LicenseId}");
+                if (ext.SizeBytes > 0)
+                    sb.AppendLine($"    Size: {ext.SizeBytes / 1024} KB");
+                if (!string.IsNullOrEmpty(ext.DownloadUrl))
+                    sb.AppendLine($"    Download: {ext.DownloadUrl}");
+                sb.AppendLine($"    Place under: user_physics_models/{ext.RelativePath}");
+                sb.AppendLine();
+            }
+            sb.AppendLine("The project was loaded, but simulation may fail");
+            sb.AppendLine("until these FMUs are available.");
+            MessageBox.Show(this, sb.ToString(),
+                "Missing External FMU", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>
@@ -530,6 +564,13 @@ namespace PowerSimBuilder
         /// preserving loaded positions (used for location round-trip tests).
         /// </summary>
         internal bool Test_DisableArrangeOnLoad { get; set; } = false;
+
+        /// <summary>
+        /// v1.8.0 Round 3: Filled after Test_LoadProjectFromPath for UI to display.
+        /// Contains manifest.ExternalFmus that were not found under user_physics_models/.
+        /// </summary>
+        internal System.Collections.Generic.List<ExternalFmu> Test_LastMissingExternalFmus
+        { get; private set; } = new();
 
         internal void Test_LoadProjectFromPath(string path)
         {
@@ -539,11 +580,18 @@ namespace PowerSimBuilder
                 CanvasModel model;
                 if (path.EndsWith(ProjectArchive.Extension, StringComparison.OrdinalIgnoreCase))
                 {
-                    // New: ZIP archive
-                    var (v2, extractDir) = ProjectArchive.Load(path, extractArtifacts: true);
-                    Test_Log($"ProjectArchive.Load OK: {v2.Components.Count} components, extract={extractDir}");
+                    // New: ZIP archive + manifest
+                    var (v2, extractDir, manifest) = ProjectArchive.LoadWithManifest(path, extractArtifacts: true);
+                    Test_Log($"ProjectArchive.LoadWithManifest OK: {v2.Components.Count} components, extract={extractDir}");
                     model = v2.ToCanvasModel();
                     Test_Log($"ToCanvasModel OK: Components={model.Components.Count}, Connections={model.Connections.Count}");
+
+                    // v1.8.0 Round 3: check external FMUs
+                    Test_LastMissingExternalFmus =
+                        ProjectArchive.CheckExternalFmus(manifest, extractDir);
+                    Test_Log($"Missing external FMUs: {Test_LastMissingExternalFmus.Count}");
+                    foreach (var ext in Test_LastMissingExternalFmus)
+                        Test_Log($"  - {ext.RelativePath} ({ext.Reason}, license={ext.LicenseId})");
 
                     // Extract generated/demo_main.py so that Create Simulation / Run can reuse it
                     if (!string.IsNullOrEmpty(extractDir))
