@@ -333,12 +333,7 @@ if (filePath != null)
                 private string ApplySimTimeOverride(string code)
                 {
                     if (numSimTime == null) return code;
-                    string val = numSimTime.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    return System.Text.RegularExpressions.Regex.Replace(
-                        code,
-                        @"^(\s*)t_end\s*=\s*[\d.]+",
-                        m => $"{m.Groups[1].Value}t_end = {val}",
-                        System.Text.RegularExpressions.RegexOptions.Multiline);
+                    return SimTimeOverride.Apply(code, (double)numSimTime.Value);
                 }
                 private void BtnRun_Click(object sender, EventArgs e)
                 {
