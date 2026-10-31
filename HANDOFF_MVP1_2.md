@@ -1390,3 +1390,63 @@ python tools\release.py --auto patch --dry-run
 # 3. 実行 (タグ + Release が一発で完了)
 python tools\release.py --auto patch
 ```
+## 2026-10-31-oven-demo-plan（B プラン 2 日間計画）
+
+**オーブンデモの GUI 統合を 11/01〜11/02 の 2 日で慎重に実施。ルーチン作業は `tools/psb.ps1` で簡略化済み。**
+
+### 背景（実測）
+
+| 項目 | 状態 |
+|------|------|
+| OvenChamber Python 実装 | ✅ 存在（`src/python_runtime/components/`） |
+| OvenChamber パレット登録 | ❌ 未登録（`ComponentDescriptorDictionary.cs`） |
+| standalone デモ | ✅ `T=200.00°C`（`demo_statable_runtime_loop.py`） |
+| GUI 統合 | ❌ 未着手 |
+
+### Day 1（11/01）: OvenChamber パレット登録
+
+| Step | 内容 | 確認 |
+|---|---|---|
+| 1 | 既存 `ThermalMass` の登録パターン（20 行）を実測 | `Select-String ComponentDescriptorDictionary.cs -Pattern "ThermalMass" -Context 0,25` |
+| 2 | `OvenChamber` の Python API 確認（params / ports） | `.\tools\psb.ps1 show src\python_runtime\components\OvenChamber.py` |
+| 3 | `ComponentDescriptorDictionary.cs` に 20 行追加 | `.\tools\psb.ps1 insert-after ...` |
+| 4 | i18n キー追加（en/zh） | `python tools\i18n_check.py --fix` |
+| 5 | ビルド + パレット表示確認 | GUI で OvenChamber が見える |
+| 6 | commit | `.\tools\psb.ps1 finish "feat(palette): add OvenChamber to component palette"` |
+
+### Day 2（11/02）: GUI で閉ループ構成 → .psbproj 化
+
+| Step | 内容 | 確認 |
+|---|---|---|
+| 1 | GUI: OvenChamber + PID + ThermalMass 配置 | パレットからドラッグ |
+| 2 | 配線（PID.control → OvenChamber.heater_input 等） | Python API のポート名に依存 |
+| 3 | setpoint=200、PID ゲイン設定 | プロパティグリッド |
+| 4 | Create Simulation → Run | 波形（温度 / duty）確認 |
+| 5 | `.psbproj` 保存 → `examples/demos/oven_closed_loop.psbproj` | Save As |
+| 6 | README 追記（セクション 5） | VSCode |
+| 7 | commit | `.\tools\psb.ps1 finish "feat(demos): add oven_closed_loop.psbproj"` |
+
+### Day 2 失敗時のフォールバック
+
+- GUI 統合が PythonSimulationMainBuilder の I/O 認識で失敗する場合 → **standalone を公開デモの主役**に戻す（`demo_mcu_oven_cycle.py` を `examples/demos/` に配置）
+- `.psbproj` 化は 11/22 以降に延期（HANDOFF の従来計画通り）
+
+### 品質保証（11/03〜11/08）
+
+| # | タスク |
+|---|---|
+| 1 | E2E 全シナリオ（`ProjectRoundTripTests` 5 テスト + 新規） |
+| 2 | 中国語 UI 最終確認（`zh.json` 翻訳漏れ） |
+| 3 | README 全体整合性（セクション 1〜5） |
+| 4 | **11/08 GO/NO-GO 判定** |
+
+### ルーチン運用（新）
+
+| 用途 | コマンド |
+|---|---|
+| 状態確認 | `.\tools\psb.ps1 status` |
+| コミット+push+確認 | `.\tools\psb.ps1 finish "msg"` |
+| 文字列置換 | `.\tools\psb.ps1 replace file "old" "new"` |
+| 行挿入 | `.\tools\psb.ps1 insert-after file "anchor" "new"` |
+
+**罠 #4 / #10 / #20 / #33 / #37 は `psb.ps1` で構造的に回避。**

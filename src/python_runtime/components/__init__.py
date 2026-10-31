@@ -26,6 +26,7 @@ from .induction_motor import InductionMotor
 from .integrator import Integrator
 from .low_pass_filter import LowPassFilter
 from .mechanical_inertia import MechanicalInertia
+from .oven_chamber import OvenChamber
 from .over_current_detector import OverCurrentDetector
 from .pid_controller import PIDController
 from .power_source import PowerSource
@@ -58,6 +59,7 @@ __all__ = [
     "LowPassFilter",
     "MechanicalInertia",
     "OverCurrentDetector",
+    "OvenChamber",
     "PIDController",
     "PowerSource",
     "PWM3Phase",

@@ -309,6 +309,38 @@ namespace PowerSimBuilder
                         OutputPorts = new[] { "temperature", "heat_loss" }
                     }
                 },
+                {
+                    "OvenChamber", new ComponentDescriptor
+                    {
+                        Name = "OvenChamber",
+                        Type = "OvenChamber",
+                        Category = "Thermal",
+                        Parameters = new List<ParameterDescriptor>
+                        {
+                            new ParameterDescriptor { Name = "thermal_resistance", Type = "double", DefaultValue = 0.5 },
+                            new ParameterDescriptor { Name = "thermal_capacity", Type = "double", DefaultValue = 200.0 },
+                            new ParameterDescriptor { Name = "ambient_temperature", Type = "double", DefaultValue = 25.0 },
+                            new ParameterDescriptor { Name = "initial_temperature", Type = "double", DefaultValue = 25.0 },
+                            new ParameterDescriptor { Name = "heater_power_max", Type = "double", DefaultValue = 1000.0 },
+                            new ParameterDescriptor { Name = "sensor_offset_top", Type = "double", DefaultValue = 5.0 },
+                            new ParameterDescriptor { Name = "sensor_offset_bottom", Type = "double", DefaultValue = -5.0 }
+                        },
+                        InputPorts = new[]
+                        {
+                            "heater_top_duty",
+                            "heater_bottom_duty",
+                            "fan_duty"
+                        },
+                        OutputPorts = new[]
+                        {
+                            "oven_current_temp",
+                            "thermistor_top",
+                            "thermistor_middle",
+                            "thermistor_bottom",
+                            "heater_power"
+                        }
+                    }
+                },
                 // ============================================================
                 // Control
                 // ============================================================
