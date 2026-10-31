@@ -61,3 +61,19 @@
 - bdaa25d: PythonEditorForm Shown handler (first-launch layout race)
 - f9a9653: 3-layer regression guard (metadata + SimTimeOverride + FlaUI skeleton)
 - Save As i18n: MainForm.BtnSaveAs + MainForm.SaveAsDialogTitle (en/zh)
+
+## Appendix: setpoint sensitivity (experimental, 2026-11-03)
+
+Tested `oven_control.psbproj` with setpoint changed from 200 to 300.
+
+| setpoint | ss | err | peak | ovs% | settle |
+|---:|---:|---:|---:|---:|---:|
+| 200 (official) | 200.68 | -0.68 | 202.89 | 1.45 | 64.7s |
+| 300 (experimental) | 306.51 | -6.51 | 326.98 | 8.99 | 292.8s |
+
+**Finding**: `no_aw` tuning (kp=0.01, ki=0.0001, anti_windup=False) is optimized
+for setpoint=200. At setpoint=300 the saturation time (~80s) grows, integral
+windup accumulates without `anti_windup`, causing 27C overshoot and 4.5x slower settling.
+
+**Conclusion**: keep setpoint=200 for the public demo. setpoint-robust tuning
+(anti_windup=True + gain scheduling) is a post-release task.
