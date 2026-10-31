@@ -77,3 +77,42 @@ windup accumulates without `anti_windup`, causing 27C overshoot and 4.5x slower 
 
 **Conclusion**: keep setpoint=200 for the public demo. setpoint-robust tuning
 (anti_windup=True + gain scheduling) is a post-release task.
+
+## Day 3: Error Handling + Regression (2026-11-04)
+
+### Malformed .psbproj handling (8/8 passed via tools/qa_day3.ps1)
+
+| Case | Input | Exception caught | Result |
+|---|---|---|---|
+| A | non-existent file | `FileNotFoundException: Archive not found` | OK |
+| B | 0-byte file | `InvalidDataException: Central Directory corrupt` | OK |
+| C | non-ZIP text | `InvalidDataException: End of Central Directory record could not be found` | OK |
+| D | ZIP without project.json | `InvalidDataException: Missing project.json in archive` | OK |
+| E | malformed JSON | `JsonException: invalid start of a property name` | OK |
+
+### Other
+
+| Case | Result |
+|---|---|
+| F: empty project save | OK (file created) |
+| G: Python execution error | OK (exit=1) |
+| H: full regression (Category!=UI) | OK (526 passed / 2 skipped) |
+
+### Notes
+
+- Test_Log writes to `%TEMP%\PowerSimBuilder_TestLoad.log` (not bin/).
+- `--test-load-save <save> <load>`: first arg = save, second = load.
+- All 5 malformed-input cases throw specific exceptions, caught by Test_LoadProjectFromPath,
+  logged as FAILED, process exits cleanly (no crash, no hang).
+- `tools\qa_day3.ps1` automates all 8 cases (idempotent, cleans tmp/qa_day3 each run).
+
+### Cumulative (Day 1-3)
+
+| Layer | Coverage | Status |
+|---|---|---|
+| Functional demos | 4 demos, quantitative | 4/4 OK |
+| UI/UX | zh/en, Save As, numSimTime, buttons | OK |
+| Error handling | 8 cases (malformed, empty, syntax) | 8/8 OK |
+| Regression | Category!=UI full suite | 526 passed / 2 skipped |
+| E2E | ProjectRoundTrip | 5 passed |
+| i18n | T1/T2/T3 + key parity 349 | OK |
