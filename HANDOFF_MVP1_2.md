@@ -470,6 +470,58 @@ text
 | Phase B 完了 | 4 passed |
 | **Phase C 完了（現在）** | **5 passed** |
 
+## 2026-10-31-closed-loop-demos 完了
+
+**閉ループデモ 2 種の Git 永続化（`150dc87`）。公開ストーリー B の核心素材が確定。**
+
+### 本日の成果（Phase 1 + 2）
+
+| Phase | 内容 | 結果 | ファイル |
+|:---:|------|:---:|---------|
+| **1** | PID + FirstOrderLag（標準） | `y = 0.9738` | `examples/demos/demo_pid_first_order_lag.py` |
+| **2** | **StaTable 7層状態機械 + 外付け PID + ThermalMass** | **`T = 200.00°C`（完全追従）** | `examples/demos/demo_statable_runtime_loop.py` |
+
+### 重要な技術発見
+
+**`CookingHeaterController_powersim.py` の構造**:
+- 7 層ステートマシン（DriverInput/DriverOutput/MwMicrowave/MwOven/MwGrill/MwSteam/Application）
+- `build_runtime()` → `StaTableRuntime`（7 layer 統合）
+- `runtime.globals` に `oven_target_temp` / `oven_current_temp` / `heater_top_duty` 等を保持
+
+**StaTableRuntime API**（実測）:
+- `fire_event(layer_name, event_name, data=None)` ← 第1引数が層名
+- `tick(t, dt, sim_data)` ← 3引数必須
+- `mw.fire_event("OV_START")` → 層直接呼び出しも可
+- `enqueue(source_layer, event_name, data=None, target_layer=None)`
+
+**ControllerBox.py（`generated/`）は空テンプレート**:
+- `F_StartOvenPid` / `F_SetTopHeaterDuty` 等は `return 0` の stub
+- `STABLE_USER_CODE_START/END` マーカーが「実装者が埋める場所」
+
+### 実用的なハイブリッドパターン（公開ストーリー B の核心）
+StaTableRuntime（7層状態機械）
+→ runtime.globals でデータ共有
+→ 外付け PID（Python）が heater_top_duty を計算
+→ ThermalMass が heat_flow を受けて温度上昇
+→ oven_current_temp を runtime.globals に書き戻し（フィードバック）
+
+**「StaTable で状態遷移を設計、Python で制御数式を実装」** という現実的な統合方法を実証。
+
+### GUI 統合の課題（明日以降）
+
+- 現在の `PythonSimulationMainBuilder` は 7 層 StateMachine を知らない
+- GUI 経由では `ControllerBox.py`（stub）が使われ `T=25°C`（加熱なし）
+- 解決策: `ControllerBox.py` を StaTableRuntime ラッパーに変更、または GUI デモは設定のみで実行は standalone（公開デモは standalone を推奨）
+
+### 残タスク
+
+| 優先 | タスク | 期日 |
+|:---:|--------|:---:|
+| 🔴 | GUI 統合の判断（.psbproj 化 vs standalone 主役） | 11/01 |
+| 🔴 | 11/15 公開準備（README/告知文面） | 11/08 GO/NO-GO |
+| 🟠 | 品質保証（E2E 全シナリオ、中国語 UI） | 11/03〜11/08 |
+| 🟡 | `.gitignore` に `scripts/` 意図記載（罠 #46 応用） | 任意 |
+
 ## v1.7.0 完了
 
 INSERT_BODY_START
@@ -1085,115 +1137,51 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 48 | plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる | plt.savefig() を必ず plt.show() より先に実行、または plt.show() を削除plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる |
 | 49 | xUnit が RedirectStandardOutput=true で子プロセス起動時、BeginOutputReadLine/BeginErrorReadLine で消費しないとパイプ満杯（4KB）で子プロセスが永久ブロック。WinForms の Console.WriteLine が原因になりやすい | Process.Start 後は必ず proc.BeginOutputReadLine() / proc.BeginErrorReadLine() を呼ぶ。SilentMode 時は Console.WriteLine 自体を抑制 |
 
-## 次タスク候補
+## 次タスク候補（2026-10-31 時点）
 
-### 🔴 最優先（このスレッドの残作業）
+### 🔴 最優先（次スレッド着手）
 
-| # | タスク | 内容 |
-|---|--------|------|
-| 1 | **HANDOFF 更新コミット** | この内容で `HANDOFF_MVP1_2.md` を更新 |
-| 2 | **v1.2.3 タグ + Release** | L3 全緑を記念 |
-| 3 | **CI 設定** | `Category!=UI` をデフォルト、`Category=UI` は main push のみ |
+| # | タスク | 規模 | 期日 |
+|---|--------|:---:|:---:|
+| 1 | **GUI 統合の判断**: standalone 主役 vs .psbproj 化 | 判断 | 11/01 |
+| 2 | 11/15 公開準備（README / 告知文面） | M | 11/08 GO/NO-GO |
+| 3 | 品質保証（E2E 全シナリオ、中国語 UI） | M | 11/03〜11/08 |
 
-### 🟠 中優先（MVP-1.3 候補）
+### 🟠 中優先
 
 | # | タスク | 規模 |
-|---|--------|------|
-| 4 | 物理モデル削除 UI | M |
-| 5 | 既存ファイルを開いた時の `_physicsCache` 復元 | S |
-| 6 | 挿入前の確認ダイアログ | S |
-| 7 | Picker に検索/フィルタ | S |
+|---|--------|:---:|
+| 4 | workspace 自動抽出（`ProjectArchive.cs:223` コメントのみ実装） | S |
+| 5 | `.gitignore` に `scripts/` 意図記載（罠 #46 応用） | S |
+| 6 | FMU stepSize 警告解消（dt 0.001 vs 0.1） | S |
+| 7 | `.gitattributes` で罠 #4 恒久対策 | S |
 
 ### 🟡 低優先
 
 | # | タスク |
 |---|--------|
-| 8 | ハイライト色の設定化 |
-| 9 | `model.yaml` エディタ UI |
-| 10 | `AppServices.MessageBox` のモック化（`IMessageBox`） |
-
-### 🔴 高優先（MVP-2 / MVP-3）
-
-| # | タスク |
-|---|--------|
-| 11 | `.whl` / `.zip`（Python パッケージ取り込み）→ MVP-2 |
-| 12 | 非 Real 型 FMU の完全対応 → MVP-2 |
-| 13 | Modelica `.mo` ソース取り込み → MVP-3 |
-| 14 | サブプロセス分離（FMU 実行）→ MVP-4 |
-
-### 次スレッド最優先: MVP-β（モデルダウンロード補助）
-
-**v1.4.0 目標**。詳細仕様: `docs/PHYSICS_MODEL_DOWNLOAD.md` の MVP-β 章。
-
-#### 4 フェーズ計画
-
-| Phase | 内容 | 規模 |
-|-------|------|------|
-| **1** | `AppSettings` 拡張 + `FmuDownloader` + 5 tests（HTTP モック） | M |
-| **2** | `NetworkAccessDialog`（ダウンロード前の明示同意）+ 3 tests | S |
-| **3** | `PhysicsImportForm` に `TabControl`（File + URL）統合 | M |
-| **4** | i18n キー追加 + 手動確認 + v1.4.0 リリース | S |
-
-#### MVP-β スコープ（中国企業環境への配慮）
-
-| 機能 | MVP-β | MVP-γ |
-|------|-------|-------|
-| URL 入力 | OK | - |
-| ネットワーク確認ダイアログ | OK | - |
-| タイムアウト設定 | OK | - |
-| プロキシ設定（手動） | OK | - |
-| コミュニティミラー | - | OK |
-| カタログ（同梱 JSON） | - | OK |
-| 企業プロキシ自動検出 | - | OK |
-
-#### ダウンロード前の必須 UI（コンプライアンス）
-
-- **全 URL ダウンロードで `NetworkAccessDialog` を必ず表示**
-- 「常に許可」チェック時のみ `AppSettings.AllowedUrls` に追加
-- 設定画面で `AllowedUrls` を個別削除可能
-- レジストリに `sha256` がある場合、検証失敗で中止
-
-### MVP-β / MVP-γ（v1.3.0 で計画化）
-
-| フェーズ | 内容 | 規模 |
-|---------|------|------|
-| **MVP-β**（v1.4.0） | PhysicsImportForm に TabControl（File + URL）追加 + NetworkAccessDialog | M |
-| **MVP-γ**（v1.5.0） | Catalog タブ + DownloadSourceSettingsForm + ミラー/プロキシ設定 | M |
-
-設計方針: GitHub 公式を優先、企業プロキシ / コミュニティミラーはオプション。中国企業環境では Session 0 / ネットワークポリシー考慮。
-
-### 新規問題（別スレッド予定）: プロジェクト JSON 保存欠落
-
-v1.3.1 検証中に発見。MVP-β / MVP-γ 完了後に対処予定。
-
-#### 症状
-
-- プロジェクト保存（`system.json` 等）に **ControllerBox** や **物理モデル** の情報が保存されない
-- 保存 → 再オープンで情報欠落の可能性
-
-#### 調査対象
-
-| # | 対象 | ファイル |
-|---|------|---------|
-| 1 | `SaveModel` / `LoadModel` | `CanvasForm/CanvasManager.cs` |
-| 2 | `ComponentModel.Descriptor` シリアライズ | 同上 |
-| 3 | `ComponentDescriptor.PhysicsModelPath` / `FmiType` の `[JsonIgnore]` 有無 | `CanvasForm/PalletteDataDefine.cs` |
-| 4 | `RepairGeneratedPaths` の往復 | `CanvasForm/MainForm.cs` |
-| 5 | `PointJsonConverter` の往復 | `CanvasForm/PointJsonConverter.cs` |
-
-#### 再現手順（次スレッドで実施）
-
-1. ControllerBox を配置 → 保存 → JSON を開いて `generated_path` を確認
-2. 物理モデル挿入 → 保存 → JSON を開いて `PhysicsModelPath` / マーカー情報を確認
-3. 各ケースで欠落フィールドを特定
+| 8 | `THREAD_HANDOFF.md`（スナップショット）作成 |
+| 9 | 中国語 UI の翻訳漏れ最終確認 |
+| 10 | CHANGELOG 整備（v1.7.0 以降） |
 
 ## スコープ外（当面やらない）
 
+- GUI での 7 層 StateMachine 完全統合（M〜L サイズ、公開後でも可）
+- Modelica `.mo` ソース取り込み
+- サブプロセス分離（FMU 実行）
 - 物理モデルの依存関係自動解決
-- コメントの日本語化
-- 挿入位置のユーザー選択
-- `ModelExchange` 対応
-- PythonEditorForm 以外の挿入先
+
+## 現在の状態（2026-10-31 時点）
+
+| 項目 | 値 |
+|------|-----|
+| **origin/main** | `150dc87`（clean） |
+| **最新タグ** | `v1.7.0` |
+| **C# テスト** | 501 passed / 2 skipped |
+| **Python テスト** | 53 passed |
+| **E2E テスト** | 5 passed（`ProjectRoundTripTests`） |
+| **公開予定** | **11/15（土）**、11/08 GO/NO-GO |
+| **デモ素材** | 2 種（`examples/demos/`、`y=0.9738` / `T=200.00`） |
 
 ## 開始手順（次スレッド）
 
@@ -1203,45 +1191,51 @@ cd C:\dev\PowerSimBuilder
 # 1. 状態確認
 git status --short
 git log --oneline -5
-git tag -l "v1.2.*"
+git tag -l "v1.*" | Select-Object -Last 3
 
-# 2. 全テスト実行
-dotnet test --filter "FullyQualifiedName~Physics"
-dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
+# 2. ビルド + テスト（健全性確認）
+dotnet build
+dotnet test tests\PowerSimBuilder.UITests --filter "FullyQualifiedName~ProjectRoundTripTests" -v n
 
-# 3. GUI 起動
+# 3. デモ再現確認
+python examples\demos\demo_pid_first_order_lag.py
+python examples\demos\demo_statable_runtime_loop.py
+
+# 4. GUI 起動
 Start-Process .\bin\Debug\net10.0-windows\PowerSimBuilder.exe
 ```
 
 ## 開始プロンプト（次スレッド用）
 
 ```
-PowerSimBuilder v1.2.3（L3 FlaUI 全緑）の続きです。
-HANDOFF_MVP1_2.md を読んで、次タスクに着手してください。
+PowerSimBuilder v1.7.0 + 完全 E2E + 閉ループデモ 2 種完成後の続きです。
+HANDOFF_MVP1_2.md の「2026-10-31-closed-loop-demos 完了」と
+「次タスク候補（2026-10-31 時点）」を読んで、次タスクに着手してください。
 
 現状:
-- L3 FlaUI スモークテスト 3/3 Pass（v1.2.3 予定）
-- 解決策: Win32 EnumWindows + FromHandle（ShowInTaskbar=false 対策）
-- Physics tests: 81 passed
-- L3 UI tests: 3 passed
+- origin/main = 150dc87（clean）
+- 最新タグ = v1.7.0
+- E2E テスト 5 passed（Canvas→FMU→生成→実行→PNG→保存→ロード→検証）
+- デモ 2 種が examples/demos/ に Git 永続化済み:
+  * PID + FirstOrderLag: y = 0.9738
+  * StaTable 7層状態機械 + 外付けPID + ThermalMass: T = 200.00°C
+- workspace 統合は完了済み（UI: 5d012c9/7cc0c0e、自動抽出は任意）
+- 罠 #49 まで記録済み
 
-次タスク候補（優先度順）:
-1. HANDOFF 更新コミット（この内容を反映）
-2. v1.2.3 タグ + GitHub Release
-3. CI 設定: Category!=UI デフォルト、Category=UI は main push のみ
-4. MVP-1.3: 物理モデル削除 UI、既存ファイル _physicsCache 復元
+次タスク（優先順）:
+1. 【判断】GUI 統合: standalone 主役 vs .psbproj 化（11/01）
+2. 【M】11/15 公開準備（README / 告知文面 / 品質保証）
+3. 【S】workspace 自動抽出 / .gitattributes / stepSize 警告
+
+重要: 11/15 公開まで 15 日。11/08（土）が GO/NO-GO 判定日。
 
 パッチ運用の注意:
-- PowerShell 5.1 では式中に if を書かない
-- FlaUI は 4.0.0（5.0.0 は .NET Framework 専用）
-- 長い here-string は貼り付けで壊れる → VSCode 直接編集推奨
-- .NET 静的メソッドは絶対パス必須（Resolve-Path / Join-Path）
-
-まず HANDOFF 更新コミット → v1.2.3 タグ付けから着手してください。
+- 罠 #4: pre-commit auto-fix 後の再 add（本日 10 回中 9 回発動）
+- 罠 #46: Python コードを PowerShell に貼らない、必ず .py ファイル経由
+- 罠 #49: 子プロセス stdout は必ず BeginOutputReadLine で消費
+- 罠 #42: 実測ベースで記録（前セッション成果の見落とし注意）
+- PS 5.1 は BOM なし UTF-8 を CP932 誤認（罠 #37）→ VSCode で UTF-8 with BOM 保存
 ```
-
----
-
 ## 付録G: i18n JSON 検証ツール (tools/i18n_check.py)
 
 **目的**: i18n JSON のカンマ問題を **commit 時に自動修復** し、罠 #24 の再発を完全に封止する。
