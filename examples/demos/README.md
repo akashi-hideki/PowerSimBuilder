@@ -64,6 +64,33 @@ realistic hybrid pattern: StaTable handles the state machine, Python
 handles the math. This is the intended extension point in the
 `STABLE_USER_CODE` markers.
 
+
+### StaTable 7 層の役割
+
+| 層 | 役割 | イベント例 |
+|---|---|---|
+| DriverInput | センサ入力 | SENSOR_TICK, ZC_PULSE |
+| DriverOutput | ヒータ・ファン出力 | HEAT_START, FAN_PUMP_START |
+| MwMicrowave | 電子レンジ | MW_START, MW_ANODE_OK |
+| **MwOven** | **オーブン（PID 制御対象）** | **OV_START → PidHeating** |
+| MwGrill | グリル | GR_START, GR_OVERHEAT |
+| MwSteam | スチーム | ST_START, ST_PUMP_TICK |
+| Application | 調理シーケンス | SEQ_RECEIVED, STAGE_DONE |
+
+### ハイブリッドパターン（StaTable 連携の核心）
+
+StaTable handles state transitions; Python handles control math.
+`STABLE_USER_CODE_START/END` markers define the integration points.
+This separation allows independent validation of state logic (StaTable) and
+control tuning (Python).
+
+**Why standalone instead of `.psbproj`**: the current GUI does not directly
+support 7-layer state machines. `demo_statable_runtime_loop.py` is provided as a
+`python`-executable demo. GUI integration (`.psbproj`) is planned for a future version.
+
+**Public demo positioning**: StaTable integration is demonstrated by this standalone demo.
+GUI PID demo is demonstrated by `oven_control.psbproj`. They are complementary.
+
 ## 3. PID + First Order Lag 閉ループ（`.psbproj`、GUI デモ）
 
 **ファイル**: `pid_closed_loop.psbproj`

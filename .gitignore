@@ -238,3 +238,6 @@ workspace/components/*
 
 # PythonEditorForm temporary execution files
 generated/temp_*.py
+
+# .psbproj backup files
+*.psbproj.bak
