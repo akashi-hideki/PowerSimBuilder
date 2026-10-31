@@ -1,4 +1,6 @@
 $ErrorActionPreference = "Continue"
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$OutputEncoding = [Text.Encoding]::UTF8
 Write-Host ""
 Write-Host ("=" * 60) -ForegroundColor Cyan
 Write-Host "  FULL VERIFICATION" -ForegroundColor Cyan
