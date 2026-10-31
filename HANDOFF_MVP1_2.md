@@ -1136,6 +1136,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 47 | plt.show() は対話 backend で figure を破棄する。plt.savefig() の前に置くと空 PNG が保存される | plt.savefig() を必ず plt.show() より先に実行、または plt.show() を削除 |
 | 48 | plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる | plt.savefig() を必ず plt.show() より先に実行、または plt.show() を削除plot_config が存在しないコンポーネントを参照しても .get() で例外が出ず、白紙 PNG になる |
 | 49 | xUnit が RedirectStandardOutput=true で子プロセス起動時、BeginOutputReadLine/BeginErrorReadLine で消費しないとパイプ満杯（4KB）で子プロセスが永久ブロック。WinForms の Console.WriteLine が原因になりやすい | Process.Start 後は必ず proc.BeginOutputReadLine() / proc.BeginErrorReadLine() を呼ぶ。SilentMode 時は Console.WriteLine 自体を抑制 |
+| 52 | psbproj のキー大小文字混在: descriptor は PascalCase（`Name`/`Type`/`Category`/`Parameters`/`InputPorts`/`OutputPorts`）、connections は camelCase（`from`/`to`）。`c['descriptor']['type']` で `KeyError: 'type'` | `.get('type') or .get('Type')` で両対応。標準リーダー `tmp\_psbproj_read.py` を使用。インライン `python -c` は履歴から復元しづらいので避ける（罠 #46 併用） |
 
 ## 次タスク候補（2026-10-31 時点）
 
