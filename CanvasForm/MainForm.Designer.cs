@@ -103,7 +103,7 @@ namespace PowerSimBuilder
             this.saveAsButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.saveAsButton.Name = "saveAsButton";
             this.saveAsButton.Size = new System.Drawing.Size(70, 28);
-            this.saveAsButton.Text = "Save As...";
+            this.saveAsButton.Text = I18n.T("MainForm.BtnSaveAs");
             // 
             // loadButton
             // 

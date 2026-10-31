@@ -143,7 +143,7 @@ namespace PowerSimBuilder
             //
             // lblSimTime
             //
-            this.lblSimTime.AutoSize = true;
+            this.lblSimTime.AutoSize = false;
             this.lblSimTime.Location = new System.Drawing.Point(276, 13);
             this.lblSimTime.Name = "lblSimTime";
             this.lblSimTime.Size = new System.Drawing.Size(55, 15);
@@ -152,15 +152,17 @@ namespace PowerSimBuilder
             //
             // numSimTime
             //
-            this.numSimTime.DecimalPlaces = 1;
-            this.numSimTime.Increment = new decimal(new int[] { 5, 0, 0, 0 });
+            this.numSimTime.DecimalPlaces = 0;
+            this.numSimTime.Increment = new decimal(new int[] { 10, 0, 0, 0 });
             this.numSimTime.Location = new System.Drawing.Point(335, 10);
             this.numSimTime.Maximum = 3600m;
             this.numSimTime.Minimum = 0.1m;
             this.numSimTime.Name = "numSimTime";
+            this.numSimTime.ReadOnly = false;
+            this.numSimTime.Enabled = true;
             this.numSimTime.Size = new System.Drawing.Size(70, 23);
             this.numSimTime.TabIndex = 5;
-            this.numSimTime.Value = 5m;
+            this.numSimTime.Value = 300m;
             this.panelTop.TabIndex = 2;
             //
             // btnRun

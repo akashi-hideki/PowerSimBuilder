@@ -78,7 +78,24 @@ namespace PowerSimBuilder
             btnOpenFolder.Enabled = enableRunButtons;
             lblStatus.Visible = enableRunButtons;
 
-            if (filePath != null)
+            
+            // Re-apply button visibility after the form is fully shown.
+            // Fixes first-launch layout race (buttons hidden until language switch).
+            this.Shown += (s, e) =>
+            {
+                btnRun.Visible = enableRunButtons;
+                btnRun.BringToFront();
+                btnReload.Visible = enableRunButtons;
+                btnReload.BringToFront();
+                btnOpenFolder.Visible = enableRunButtons;
+                btnOpenFolder.BringToFront();
+                lblStatus.Visible = enableRunButtons;
+                panelTop.PerformLayout();
+                panelTop.Invalidate(true);
+                panelTop.Update();
+            };
+
+if (filePath != null)
             {
                 LoadFile();
             }

@@ -61,6 +61,8 @@
   "MainForm.BtnArrange": "Arrange Layout",
   "MainForm.BtnStaTableImport": "StaTable Import",
   "MainForm.SaveDialogTitle": "Save Project File",
+    "MainForm.BtnSaveAs": "Save As...",
+    "MainForm.SaveAsDialogTitle": "Save As",
   "MainForm.LoadDialogTitle": "Open Project File",
   "MainForm.SimSaveTitle": "Select save location for Python simulation",
   "MainForm.MsgSelectToEdit": "Please select a component to edit.",

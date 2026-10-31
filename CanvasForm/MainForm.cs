@@ -474,7 +474,7 @@ namespace PowerSimBuilder
             this.Activate();
             using (var dialog = new SaveFileDialog())
             {
-                dialog.Title = "Save As";
+                dialog.Title = I18n.T("MainForm.SaveAsDialogTitle");
                 dialog.Filter = "PowerSimBuilder Project (*.psbproj)|*.psbproj|JSON (legacy) (*.json)|*.json";
                 dialog.DefaultExt = ProjectArchive.Extension;
                 dialog.FileName = "project" + ProjectArchive.Extension;

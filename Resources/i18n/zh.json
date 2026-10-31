@@ -61,6 +61,8 @@
   "MainForm.BtnArrange": "排列布局",
   "MainForm.BtnStaTableImport": "StaTable 导入",
   "MainForm.SaveDialogTitle": "保存项目文件",
+    "MainForm.BtnSaveAs": "另存为...",
+    "MainForm.SaveAsDialogTitle": "另存为",
   "MainForm.LoadDialogTitle": "打开项目文件",
   "MainForm.SimSaveTitle": "选择 Python 仿真的保存位置",
   "MainForm.MsgSelectToEdit": "请选择要编辑的组件。",
