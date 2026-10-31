@@ -253,6 +253,25 @@ python tools\verify_controller_box.py examples\demos\oven_control_statable.psbpr
 
 `verify_controller_box.py` で gating の双方向動作（pass + block）を確認できます。
 
+### XML → generated Python → simulation (full pipeline)
+
+`oven_control_from_design_xml.psbproj` demonstrates the **full pipeline**:
+
+1. `tests/data/scenarios/cooking_heater/design.xml` (StaTable XML)
+2. `PowerSimBuilder.exe --statable-import design.xml generated/design_powersim.py`
+3. GUI: place Controller Box + PID + OvenChamber, wire, Save As `.psbproj`
+4. Run / verify: `ss=200.681°C, ovs=1.45%, settle=64.6s`
+
+```powershell
+.\bin\Debug\net10.0-windows\PowerSimBuilder.exe --statable-import `
+    tests\data\scenarios\cooking_heater\design.xml `
+    generated\design_powersim.py
+python tools\verify_statable_psbproj.py examples\demos\oven_control_from_design_xml.psbproj
+```
+
+The `Controller Box` uses `generated_path=generated/design_powersim.py` (per-instance),
+so multiple StaTable XMLs can coexist as separate `.psbproj` demos.
+
 ### ストーリー
 
 StaTable 7 層状態機械が安全ロジック（ドア開閉、過熱、シーケンス）を管理し、

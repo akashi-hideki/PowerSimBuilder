@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **StaTable gating demo** (`examples/demos/oven_control_statable.psbproj`)
   - `MwOven: PidHeating` gates PID output via `ControllerBox`
   - Quantitative: ss=200.68°C, ovs=1.45%, settle=64.6s (matches no_aw tuning)
+- **Full StaTable pipeline verified** (`oven_control_from_design_xml.psbproj`)
+  - `tests/data/scenarios/cooking_heater/design.xml` -> `--statable-import` -> `generated/design_powersim.py` -> GUI wiring -> Run
+  - Result: ss=200.681°C, ovs=1.45%, settle=64.6s (matches `no_aw` tuning)
+  - ControllerBox `generated_path` is per-instance, so multiple StaTable XMLs can coexist
 - **Verification tools**
   - `tools/verify_statable_psbproj.py` — `.psbproj` with ControllerBox
   - `tools/verify_controller_box.py` — gating pass/block proof
