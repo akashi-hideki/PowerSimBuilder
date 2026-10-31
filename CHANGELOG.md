@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -6,6 +6,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.8.0] - 2026-11-01
+
+### Added
+
+- **OvenChamber component** (`src/python_runtime/components/oven_chamber.py`)
+  - Wraps `ThermalMass` with oven-specific I/O: `heater_top_duty`, `heater_bottom_duty`,
+    `fan_duty` inputs; `oven_current_temp`, `thermistor_top/middle/bottom`, `heater_power` outputs
+  - Registered in palette (Category: Thermal)
+- **ControllerBox gating** (`controller_box.py`)
+  - `gate_layer` / `gate_states` / `gate_input_port` / `gate_output_port` parameters
+  - Generic Wrapper: `input_globals` / `output_globals` drive dynamic I/O
+  - `_resolve_generated_path` globs `*_powersim.py` for multi-instance support
+- **t_end persistence** (schema v2: `metadata.tEnd` / `metadata.dt`)
+  - `PythonEditorForm` NumericUpDown + `SimTimeChanged` event
+  - `.psbproj` round-trip verified (`ProjectFileV2MetadataTests`)
+- **StaTable gating demo** (`examples/demos/oven_control_statable.psbproj`)
+  - `MwOven: PidHeating` gates PID output via `ControllerBox`
+  - Quantitative: ss=200.68°C, ovs=1.45%, settle=64.6s (matches no_aw tuning)
+- **Verification tools**
+  - `tools/verify_statable_psbproj.py` — `.psbproj` with ControllerBox
+  - `tools/verify_controller_box.py` — gating pass/block proof
+  - `tools/inspect_controller_box.py` — ControllerBox diagnostics
+  - `tools/dump_sim_csv.py` / `tools/analyze_sim_csv.py` — CSV signal metrics
+- **Regression guards**
+  - `ProjectFileV2MetadataTests` (10) — tEnd default/serialize/round-trip/compat
+  - `SimTimeOverrideTests` (6) — t_end regex/indent/multiple/empty
+
+### Changed
+
+- `pid_closed_loop.psbproj`: IMC tuning (kp=1.0, ki=1.0, aw=True, out_max=2.0)
+  eliminates steady-state error (ss=0.991, settle=3.9s)
+- `oven_control.psbproj`: no_aw PID (kp=0.01, ki=0.0001, aw=False), setpoint=200
+- Demo `ROOT` path corrected for `examples/demos/` relocation
+
+### Fixed
+
+- **First-launch button visibility** (PythonEditorForm): `Shown` event re-applies
+  `Visible` + `PerformLayout()` for non-modal `Show()` layout race
+- **Save As i18n**: `MainForm.BtnSaveAs` / `MainForm.SaveAsDialogTitle` (en/zh)
+- **pytest basetemp**: `tmp/pytest` -> `.pytest_tmp` (CI fresh checkout fix;
+  `tmp/` is gitignored and missing on clean CI)
+- **CI red badge cleanup**: failed run from billing error removed
+
+### Known issues
+
+- CI workflows disabled (GitHub Actions billing); restore after public release
+- GUI generated code uses `dt=0.001` fixed; `metadata.dt` used by verify tools only
+
+---
 
 ## [0.9.0] - 2026-10-18
 

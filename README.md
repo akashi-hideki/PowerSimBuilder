@@ -3,10 +3,33 @@
 [![CI](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-496%20%2B%2042%20pass-green.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-526%20C%23%20%2B%205%20E2E%20%2B%2053%20Py%20pass-green.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Windows%20only-lightgrey.svg)]()
 
 **Visual simulation companion to [StaTable](https://github.com/akashi-hideki/StaTable) — load StaTable XML, build Python state-machine controllers, run end-to-end simulations with signal plots.**
+
+## Demos
+
+Five ready-to-run demos in `examples/demos/` (see [README](examples/demos/README.md)):
+
+| Demo | Type | Quantitative result |
+|---|---|---|
+| `demo_pid_first_order_lag.py` | standalone Python | `y = 0.9738` (target 1.0) |
+| `demo_statable_runtime_loop.py` | standalone Python (StaTable 7-layer) | `T = 200.00 degC` |
+| `pid_closed_loop.psbproj` | GUI project | ss=0.991, settle 3.9s |
+| `oven_control.psbproj` | GUI project (PID + OvenChamber) | ss=200.68, ovs=1.45%, settle 64.7s |
+| `oven_control_statable.psbproj` | GUI project (StaTable gating + PID + OvenChamber) | ss=200.68, ovs=1.45%, settle 64.6s |
+
+### StaTable gating demo (`oven_control_statable.psbproj`)
+
+The 7-layer StaTable state machine acts as a **safety interlock**: PID output
+reaches the plant only while `MwOven` is in `PidHeating`. Open the project in the GUI,
+click **Create Simulation**, then **Run**. Verify quantitatively:
+
+```powershell
+python tools\verify_statable_psbproj.py examples\demos\oven_control_statable.psbproj
+python tools\verify_controller_box.py examples\demos\oven_control_statable.psbproj
+```
 
 ---
 

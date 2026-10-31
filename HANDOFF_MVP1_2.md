@@ -1139,6 +1139,10 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 50 | `ShowDialog` は親 Form をモーダル無効化し、他ボタン（Save 等）が押せなくなる | 非モーダルで開くなら `Show(owner)`。`FormClosed` で `owner.Activate()` |
 | 51 | `MPLBACKEND=Agg` を `SilentMode` と連動させると GUI でもグラフウィンドウが消える（no-op） | `ForceHeadlessBackend` を分離。GUI は backend 指定なし（対話）、xUnit は `Agg` |
 | 52 | psbproj のキー大小文字混在: descriptor は PascalCase（`Name`/`Type`/`Category`/`Parameters`/`InputPorts`/`OutputPorts`）、connections は camelCase（`from`/`to`）。`c['descriptor']['type']` で `KeyError: 'type'` | `.get('type') or .get('Type')` で両対応。標準リーダー `tmp\_psbproj_read.py` を使用。インライン `python -c` は履歴から復元しづらいので避ける（罠 #46 併用） |
+| 53 | 新規コンポーネントを `ComponentDescriptorDictionary.cs` に追加してもパレットに出ない。`Pallets/ComponentDescriptors.xml` が既存だと XML から読むため | XML 削除 → GUI 再起動で `Descriptors` から再生成。または `AddComponentForm` で動的追加。`ComponentPaletteStorage.LoadOrCreateDefault()` 参照 |
+| 54 | `[IO.File]::ReadAllText` / `WriteAllText` は `Environment.CurrentDirectory` を見る。PowerShell の `cd` では変わらない（PS 5.1） | 必ず `(Resolve-Path ...).Path` で絶対パス化してから渡す |
+| 55 | `@'...'@` ヒアストリングは貼り付け中断（`^C`）で壊れる。`python -c "..."` 内の `{}` / `\"` も PS パーサーと衝突する | 行配列 `@('行1','行2') -join $eol` で構築。Python 呼び出しは .py ファイル経由（罠 #46 併用） |
+| 56 | 非モーダル `Show()` + `AutoScaleMode.Font` で初回レイアウト未確定 → ボタンが見えない。言語切替（`Application.Restart`）で解消する症状 | `Shown` イベントで `Visible` 再適用 + `panelTop.PerformLayout()` + `Invalidate(true)` |
 
 ## 次タスク候補（2026-10-31 時点）
 
