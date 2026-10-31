@@ -26,7 +26,7 @@
 - demo_pid_first_order_lag.py: ROOT = parent.parent.parent（examples/demos 移動対応）
 - demo_statable_runtime_loop.py: 同上
 
-## Day 2: UI/UX Quality (2026-11-03)
+## Day 2: UI/UX Quality (2026-10-31)
 
 ### Language switch (zh/en)
 
@@ -78,7 +78,7 @@ windup accumulates without `anti_windup`, causing 27C overshoot and 4.5x slower 
 **Conclusion**: keep setpoint=200 for the public demo. setpoint-robust tuning
 (anti_windup=True + gain scheduling) is a post-release task.
 
-## Day 3: Error Handling + Regression (2026-11-04)
+## Day 3: Error Handling + Regression (2026-10-31)
 
 ### Malformed .psbproj handling (8/8 passed via tools/qa_day3.ps1)
 
