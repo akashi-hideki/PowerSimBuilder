@@ -25,3 +25,39 @@
 
 - demo_pid_first_order_lag.py: ROOT = parent.parent.parent（examples/demos 移動対応）
 - demo_statable_runtime_loop.py: 同上
+
+## Day 2: UI/UX Quality (2026-11-03)
+
+### Language switch (zh/en)
+
+| Item | Result | Notes |
+|---|---|---|
+| Toolbar Save As (zh) | OK | 「另存为...」 |
+| Toolbar Save As (en) | OK | 「Save As...」 |
+| Save As dialog title (zh) | OK | 「另存为」 |
+| Save As dialog title (en) | OK | 「Save As」 |
+
+### PythonEditorForm layout (after Shown fix)
+
+| Item | Result | Notes |
+|---|---|---|
+| btnRun visible (1st launch) | OK | Shown handler fix confirmed |
+| btnReload visible | OK | |
+| btnOpenFolder visible | OK | |
+| numSimTime input | OK | Direct type + Enter, 10-step ▲▼ |
+| numSimTime restore (tEnd=300) | OK | |
+| Run -> matplotlib window | OK | Trap #51 non-recurrence |
+
+### Automated tests added (regression guards)
+
+| Test | Passed | Coverage |
+|---|---|---|
+| ProjectFileV2MetadataTests | 10 | tEnd default/serialize/round-trip/compat |
+| SimTimeOverrideTests | 6 | t_end regex/indent/multiple/empty |
+| I18nComplianceTests (T1/T2/T3) | 3 | key parity + references + Form titles |
+
+### Fixes applied (Day 2)
+
+- bdaa25d: PythonEditorForm Shown handler (first-launch layout race)
+- f9a9653: 3-layer regression guard (metadata + SimTimeOverride + FlaUI skeleton)
+- Save As i18n: MainForm.BtnSaveAs + MainForm.SaveAsDialogTitle (en/zh)
