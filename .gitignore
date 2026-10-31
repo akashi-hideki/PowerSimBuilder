@@ -241,3 +241,6 @@ generated/temp_*.py
 
 # .psbproj backup files
 *.psbproj.bak
+
+# pytest basetemp (root-level)
+.pytest_tmp/
