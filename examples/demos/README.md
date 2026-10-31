@@ -64,16 +64,6 @@ realistic hybrid pattern: StaTable handles the state machine, Python
 handles the math. This is the intended extension point in the
 `STABLE_USER_CODE` markers.
 
-## Prerequisites
-
-- Python 3.13
-- fmpy, matplotlib, numpy
-- `pip install -e .` in the repo root
-
-## License
-
-Apache-2.0
-
 ## 3. PID + First Order Lag 閉ループ（`.psbproj`、GUI デモ）
 
 **ファイル**: `pid_closed_loop.psbproj`
@@ -104,3 +94,99 @@ python tmp\_psbproj_read.py examples\demos\pid_closed_loop.psbproj
 \`\`\`
 
 descriptor=PascalCase / connections=camelCase（罠 #52 対応済み）
+## 4. OvenChamber + PID 閉ループ（`.psbproj`、GUI デモ）
+
+**ファイル**: `oven_control.psbproj`
+
+OvenChamber（StaTable オーブン庫内温度モデル）+ PID 制御の閉ループデモ。
+ThermalMass を内部にラップし、ヒータ duty から庫内温度を計算します。
+
+| 構成 | 内容 |
+|---|---|
+| コンポーネント | `OvenChamber` + `PID Controller` |
+| 配線 | `PID.control → OvenChamber.heater_top_duty` / `OvenChamber.oven_current_temp → PID.measured` |
+| setpoint | 200.0 °C |
+| t_end | 300.0 s（`.psbproj` の `metadata.tEnd` に永続化） |
+
+### PID パラメータ（no_aw チューニング）
+
+| パラメータ | 値 | 根拠 |
+|---|---:|---|
+| kp | 0.01 | IMC ベース |
+| ki | 0.0001 | τ=100s に整合 |
+| kd | 0.0 | 1 次遅れのため不要 |
+| anti_windup | False | オーバーシュート最小化 |
+
+### OvenChamber パラメータ（既定値）
+
+| パラメータ | 値 | 意味 |
+|---|---:|---|
+| thermal_resistance | 0.5 K/W | 断熱性能 |
+| thermal_capacity | 200 J/K | 庫内熱容量 |
+| ambient_temperature | 25.0 °C | 室温 |
+| initial_temperature | 25.0 °C | 初期温度 |
+| heater_power_max | 1000.0 W | ヒータ最大電力 |
+
+### 期待される波形
+
+| 指標 | 値 |
+|---|---|
+| 初期温度 | 25.0 °C |
+| ピーク | 202.9 °C（オーバーシュート 1.45%） |
+| 整定時間 | ~65 s（±2% バンド） |
+| 定常値 | 200.68 °C（誤差 -0.68°C） |
+
+温度が 25 → 200°C に上昇後、duty が 1.0 → ~0.35 に低下して安定（放熱との平衡）。
+
+### 再現手順
+
+1. `PowerSimBuilder.exe` 起動
+2. **File → Open** → `examples\demos\oven_control.psbproj`
+3. **Create Simulation**（非モーダルでエディタが開く）
+4. `t_end (s):` が **300** で復元されていることを確認
+5. **Run** → matplotlib グラフウィンドウに温度・制御波形
+
+### 中身検証
+
+```powershell
+python tools\inspect_psbproj.py examples\demos\oven_control.psbproj
+```
+
+期待出力:
+
+```
+tEnd=300 dt=0.001 components=2 connections=2
+PID Controller: {'kp': 0.01, 'ki': 0.0001, ..., 'anti_windup': False, 'setpoint': 200}
+OvenChamber: {'thermal_resistance': 0.5, 'thermal_capacity': 200, ...}
+```
+
+### PID パラメータの定量比較（参考）
+
+`tools\verify_pid.py` で複数ゲインを一括評価できます:
+
+| combo | kp | ki | aw | settle (s) | ovs (%) | IAE |
+|---|---:|---:|---|---:|---:|---:|
+| current | 0.02 | 0.001 | False | 119.2 | 40.09 | 6780 |
+| imc | 0.01 | 0.0001 | True | 171.6 | 0.00 | 5601 |
+| aggressive | 0.02 | 0.0002 | True | 153.3 | 0.00 | 4804 |
+| **no_aw**（採用） | **0.01** | **0.0001** | **False** | **64.6** | **1.45** | **4300** |
+
+### 関連ツール
+
+| ツール | 用途 |
+|---|---|
+| `tools\inspect_psbproj.py` | `.psbproj` の中身検査 |
+| `tools\verify_pid.py` | PID ゲインの定量比較 |
+| `tools\verify_pid_ascii.py` | 波形の ASCII 可視化 |
+| `tools\verify_all.ps1` | 一括検証（build + metadata + PID + E2E + git） |
+
+---
+## Prerequisites
+
+- Python 3.13
+- fmpy, matplotlib, numpy
+- `pip install -e .` in the repo root
+
+## License
+
+Apache-2.0
