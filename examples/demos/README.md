@@ -73,3 +73,34 @@ handles the math. This is the intended extension point in the
 ## License
 
 Apache-2.0
+
+## 3. PID + First Order Lag 閉ループ（`.psbproj`、GUI デモ）
+
+**ファイル**: `pid_closed_loop.psbproj`
+
+| 構成 | 内容 |
+|---|---|
+| コンポーネント | `PID Controller` + `First Order Lag` |
+| 配線 | `PID.control → FOL.input` / `FOL.output → PID.measured` |
+| setpoint | 1.0 |
+
+### 再現手順
+
+1. `PowerSimBuilder.exe` 起動
+2. **File → Open** → `examples\demos\pid_closed_loop.psbproj`
+3. **Create Simulation**（非モーダルでエディタが開く）
+4. **Run** → matplotlib グラフウィンドウに PID 応答波形が表示
+
+### 期待される波形
+
+- setpoint=1 に収束
+- オーバーシュート: 小（数 %）
+- 整定後は定常偏差なし
+
+### 中身検証
+
+\`\`\`powershell
+python tmp\_psbproj_read.py examples\demos\pid_closed_loop.psbproj
+\`\`\`
+
+descriptor=PascalCase / connections=camelCase（罠 #52 対応済み）
