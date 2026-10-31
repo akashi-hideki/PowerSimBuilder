@@ -10,6 +10,16 @@ namespace PowerSimBuilder
         private string _originalCode;
         private string _filePath;
 
+        /// <summary>Simulation t_end (seconds). Persisted to .psbproj.</summary>
+        public double SimTime
+        {
+            get { return numSimTime != null ? (double)numSimTime.Value : 5.0; }
+            set { if (numSimTime != null) numSimTime.Value = (decimal)value; }
+        }
+
+        public event EventHandler<double> SimTimeChanged;
+
+
         private ContextMenuStrip contextMenu;
         private ToolStripMenuItem menuItemForLoop;
         private ToolStripMenuItem menuItemWhileLoop;
@@ -37,8 +47,8 @@ namespace PowerSimBuilder
             set { editPanel.ProjectDir = value; }
         }
 
-        public PythonEditorForm(string filePath, bool enableRunButtons)
-            : this(filePath, enableRunButtons, null) { }
+        public PythonEditorForm(string filePath, bool enableRunButtons, double initialTEnd = 5.0)
+            : this(filePath, enableRunButtons, null, initialTEnd) { }
 
         /// <summary>
         /// Lazy-save constructor. When filePath is null, the editor opens as
@@ -46,13 +56,19 @@ namespace PowerSimBuilder
         /// non-null) is shown as-is. On first Save, SaveFileDialog is shown
         /// using SuggestedFileName as the default filename.
         /// </summary>
-        public PythonEditorForm(string filePath, bool enableRunButtons, string initialCode)
+        public PythonEditorForm(string filePath, bool enableRunButtons, string initialCode, double initialTEnd = 5.0)
         {
             InitializeComponent();
             InitializeContextMenu();
             WireEditPanel();
 
             _filePath = filePath;
+            // t_end persistence (schema v2: metadata.tEnd)
+            if (initialTEnd > 0 && numSimTime != null)
+                numSimTime.Value = (decimal)initialTEnd;
+            if (numSimTime != null)
+                numSimTime.ValueChanged += (s, e) => SimTimeChanged?.Invoke(this, SimTime);
+
 
             btnRun.Visible = enableRunButtons;
             btnRun.Enabled = enableRunButtons;
@@ -297,6 +313,16 @@ namespace PowerSimBuilder
                 }
 
                 // 実行ボタンのクリック処理
+                private string ApplySimTimeOverride(string code)
+                {
+                    if (numSimTime == null) return code;
+                    string val = numSimTime.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    return System.Text.RegularExpressions.Regex.Replace(
+                        code,
+                        @"^(\s*)t_end\s*=\s*[\d.]+",
+                        m => $"{m.Groups[1].Value}t_end = {val}",
+                        System.Text.RegularExpressions.RegexOptions.Multiline);
+                }
                 private void BtnRun_Click(object sender, EventArgs e)
                 {
                     if (lblStatus != null) { lblStatus.Text = "Running..."; lblStatus.Refresh(); }
@@ -372,7 +398,7 @@ namespace PowerSimBuilder
 
                         try
                         {
-                            File.WriteAllText(tempFile, textEditor.Text);
+                            File.WriteAllText(tempFile, ApplySimTimeOverride(textEditor.Text));
                             return _executor.Run(tempFile);
                         }
                         catch (Exception ex)
@@ -385,7 +411,11 @@ namespace PowerSimBuilder
                     else
                     {
                         // 元のファイルを実行
-                        return _executor.Run(_filePath);
+                        string originalCode = File.ReadAllText(_filePath);
+                        string overrideCode = ApplySimTimeOverride(originalCode);
+                        string tmp = Path.Combine(Path.GetDirectoryName(_filePath), $"temp_{DateTime.Now:yyyyMMdd_HHmmss}.py");
+                        File.WriteAllText(tmp, overrideCode);
+                        return _executor.Run(tmp);
                     }
                 }
 

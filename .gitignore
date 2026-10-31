@@ -235,3 +235,6 @@ workspace/projects/*
 !workspace/projects/.gitkeep
 workspace/components/*
 !workspace/components/.gitkeep
+
+# PythonEditorForm temporary execution files
+generated/temp_*.py

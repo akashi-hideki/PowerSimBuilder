@@ -501,6 +501,8 @@ namespace PowerSimBuilder
         /// Save current canvas to path (ZIP if .psbproj, JSON otherwise).
         /// Extracted from saveButton_Click for headless automation.
         /// </summary>
+        private double _currentTEnd = 5.0;
+
         private void SaveProjectToPath(string filePath)
         {
             var model = _canvasManager.SaveModel();
@@ -509,6 +511,7 @@ namespace PowerSimBuilder
             if (filePath.EndsWith(ProjectArchive.Extension, StringComparison.OrdinalIgnoreCase))
             {
                 var v2 = model.FromCanvasModel(projectName);
+                v2.Metadata.TEnd = _currentTEnd;
                 var archiveOptions = new ProjectArchive.ArchiveOptions
                 {
                     IncludeComponents = true,
@@ -669,6 +672,7 @@ namespace PowerSimBuilder
                     // New: ZIP archive + manifest
                     var (v2, extractDir, manifest) = ProjectArchive.LoadWithManifest(path, extractArtifacts: true);
                     Test_Log($"ProjectArchive.LoadWithManifest OK: {v2.Components.Count} components, extract={extractDir}");
+                    _currentTEnd = v2.Metadata.TEnd;
                     model = v2.ToCanvasModel();
                     Test_Log($"ToCanvasModel OK: Components={model.Components.Count}, Connections={model.Connections.Count}");
 
@@ -1332,7 +1336,8 @@ namespace PowerSimBuilder
                 return;
 
             // Non-modal editor: MainForm stays interactive (Save always clickable).
-            var editorForm = new PythonEditorForm(file_path, true);
+            var editorForm = new PythonEditorForm(file_path, true, initialTEnd: _currentTEnd);
+            editorForm.SimTimeChanged += (s, v) => _currentTEnd = v;
             editorForm.Executor = new PythonExecutor { SilentMode = true };
             editorForm.FormClosed += (s, e) => this.Activate();
             editorForm.Show(this);

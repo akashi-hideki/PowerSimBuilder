@@ -85,6 +85,7 @@
   "Manager.MsgNoChange": "没有变更。",
   "PythonEditor.Title": "Python 代码编辑器",
   "PythonEditor.BtnRun": "运行",
+    "PythonEditor.SimTime": "仿真时间 (s):",
   "PythonEditor.LblStatus": "状态:",
   "PythonEditor.MsgLoadFail": "加载文件失败: {0}",
   "PythonEditor.MsgSaveFail": "保存文件失败: {0}",

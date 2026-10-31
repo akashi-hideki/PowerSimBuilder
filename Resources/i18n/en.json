@@ -85,6 +85,7 @@
   "Manager.MsgNoChange": "No changes.",
   "PythonEditor.Title": "Python Code Editor",
   "PythonEditor.BtnRun": "Run",
+    "PythonEditor.SimTime": "t_end (s):",
   "PythonEditor.LblStatus": "Status: ",
   "PythonEditor.MsgLoadFail": "Failed to load file: {0}",
   "PythonEditor.MsgSaveFail": "Failed to save file: {0}",
