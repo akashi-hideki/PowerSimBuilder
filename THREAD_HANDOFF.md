@@ -105,4 +105,4 @@ cd C:\dev\PowerSimBuilder
 
 ---
 
-*最終更新: 2026-11-03 / QA Day 1-2 完了（`f9a9653`）*
+*最終更新: 2026-10-31 / QA Day 1-3 完了（`52ffbac`）*

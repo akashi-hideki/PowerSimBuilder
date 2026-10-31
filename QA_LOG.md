@@ -1,4 +1,4 @@
-# QA Log — 2026-11-03 (Day 1)
+# QA Log — 2026-10-31 (Day 1-3)
 
 ## 1. Existing demos (standalone)
 
