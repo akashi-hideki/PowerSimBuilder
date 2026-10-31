@@ -274,6 +274,7 @@ namespace PowerSimBuilder
         {
             addButton.Click += addComponentButton_Click; // 追加: イベントハンドラ登録
             saveButton.Click += saveButton_Click;
+            saveAsButton.Click += saveAsButton_Click;
             loadButton.Click += loadButton_Click;
             undoButton.Click += undoButton_Click;
             redoButton.Click += redoButton_Click;
@@ -437,6 +438,10 @@ namespace PowerSimBuilder
         /// </summary>
         private void saveButton_Click(object sender, EventArgs e)
         {
+            // Ensure MainForm is active before opening modal dialog.
+            this.BringToFront();
+            this.Activate();
+
             using (var dialog = new SaveFileDialog())
             {
                 dialog.Title = I18n.T("MainForm.SaveDialogTitle");
@@ -453,6 +458,36 @@ namespace PowerSimBuilder
                 try
                 {
                     SaveProjectToPath(dialog.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(I18n.T("MainForm.MsgSaveFail", ex.Message), I18n.T("Common.MsgTitleError"),
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void saveAsButton_Click(object sender, EventArgs e)
+        {
+            // Save As: always enabled, ignores IsModified.
+            this.BringToFront();
+            this.Activate();
+            using (var dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Save As";
+                dialog.Filter = "PowerSimBuilder Project (*.psbproj)|*.psbproj|JSON (legacy) (*.json)|*.json";
+                dialog.DefaultExt = ProjectArchive.Extension;
+                dialog.FileName = "project" + ProjectArchive.Extension;
+                var workspaceProjects = Path.Combine(AppSettings.WorkspaceRoot, "projects");
+                try { Directory.CreateDirectory(workspaceProjects); } catch { }
+                dialog.InitialDirectory = Directory.Exists(workspaceProjects)
+                    ? workspaceProjects
+                    : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                try
+                {
+                    SaveProjectToPath(dialog.FileName);
+                    this.Activate();
                 }
                 catch (Exception ex)
                 {
@@ -796,7 +831,7 @@ namespace PowerSimBuilder
             }
             catch (Exception ex) { Test_Log("where python failed: " + ex.Message); }
 
-            var executor = new PythonExecutor { SilentMode = true };
+            var executor = new PythonExecutor { SilentMode = true, ForceHeadlessBackend = true };
             var runSw = System.Diagnostics.Stopwatch.StartNew();
             var ok = executor.Run(scriptPath);
             Test_Log("PythonExecutor.Run returned: " + ok);
@@ -1291,25 +1326,16 @@ namespace PowerSimBuilder
 
         private void createSimButton_Click(object sender, EventArgs e)
         {
-            string file_path = BuildPythonSimulationWithFileDialog(_canvasManager);
-            if ((!String.IsNullOrEmpty(file_path)) && (File.Exists(file_path)))
-            {
-                // ファイルパスを指定してフォームを表示
-                var editorForm = new PythonEditorForm(file_path, true);
+            // Auto-save to generated/demo_main.py (no SaveFileDialog).
+            string file_path = BuildPythonSimulationAutoSave(_canvasManager);
+            if (string.IsNullOrEmpty(file_path) || !File.Exists(file_path))
+                return;
 
-                editorForm.Executor = new PythonExecutor();
-                if (editorForm.ShowDialog() == DialogResult.OK)
-                {
-                    // 保存が選択された場合、編集されたコードを取得
-                    string editedCode = editorForm.GetPythonCode();
-                    // 必要に応じて editedCode を使用
-                }
-                else
-                {
-                    // キャンセルされた場合の処理
-                }
-            }
-
+            // Non-modal editor: MainForm stays interactive (Save always clickable).
+            var editorForm = new PythonEditorForm(file_path, true);
+            editorForm.Executor = new PythonExecutor { SilentMode = true };
+            editorForm.FormClosed += (s, e) => this.Activate();
+            editorForm.Show(this);
         }
         /// <summary>
         /// Pythonシミュレーションコードの出力ディレクトリパスを取得します
@@ -1394,6 +1420,7 @@ namespace PowerSimBuilder
         private void UpdateSaveStatus()
         {
             saveButton.Enabled = _canvasManager.IsModified;
+            if (saveAsButton != null) saveAsButton.Enabled = true;
         }
 
         /// <summary>
@@ -1421,6 +1448,45 @@ namespace PowerSimBuilder
         /// </summary>
         /// <param name="manager">コンポーネントと接続情報を含むCanvasManagerインスタンス</param>
         /// <returns>生成されたPythonファイルのパス。ユーザーがキャンセルした場合やエラーが発生した場合は空文字列を返します</returns>
+        /// <summary>
+        /// Auto-save Python simulation to generated/demo_main.py (no dialog).
+        /// Used by Create Simulation button to avoid double-dialog UX.
+        /// </summary>
+        public string BuildPythonSimulationAutoSave(CanvasManager manager)
+        {
+            string outputPath = Path.Combine(
+                Directory.GetCurrentDirectory(), "generated", "demo_main.py");
+            string? outputDir = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrEmpty(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            try
+            {
+                List<ComponentDescriptor> components = manager.UsedComponentDescriptors;
+                List<ComponentControl> componentInstances = manager.GetAllComponents();
+                List<Connection> connections = manager.Connections;
+
+                var builder = new PythonSimulationMainBuilder();
+                builder.FilePath = outputPath;
+                builder.Components = components;
+                builder.ComponentInstances = componentInstances;
+                builder.Connections = connections;
+                builder.ErrorHandler = (category, message) =>
+                {
+                    MessageBox.Show(I18n.T("MainForm.MsgErrCategory", category, message),
+                        I18n.T("Common.MsgTitleError"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                };
+                builder.BuildPythonSimulationFile();
+                return outputPath;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(I18n.T("MainForm.MsgGenerateFail", ex.Message),
+                    I18n.T("Common.MsgTitleError"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return string.Empty;
+            }
+        }
+
         public string BuildPythonSimulationWithFileDialog(CanvasManager manager)
         {
             List<ComponentDescriptor> components = manager.UsedComponentDescriptors;

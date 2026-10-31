@@ -88,7 +88,7 @@ namespace PowerSimBuilder
 
                 // Task 3-C-11: PYTHONPATH に src/ を追加
                 // Force matplotlib Agg backend (headless-safe, avoids plt.show() blocking)
-                if (SilentMode)
+                if (ForceHeadlessBackend)
                 {
                     process.StartInfo.EnvironmentVariables["MPLBACKEND"] = "Agg";
                 }
@@ -142,6 +142,7 @@ namespace PowerSimBuilder
                                   ? ""
                                   : errTail.Substring(0, Math.Min(500, errTail.Length)));
 
+                        try { Completed?.Invoke(exitCode == 0, exitCode, errTail); } catch { }
                         if (!SilentMode && Application.OpenForms.Count > 0)
                         {
                             var form = Application.OpenForms[0];
@@ -183,6 +184,17 @@ namespace PowerSimBuilder
         /// "still running") and sets MPLBACKEND=Agg to avoid plt.show() hanging.
         /// </summary>
         public bool SilentMode { get; set; } = false;
+
+        /// <summary>
+        /// Force matplotlib Agg backend (headless). Used by xUnit/CLI.
+        /// GUI Run keeps this false so plt.show() opens a window.
+        /// </summary>
+        public bool ForceHeadlessBackend { get; set; } = false;
+
+        /// <summary>
+        /// Raised when a Python run completes (success, exitCode, stderrTail).
+        /// </summary>
+        public event Action<bool, int, string>? Completed;
 
         /// <summary>
         /// Last process stdout+stderr captured by the OutputDataReceived/ErrorDataReceived handlers.

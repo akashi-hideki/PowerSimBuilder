@@ -32,6 +32,7 @@ namespace PowerSimBuilder
             this.palettePanel = new System.Windows.Forms.Panel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.saveButton = new System.Windows.Forms.ToolStripButton();
+            this.saveAsButton = new System.Windows.Forms.ToolStripButton();
             this.loadButton = new System.Windows.Forms.ToolStripButton();
             this.undoButton = new System.Windows.Forms.ToolStripButton();
             this.redoButton = new System.Windows.Forms.ToolStripButton();
@@ -75,6 +76,7 @@ namespace PowerSimBuilder
             this.staTableImportButton = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveButton,
+            this.saveAsButton,
             this.loadButton,
             this.undoButton,
             this.redoButton,
@@ -94,6 +96,14 @@ namespace PowerSimBuilder
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(43, 28);
             this.saveButton.Text = I18n.T("Common.BtnSave");
+            //
+            // saveAsButton
+            //
+            this.saveAsButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.saveAsButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.saveAsButton.Name = "saveAsButton";
+            this.saveAsButton.Size = new System.Drawing.Size(70, 28);
+            this.saveAsButton.Text = "Save As...";
             // 
             // loadButton
             // 
@@ -236,6 +246,7 @@ namespace PowerSimBuilder
         private System.Windows.Forms.Panel palettePanel;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton saveButton;
+        private System.Windows.Forms.ToolStripButton saveAsButton;
         private System.Windows.Forms.ToolStripButton loadButton;
         private System.Windows.Forms.ToolStripButton undoButton;
         private System.Windows.Forms.ToolStripButton redoButton;

@@ -299,7 +299,9 @@ namespace PowerSimBuilder
                 // 実行ボタンのクリック処理
                 private void BtnRun_Click(object sender, EventArgs e)
                 {
-                    ExecutePythonScript();
+                    if (lblStatus != null) { lblStatus.Text = "Running..."; lblStatus.Refresh(); }
+                    var ok = ExecutePythonScript();
+                    if (!ok && lblStatus != null) { lblStatus.Text = "Failed to start"; }
                 }
 
                 // 再読み込みボタンのクリック処理
