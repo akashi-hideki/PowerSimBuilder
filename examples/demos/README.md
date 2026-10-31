@@ -208,6 +208,57 @@ OvenChamber: {'thermal_resistance': 0.5, 'thermal_capacity': 200, ...}
 | `tools\verify_all.ps1` | 一括検証（build + metadata + PID + E2E + git） |
 
 ---
+
+## 5. StaTable 7-Layer Gating + PID + OvenChamber（`.psbproj`、GUI デモ）
+
+**File**: `oven_control_statable.psbproj`
+
+StaTable 7 層状態機械が「安全インターロック」として PID 出力をゲートする
+統合デモ。`MwOven` が `PidHeating` のときのみヒータ指令がプラントに届きます。
+
+| 構成 | 内容 |
+|---|---|
+| コンポーネント | `Controller Box` + `PID Controller` + `OvenChamber` |
+| 配線 | `PID.control → Controller Box.heater_command` / `Controller Box.heater_top_duty → OvenChamber.heater_top_duty` / `OvenChamber.oven_current_temp → PID.measured` / `OvenChamber.oven_current_temp → Controller Box.oven_current_temp` |
+| setpoint | 200.0 °C |
+| t_end | 300.0 s |
+| dt | 0.01 s |
+
+### Controller Box gating パラメータ
+
+| パラメータ | 値 | 意味 |
+|---|---|---|
+| `auto_events` | `demo_oven` | 起動時に `OV_START` 等を自動発火 |
+| `gate_layer` | `MwOven` | 状態を監視する層 |
+| `gate_states` | `PidHeating` | 通過を許可する状態 |
+| `gate_input_port` | `heater_command` | PID からの指令入力 |
+| `gate_output_port` | `heater_top_duty` | プラントへの出力 |
+
+### 定量結果（GUI Run と一致）
+
+| 指標 | 値 |
+|---|---|
+| 定常値 | 200.681 °C（誤差 -0.68） |
+| ピーク | 202.906 °C（オーバーシュート 1.45%） |
+| 整定時間 | 64.6 s |
+| duty 定常 | 0.350 |
+| MwOven 最終状態 | PidHeating |
+
+### 検証手順
+
+```powershell
+python tools\verify_statable_psbproj.py examples\demos\oven_control_statable.psbproj
+python tools\verify_controller_box.py examples\demos\oven_control_statable.psbproj
+```
+
+`verify_controller_box.py` で gating の双方向動作（pass + block）を確認できます。
+
+### ストーリー
+
+StaTable 7 層状態機械が安全ロジック（ドア開閉、過熱、シーケンス）を管理し、
+Python の PID が温度制御を担当。**「状態機械が制御数式をゲートする」** 現実的な
+ハイブリッドパターンです。
+
 ## Prerequisites
 
 - Python 3.13

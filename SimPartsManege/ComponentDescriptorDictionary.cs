@@ -341,6 +341,38 @@ namespace PowerSimBuilder
                         }
                     }
                 },
+                {
+                    "Controller Box", new ComponentDescriptor
+                    {
+                        Name = "Controller Box",
+                        Type = "ControllerBox",
+                        Category = "Control",
+                        Parameters = new List<ParameterDescriptor>
+                        {
+                            new ParameterDescriptor { Name = "generated_path", Type = "string", DefaultValue = "" },
+                            new ParameterDescriptor { Name = "auto_events", Type = "string", DefaultValue = "" },
+                            new ParameterDescriptor { Name = "gate_layer", Type = "string", DefaultValue = "" },
+                            new ParameterDescriptor { Name = "gate_states", Type = "string", DefaultValue = "" },
+                            new ParameterDescriptor { Name = "gate_input_port", Type = "string", DefaultValue = "" },
+                            new ParameterDescriptor { Name = "gate_output_port", Type = "string", DefaultValue = "" }
+                        },
+                        InputPorts = new[]
+                        {
+                            "oven_target_temp",
+                            "oven_current_temp",
+                            "heater_command",
+                            "door_open"
+                        },
+                        OutputPorts = new[]
+                        {
+                            "heater_top_duty",
+                            "heater_middle_duty",
+                            "heater_bottom_duty",
+                            "fan_duty",
+                            "error_code"
+                        }
+                    }
+                },
                 // ============================================================
                 // Control
                 // ============================================================

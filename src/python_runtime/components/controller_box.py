@@ -80,6 +80,10 @@ class ControllerBox(Component):
         self.parameters = {
             "generated_path": str(generated_path or ""),
             "auto_events": "",  # "" = disabled; "demo_oven" = enable demo driver
+            "gate_layer": "",  # "" = no gating; e.g. "MwOven"
+            "gate_states": "",  # comma-separated allowed states, e.g. "PidHeating"
+            "gate_input_port": "",  # e.g. "heater_command" (from PID)
+            "gate_output_port": "",  # e.g. "heater_top_duty"
         }
         self._demo_state: dict[str, bool] = {
             "startup_fired": False,
@@ -143,6 +147,19 @@ class ControllerBox(Component):
 
         # 3) Tick the StaTable runtime (drives all 7 layers)
         self._runtime.tick(t, dt, sim_data)
+
+        # 3.5) Optional interlock: if gate_input_port is wired, pass its value to
+        # gate_output_port only when gate_layer.state is in gate_states; else 0.
+        gate_layer = self.parameters.get("gate_layer", "").strip()
+        gate_in = self.parameters.get("gate_input_port", "").strip()
+        gate_out = self.parameters.get("gate_output_port", "").strip()
+        if gate_layer and gate_in and gate_out and gate_in in self.inputs:
+            allowed = [
+                s.strip() for s in self.parameters.get("gate_states", "").split(",") if s.strip()
+            ]
+            layer = self._runtime.layers_by_name.get(gate_layer)
+            state_ok = layer is not None and layer.state in allowed
+            self._globals[gate_out] = self.inputs[gate_in] if state_ok else 0
 
         # 4) Copy back outputs from globals
         for name in self._output_globals:
@@ -239,17 +256,30 @@ class ControllerBox(Component):
     def _resolve_generated_path(generated_path: str | None) -> Path:
         if generated_path:
             return Path(generated_path).resolve()
-        candidates = [
-            Path.cwd() / "generated" / "controller_box_powersim.py",
-            Path(__file__).resolve().parents[3] / "generated" / "controller_box_powersim.py",
+        # Search common generated/ dirs for *_powersim.py (StaTable output).
+        search_dirs = [
+            Path.cwd() / "generated",
+            Path(__file__).resolve().parents[3] / "generated",
+        ]
+        fallback = search_dirs[0] / "controller_box_powersim.py"
+        for d in search_dirs:
+            if d.is_dir():
+                hits = sorted(d.glob("*_powersim.py"))
+                # Prefer the known CookingHeater controller if present.
+                for h in hits:
+                    if "cookingheater" in h.name.lower():
+                        return h
+                if hits:
+                    return hits[0]
+        # Legacy fixture fallback
+        legacy = (
             Path(__file__).resolve().parents[3]
             / "tests"
             / "data"
             / "scenarios"
             / "cooking_heater"
-            / "controller_box.py",
-        ]
-        for p in candidates:
-            if p.is_file():
-                return p
-        return candidates[0]
+            / "controller_box.py"
+        )
+        if legacy.is_file():
+            return legacy
+        return fallback
