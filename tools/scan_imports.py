@@ -1,24 +1,25 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """scan_imports.py — AST-based import scanner for PowerSimBuilder.
 
 Classifies every top-level import found in the repository as:
   - stdlib   : Python standard library
-  - local    : project modules (tools/, tests/, examples/, ...)
+  - local    : project modules (any .py stem under the repo, excluding SKIP_DIRS)
   - external : third-party packages (candidates for requirements.txt)
+
+Generated FMU module names (e.g. CookingHeaterController_powersim) are excluded
+from the EXTERNAL listing by default (see DEFAULT_EXCLUDE).
 
 Usage:
     python tools/scan_imports.py                        # list external imports
     python tools/scan_imports.py -v                     # per-file breakdown
     python tools/scan_imports.py --check lxml matplotlib
     python tools/scan_imports.py --json                 # machine-readable
+    python tools/scan_imports.py --exclude Foo Bar      # extra exclusions
+    python tools/scan_imports.py --no-default-exclude   # disable DEFAULT_EXCLUDE
 
 Exit code for --check:
     0 = every specified package is imported somewhere
     1 = at least one specified package is NOT imported
-
-Examples:
-    python tools/scan_imports.py --check lxml matplotlib
-    # -> decide whether to keep lxml / matplotlib in requirements.txt
 """
 
 from __future__ import annotations
@@ -35,12 +36,11 @@ ROOT = Path(__file__).resolve().parent.parent
 SKIP_DIRS = {
     ".git", ".venv", "venv", "env", "build", "dist",
     "__pycache__", "node_modules", "tmp", "obj", "bin",
-    ".pytest_cache", ".mypy_cache", ".ruff_cache",
+    ".pytest_cache", ".pytest_tmp", ".mypy_cache", ".ruff_cache",
     ".vs", ".idea", "generated",
     "user_components", "user_physics_models",
 }
 
-# Bundled stdlib list for Python < 3.10 (sys.stdlib_module_names is 3.10+).
 STDLIB_39 = frozenset("""
     __future__ _abc _ast _asyncio _bisect _blake2 _bootlocale _bz2 _codecs
     _codecs_cn _codecs_hk _codecs_iso2022 _codecs_jp _codecs_kr _codecs_tw
@@ -80,6 +80,13 @@ STDLIB_39 = frozenset("""
     """.split())
 
 
+# Generated FMU module names that are not third-party packages.
+# Extend this list as new generated modules appear; override with --no-default-exclude.
+DEFAULT_EXCLUDE: frozenset[str] = frozenset({
+    "CookingHeaterController_powersim",
+})
+
+
 def collect_stdlib() -> tuple[frozenset, str]:
     builtin = getattr(sys, "stdlib_module_names", None)
     if builtin is not None:
@@ -87,22 +94,32 @@ def collect_stdlib() -> tuple[frozenset, str]:
     return STDLIB_39, "bundled 3.9 list"
 
 
+def _is_skipped(rel: Path) -> bool:
+    return any(part in SKIP_DIRS for part in rel.parts)
+
+
 def detect_local_modules(root: Path) -> set[str]:
-    """Top-level names that belong to this project."""
+    """Top-level names that belong to this project (recursive)."""
     local: set[str] = set()
     for p in root.glob("*.py"):
         local.add(p.stem)
-    for p in root.iterdir():
-        if not p.is_dir() or p.name in SKIP_DIRS:
+    for p in root.rglob("*.py"):
+        if _is_skipped(p.relative_to(root)):
             continue
-        if (p / "__init__.py").exists() or any(p.glob("*.py")):
-            local.add(p.name)
+        local.add(p.stem)
+    for d in root.rglob("*"):
+        if not d.is_dir() or d.name in SKIP_DIRS:
+            continue
+        if _is_skipped(d.relative_to(root)):
+            continue
+        if (d / "__init__.py").exists() or any(d.glob("*.py")):
+            local.add(d.name)
     return local
 
 
 def iter_py_files(root: Path):
     for p in root.rglob("*.py"):
-        if any(part in SKIP_DIRS for part in p.relative_to(root).parts):
+        if _is_skipped(p.relative_to(root)):
             continue
         yield p
 
@@ -111,10 +128,9 @@ def scan(root: Path) -> dict[str, list[str]]:
     results: dict[str, list[str]] = defaultdict(list)
     for py in iter_py_files(root):
         try:
-            tree = ast.parse(
-                py.read_text(encoding="utf-8", errors="ignore"),
-                filename=str(py),
-            )
+            # utf-8-sig strips the BOM automatically (VS Code may add it).
+            source = py.read_text(encoding="utf-8-sig", errors="ignore")
+            tree = ast.parse(source, filename=str(py))
         except SyntaxError as e:
             print(f"WARN: skip {py} ({e})", file=sys.stderr)
             continue
@@ -125,7 +141,7 @@ def scan(root: Path) -> dict[str, list[str]]:
                 for n in node.names:
                     seen.add(n.name.split(".")[0])
             elif isinstance(node, ast.ImportFrom):
-                if node.level:  # relative import
+                if node.level:
                     continue
                 if node.module:
                     seen.add(node.module.split(".")[0])
@@ -152,6 +168,11 @@ def main() -> None:
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     ap.add_argument("--include-local", action="store_true",
                     help="also list project-local modules")
+    ap.add_argument("--exclude", nargs="*", default=[], metavar="NAME",
+                    help="names to omit from the EXTERNAL listing "
+                         "(e.g. generated FMU module names)")
+    ap.add_argument("--no-default-exclude", action="store_true",
+                    help="do not apply the built-in exclusion list for generated modules")
     args = ap.parse_args()
 
     stdlib, stdlib_src = collect_stdlib()
@@ -177,6 +198,15 @@ def main() -> None:
     for name, files in sorted(results.items()):
         classified[classify(name, stdlib, local)].append((name, files))
 
+    # Apply exclusions to the EXTERNAL listing only.
+    excludes = set(args.exclude)
+    if not args.no_default_exclude:
+        excludes |= DEFAULT_EXCLUDE
+    if excludes:
+        classified["external"] = [
+            (n, fs) for n, fs in classified["external"] if n not in excludes
+        ]
+
     if args.json:
         payload = {
             cat: [{"name": n, "files": fs} for n, fs in items]
@@ -190,7 +220,10 @@ def main() -> None:
     print(f"Python     : {sys.version.split()[0]}")
     print(f".py files  : {n_files}")
     print(f"stdlib src : {stdlib_src}")
-    print(f"local mods : {', '.join(sorted(local)) or '(none)'}")
+    if args.verbose:
+        print(f"local mods : {', '.join(sorted(local)) or '(none)'}")
+    else:
+        print(f"local mods : {len(local)} module(s)  (use -v to list)")
 
     def dump(title: str, items: list[tuple[str, list[str]]], verbose: bool) -> None:
         if not items:
