@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 try:
-    from fmpy import instantiate_fmu, read_model_description
+    from fmpy import extract, instantiate_fmu, read_model_description
 
     _FMPY_IMPORT_ERROR: Exception | None = None
 except ImportError as exc:
@@ -47,6 +47,7 @@ class FmuAdapter(_BaseComponent):
         self._start_time = float(start_time)
         self._time = self._start_time
         self._fmu: Any = None
+        self._unzipdir: str | None = None
         self._md = read_model_description(str(fmu_path))
         self._vrs: dict[str, int] = {v.name: v.valueReference for v in self._md.modelVariables}
 
@@ -67,7 +68,9 @@ class FmuAdapter(_BaseComponent):
         self._instantiate()
 
     def _instantiate(self) -> None:
-        self._fmu = instantiate_fmu(None, self._md, fmi_type="CoSimulation")
+        fmu_path = self.manifest.resolve_source_path()
+        self._unzipdir = extract(str(fmu_path))
+        self._fmu = instantiate_fmu(self._unzipdir, self._md, fmi_type="CoSimulation")
         self._fmu.instantiate()
         self._fmu.setupExperiment(startTime=self._time)
         self._fmu.enterInitializationMode()
@@ -100,6 +103,14 @@ class FmuAdapter(_BaseComponent):
         except Exception:
             pass
         self._fmu = None
+        if self._unzipdir is not None:
+            import shutil
+
+            try:
+                shutil.rmtree(self._unzipdir, ignore_errors=True)
+            except Exception:
+                pass
+            self._unzipdir = None
 
     def step(self, dt: float) -> None:
         if self._fmu is None:
@@ -127,6 +138,5 @@ class FmuAdapter(_BaseComponent):
     def _refresh_outputs(self) -> None:
         for port, fmu_var in self._output_map.items():
             vr = self._vrs[fmu_var]
-            buf = [0.0]
-            self._fmu.getReal([vr], buf)
-            self.outputs[port] = float(buf[0])
+            values = self._fmu.getReal([vr])
+            self.outputs[port] = float(values[0])
