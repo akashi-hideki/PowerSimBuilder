@@ -1,8 +1,53 @@
 ﻿# THREAD HANDOFF — PowerSimBuilder 現状スナップショット
 
 > **用途**: 新スレッド開始時にこのファイル 1 つ読めば即座に作業再開できる「現在の状態」を記録する。
-> **累積履歴**: `HANDOFF_MVP1_2.md`（バージョン別・罠 #1〜#55）を参照。
-> **最終更新**: 2026-10-31（QA Day 1-3 完了、OvenChamber + 回帰ガード）
+> **累積履歴**: `HANDOFF_MVP1_2.md`（バージョン別・罠 #1〜#57）を参照。
+> **最終更新**: 2026-11-01（FMU Adapter 修正 + Trap #57 + controller_box legacy 優先）
+
+---
+
+
+## 🆕 2026-11-01 更新サマリ
+
+| 項目 | 値 |
+|---|---|
+| origin/main | `85d755c` |
+| C# テスト | 526 passed / 2 skipped |
+| E2E | 5 passed |
+| Python | 246 passed |
+| 最新タグ | `v1.7.0` |
+| 公開予定 | 11/15（土）、11/08（日）GO/NO-GO |
+
+### 完了コミット（8 件）
+
+- `85d755c`: Trap #57（fmpy 0.3.32 API + unzip）
+- `1ee6b2a`: controller_box legacy fixture 優先（テスト復旧）
+- `4d0062a`: FmuAdapter 2 バグ修正
+- `50ebbd5`: oven_control_from_design_xml.psbproj
+- `36d8584`: v1.8.0 CHANGELOG + README + Trap #53〜#56
+- `07d7750`: oven_control_statable.psbproj
+- `579dbc2`: user_components/ untrack + pre_public_check
+- `6da9266`: user_physics_models/ untrack
+
+### 6 デモ
+
+1. demo_pid_first_order_lag.py (y=0.9738)
+2. demo_statable_runtime_loop.py (T=200.00)
+3. pid_closed_loop.psbproj (ss=0.991, settle 3.9s)
+4. oven_control.psbproj (ss=200.68, ovs=1.45%, settle=64.7s)
+5. oven_control_statable.psbproj (StaTable gating)
+6. oven_control_from_design_xml.psbproj (XML full pipeline)
+
+### 次タスク
+
+1. GUI Add Physics -> Dahlquist -> Run (FMU E2E)
+2. StaTable GUI -> simulation (launch.ps1 -Mode statable)
+3. 11/08 GO/NO-GO 判定
+
+### 制約
+
+- CI workflow 停止中（`tmp/ci_disabled/`）、public 化後に復元
+- Public 化保留（`pre_public_check.ps1` 全 [OK]、いつでも可）
 
 ---
 
