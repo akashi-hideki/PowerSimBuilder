@@ -1143,6 +1143,7 @@ dotnet test tests\PowerSimBuilder.UITests --filter "Category=UI"
 | 54 | `[IO.File]::ReadAllText` / `WriteAllText` は `Environment.CurrentDirectory` を見る。PowerShell の `cd` では変わらない（PS 5.1） | 必ず `(Resolve-Path ...).Path` で絶対パス化してから渡す |
 | 55 | `@'...'@` ヒアストリングは貼り付け中断（`^C`）で壊れる。`python -c "..."` 内の `{}` / `\"` も PS パーサーと衝突する | 行配列 `@('行1','行2') -join $eol` で構築。Python 呼び出しは .py ファイル経由（罠 #46 併用） |
 | 56 | 非モーダル `Show()` + `AutoScaleMode.Font` で初回レイアウト未確定 → ボタンが見えない。言語切替（`Application.Restart`）で解消する症状 | `Shown` イベントで `Visible` 再適用 + `panelTop.PerformLayout()` + `Invalidate(true)` |
+| 57 | `fmpy 0.3.32` で `FmuAdapter` が動かない 2 バグ: (1) `instantiate_fmu(None, ...)` で unzip ディレクトリ未指定 → `TypeError: expected str, bytes or os.PathLike object, not NoneType`、(2) `getReal([vr], buf)` の旧 API → `TypeError: getReal() takes 2 positional arguments but 3 were given` | `fmpy.extract(fmu_path)` で unzip → `instantiate_fmu(unzipdir, ...)`。`getReal(vr)` は値リストを返す（`values = fmu.getReal([vr]); output = values[0]`）。`setReal(vr, value)` は変更なし |
 
 ## 次タスク候補（2026-10-31 時点）
 
