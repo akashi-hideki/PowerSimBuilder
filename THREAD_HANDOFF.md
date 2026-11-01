@@ -162,3 +162,23 @@ cd C:\dev\PowerSimBuilder
   - `CanvasForm/DesignCanvas.cs`: ControllerBox 分岐の enableRun テスト対応
 - UITests: 12 テスト（11 pass / 1 skip）— 並列無効化で flakiness 解消
 - 生成 temp: `generated/temp_*.py` に Dahlquist 実行結果
+
+### 2026-11-01 プロダクト改善（GUI E2E 副産物）
+
+`cbacbf5` の GUI E2E 対応で、以下の既存バグを修正（通常起動の挙動が改善）:
+
+1. **Run 完了表示** (`ComponentEdit/PythonEditorForm.cs`)
+   - 変更前: Run 後 `lblStatus` が `Running...` のまま
+   - 変更後: `Completed` イベント購読で `MsgCompleted` / `MsgExitedWithCode` に更新
+   - 影響: Create Simulation 経由でも Run 完了が可視化
+
+2. **新規コンポーネント Run** (`ComponentEdit/PythonEditorForm.cs`)
+   - 変更前: `_filePath=null` で `Path.GetDirectoryName(null)` → 例外 → MessageBox
+   - 変更後: `ResolveRunDirectory()` が ProjectDir → SuggestedInitialDirectory → CWD → %TEMP% の順でフォールバック
+   - 影響: 新規作成コンポーネントでも Run 可能
+
+### 検証済み
+
+- `PowerSimBuilder.Tests`: 528 / 526 Pass / 2 Skip / 0 Fail
+- `PowerSimBuilder.UITests`: 12 / 11 Pass / 1 Skip / 0 Fail
+- 通常起動手動確認: ダブルクリック編集 / Create Simulation / ControllerBox Edit — すべて OK
