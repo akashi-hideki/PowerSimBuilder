@@ -1339,6 +1339,7 @@ namespace PowerSimBuilder
             var editorForm = new PythonEditorForm(file_path, true, initialTEnd: _currentTEnd);
             editorForm.SimTimeChanged += (s, v) => _currentTEnd = v;
             editorForm.Executor = new PythonExecutor { SilentMode = true };
+            if (Test_IsTestMode()) editorForm.SuppressDialogs = true;
             editorForm.FormClosed += (s, e) => this.Activate();
             editorForm.Show(this);
         }

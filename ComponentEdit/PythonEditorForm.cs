@@ -35,10 +35,17 @@ namespace PowerSimBuilder
         public bool IsModified { get; private set; }
         public string PythonCode => textEditor.Text;
 
+        public bool SuppressDialogs { get; set; } = false;
+
         public PythonExecutor Executor
         {
             get { return _executor; }
-            set { _executor = value; }
+            set
+            {
+                if (_executor != null) _executor.Completed -= OnExecutorCompleted;
+                _executor = value;
+                if (_executor != null) _executor.Completed += OnExecutorCompleted;
+            }
         }
 
         public string ProjectDir
@@ -335,6 +342,20 @@ if (filePath != null)
                     if (numSimTime == null) return code;
                     return SimTimeOverride.Apply(code, (double)numSimTime.Value);
                 }
+
+                private string ResolveRunDirectory()
+                {
+                    if (!string.IsNullOrEmpty(_filePath))
+                    {
+                        var dir = Path.GetDirectoryName(_filePath);
+                        if (!string.IsNullOrEmpty(dir)) return dir;
+                    }
+                    if (!string.IsNullOrEmpty(ProjectDir)) return ProjectDir;
+                    if (!string.IsNullOrEmpty(SuggestedInitialDirectory)) return SuggestedInitialDirectory;
+                    var cwd = Environment.CurrentDirectory;
+                    if (!string.IsNullOrEmpty(cwd)) return cwd;
+                    return Path.GetTempPath();
+                }
                 private void BtnRun_Click(object sender, EventArgs e)
                 {
                     if (lblStatus != null) { lblStatus.Text = "Running..."; lblStatus.Refresh(); }
@@ -343,6 +364,27 @@ if (filePath != null)
                 }
 
                 // 再読み込みボタンのクリック処理
+                private void OnExecutorCompleted(bool success, int exitCode, string stderr)
+                {
+                    if (lblStatus == null || lblStatus.IsDisposed) return;
+                    Action update = () =>
+                    {
+                        try
+                        {
+                            lblStatus.Text = success
+                                ? I18n.T("PythonExecutor.MsgCompleted")
+                                : I18n.T("PythonExecutor.MsgExitedWithCode", exitCode);
+                        }
+                        catch { }
+                    };
+                    try
+                    {
+                        if (lblStatus.InvokeRequired) lblStatus.BeginInvoke(update);
+                        else update();
+                    }
+                    catch { }
+                }
+
                 private void BtnReload_Click(object sender, EventArgs e)
                 {
                     if (IsModified)
@@ -397,15 +439,17 @@ if (filePath != null)
                     // 変更があれば一時ファイルに保存して実行
                     if (IsModified)
                     {
-                        var result = MessageBox.Show(I18n.T("PythonEditor.MsgSaveTempBeforeRun"),
-                            I18n.T("Common.MsgTitleConfirm"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                        DialogResult result = SuppressDialogs
+                            ? DialogResult.Yes
+                            : MessageBox.Show(I18n.T("PythonEditor.MsgSaveTempBeforeRun"),
+                                I18n.T("Common.MsgTitleConfirm"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                         if (result == DialogResult.No)
                             return false;
 
                         // 一時ファイルを作成
                         string tempFile = Path.Combine(
-                            Path.GetDirectoryName(_filePath),
+                            ResolveRunDirectory(),
                             $"temp_{DateTime.Now:yyyyMMdd_HHmmss}.py");
 
                         try
@@ -425,7 +469,7 @@ if (filePath != null)
                         // 元のファイルを実行
                         string originalCode = File.ReadAllText(_filePath);
                         string overrideCode = ApplySimTimeOverride(originalCode);
-                        string tmp = Path.Combine(Path.GetDirectoryName(_filePath), $"temp_{DateTime.Now:yyyyMMdd_HHmmss}.py");
+                        string tmp = Path.Combine(ResolveRunDirectory(), $"temp_{DateTime.Now:yyyyMMdd_HHmmss}.py");
                         File.WriteAllText(tmp, overrideCode);
                         return _executor.Run(tmp);
                     }

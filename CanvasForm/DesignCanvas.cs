@@ -1692,7 +1692,14 @@ private void ClearCanvas()
         /// </summary>
         private void OpenPythonEditor(string filePath)
         {
-            using (var editorForm = new PythonEditorForm(filePath, false))
+            // Test mode: enable Run button so UI tests can exercise the Run path.
+            // (filePath=null -> lazy-save; BtnRun creates temp file next to ProjectDir.)
+            bool enableRun = false;
+            foreach (var a in Environment.GetCommandLineArgs())
+            {
+                if (a == "--test-project") { enableRun = true; break; }
+            }
+            using (var editorForm = new PythonEditorForm(filePath, enableRun))
             {
                 // Only called from the ControllerBox branch of EditPythonCodeItem_Click.
                 // Suppress the "Add Physics" button (physics cannot be attached to StaTable-generated controllers).

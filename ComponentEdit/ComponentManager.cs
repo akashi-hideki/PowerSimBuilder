@@ -65,7 +65,13 @@ namespace PowerSimBuilder
                 return null;
             }
 
-            var editorForm = new PythonEditorForm(null, false, initialCode);
+            // Test mode: enable Run button so UI tests can exercise the Run path.
+            bool enableRun = false;
+            foreach (var a in System.Environment.GetCommandLineArgs())
+            {
+                if (a == "--test-project") { enableRun = true; break; }
+            }
+            var editorForm = new PythonEditorForm(null, enableRun, initialCode);
             editorForm.ComponentType = descriptor.Type ?? "";
             if (existing != null)
             {

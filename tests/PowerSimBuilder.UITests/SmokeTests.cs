@@ -293,4 +293,94 @@ public sealed class SmokeTests
         }
         finally { try { app.Kill(); } catch { } }
     }
+    [Fact]
+    public void AddPhysicsAndRun_Dahlquist_Completes()
+    {
+        Log("AddPhysicsAndRun START");
+        var fixture = TestPaths.TestFixturePath("with-component.json");
+        using var app = FlaUI.Core.Application.Launch(TestPaths.AppExePath,
+            "--test-project \"" + fixture + "\" --test-open-editor firstOrderLag1");
+        try
+        {
+            using var automation = new UIA3Automation();
+            var editor = WaitForEditor(automation, 20, app.ProcessId);
+            Assert.NotNull(editor);
+            Log("editor opened");
+
+            var btnPhysics = Retry.WhileNull(
+                () => editor.FindFirstDescendant(cf => cf.ByAutomationId("btnPhysics"))
+                    ?? editor.FindFirstDescendant(cf => cf.ByName("btnPhysics")),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(btnPhysics);
+            btnPhysics.Click();
+            Log("btnPhysics clicked");
+
+            var picker = WaitForWindowByTitleContaining(automation, 10, app.ProcessId, "Add Physics Model");
+            if (picker == null)
+                picker = WaitForWindowByTitleContaining(automation, 5, app.ProcessId, "\u7269\u7406\u30e2\u30c7\u30eb\u3092\u8ffd\u52a0");
+            Assert.NotNull(picker);
+            Log("picker opened");
+
+            var listView = picker.FindFirstDescendant(cf => cf.ByAutomationId("ListViewModels"))
+                ?? picker.FindFirstDescendant(cf => cf.ByName("ListViewModels"));
+            Assert.NotNull(listView);
+
+            AutomationElement firstItem = null;
+            var itemDeadline = DateTime.UtcNow.AddSeconds(10);
+            while (DateTime.UtcNow < itemDeadline && firstItem == null)
+            {
+                firstItem = listView.FindFirstDescendant(cf => cf.ByControlType(ControlType.ListItem));
+                if (firstItem == null) System.Threading.Thread.Sleep(500);
+            }
+            Assert.NotNull(firstItem);
+            firstItem.Click();
+
+            var btnInsert = picker.FindFirstDescendant(cf => cf.ByAutomationId("BtnInsert"))
+                ?? picker.FindFirstDescendant(cf => cf.ByName("Insert"));
+            Assert.NotNull(btnInsert);
+            btnInsert.Click();
+            Log("insert clicked");
+
+            var textBox = Retry.WhileNull(
+                () => editor.FindFirstDescendant(cf => cf.ByAutomationId("TextBoxCode"))
+                    ?? editor.FindFirstDescendant(cf => cf.ByName("TextBoxCode")),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(textBox);
+            var text = textBox.AsTextBox().Text;
+            Assert.Contains("# === physics:", text);
+            Log("physics snippet inserted");
+
+            var btnRun = Retry.WhileNull(
+                () => editor.FindFirstDescendant(cf => cf.ByAutomationId("btnRun"))
+                    ?? editor.FindFirstDescendant(cf => cf.ByName("btnRun")),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(btnRun);
+            btnRun.Click();
+            Log("btnRun clicked");
+
+            var lblStatus = Retry.WhileNull(
+                () => editor.FindFirstDescendant(cf => cf.ByAutomationId("lblStatus"))
+                    ?? editor.FindFirstDescendant(cf => cf.ByName("lblStatus")),
+                TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(lblStatus);
+
+            var deadline = DateTime.UtcNow.AddSeconds(120);
+            string finalStatus = null;
+            while (DateTime.UtcNow < deadline)
+            {
+                try { finalStatus = lblStatus.AsLabel().Text; } catch { finalStatus = null; }
+                if (!string.IsNullOrEmpty(finalStatus) &&
+                    !finalStatus.StartsWith("Running", StringComparison.OrdinalIgnoreCase))
+                    break;
+                System.Threading.Thread.Sleep(500);
+            }
+            Log("finalStatus=" + (finalStatus ?? "<null>"));
+            Assert.NotNull(finalStatus);
+            Assert.False(finalStatus.StartsWith("Running", StringComparison.OrdinalIgnoreCase),
+                "Run did not complete within 120s; status=" + finalStatus);
+            Assert.DoesNotContain("Failed", finalStatus, StringComparison.OrdinalIgnoreCase);
+            Log("AddPhysicsAndRun PASS");
+        }
+        finally { try { app.Kill(); } catch { } }
+    }
 }
