@@ -151,3 +151,14 @@ cd C:\dev\PowerSimBuilder
 ---
 
 *最終更新: 2026-10-31 / QA Day 1-3 完了（`52ffbac`）*
+
+### 2026-11-01 追加成果（GUI FMU E2E）
+
+- GUI E2E `AddPhysicsAndRun_Dahlquist_Completes` 追加（SmokeTests.cs）
+- 修正ファイル:
+  - `ComponentEdit/ComponentManager.cs`: `--test-project` 時 enableRunButtons=true
+  - `ComponentEdit/PythonEditorForm.cs`: SuppressDialogs プロパティ / ResolveRunDirectory() / Executor setter で Completed 購読
+  - `CanvasForm/MainForm.cs`: テスト時 SuppressDialogs=true
+  - `CanvasForm/DesignCanvas.cs`: ControllerBox 分岐の enableRun テスト対応
+- UITests: 12 テスト（11 pass / 1 skip）— 並列無効化で flakiness 解消
+- 生成 temp: `generated/temp_*.py` に Dahlquist 実行結果
