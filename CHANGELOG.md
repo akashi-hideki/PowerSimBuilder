@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **GUI FMU E2E** (`SmokeTests.AddPhysicsAndRun_Dahlquist_Completes`)
+  - Add Physics -> Dahlquist -> Run end-to-end through the WinForms UI (FlaUI).
+- **Python runtime spec** (`docs/SPEC_PYTHON_RUNTIME.en.md` / `.zh.md`)
+  - Install via a single `requirements.txt`.
+- **`tools/scan_imports.py`**
+  - AST-based dependency detection with `--check` / `--exclude`.
+- **`requirements.txt`**: added `pyyaml` (used by `src/python_runtime/physics/manifest.py`);
+  removed `lxml` (stdlib `xml.etree` suffices).
+
+### Fixed
+
+- Run button now updates `lblStatus` on completion (previously stayed at "Running...").
+- Running a new (unsaved) component no longer fails on `Path.GetDirectoryName(null)`.
+
+### Added
 - **OvenChamber component** (`src/python_runtime/components/oven_chamber.py`)
   - Wraps `ThermalMass` with oven-specific I/O: `heater_top_duty`, `heater_bottom_duty`,
     `fan_duty` inputs; `oven_current_temp`, `thermistor_top/middle/bottom`, `heater_power` outputs

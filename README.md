@@ -3,7 +3,7 @@
 [![CI](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-526%20C%23%20%2B%205%20E2E%20%2B%2053%20Py%20pass-green.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-528%20C%23%20%2B%2012%20E2E%20%2B%20463%20Py%20pass-green.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Windows%20only-lightgrey.svg)]()
 
 **Visual simulation companion to [StaTable](https://github.com/akashi-hideki/StaTable) — load StaTable XML, build Python state-machine controllers, run end-to-end simulations with signal plots.**
@@ -181,6 +181,15 @@ StaTable alone answers **"does it compile?"**. PowerSimBuilder answers
 **"does the behavior make sense?"** — before you flash the firmware.
 
 ---
+
+## What's New in v1.8.0
+
+- **GUI FMU E2E**: `AddPhysicsAndRun_Dahlquist_Completes` verifies the full path Add Physics -> Dahlquist -> Run in the WinForms UI.
+- **Python runtime spec** (`docs/SPEC_PYTHON_RUNTIME.en.md` / `.zh.md`): install with a single `requirements.txt`.
+- **`tools/scan_imports.py`**: AST-based dependency detection (`--check` / `--exclude`).
+- **`pyyaml` added** to `requirements.txt` (used by `src/python_runtime/physics/manifest.py`); `lxml` removed (stdlib `xml.etree` suffices).
+- **Fixed**: Run status now shows completion (previously stuck at "Running...").
+- **Fixed**: Running a new (unsaved) component no longer throws on `Path.GetDirectoryName(null)`.
 
 ## What's New in v1.6.1
 
@@ -425,6 +434,8 @@ Both tools are intentionally separate so that:
 | [docs/ip/FAQ.md](docs/ip/FAQ.md) | Product FAQ (companion to StaTable, Windows-only) |
 | [docs/ip/OSS_COMPLIANCE.md](docs/ip/OSS_COMPLIANCE.md) | OSS license compliance (Apache-2.0; no GPL/AGPL) |
 | [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) | Redistributed NuGet package licenses |
+| [docs/SPEC_PYTHON_RUNTIME.en.md](docs/SPEC_PYTHON_RUNTIME.en.md) | Python runtime setup (English) |
+| [docs/SPEC_PYTHON_RUNTIME.zh.md](docs/SPEC_PYTHON_RUNTIME.zh.md) | Python runtime setup (中文) |
 
 ---
 
