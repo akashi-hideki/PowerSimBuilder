@@ -44,19 +44,19 @@ Contents of `requirements.txt`:
 ```
 fmpy==0.3.32
 numpy>=1.24
-lxml
 matplotlib>=3.7
+pyyaml
 ```
 
 | Library | Version | Purpose |
 |---|---|---|
 | **fmpy** | **`==0.3.32` (strictly pinned)** | FMU (physical model) execution engine. **Must be pinned — API differences break execution** (Trap #57) |
 | **numpy** | **`>=1.24`** | Numerical computation for simulation |
-| **lxml** | Latest stable | Design XML loading (`oven_control_from_design_xml`) — *to be verified* |
-| **matplotlib** | **`>=3.7`** | Result graph display — *to be verified* |
+| **matplotlib** | **`>=3.7`** | Result graph display |
+| **pyyaml** | Latest stable | YAML manifest loading (`src/python_runtime/physics/manifest.py`) |
 
 > ⚠️ **Do not change the `fmpy==0.3.32` line.** Other versions fail during FMU extraction/execution.
-> 📌 Whether `lxml` / `matplotlib` are actually imported is pending verification; remove them from `requirements.txt` if unused.
+> 📌 Verified: `matplotlib` (demos, logger) and `pyyaml` (manifest loader) are imported. `lxml` is not imported; stdlib `xml.etree` is used instead.
 
 ---
 
@@ -107,7 +107,6 @@ If these two lines appear, setup is complete. Otherwise, see §7.
 | `python` not found | PATH not set | Reinstall Python with "Add to PATH" enabled |
 | `pip` not found | pip missing | Run `python -m ensurepip` |
 | Graphs not displayed | matplotlib missing | Re-run `pip install -r requirements.txt` |
-| XML demo error | lxml missing | Re-run `pip install -r requirements.txt` |
 
 ---
 

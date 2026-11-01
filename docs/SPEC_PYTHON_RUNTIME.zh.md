@@ -44,19 +44,19 @@
 ```
 fmpy==0.3.32
 numpy>=1.24
-lxml
 matplotlib>=3.7
+pyyaml
 ```
 
 | 库 | 版本要求 | 用途 |
 |---|---|---|
 | **fmpy** | **`==0.3.32`（严格固定）** | FMU（物理模型）执行引擎。**API 差异会导致无法运行，必须固定版本**（Trap #57） |
 | **numpy** | **`>=1.24`** | 仿真数值计算 |
-| **lxml** | 最新稳定版 | 读取设计 XML（`oven_control_from_design_xml`）—— *待验证* |
-| **matplotlib** | **`>=3.7`** | 结果图表显示 —— *待验证* |
+| **matplotlib** | **`>=3.7`** | 结果图表显示 |
+| **pyyaml** | 最新稳定版 | YAML 清单加载（`src/python_runtime/physics/manifest.py`） |
 
 > ⚠️ **请勿修改 `fmpy==0.3.32` 这一行。** 其他版本在 FMU 解压/执行时会失败。
-> 📌 `lxml` / `matplotlib` 是否实际被 import 尚待验证；如未使用则从 `requirements.txt` 中删除。
+> 📌 已确认使用 `matplotlib`（演示、日志）和 `pyyaml`（清单加载）。`lxml` 未被 import，改用标准库 `xml.etree`。
 
 ---
 
@@ -107,7 +107,6 @@ OK
 | 找不到 `python` | 未设置 PATH | 重新安装 Python 并勾选 "Add to PATH" |
 | 找不到 `pip` | 未安装 pip | 执行 `python -m ensurepip` |
 | 图表不显示 | 未安装 matplotlib | 重新执行 `pip install -r requirements.txt` |
-| XML 演示报错 | 未安装 lxml | 重新执行 `pip install -r requirements.txt` |
 
 ---
 

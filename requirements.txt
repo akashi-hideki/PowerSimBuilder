@@ -1,4 +1,4 @@
 fmpy==0.3.32
 numpy>=1.24
-lxml
 matplotlib>=3.7
+pyyaml
