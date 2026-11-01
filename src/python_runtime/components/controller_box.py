@@ -256,22 +256,7 @@ class ControllerBox(Component):
     def _resolve_generated_path(generated_path: str | None) -> Path:
         if generated_path:
             return Path(generated_path).resolve()
-        # Search common generated/ dirs for *_powersim.py (StaTable output).
-        search_dirs = [
-            Path.cwd() / "generated",
-            Path(__file__).resolve().parents[3] / "generated",
-        ]
-        fallback = search_dirs[0] / "controller_box_powersim.py"
-        for d in search_dirs:
-            if d.is_dir():
-                hits = sorted(d.glob("*_powersim.py"))
-                # Prefer the known CookingHeater controller if present.
-                for h in hits:
-                    if "cookingheater" in h.name.lower():
-                        return h
-                if hits:
-                    return hits[0]
-        # Legacy fixture fallback
+        # Priority 1: legacy test fixture (only exists in dev repo, contains real impls)
         legacy = (
             Path(__file__).resolve().parents[3]
             / "tests"
@@ -282,4 +267,18 @@ class ControllerBox(Component):
         )
         if legacy.is_file():
             return legacy
-        return fallback
+        # Priority 2: explicit conventional name
+        candidates = [
+            Path.cwd() / "generated" / "controller_box_powersim.py",
+            Path(__file__).resolve().parents[3] / "generated" / "controller_box_powersim.py",
+        ]
+        for p in candidates:
+            if p.is_file():
+                return p
+        # Priority 3: glob fallback (demos without explicit generated_path)
+        for d in [Path.cwd() / "generated", Path(__file__).resolve().parents[3] / "generated"]:
+            if d.is_dir():
+                hits = sorted(d.glob("*_powersim.py"))
+                if hits:
+                    return hits[0]
+        return candidates[0]
