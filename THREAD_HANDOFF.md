@@ -189,3 +189,11 @@ cd C:\dev\PowerSimBuilder
 - 原因: `--filter "FullyQualifiedName~ProjectRoundTripTests"` が残っていた
 - 対策: フィルタを外して全 UITests を実行（`xunit.runner.json` で並列無効化済みなので安定）
 - 検出: `verify_all.ps1` の E2E 結果が `合計: 5` なら古い、`合計: 12`（11 pass / 1 skip）が正常
+
+### Trap #64: ControllerBoxDescriptorBuilder のポート数が psbproj と一致しない
+
+- 症状: GUI インポート後のポート = 22 入力 / 20 出力、psbproj = 4 入力 / 5 出力
+- 原因: Stage 1 (`self.globals[...]` の読み書き抽出) が全参照変数を拾う。psbproj は手動キュレーション (gating で `heater_command` 追加)
+- 設計判断: **A 案（現状維持）** を採用。全変数をポート化しても動作上の問題なし
+- 固定: `ControllerBoxDescriptorBuilderTests.DesignXml_Builder_ProducesExpectedBasePorts` で 22/20 を完全一致アサート
+- gating の `heater_command`: `gate_input_port` パラメータで動的追加されるため GLOBAL_VARIABLES には含まれない
