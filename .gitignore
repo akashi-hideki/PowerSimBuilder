@@ -245,3 +245,6 @@ generated/temp_*.py
 
 # pytest basetemp (root-level)
 .pytest_tmp/
+
+# Group files (user-generated, not source)
+*.psbgroup
