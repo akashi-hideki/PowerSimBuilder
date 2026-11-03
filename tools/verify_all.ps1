@@ -35,7 +35,10 @@ if (Test-Path "tools\verify_pid.py") {
 # 4) E2E tests
 Write-Host "[4/6] E2E TESTS" -ForegroundColor Yellow
 Get-Process PowerSimBuilder -ErrorAction SilentlyContinue | Stop-Process -Force
-$testOut = & dotnet test tests\PowerSimBuilder.UITests --filter "FullyQualifiedName~ProjectRoundTripTests" --nologo 2>&1
+# Run ALL UITests (SmokeTests + ProjectRoundTripTests + PythonEditorFormShownTests).
+# xunit.runner.json disables parallelism; expect ~11 pass + 1 skip.
+# Trap #63: previously filtered to ProjectRoundTripTests only (5/12); new E2E was silently skipped.
+$testOut = & dotnet test tests\PowerSimBuilder.UITests --nologo 2>&1
 $testExit = $LASTEXITCODE
 $testOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "  $_" }
 if ($testExit -eq 0) { Write-Host "  exit=0 OK" -ForegroundColor Green } else { Write-Host "  exit=$testExit NG" -ForegroundColor Red }
