@@ -1,0 +1,25 @@
+{
+  "Components": [
+    {
+      "Descriptor": {
+        "Name": "Controller Box",
+        "Type": "ControllerBox",
+        "Category": "Control",
+        "Parameters": [
+          { "Name": "generated_path", "Type": "string", "DefaultValue": "" },
+          { "Name": "auto_events", "Type": "string", "DefaultValue": "" },
+          { "Name": "gate_layer", "Type": "string", "DefaultValue": "" },
+          { "Name": "gate_states", "Type": "string", "DefaultValue": "" },
+          { "Name": "gate_input_port", "Type": "string", "DefaultValue": "" },
+          { "Name": "gate_output_port", "Type": "string", "DefaultValue": "" }
+        ],
+        "InputPorts": ["oven_target_temp", "oven_current_temp", "heater_command", "door_open"],
+        "OutputPorts": ["heater_top_duty", "heater_middle_duty", "heater_bottom_duty", "fan_duty", "error_code"]
+      },
+      "Parameters": {},
+      "Location": { "X": 100, "Y": 100 },
+      "InstanceName": "controllerBox1"
+    }
+  ],
+  "Connections": []
+}
