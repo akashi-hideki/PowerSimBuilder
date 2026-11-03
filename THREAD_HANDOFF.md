@@ -150,6 +150,70 @@
 
 - `tools/edit_role_function.py` は開発者向けとして完成済み（`--show` / `--body` / `--dry-run`）
 - `F_ReadThermistors` は実装済み（`thermistor_top = oven_current_temp + 5`）
+
+### 2026-11-03 セッション固有情報（引継ぎ補足）
+
+> 通常セクションには載らない、作業プロセス・状態・申し送り。
+
+#### セッション振り返り（プロセス）
+
+| 項目 | 内容 |
+|---|---|
+| セッション長 | 11/03 午前〜夕方（長時間） |
+| 主な失敗パターン | アンカー不一致 5 回 / PowerShell CRLF 問題 3 回 / フック中断 4 回 |
+| 発見したツール | `gcommit.ps1` / `finish.ps1` / `enable-utf8.ps1`（セッション途中で発見） |
+| 最大の学び | 「実ファイルを見てからパッチを書く」「コミットは `gcommit.ps1`」 |
+
+#### 次回以降の鉄則（必ず守る）
+
+1. **コミットは `.\tools\gcommit.ps1 "msg" -Push`** — `mixed line ending` 中断を自動解決
+2. **パッチ前に実ファイルを `Get-Content` で確認** — アンカー不一致防止
+3. **CRLF 混在の可能性は `[regex]::Replace` + `\r?\n`** — ヒアストリング CRLF 対策
+4. **`String.Replace` は全置換**（Trap #77） — 単一置換は `[regex]::Replace(..., count=1)`
+5. **PowerShell 再起動後は `.\tools\enable-utf8.ps1`** — 文字化け防止
+6. **大量 diff は `git diff --ignore-all-space --stat`** — CRLF 全体変換の検出
+
+#### ファイル状態スナップショット（2026-11-03 終了時点）
+
+| ファイル | 状態 |
+|---|---|
+| `generated/CookingHeaterController_powersim.py` | `F_ReadThermistors` 実装済み、他 59 関数は `return 0` スタブ |
+| `generated/demo_main.py` | `t_end=300` / `generated_path` 絶対パス / `auto_events=demo_oven` |
+| `examples/demos/oven_control_statable.psbproj` | 動作確認済み（GUI Run 300 秒完走） |
+| `examples/demos/oven_control_nocbox.psbproj` | テスト用（ControllerBox なし、PID 直接制御） |
+| `examples/demos/oven_control_statable_v181.psbproj` | 自己完結版（`*_powersim.py` 同梱） |
+| `tools/edit_role_function.py` | 正式採用（`--show` / `--body` / `--dry-run`） |
+
+#### 未整理事項（次回対応）
+
+| 項目 | 内容 | 優先 |
+|---|---|---|
+| `tmp/*.py`（26 ファイル） | デバッグスクリプト多数。`.gitignore` 対象化 or 削除 | 🟡 |
+| `examples/demos/oven_control_nocbox.psbproj` | テスト成果物。gitignore 対象化を検討 | 🟡 |
+| `message` イベント残り 5 箇所 | `EditLogEvent` へ変換（任意） | 🟢 |
+| Role Snippets | SPEC 済み、実装は A/B/C 判断待ち | 🔴 |
+| 全 60 ロール関数のスタブ | `F_ReadThermistors` 以外は `return 0` | 🟡 |
+
+#### 次回再開時の確認コマンド
+
+```powershell
+cd C:\dev\PowerSimBuilder
+.\tools\enable-utf8.ps1
+git log --oneline -5
+git status --short
+.\tools\verify_all.ps1
+```
+
+#### Python 編集ワークフロー（確定）
+
+```
+GUI: StaTable XML -> ControllerBox 生成
+  -> OvenChamber/PID 配置 + 配線 + パラメータ設定
+  -> Save As .psbproj（generated_path は絶対パス、Trap #79）
+  -> 閉じる
+Script: python tools\edit_role_function.py <powersim.py> <Layer> <F_Func> --body "code"
+  -> GUI: Open .psbproj -> 編集内容確認 -> Create Simulation -> Run
+```
 ### 次タスク
 
 #### 優先 1: ログベース自動テスト
