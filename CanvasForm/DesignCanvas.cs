@@ -618,17 +618,37 @@ namespace PowerSimBuilder
         private void HandleComponentSelectedChanged(object sender)
         {
             if (_suppressSelectionChanged) return;
+            var component = (ComponentControl)sender;
+            bool additive = (Control.ModifierKeys & Keys.Control) == Keys.Control;
+
             _suppressSelectionChanged = true;
             try
             {
-                var component = (ComponentControl)sender;
-                foreach (var c in _selectedComponents)
+                if (additive)
                 {
-                    if (c != null && c != component) c.IsSelected = false;
+                    // Ctrl+click: toggle membership
+                    if (_selectedComponents.Contains(component))
+                    {
+                        _selectedComponents.Remove(component);
+                        component.IsSelected = false;
+                    }
+                    else
+                    {
+                        _selectedComponents.Add(component);
+                        component.IsSelected = true;
+                    }
                 }
-                _selectedComponents.Clear();
-                _selectedComponents.Add(component);
-                component.IsSelected = true;
+                else
+                {
+                    // Plain click: replace selection
+                    foreach (var c in _selectedComponents)
+                    {
+                        if (c != null && c != component) c.IsSelected = false;
+                    }
+                    _selectedComponents.Clear();
+                    _selectedComponents.Add(component);
+                    component.IsSelected = true;
+                }
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 ComponentSelected?.Invoke(this, new ComponentEventArgs(component));
                 Invalidate();
@@ -669,20 +689,8 @@ namespace PowerSimBuilder
 
             if (e.Button == MouseButtons.Left)
             {
-                // Ctrl+click: toggle membership in the multi-selection, do not drag.
-                bool ctrl = (Control.ModifierKeys & Keys.Control) == Keys.Control;
-                if (ctrl)
-                {
-                    SelectComponent(component, additive: true);
-                    return;
-                }
-                // Plain click on an unselected component: replace selection.
-                // Click on an already-selected component: keep the whole selection
-                // so the user can drag the group.
-                if (!IsComponentSelected(component))
-                {
-                    SelectComponent(component, additive: false);
-                }
+                // Selection is decided by ComponentControl.OnMouseDown -> SelectedChanged.
+                // Selection is handled by HandleComponentSelectedChanged. Drag existing selection only.
                 StartDragging(component, e.Location);
             }
         }
