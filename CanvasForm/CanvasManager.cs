@@ -112,6 +112,39 @@ namespace PowerSimBuilder
         }
 
         /// <summary>
+        /// Phase 4: add a pre-built ComponentControl (used by GroupManager.LoadAndAppend).
+        /// Keeps InstanceName and Parameters intact, matching LoadModel's internal pattern.
+        /// </summary>
+        public void AddComponentControl(ComponentControl component)
+        {
+            if (component == null) throw new ArgumentNullException(nameof(component));
+            SaveStateForUndo();
+            _components.Add(component);
+            Canvas.AddComponent(component);
+            NotifyCanvasModified();
+        }
+
+        /// <summary>
+        /// Phase 4: append multiple components and connections in one undo step.
+        /// Used by GroupManager.LoadAndAppend to avoid per-item undo stack churn.
+        /// </summary>
+        public void BeginBulkInsert() { SaveStateForUndo(); }
+        public void AppendComponentNoUndo(ComponentControl component)
+        {
+            if (component == null) return;
+            _components.Add(component);
+            Canvas.AddComponent(component);
+        }
+        public void AppendConnectionNoUndo(ComponentControl src, string sp, ComponentControl dst, string dp)
+        {
+            if (src == null || dst == null) return;
+            var connection = new Connection { StartComponent = src, StartPort = sp, EndComponent = dst, EndPort = dp };
+            _connections.Add(connection);
+            Canvas.AddConnection(connection);
+        }
+        public void EndBulkInsert() { NotifyCanvasModified(); Canvas.Invalidate(); }
+
+        /// <summary>
         /// コンポーネントを削除
         /// 注意点: 関連接続も同時削除
         /// </summary>

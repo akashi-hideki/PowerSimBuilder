@@ -105,5 +105,95 @@ namespace PowerSimBuilder
             if (group == null) throw new InvalidDataException("Failed to parse group file");
             return group;
         }
+
+        /// <summary>
+        /// Phase 4: load a .psbgroup file and append its components and internal
+        /// connections to the current canvas. Group positions are offset by <paramref name="offset"/>.
+        /// Instance names are made unique by appending _2, _3, ... when they collide.
+        /// Returns (componentsAdded, connectionsAdded).
+        /// </summary>
+        public static (int components, int connections) LoadAndAppend(
+            string path,
+            CanvasManager manager,
+            System.Drawing.Point offset)
+        {
+            if (manager == null) throw new ArgumentNullException(nameof(manager));
+            var group = Load(path);
+
+            // Collect existing instance names for uniqueness.
+            var existing = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var c in manager.GetAllComponents())
+                if (c?.InstanceName != null) existing.Add(c.InstanceName);
+
+            var byName = new Dictionary<string, ComponentControl>(StringComparer.Ordinal);
+            int addedComponents = 0;
+            int addedConnections = 0;
+
+            manager.BeginBulkInsert();
+            try
+            {
+                foreach (var ci in group.Components ?? new List<ComponentInstanceV2>())
+                {
+                    var uniqueName = MakeUnique(ci.InstanceName, existing);
+                    existing.Add(uniqueName);
+
+                    var control = new ComponentControl(ci.Descriptor)
+                    {
+                        InstanceName = uniqueName,
+                        Location = new System.Drawing.Point(
+                            (ci.Location?.X ?? 0) + offset.X,
+                            (ci.Location?.Y ?? 0) + offset.Y),
+                    };
+                    control.Name = uniqueName;
+                    if (ci.Parameters != null)
+                    {
+                        foreach (var kv in ci.Parameters)
+                        {
+                            if (control.Parameters.ContainsKey(kv.Key))
+                                control.Parameters[kv.Key] = kv.Value;
+                            else
+                                control.Parameters[kv.Key] = kv.Value;
+                        }
+                    }
+                    manager.AppendComponentNoUndo(control);
+                    byName[ci.InstanceName ?? ""] = control;
+                    addedComponents++;
+                }
+
+                foreach (var cv in group.Connections ?? new List<ConnectionV2>())
+                {
+                    var (srcName, srcPort) = SplitRef(cv.From);
+                    var (dstName, dstPort) = SplitRef(cv.To);
+                    if (srcName == null || dstName == null) continue;
+                    if (!byName.TryGetValue(srcName, out var src)) continue;
+                    if (!byName.TryGetValue(dstName, out var dst)) continue;
+                    manager.AppendConnectionNoUndo(src, srcPort, dst, dstPort);
+                    addedConnections++;
+                }
+            }
+            finally
+            {
+                manager.EndBulkInsert();
+            }
+
+            return (addedComponents, addedConnections);
+        }
+
+        private static string MakeUnique(string baseName, HashSet<string> existing)
+        {
+            var name = string.IsNullOrEmpty(baseName) ? "comp" : baseName;
+            if (!existing.Contains(name)) return name;
+            int i = 2;
+            while (existing.Contains(name + "_" + i)) i++;
+            return name + "_" + i;
+        }
+
+        private static (string instance, string port) SplitRef(string reference)
+        {
+            if (string.IsNullOrEmpty(reference)) return (null, null);
+            int idx = reference.LastIndexOf('.');
+            if (idx <= 0 || idx == reference.Length - 1) return (null, null);
+            return (reference.Substring(0, idx), reference.Substring(idx + 1));
+        }
     }
 }
