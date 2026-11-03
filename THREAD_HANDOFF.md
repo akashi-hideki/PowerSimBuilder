@@ -1,4 +1,4 @@
-﻿# THREAD HANDOFF — PowerSimBuilder 現状スナップショット
+# THREAD HANDOFF — PowerSimBuilder 現状スナップショット
 
 > **用途**: 新スレッド開始時にこのファイル 1 つ読めば即座に作業再開できる「現在の状態」を記録する。
 > **累積履歴**: `HANDOFF_MVP1_2.md`（バージョン別・罠 #1〜#57）を参照。
@@ -182,3 +182,10 @@ cd C:\dev\PowerSimBuilder
 - `PowerSimBuilder.Tests`: 528 / 526 Pass / 2 Skip / 0 Fail
 - `PowerSimBuilder.UITests`: 12 / 11 Pass / 1 Skip / 0 Fail
 - 通常起動手動確認: ダブルクリック編集 / Create Simulation / ControllerBox Edit — すべて OK
+
+### Trap #63: verify_all.ps1 の E2E フィルタが新テストを漏らす
+
+- 症状: 昨日追加した `AddPhysicsAndRun_Dahlquist_Completes` が `verify_all.ps1` で実行されず、E2E が 5/12 のみ
+- 原因: `--filter "FullyQualifiedName~ProjectRoundTripTests"` が残っていた
+- 対策: フィルタを外して全 UITests を実行（`xunit.runner.json` で並列無効化済みなので安定）
+- 検出: `verify_all.ps1` の E2E 結果が `合計: 5` なら古い、`合計: 12`（11 pass / 1 skip）が正常
