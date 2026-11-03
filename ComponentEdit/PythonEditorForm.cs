@@ -84,6 +84,8 @@ namespace PowerSimBuilder
             btnOpenFolder.Visible = enableRunButtons;
             btnOpenFolder.Enabled = enableRunButtons;
             lblStatus.Visible = enableRunButtons;
+            if (lblSimTime != null) lblSimTime.Visible = enableRunButtons;
+            if (numSimTime != null) numSimTime.Visible = enableRunButtons;
 
             
             // Re-apply button visibility after the form is fully shown.
@@ -97,6 +99,8 @@ namespace PowerSimBuilder
                 btnOpenFolder.Visible = enableRunButtons;
                 btnOpenFolder.BringToFront();
                 lblStatus.Visible = enableRunButtons;
+                if (lblSimTime != null) lblSimTime.Visible = enableRunButtons;
+                if (numSimTime != null) numSimTime.Visible = enableRunButtons;
                 panelTop.PerformLayout();
                 panelTop.Invalidate(true);
                 panelTop.Update();
