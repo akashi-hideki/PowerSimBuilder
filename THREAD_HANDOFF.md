@@ -113,6 +113,27 @@
 - ControllerBox gating (`MwOven:PidHeating`): ✅ PID 出力を素通し
 - PID + OvenChamber 制御: ✅ 200°C 整定
 - 30 秒短縮実行: ✅ exit 0、波形生成
+
+### 2026-11-03 GUI Run 実証（Trap #79 修正後）
+
+- `oven_control_statable.psbproj` を GUI で Open → Create Simulation → Run で **300 秒シミュレーション完走**
+- `generated_path` が絶対パス（`C:\dev\...\CookingHeaterController_powersim.py`）で出力
+- `F_ReadThermistors` 実装（`thermistor_top = oven_current_temp + 5`）
+- 波形 `simulation_signals.png` 更新（200°C 整定）
+
+### 追加罠（Trap #79）
+
+| # | 罠 |
+|---|---|
+| 79 | `generated_path` 相対パス + GUI Run の CWD=`generated/` → 二重 `generated/` で `FileNotFoundError`。`PythonSimulationMainBuilder` で絶対パス化して解決 |
+
+### CLI vs GUI Run の差異（Trap #79 の背景）
+
+| 項目 | CLI 実行 | GUI Run（PythonExecutor） |
+|---|---|---|
+| CWD | リポジトリルート | `generated/`（temp_*.py のあるフォルダ） |
+| `generated_path` 相対パス | 解決可能 | **二重 generated/ で失敗** |
+- 対策: `PythonSimulationMainBuilder` で `generated_path` を**絶対パス**で書き出し
 ### 次タスク
 
 #### 優先 1: ログベース自動テスト
