@@ -32,6 +32,13 @@ if (Test-Path "tools\verify_pid.py") {
     Write-Host "  SKIP (tools\verify_pid.py not found)" -ForegroundColor Yellow
 }
 
+# 3.5) StaTable psbproj metrics
+Write-Host "[3.5/6] STATABLE PSBPROJ METRICS" -ForegroundColor Yellow
+$stOut = & python -m pytest tests\python\test_statable_psbproj_metrics.py -q 2>&1
+$stExit = $LASTEXITCODE
+$stOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "  $_" }
+if ($stExit -ne 0) { Write-Host "  exit=$stExit NG" -ForegroundColor Red } else { Write-Host "  exit=0 OK" }
+
 # 4) E2E tests
 Write-Host "[4/6] E2E TESTS" -ForegroundColor Yellow
 Get-Process PowerSimBuilder -ErrorAction SilentlyContinue | Stop-Process -Force
