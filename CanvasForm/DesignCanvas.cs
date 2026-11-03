@@ -130,8 +130,26 @@ namespace PowerSimBuilder
             _suppressSelectionChanged = true;
             try
             {
-                if (!additive) ClearSelection();
-                if (!_selectedComponents.Contains(c)) { _selectedComponents.Add(c); c.IsSelected = true; }
+                if (!additive)
+                {
+                    ClearSelection();
+                    _selectedComponents.Add(c);
+                    c.IsSelected = true;
+                }
+                else
+                {
+                    // additive (Ctrl+click): toggle membership
+                    if (_selectedComponents.Contains(c))
+                    {
+                        _selectedComponents.Remove(c);
+                        c.IsSelected = false;
+                    }
+                    else
+                    {
+                        _selectedComponents.Add(c);
+                        c.IsSelected = true;
+                    }
+                }
             }
             finally { _suppressSelectionChanged = false; }
             SelectionChanged?.Invoke(this, EventArgs.Empty);
@@ -651,6 +669,20 @@ namespace PowerSimBuilder
 
             if (e.Button == MouseButtons.Left)
             {
+                // Ctrl+click: toggle membership in the multi-selection, do not drag.
+                bool ctrl = (Control.ModifierKeys & Keys.Control) == Keys.Control;
+                if (ctrl)
+                {
+                    SelectComponent(component, additive: true);
+                    return;
+                }
+                // Plain click on an unselected component: replace selection.
+                // Click on an already-selected component: keep the whole selection
+                // so the user can drag the group.
+                if (!IsComponentSelected(component))
+                {
+                    SelectComponent(component, additive: false);
+                }
                 StartDragging(component, e.Location);
             }
         }
