@@ -294,6 +294,51 @@ namespace PowerSimBuilder
             };
             paramsEditButton.Click += paramsEditButton_Click;
             toolStrip1.Items.Add(paramsEditButton);
+
+            // Phase 3b: Save selection as group
+            var saveGroupButton = new ToolStripButton
+            {
+                Name = "saveGroupButton",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Text = I18n.T("MainForm.BtnSaveGroup"),
+            };
+            saveGroupButton.Click += saveGroupButton_Click;
+            toolStrip1.Items.Add(saveGroupButton);
+        }
+
+        private void saveGroupButton_Click(object sender, EventArgs e)
+        {
+            var selected = designCanvas1.SelectedComponents;
+            if (selected == null || selected.Count == 0)
+            {
+                MessageBox.Show(this, I18n.T("MainForm.MsgSaveGroupNoSelection"),
+                    I18n.T("MainForm.SaveGroupDialogTitle"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            using var dlg = new SaveFileDialog
+            {
+                Title = I18n.T("MainForm.SaveGroupDialogTitle"),
+                Filter = "PowerSimBuilder Group (*.psbgroup)|*.psbgroup",
+                DefaultExt = GroupManager.Extension,
+                AddExtension = true,
+            };
+            if (dlg.ShowDialog(this) != DialogResult.OK) return;
+            try
+            {
+                var groupName = System.IO.Path.GetFileNameWithoutExtension(dlg.FileName);
+                var group = GroupManager.Extract(groupName, selected, _canvasManager.GetAllConnections());
+                GroupManager.Save(dlg.FileName, group);
+                MessageBox.Show(this, I18n.T("MainForm.MsgSaveGroupOk", dlg.FileName),
+                    I18n.T("MainForm.SaveGroupDialogTitle"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message,
+                    I18n.T("Common.MsgTitleError"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         /// <summary>
         /// イベント購読を設定
