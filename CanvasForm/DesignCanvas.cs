@@ -78,7 +78,85 @@ namespace PowerSimBuilder
         /// 選択中のコンポーネント
         /// 注意点: 複数選択未対応
         /// </summary>
-        public ComponentControl SelectedComponent { get; private set; }
+        private readonly System.Collections.Generic.List<ComponentControl> _selectedComponents
+            = new System.Collections.Generic.List<ComponentControl>();
+        private bool _suppressSelectionChanged;
+
+        /// <summary>
+        /// 選択中のコンポーネント（後方互換: 先頭要素）。
+        /// 複数選択時は SelectedComponents を参照。
+        /// </summary>
+        public ComponentControl SelectedComponent
+        {
+            get => _selectedComponents.Count > 0 ? _selectedComponents[0] : null;
+            private set
+            {
+                _suppressSelectionChanged = true;
+                try
+                {
+                    foreach (var c in _selectedComponents) { if (c != null) c.IsSelected = false; }
+                    _selectedComponents.Clear();
+                    if (value != null) { _selectedComponents.Add(value); value.IsSelected = true; }
+                }
+                finally { _suppressSelectionChanged = false; }
+            }
+        }
+
+        /// <summary>
+        /// 選択中のコンポーネント一覧（読み取り専用）。
+        /// </summary>
+        public System.Collections.Generic.IReadOnlyList<ComponentControl> SelectedComponents
+            => _selectedComponents;
+
+        public bool IsComponentSelected(ComponentControl c) => c != null && _selectedComponents.Contains(c);
+
+        public void ClearSelection()
+        {
+            _suppressSelectionChanged = true;
+            try
+            {
+                foreach (var c in _selectedComponents) { if (c != null) c.IsSelected = false; }
+                _selectedComponents.Clear();
+            }
+            finally { _suppressSelectionChanged = false; }
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            Invalidate();
+        }
+
+        public void SelectComponent(ComponentControl c, bool additive = false)
+        {
+            if (c == null) return;
+            _suppressSelectionChanged = true;
+            try
+            {
+                if (!additive) ClearSelection();
+                if (!_selectedComponents.Contains(c)) { _selectedComponents.Add(c); c.IsSelected = true; }
+            }
+            finally { _suppressSelectionChanged = false; }
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            ComponentSelected?.Invoke(this, new ComponentEventArgs(c));
+            Invalidate();
+        }
+
+        public void SelectComponents(System.Collections.Generic.IEnumerable<ComponentControl> components)
+        {
+            _suppressSelectionChanged = true;
+            try
+            {
+                ClearSelection();
+                if (components != null)
+                {
+                    foreach (var c in components)
+                    {
+                        if (c != null && !_selectedComponents.Contains(c))
+                        { _selectedComponents.Add(c); c.IsSelected = true; }
+                    }
+                }
+            }
+            finally { _suppressSelectionChanged = false; }
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            Invalidate();
+        }
 
         /// <summary>
         /// 接続グラフ管理
@@ -520,15 +598,23 @@ namespace PowerSimBuilder
         /// </summary>
         private void HandleComponentSelectedChanged(object sender)
         {
-            var component = (ComponentControl)sender;
-            // FIX 3: unselect previous component before assigning new one
-            if (SelectedComponent != null && SelectedComponent != component)
+            if (_suppressSelectionChanged) return;
+            _suppressSelectionChanged = true;
+            try
             {
-                SelectedComponent.IsSelected = false;
+                var component = (ComponentControl)sender;
+                foreach (var c in _selectedComponents)
+                {
+                    if (c != null && c != component) c.IsSelected = false;
+                }
+                _selectedComponents.Clear();
+                _selectedComponents.Add(component);
+                component.IsSelected = true;
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
+                ComponentSelected?.Invoke(this, new ComponentEventArgs(component));
+                Invalidate();
             }
-            SelectedComponent = component;
-            SelectionChanged?.Invoke(this, EventArgs.Empty);
-            ComponentSelected?.Invoke(this, new ComponentEventArgs(component));
+            finally { _suppressSelectionChanged = false; }
         }
 
         /// <summary>
@@ -953,10 +1039,18 @@ namespace PowerSimBuilder
         /// </summary>
         private void DeleteSelectedComponent()
         {
-            if (SelectedComponent != null)
+            if (_selectedComponents.Count == 0) return;
+            var toRemove = _selectedComponents.ToArray();
+            _selectedComponents.Clear();
+            foreach (var c in toRemove)
             {
-                RemoveComponent(SelectedComponent);
+                if (c != null)
+                {
+                    c.IsSelected = false;
+                    RemoveComponent(c);
+                }
             }
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>

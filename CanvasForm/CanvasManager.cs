@@ -619,6 +619,7 @@ namespace PowerSimBuilder
         public List<ComponentModel> Components { get; set; } = new List<ComponentModel>();
         public List<ConnectionModel> Connections { get; set; } = new List<ConnectionModel>();
         public int SelectedComponentIndex { get; set; } = -1;
+        public List<int> SelectedComponentIndices { get; set; } = new List<int>();
         public int SelectedConnectionIndex { get; set; } = -1;
     }
 
