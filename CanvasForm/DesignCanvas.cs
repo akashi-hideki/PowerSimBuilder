@@ -81,6 +81,7 @@ namespace PowerSimBuilder
         private readonly System.Collections.Generic.List<ComponentControl> _selectedComponents
             = new System.Collections.Generic.List<ComponentControl>();
         private bool _suppressSelectionChanged;
+        private System.Collections.Generic.Dictionary<ComponentControl, Point> _dragStartPositions;
 
         /// <summary>
         /// 選択中のコンポーネント（後方互換: 先頭要素）。
@@ -967,6 +968,13 @@ namespace PowerSimBuilder
             _isDragging = true;
             _draggedComponent = component;
             _dragStartPosition = location;
+            _dragStartPositions = new System.Collections.Generic.Dictionary<ComponentControl, Point>();
+            foreach (var c in _selectedComponents)
+            {
+                if (c != null) _dragStartPositions[c] = c.Location;
+            }
+            if (!_dragStartPositions.ContainsKey(component))
+                _dragStartPositions[component] = component.Location;
         }
 
         /// <summary>
@@ -979,10 +987,25 @@ namespace PowerSimBuilder
             int deltaX = location.X - _dragStartPosition.X;
             int deltaY = location.Y - _dragStartPosition.Y;
 
-            component.Left += deltaX;
-            component.Top += deltaY;
-
-            UpdateComponentConnections(component);
+            if (_dragStartPositions != null && _dragStartPositions.Count > 0)
+            {
+                foreach (var kv in _dragStartPositions)
+                {
+                    var c = kv.Key;
+                    if (c == null) continue;
+                    c.Location = new Point(kv.Value.X + deltaX, kv.Value.Y + deltaY);
+                }
+                foreach (var c in _dragStartPositions.Keys)
+                {
+                    if (c != null) UpdateComponentConnections(c);
+                }
+            }
+            else
+            {
+                component.Left += deltaX;
+                component.Top += deltaY;
+                UpdateComponentConnections(component);
+            }
             Invalidate();
         }
 
@@ -995,6 +1018,7 @@ namespace PowerSimBuilder
         {
             _isDragging = false;
             _draggedComponent = null;
+            _dragStartPositions = null;
         }
         #endregion
 
