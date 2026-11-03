@@ -242,6 +242,7 @@
   "DesignCanvas.MenuEditPythonCode": "编辑 Python 代码",
   "DesignCanvas.MsgGeneratedMissing": "未找到生成文件：{0}",
   "DesignCanvas.MsgNoGeneratedPath": "ControllerBox 缺少 generated_path 参数。",
+  "DesignCanvas.PickPowersimTitle": "选择控制器（*_powersim.py）以编辑角色函数",
   "Manager.MsgSaved": "文件已保存。",
   "PythonEditor.SaveDialogTitle": "保存 Python 文件",
   "EditPanel.GroupBundledComponents": "内置组件",

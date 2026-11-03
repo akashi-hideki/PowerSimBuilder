@@ -1801,6 +1801,14 @@ private void ClearCanvas()
         /// </summary>
         private void EditPythonCodeItem_Click(object sender, System.EventArgs e)
         {
+            EditDebugLog("=== EditPythonCodeItem_Click START ===");
+            EditDebugLog($"  Selected={SelectedComponent?.InstanceName}");
+            EditDebugLog($"  Type={SelectedComponent?.Descriptor?.Type}");
+            if (SelectedComponent?.Parameters != null)
+            {
+                foreach (var kv in SelectedComponent.Parameters)
+                    EditDebugLog($"    param {kv.Key}='{kv.Value}'");
+            }
             if (SelectedComponent == null) return;
             var descriptor = SelectedComponent.Descriptor;
             if (descriptor == null) return;
@@ -1813,15 +1821,23 @@ private void ClearCanvas()
                     if (SelectedComponent.Parameters != null &&
                         SelectedComponent.Parameters.TryGetValue("generated_path", out var raw))
                     {
-                        generatedPath = raw as string;
+                        generatedPath = AsStringOrNull(raw);
+                        EditDebugLog($"  generated_path from Parameters: '{generatedPath}'");
                     }
 
                     if (string.IsNullOrEmpty(generatedPath))
                     {
-                        AppServices.MessageBox.ShowInfo(this,
-                            I18n.T("DesignCanvas.MsgNoGeneratedPath"),
-                            I18n.T("Common.MsgTitleInfo"));
-                        return;
+                        // Palette ControllerBox is not bound to any controller.
+                        // Role functions live in *_powersim.py files; the adapter
+                        // template (user_components/ControllerBox.py) is not relevant.
+                        EditDebugLog("  generated_path empty -> prompting user");
+                        var picked = PromptUserPickPowersimFile();
+                        if (string.IsNullOrEmpty(picked))
+                        {
+                            return;
+                        }
+                        generatedPath = picked;
+                        EditDebugLog("  user picked: " + generatedPath);
                     }
                     if (!System.IO.File.Exists(generatedPath))
                     {
@@ -1830,6 +1846,7 @@ private void ClearCanvas()
                             I18n.T("Common.MsgTitleWarning"));
                         return;
                     }
+                    EditDebugLog($"  -> OpenPythonEditor({generatedPath})");
                     OpenPythonEditor(generatedPath);
                     return;
                 }
@@ -1839,6 +1856,8 @@ private void ClearCanvas()
             }
             catch (System.Exception ex)
             {
+                EditDebugLog($"  EXCEPTION: {ex.GetType().Name}: {ex.Message}");
+
                 AppServices.MessageBox.ShowError(this,
                     I18n.T("MainForm.MsgGenerateFail", ex.Message),
                     I18n.T("Common.MsgTitleError"));
@@ -1848,6 +1867,78 @@ private void ClearCanvas()
         /// <summary>
         /// Open a Python file in PythonEditorForm with ProjectDir set.
         /// </summary>
+        /// <summary>
+        /// Default ControllerBox.py lookup for palette instances whose
+        /// generated_path is empty. Preference: user_components (override) > generated.
+        /// </summary>
+        private static readonly string EditDebugLogPath =
+            System.IO.Path.Combine(System.IO.Path.GetTempPath(), "psb_edit_debug.log");
+
+        private static string AsStringOrNull(object value)
+        {
+            if (value == null) return null;
+            if (value is string s) return s;
+            if (value is System.Text.Json.JsonElement je)
+            {
+                return je.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? je.GetString()
+                    : je.ToString();
+            }
+            return value.ToString();
+        }
+
+        private static void EditDebugLog(string message)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(EditDebugLogPath,
+                    DateTime.Now.ToString("HH:mm:ss.fff") + " " + message + Environment.NewLine);
+                Console.WriteLine("[EDIT] " + message);
+            }
+            catch { }
+        }
+
+        private static string PromptUserPickPowersimFile()
+        {
+            EditDebugLog("--- PromptUserPickPowersimFile ---");
+            using var dlg = new System.Windows.Forms.OpenFileDialog
+            {
+                Title = I18n.T("DesignCanvas.PickPowersimTitle"),
+                Filter = "StaTable controller (*_powersim.py)|*_powersim.py|Python (*.py)|*.py|All files (*.*)|*.*",
+                CheckFileExists = true,
+                Multiselect = false,
+            };
+            var roots = new System.Collections.Generic.List<string>();
+            void AddR(string r) { if (!string.IsNullOrEmpty(r) && !roots.Contains(r)) roots.Add(r); }
+            var cwd = System.IO.Directory.GetCurrentDirectory();
+            AddR(cwd);
+            var dir = cwd;
+            while (!string.IsNullOrEmpty(dir))
+            {
+                if (System.IO.File.Exists(System.IO.Path.Combine(dir, "PowerSimBuilder.sln")))
+                { AddR(dir); break; }
+                var parent = System.IO.Path.GetDirectoryName(dir);
+                if (parent == dir) break;
+                dir = parent;
+            }
+            foreach (var root in roots)
+            {
+                var genDir = System.IO.Path.Combine(root, "generated");
+                if (System.IO.Directory.Exists(genDir))
+                {
+                    dlg.InitialDirectory = genDir;
+                    EditDebugLog("  InitialDirectory: " + genDir);
+                    break;
+                }
+            }
+            if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                EditDebugLog("  user cancelled");
+                return null;
+            }
+            return dlg.FileName;
+        }
+
         private void OpenPythonEditor(string filePath)
         {
             // Test mode: enable Run button so UI tests can exercise the Run path.

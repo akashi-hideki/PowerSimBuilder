@@ -2,11 +2,85 @@
 
 > **用途**: 新スレッド開始時にこのファイル 1 つ読めば即座に作業再開できる「現在の状態」を記録する。
 > **累積履歴**: `HANDOFF_MVP1_2.md`（バージョン別・罠 #1〜#57）を参照。
-> **最終更新**: 2026-11-01（FMU Adapter 修正 + Trap #57 + controller_box legacy 優先）
+> **最終更新**: 2026-11-03（FMU Adapter 修正 + Trap #57 + controller_box legacy 優先）
 
 ---
 
 
+## 2026-11-03 更新サマリ
+
+| 項目 | 値 |
+|--------|------------------------------|
+| origin/main | `1a20211` + 本コミット |
+| C# テスト | 567 passed / 2 skipped |
+| Python テスト | 463 passed |
+| E2E (UITests) | 12 passed / 1 skip |
+
+### 完了機能
+
+#### 複数選択 (Multi-Select)
+- `DesignCanvas.SelectedComponents` (IReadOnlyList)
+- `SelectComponent(c, additive)` / `SelectComponents` / `ClearSelection` / `IsComponentSelected`
+- Ctrl+click トグル、一括移動 (multi-drag)
+- `_suppressSelectionChanged` ガードで再帰防止
+
+#### グループ保存/ロード
+- `SimPartsManege/GroupManager.cs` (Extract / Save / Load / LoadAndAppend)
+- `.psbgroup` (JSON, 相対座標, 接続再マッピング, 重複名 `_2` 付与)
+- ツールバー「Save Group...」「Load Group...」(en/zh i18n)
+
+#### ControllerBox 編集修正
+- `JsonElement` 対応 (`AsStringOrNull` ヘルパー) — psbproj ロード後の `raw as string` が null になる問題
+- パレット ControllerBox: `*_powersim.py` をユーザー選択（ロール関数編集用）
+- `EditDebugLog` (Debug のみ、`PSB_EDIT_DEBUG=1` で有効)
+
+#### ツール標準化
+- `tools/gcommit.ps1` = 標準コミットツール（pre-commit auto-fix を自動で再ステージ）
+- `tools/finish.ps1` = 作業完了時の一括処理
+- `tools/enable-utf8.ps1` = コンソール文字化け解消
+
+### 追加された罠 (Trap #65-#74)
+
+| # | 罠 |
+|--------|------------------------------|
+| 65 | `IsSelected` setter の `SelectedChanged` 再帰発火 → `_suppressSelectionChanged` |
+| 66 | PS 5.1 で表セパレータ行がパースエラー → `('-' * N)` で動的生成 |
+| 67 | `ComponentControl.OnMouseDown` と `HandleComponentMouseDown` の二重処理 → 一本化 |
+| 68 | `mixed line ending` フック連続中断 → `gcommit.ps1` を使用 |
+| 69 | `PowerSimBuilder.I18n` クラスと namespace 衝突 → `I18nKeys` に変更 |
+| 70 | `git rm` に `-ErrorAction` → git は PS パラメータ非対応 |
+| 71 | psbproj `Parameters` は `JsonElement` 型 → `AsStringOrNull` で変換 |
+| 72 | パレット ControllerBox は `generated_path` 空 → ユーザー選択に変更 |
+| 73 | 空行混入で `Replace` アンカー不一致 → `[regex]::Replace` + `(?s)` |
+| 74 | `user_components/ControllerBox.py` はアダプタ（ロール関数なし）→ `*_powersim.py` を選ばせる |
+
+### 追加テスト（21 本）
+
+- `DesignCanvasMultiSelectTests` (6)
+- `DesignCanvasCtrlClickTests` (2)
+- `DesignCanvasDragTests` (2)
+- `I18nGroupKeysTests` (8)
+- `GroupManagerTests` (4)
+- `GroupManagerLoadTests` (2)
+- `GroupMultiSelectE2ETests` (1)
+- `GroupManagerLoadErrorTests` (6)
+- `ControllerBoxEditFallbackTests` (2、新 API 用に書き換え)
+
+### 次タスク
+
+#### 優先 1: ログベース自動テスト
+- **Phase B**: ログパスを環境変数 `PSB_EDIT_LOG` で上書き可能に
+- **Phase A**: 構造化ログ (JSON Lines、`event` + params)
+- **Phase C**: FlaUI + ログで編集経路テスト
+
+#### 優先 2: 11/08 GO/NO-GO 判定準備
+- README トップ更新（multi-select / group の紹介）
+- 告知文面ドラフト（WeChat、中英併記）
+
+#### 優先 3: v1.9.0 リリース
+- CHANGELOG 更新、GitHub Release
+
+---
 ## 🆕 2026-11-01 更新サマリ
 
 | 項目 | 値 |
