@@ -134,6 +134,22 @@
 | CWD | リポジトリルート | `generated/`（temp_*.py のあるフォルダ） |
 | `generated_path` 相対パス | 解決可能 | **二重 generated/ で失敗** |
 - 対策: `PythonSimulationMainBuilder` で `generated_path` を**絶対パス**で書き出し
+
+### 2026-11-03 追加: Role Snippets SPEC
+
+- `docs/SPEC_ROLE_SNIPPETS.md` 策定（198 行、実装未着手）
+- 目的: 一般ユーザーが GUI でロール関数を編集・挿入できる仕組み
+- 実装規模: 5〜6h（Phase 1-3 必須 = 3.5h、Phase 4-6 推奨）
+- 後方互換: 完全（`PythonEditorForm` にボタン追加のみ）
+
+### 未決事項（次回判断）
+
+- **A**: 今日中に実装（5-6h、セッション延長）
+- **B**: 次回実装（11/04、他のタスクと並行）
+- **C**: 11/08 GO/NO-GO 優先（Role Snippets は v1.9.x）
+
+- `tools/edit_role_function.py` は開発者向けとして完成済み（`--show` / `--body` / `--dry-run`）
+- `F_ReadThermistors` は実装済み（`thermistor_top = oven_current_temp + 5`）
 ### 次タスク
 
 #### 優先 1: ログベース自動テスト
