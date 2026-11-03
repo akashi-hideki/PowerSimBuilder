@@ -514,7 +514,19 @@ namespace PowerSimBuilder
                              je2.ValueKind == System.Text.Json.JsonValueKind.Undefined))
                             continue;
 
-                        var pyValue = GetPythonValueFromObject(kvp.Value);
+// Resolve generated_path to absolute so the script works
+                        // regardless of process CWD (GUI Run sets CWD to script folder).
+                        object _val = kvp.Value;
+                        if (kvp.Key == "generated_path")
+                        {
+                            var _rawPath = AsStringOrNull(kvp.Value);
+                            if (!string.IsNullOrEmpty(_rawPath))
+                            {
+                                var _abs = ResolveToAbsolutePath(_rawPath);
+                                if (!string.IsNullOrEmpty(_abs)) _val = _abs;
+                            }
+                        }
+                        var pyValue = GetPythonValueFromObject(_val);
                         AddLineToSection("function_def", $"    components[\"{compName}\"].parameters[\"{kvp.Key}\"] = {pyValue}");
                     }
                     AddLineToSection("function_def", "");
@@ -543,6 +555,54 @@ namespace PowerSimBuilder
         /// <summary>Task 3-C-8: convert runtime object to Python literal.
         /// Handles System.Text.Json.JsonElement (from system.json) and
         /// numeric-string coercion (e.g. "50" -> 50.0).</summary>
+        private static string AsStringOrNull(object value)
+        {
+            if (value == null) return null;
+            if (value is string s) return s;
+            if (value is System.Text.Json.JsonElement je)
+            {
+                return je.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? je.GetString()
+                    : je.ToString();
+            }
+            return value.ToString();
+        }
+
+        private static string ResolveToAbsolutePath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return path;
+            try
+            {
+                if (System.IO.Path.IsPathRooted(path) && System.IO.File.Exists(path))
+                    return System.IO.Path.GetFullPath(path);
+
+                var candidates = new System.Collections.Generic.List<string> { path };
+                var dir = System.IO.Directory.GetCurrentDirectory();
+                var roots = new System.Collections.Generic.List<string> { dir };
+                while (!string.IsNullOrEmpty(dir))
+                {
+                    if (System.IO.File.Exists(System.IO.Path.Combine(dir, "PowerSimBuilder.sln")))
+                    {
+                        if (!roots.Contains(dir)) roots.Add(dir);
+                        break;
+                    }
+                    var parent = System.IO.Path.GetDirectoryName(dir);
+                    if (parent == dir) break;
+                    dir = parent;
+                }
+                foreach (var root in roots)
+                    candidates.Add(System.IO.Path.Combine(root, path));
+
+                foreach (var c in candidates)
+                {
+                    if (System.IO.File.Exists(c))
+                        return System.IO.Path.GetFullPath(c);
+                }
+                return path;
+            }
+            catch { return path; }
+        }
+
         private static string GetPythonValueFromObject(object value)
         {
             if (value == null) return "None";
