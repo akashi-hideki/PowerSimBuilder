@@ -886,6 +886,7 @@ namespace PowerSimBuilder
 
                 var builder = new PythonSimulationMainBuilder();
                 builder.FilePath = outputFilePath;
+                builder.TEnd = _currentTEnd;
                 builder.Components = components;
                 builder.ComponentInstances = componentInstances;
                 builder.Connections = connections;
@@ -1474,6 +1475,7 @@ namespace PowerSimBuilder
 
                 var builder = new PythonSimulationMainBuilder();
                 builder.FilePath = outputPath;
+                builder.TEnd = _currentTEnd;
                 builder.Components = components;
                 builder.ComponentInstances = componentInstances;
                 builder.Connections = connections;
@@ -1521,6 +1523,7 @@ namespace PowerSimBuilder
 
                     // ファイルパスを設定
                     builder.FilePath = saveFileDialog.FileName;
+                    builder.TEnd = _currentTEnd;
                     pyfile = builder.FilePath;
 
                     // コンポーネントと接続を引数から設定

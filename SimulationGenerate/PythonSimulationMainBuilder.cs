@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -109,6 +110,9 @@ namespace PowerSimBuilder
 
         /// <summary>エラーハンドラーデリゲート</summary>
         public Action<ErrorCategory, string> ErrorHandler { get; set; } = DefaultErrorHandler;
+
+        /// <summary>Simulation t_end (seconds). Written into the generated t_end = X line.</summary>
+        public double TEnd { get; set; } = 5.0;
         public Dictionary<string, List<string>> CodeSections { get; private set; }
 
         #endregion
@@ -474,7 +478,8 @@ namespace PowerSimBuilder
         private void AddTimeStepDefinition()
         {
             AddLineToSection("function_def", "    dt = 0.001");
-            AddLineToSection("function_def", "    t_end = 5.0");
+            AddLineToSection("function_def",
+                "    t_end = " + TEnd.ToString(CultureInfo.InvariantCulture));
         }
 
         /// <summary>
