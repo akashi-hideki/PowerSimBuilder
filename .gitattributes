@@ -8,11 +8,11 @@
 *.yaml text eol=lf
 *.md text eol=lf
 
-# C# on Windows: CRLF is fine
-*.cs text
-*.csproj text
-*.sln text
-*.config text
+# C# on Windows: force CRLF in working tree, LF in repo (prevents churn)
+*.cs text eol=crlf
+*.csproj text eol=crlf
+*.sln text eol=crlf
+*.config text eol=crlf
 
 # Binary
 *.png binary
