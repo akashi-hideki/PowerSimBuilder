@@ -407,6 +407,7 @@ namespace PowerSimBuilder
                 if (name.StartsWith("_")) continue;
                 if (name.EndsWith("_dbg.py")) continue;
                 if (name.StartsWith("test_")) continue;
+                if (name.StartsWith("temp_")) continue;
                 // StaTable-generated controllers (bundled when IncludePowersim is true).
                 if (name.EndsWith("_powersim.py") && !includePowersim) continue;
 
