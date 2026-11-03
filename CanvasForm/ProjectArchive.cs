@@ -32,6 +32,8 @@ namespace PowerSimBuilder
         {
             public bool IncludeComponents { get; set; } = true;
             public bool IncludeGenerated { get; set; } = true;
+            // v1.8.1: bundle StaTable-generated *_powersim.py inside components/.
+            public bool IncludePowersim { get; set; } = true;
             // Legacy blunt copy (all FMUs). Overrides IncludeFmusByLicense if true.
             public bool IncludeFmu { get; set; } = false;
             // v1.8.0: license-gated selective bundling (default).
@@ -72,7 +74,7 @@ namespace PowerSimBuilder
                 var src = options.ComponentsSourceDir
                     ?? Path.Combine(Directory.GetCurrentDirectory(), "generated");
                 // v1.8.0: filter out simulation artifacts (demo_*, _*, *_dbg.py, *_powersim.py)
-                AddComponentFilesToZip(zip, src, ComponentsDir);
+                AddComponentFilesToZip(zip, src, ComponentsDir, options.IncludePowersim);
             }
 
             if (options.IncludeGenerated)
@@ -286,7 +288,21 @@ namespace PowerSimBuilder
                     if (entry.FullName == ProjectJsonEntry) continue;
                     if (string.IsNullOrEmpty(entry.Name)) continue;
 
-                    var safeRel = entry.FullName.Replace('/', Path.DirectorySeparatorChar);
+                    // v1.8.1: components/*_powersim.py -> generated/*_powersim.py
+                    // so demo_main.py's "generated/foo_powersim.py" path resolves.
+                    var relName = entry.FullName.Replace('\\', '/');
+                    string targetRel;
+                    if (relName.StartsWith(ComponentsDir, StringComparison.Ordinal)
+                        && relName.EndsWith("_powersim.py", StringComparison.Ordinal))
+                    {
+                        targetRel = GeneratedDir + relName.Substring(ComponentsDir.Length);
+                    }
+                    else
+                    {
+                        targetRel = relName;
+                    }
+
+                    var safeRel = targetRel.Replace('/', Path.DirectorySeparatorChar);
                     if (safeRel.Contains("..")) continue;
 
                     var targetPath = Path.Combine(extractDir, safeRel);
@@ -379,7 +395,7 @@ namespace PowerSimBuilder
         /// v1.8.0: Add only component .py files (excluding demo_*, _*, *_dbg.py, *_powersim.py).
         /// Components are the building blocks; simulation artifacts go into generated/.
         /// </summary>
-        private static void AddComponentFilesToZip(ZipArchive zip, string srcDir, string zipPrefix)
+        private static void AddComponentFilesToZip(ZipArchive zip, string srcDir, string zipPrefix, bool includePowersim = false)
         {
             if (!Directory.Exists(srcDir)) return;
 
@@ -390,8 +406,9 @@ namespace PowerSimBuilder
                 if (name.StartsWith("demo_")) continue;
                 if (name.StartsWith("_")) continue;
                 if (name.EndsWith("_dbg.py")) continue;
-                if (name.EndsWith("_powersim.py")) continue;
                 if (name.StartsWith("test_")) continue;
+                // StaTable-generated controllers (bundled when IncludePowersim is true).
+                if (name.EndsWith("_powersim.py") && !includePowersim) continue;
 
                 zip.CreateEntryFromFile(file, zipPrefix + name, CompressionLevel.Optimal);
             }
