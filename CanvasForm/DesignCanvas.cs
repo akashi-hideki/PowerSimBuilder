@@ -1801,7 +1801,7 @@ private void ClearCanvas()
         /// </summary>
         private void EditPythonCodeItem_Click(object sender, System.EventArgs e)
         {
-            EditDebugLog("=== EditPythonCodeItem_Click START ===");
+            EditLogEvent("EditStart", ("instance", SelectedComponent?.InstanceName ?? ""), ("type", SelectedComponent?.Descriptor?.Type ?? ""));
             EditDebugLog($"  Selected={SelectedComponent?.InstanceName}");
             EditDebugLog($"  Type={SelectedComponent?.Descriptor?.Type}");
             if (SelectedComponent?.Parameters != null)
@@ -1822,7 +1822,7 @@ private void ClearCanvas()
                         SelectedComponent.Parameters.TryGetValue("generated_path", out var raw))
                     {
                         generatedPath = AsStringOrNull(raw);
-                        EditDebugLog($"  generated_path from Parameters: '{generatedPath}'");
+                        EditLogEvent("GeneratedPathRead", ("value", generatedPath ?? ""));
                     }
 
                     if (string.IsNullOrEmpty(generatedPath))
@@ -1830,14 +1830,14 @@ private void ClearCanvas()
                         // Palette ControllerBox is not bound to any controller.
                         // Role functions live in *_powersim.py files; the adapter
                         // template (user_components/ControllerBox.py) is not relevant.
-                        EditDebugLog("  generated_path empty -> prompting user");
+                        EditLogEvent("EmptyGeneratedPath", ("action", "prompt"));
                         var picked = PromptUserPickPowersimFile();
                         if (string.IsNullOrEmpty(picked))
                         {
                             return;
                         }
                         generatedPath = picked;
-                        EditDebugLog("  user picked: " + generatedPath);
+                        EditLogEvent("UserPicked", ("path", generatedPath ?? ""));
                     }
                     if (!System.IO.File.Exists(generatedPath))
                     {
@@ -1846,7 +1846,7 @@ private void ClearCanvas()
                             I18n.T("Common.MsgTitleWarning"));
                         return;
                     }
-                    EditDebugLog($"  -> OpenPythonEditor({generatedPath})");
+                    EditLogEvent("OpenEditor", ("path", generatedPath ?? ""));
                     OpenPythonEditor(generatedPath);
                     return;
                 }
@@ -1871,8 +1871,9 @@ private void ClearCanvas()
         /// Default ControllerBox.py lookup for palette instances whose
         /// generated_path is empty. Preference: user_components (override) > generated.
         /// </summary>
-        private static readonly string EditDebugLogPath =
-            System.IO.Path.Combine(System.IO.Path.GetTempPath(), "psb_edit_debug.log");
+        private static string GetEditLogPath() =>
+            System.Environment.GetEnvironmentVariable("PSB_EDIT_LOG")
+            ?? System.IO.Path.Combine(System.IO.Path.GetTempPath(), "psb_edit_debug.log");
 
         private static string AsStringOrNull(object value)
         {
@@ -1887,20 +1888,50 @@ private void ClearCanvas()
             return value.ToString();
         }
 
-        private static void EditDebugLog(string message)
+        private static readonly bool _editDebugEnabled =
+#if DEBUG
+            true;
+#else
+            System.Environment.GetEnvironmentVariable("PSB_EDIT_DEBUG") == "1";
+#endif
+
+        private static readonly string _editSession =
+            System.Environment.GetEnvironmentVariable("PSB_EDIT_SESSION")
+            ?? System.Guid.NewGuid().ToString("N").Substring(0, 8);
+
+        /// <summary>
+        /// Structured event log (JSON Lines). One line per event.
+        /// Format: {"ts":"HH:mm:ss.fff","session":"abc12345","event":"OpenEditor","path":"..."}
+        /// Path override: PSB_EDIT_LOG env var. Default: %TEMP%\psb_edit_debug.log
+        /// </summary>
+        private static void EditLogEvent(string evt, params (string key, object val)[] fields)
         {
+            if (!_editDebugEnabled) return;
             try
             {
-                System.IO.File.AppendAllText(EditDebugLogPath,
-                    DateTime.Now.ToString("HH:mm:ss.fff") + " " + message + Environment.NewLine);
-                Console.WriteLine("[EDIT] " + message);
+                var obj = new System.Collections.Generic.Dictionary<string, object>
+                {
+                    ["ts"] = DateTime.Now.ToString("HH:mm:ss.fff"),
+                    ["session"] = _editSession,
+                    ["event"] = evt,
+                };
+                if (fields != null)
+                {
+                    foreach (var (k, v) in fields) obj[k] = v;
+                }
+                var json = System.Text.Json.JsonSerializer.Serialize(obj);
+                System.IO.File.AppendAllText(GetEditLogPath(), json + Environment.NewLine);
             }
             catch { }
         }
 
+        // Backward-compat: existing call sites keep working as event="message".
+        private static void EditDebugLog(string message) =>
+            EditLogEvent("message", ("text", message));
+
         private static string PromptUserPickPowersimFile()
         {
-            EditDebugLog("--- PromptUserPickPowersimFile ---");
+            EditLogEvent("PromptUserPickStart");
             using var dlg = new System.Windows.Forms.OpenFileDialog
             {
                 Title = I18n.T("DesignCanvas.PickPowersimTitle"),
@@ -1933,7 +1964,7 @@ private void ClearCanvas()
             }
             if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK)
             {
-                EditDebugLog("  user cancelled");
+                EditLogEvent("PromptUserPickCancelled");
                 return null;
             }
             return dlg.FileName;
