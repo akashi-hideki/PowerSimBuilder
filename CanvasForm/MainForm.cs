@@ -1252,12 +1252,15 @@ namespace PowerSimBuilder
                 if (comp.Parameters == null) continue;
                 if (!comp.Parameters.ContainsKey("generated_path")) continue;
 
-                var path = comp.Parameters["generated_path"]?.ToString();
+                // Read via JsonElement-aware converter (psbproj load returns JsonElement).
+                var raw = comp.Parameters["generated_path"];
+                var path = AsStringOrNull(raw);
                 if (IsValidControllerModule(path)) continue;
 
-                var defVal = comp.Descriptor.Parameters?
+                var defRaw = comp.Descriptor.Parameters?
                     .FirstOrDefault(p => p.Name == "generated_path")?
-                    .DefaultValue?.ToString();
+                    .DefaultValue;
+                var defVal = AsStringOrNull(defRaw);
                 var fallback = IsValidControllerModule(defVal) ? defVal : "";
                 comp.Parameters["generated_path"] = fallback;
                 try
@@ -1273,13 +1276,66 @@ namespace PowerSimBuilder
         /// <summary>
         /// 指定パスが有効な ControllerBox モジュール（build_runtime() を持つ .py）か判定。
         /// </summary>
+        /// <summary>
+        /// Convert a parameter value (possibly JsonElement) to string.
+        /// Mirrors DesignCanvas.AsStringOrNull, needed because psbproj load
+        /// deserializes Parameters into System.Text.Json.JsonElement.
+        /// </summary>
+        private static string AsStringOrNull(object value)
+        {
+            if (value == null) return null;
+            if (value is string s) return s;
+            if (value is System.Text.Json.JsonElement je)
+            {
+                return je.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? je.GetString()
+                    : je.ToString();
+            }
+            return value.ToString();
+        }
+
+        /// <summary>
+        /// Resolve a possibly-relative path against CWD and the repo root
+        /// (walks up to PowerSimBuilder.sln). Returns null if not found.
+        /// </summary>
+        private static string ResolveRelativePath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            try
+            {
+                if (System.IO.File.Exists(path)) return path;
+                var dir = System.IO.Directory.GetCurrentDirectory();
+                var roots = new System.Collections.Generic.List<string> { dir };
+                while (!string.IsNullOrEmpty(dir))
+                {
+                    if (System.IO.File.Exists(System.IO.Path.Combine(dir, "PowerSimBuilder.sln")))
+                    {
+                        if (!roots.Contains(dir)) roots.Add(dir);
+                        break;
+                    }
+                    var parent = System.IO.Path.GetDirectoryName(dir);
+                    if (parent == dir) break;
+                    dir = parent;
+                }
+                foreach (var root in roots)
+                {
+                    var candidate = System.IO.Path.Combine(root, path);
+                    if (System.IO.File.Exists(candidate)) return candidate;
+                }
+                return null;
+            }
+            catch { return null; }
+        }
+
         private static bool IsValidControllerModule(string path)
         {
             if (string.IsNullOrEmpty(path)) return false;
             try
             {
-                if (!System.IO.File.Exists(path)) return false;
-                var content = System.IO.File.ReadAllText(path, System.Text.Encoding.UTF8);
+                // Resolve relative paths against CWD and repo root (Trap #78).
+                var resolved = ResolveRelativePath(path);
+                if (resolved == null) return false;
+                var content = System.IO.File.ReadAllText(resolved, System.Text.Encoding.UTF8);
                 return content.Contains("def build_runtime");
             }
             catch { return false; }
