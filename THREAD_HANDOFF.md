@@ -91,6 +91,28 @@
 - C# 全テスト: 570 Pass / 2 Skip
 - UITests: 13 Pass / 1 Skip
 - Python: 463 Pass
+
+### 2026-11-03 追加修正（実シミュレーション実証）
+
+- `oven_control_statable.psbproj` で **GUI 経由の実シミュレーション**がグラフ表示まで成功
+- `RepairGeneratedPaths` 修正:
+  - `JsonElement` 対応（`AsStringOrNull` ヘルパー）
+  - 相対パス解決（`ResolveRelativePath` でリポジトリルート探索）
+- 修正前: `generated_path = ""`（glob フォールバック依存）
+- 修正後: `generated_path = "generated/CookingHeaterController_powersim.py"`（明示的）
+
+### 追加罠（Trap #78）
+
+| # | 罠 |
+|---|---|
+| 78 | `RepairGeneratedPaths` の `JsonElement.ToString()` + CWD 依存 `File.Exists` → 相対パスが無効判定され `""` に上書きされる |
+
+### 実シミュレーション検証結果（2026-11-03）
+
+- Open → Create Simulation → Run（GUI）: ✅
+- ControllerBox gating (`MwOven:PidHeating`): ✅ PID 出力を素通し
+- PID + OvenChamber 制御: ✅ 200°C 整定
+- 30 秒短縮実行: ✅ exit 0、波形生成
 ### 次タスク
 
 #### 優先 1: ログベース自動テスト
