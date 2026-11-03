@@ -50,6 +50,15 @@ $testExit = $LASTEXITCODE
 $testOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "  $_" }
 if ($testExit -eq 0) { Write-Host "  exit=0 OK" -ForegroundColor Green } else { Write-Host "  exit=$testExit NG" -ForegroundColor Red }
 
+# 4b) Phase C: ControllerBox edit E2E (C1/C2) - explicit filter
+# Ensures the log-based edit path tests run even if the main UITests filter changes.
+Write-Host "  [4b] ControllerBox edit E2E (C1/C2)" -ForegroundColor Yellow
+Get-Process PowerSimBuilder -ErrorAction SilentlyContinue | Stop-Process -Force
+$cOut = & dotnet test tests\PowerSimBuilder.UITests --nologo --filter "FullyQualifiedName~ControllerBoxEditE2ETests" 2>&1
+$cExit = $LASTEXITCODE
+$cOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "    $_" }
+if ($cExit -eq 0) { Write-Host "    exit=0 OK (C1+C2)" -ForegroundColor Green } else { Write-Host "    exit=$cExit NG (C1/C2)" -ForegroundColor Red }
+
 # 5) Demo files
 Write-Host "[5/6] DEMO FILES" -ForegroundColor Yellow
 Get-ChildItem examples\demos | Select-Object Name, Length | ForEach-Object { Write-Host ("  {0,-32} {1,8}" -f $_.Name, $_.Length) }

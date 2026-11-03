@@ -76,6 +76,9 @@
 - `Fixtures/with-controllerbox.json` 追加
 - 実行時間: 22s → 5s（WorkingDirectory 修正）
 
+
+- `verify_all.ps1` に `[4b]` C1/C2 検証を追加（明示的フィルタ）
+
 ### 追加罠（Trap #75-#76）
 
 | # | 罠 |
@@ -135,27 +138,7 @@
 6. oven_control_from_design_xml.psbproj (XML full pipeline)
 
 
-### Phase C 完了（FlaUI + ログ E2E）
 
-- `ControllerBoxEditE2ETests` (2)
-  - C1: 既存 ControllerBox → `OpenEditor` 直接（ログ検証）
-  - C2: パレット ControllerBox → `PromptUserPickStart` + ESC キャンセル
-- `EditLogReader` ヘルパー（JSON Lines パーサ + `WaitForEvent`）
-- `Fixtures/with-controllerbox.json` 追加
-- 実行時間: 22s → 5s（WorkingDirectory 修正）
-
-### 追加罠（Trap #75-#76）
-
-| # | 罠 |
-|---|---|
-| 75 | FlaUI `Application.Launch` の CWD はテスト実行ディレクトリ → 相対パス解決に `WorkingDirectory = ProjectRoot` 必須 |
-| 76 | `Application` が `FlaUI.Core` と `System.Windows.Forms` で曖昧 → 完全修飾名 |
-
-### テスト総数（2026-11-03 時点）
-
-- C# 全テスト: 570 Pass / 2 Skip
-- UITests: 13 Pass / 1 Skip
-- Python: 463 Pass
 ### 次タスク
 
 1. GUI Add Physics -> Dahlquist -> Run (FMU E2E)
