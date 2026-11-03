@@ -304,6 +304,16 @@ namespace PowerSimBuilder
             };
             saveGroupButton.Click += saveGroupButton_Click;
             toolStrip1.Items.Add(saveGroupButton);
+
+            // Phase 4b: Load group
+            var loadGroupButton = new ToolStripButton
+            {
+                Name = "loadGroupButton",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Text = I18n.T("MainForm.BtnLoadGroup"),
+            };
+            loadGroupButton.Click += loadGroupButton_Click;
+            toolStrip1.Items.Add(loadGroupButton);
         }
 
         private void saveGroupButton_Click(object sender, EventArgs e)
@@ -331,6 +341,37 @@ namespace PowerSimBuilder
                 GroupManager.Save(dlg.FileName, group);
                 MessageBox.Show(this, I18n.T("MainForm.MsgSaveGroupOk", dlg.FileName),
                     I18n.T("MainForm.SaveGroupDialogTitle"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message,
+                    I18n.T("Common.MsgTitleError"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void loadGroupButton_Click(object sender, EventArgs e)
+        {
+            using var dlg = new OpenFileDialog
+            {
+                Title = I18n.T("MainForm.LoadGroupDialogTitle"),
+                Filter = "PowerSimBuilder Group (*.psbgroup)|*.psbgroup",
+                DefaultExt = GroupManager.Extension,
+                CheckFileExists = true,
+            };
+            if (dlg.ShowDialog(this) != DialogResult.OK) return;
+            try
+            {
+                // Offset: place group 50px to the right/down from canvas origin.
+                var offset = new System.Drawing.Point(50, 50);
+                var (comps, conns) = GroupManager.LoadAndAppend(
+                    dlg.FileName, _canvasManager, offset);
+                MessageBox.Show(this,
+                    I18n.T("MainForm.MsgLoadGroupOk",
+                        string.Format("{0} ({1} components, {2} connections)",
+                            System.IO.Path.GetFileName(dlg.FileName), comps, conns)),
+                    I18n.T("MainForm.LoadGroupDialogTitle"),
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
