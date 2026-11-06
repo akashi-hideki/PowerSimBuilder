@@ -1,0 +1,25 @@
+{
+  "snippets": [
+    {
+      "layer": "MwOven",
+      "func": "F_ReadThermistors",
+      "displayName": "Read thermistors (oven)",
+      "description": "oven_current_temp -> thermistor_top/middle/bottom (with sensor offsets)",
+      "file": "MwOven.F_ReadThermistors.py"
+    },
+    {
+      "layer": "MwOven",
+      "func": "F_SetTopHeaterDuty",
+      "displayName": "P control (top heater)",
+      "description": "Simple proportional control: oven_target_temp vs thermistor_middle",
+      "file": "MwOven.F_SetTopHeaterDuty.py"
+    },
+    {
+      "layer": "MwOven",
+      "func": "F_CheckOvenOverheat",
+      "displayName": "Oven overheat guard",
+      "description": "Fire OV_OVERHEAT when thermistor_top > 250C",
+      "file": "MwOven.F_CheckOvenOverheat.py"
+    }
+  ]
+}
