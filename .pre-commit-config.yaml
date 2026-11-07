@@ -8,6 +8,13 @@ repos:
         language: system
         files: ^Resources/i18n/.*\.json$
         pass_filenames: false
+      # Trap #81 (duplicate test class) / #82 (nested ItemGroup)
+      - id: check-known-traps
+        name: check-known-traps (Trap #81/#82)
+        entry: python tools/check_known_traps.py
+        language: system
+        pass_filenames: false
+        files: ^(PowerSimBuilder\.Tests/.*\.cs|.*\.csproj)$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

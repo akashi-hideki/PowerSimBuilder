@@ -48,8 +48,8 @@
 | # | 罠 |
 |---|---|
 | 80 | `dotnet build \| Select-String "error CS"` は MSB3027/3021（ファイルロック）を見逃す → `"error (CS\|MSB)"` + `Stop-Process` |
-| 81 | `<ClassName>Test.cs`（単数）/ `<ClassName>Tests.cs`（複数）で CS0101+CS0111 → 作成前に `Get-ChildItem *<ClassName>*.cs` |
-| 82 | `rfind("</ItemGroup>")` 直前挿入は既存 ItemGroup 内にネスト → MSB4232 → `</Project>` 直前へ |
+| 81 | `<ClassName>Test.cs` / `<ClassName>Tests.cs` で CS0101+CS0111 → **恒久化完了**: `tools/check_known_traps.py` で重複 public 非 partial クラスを検出（pre-commit + verify_all [0/6] の 2 段階） |
+| 82 | `<ItemGroup>` ネスト → MSB4232 → **恒久化完了**: `tools/check_known_traps.py` で `xml.etree` により構造検証（pre-commit + verify_all [0/6]） |
 | 83 | WinForms `Control.Visible` は親 Form 非表示時 **常に false** → 内部フラグ `_registerSnippetAvailable` で意図観測 |
 | 84 | C# verbatim 文字列内の `@"^\\s*..."`（二重バックスラッシュ）は regex 不正 → 純粋関数 `ContainsRoleMarkers` に切り出し |
 | 85 | `verify_all.ps1` `[4/6]` FlaUI flaky → Start-Sleep 3 + 1 回リトライ（retry-once） |

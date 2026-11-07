@@ -1,7 +1,7 @@
 # GO/NO-GO Decision Sheet — 2026-11-08-gonogo
 
-Generated: 2026-11-08 08:07:55
-Environment: commit=4a9ac23 tag=v1.9.0-17-g4a9ac23 dirty=True
+Generated: 2026-11-08 08:17:32
+Environment: commit=91db4d1 tag=v1.9.0-21-g91db4d1 dirty=False
 
 ## 1. Decision
 
@@ -39,7 +39,7 @@ Both agree within 1Hz sampling tolerance. This removes single-method bias from t
 | 5 | RoleSnippet unit tests (29) | PASS | `verify_all.log` `[4c]` |
 | 6 | RoleSnippet Register E2E (1) | PASS | `verify_all.log` `[4d]` |
 | 7 | Demo files present | PASS | `verify_all.log` `[5/6]` |
-| 8 | Git working tree clean | DIRTY | `environment.json` |
+| 8 | Git working tree clean | PASS | `environment.json` |
 
 **Overall**: PASS
 

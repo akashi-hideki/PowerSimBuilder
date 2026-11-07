@@ -6,6 +6,16 @@ Write-Host ("=" * 60) -ForegroundColor Cyan
 Write-Host "  FULL VERIFICATION" -ForegroundColor Cyan
 Write-Host ("=" * 60) -ForegroundColor Cyan
 
+# 0) Known traps (Trap #81 / #82)
+Write-Host ""
+Write-Host "[0/6] KNOWN TRAPS" -ForegroundColor Yellow
+python tools\check_known_traps.py 2>&1 | ForEach-Object { Write-Host "  $_" }
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  exit=$LASTEXITCODE NG (Trap #81/#82)" -ForegroundColor Red
+    exit 1
+}
+Write-Host "  exit=0 OK" -ForegroundColor Green
+
 # 1) Build
 Write-Host ""
 Write-Host "[1/6] BUILD" -ForegroundColor Yellow
