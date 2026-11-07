@@ -46,6 +46,15 @@ if (-not (Test-Path (Join-Path (Get-Location) '.git'))) {
     Fail "not a git repository: $(Get-Location)"
 }
 
+# 0.5 Trap #80 mitigation: stop any running PowerSimBuilder.exe before git operations.
+# Prevents (a) file locks on bin\Debug\*.exe during future builds, (b) in-flight
+# writes to templates/role_snippets or generated/ being staged half-finished.
+$psb = Get-Process PowerSimBuilder -ErrorAction SilentlyContinue
+if ($psb) {
+    Write-Host "  Stopping PowerSimBuilder.exe (PID $($psb.Id)) to avoid file locks" -ForegroundColor DarkYellow
+    $psb | Stop-Process -Force
+}
+
 # 1. stage
 Step "1/5 stage"
 if ($Files) {
