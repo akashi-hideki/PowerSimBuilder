@@ -106,6 +106,7 @@
   "PythonEditor.RoleSnippetsTitle": "角色函数",
   "PythonEditor.MsgRoleSnippetNoMarkers": "未找到 {0}.{1} 的标记",
   "PythonEditor.MsgRoleSnippetInserted": "已插入 {0}.{1}（{2} 字符）",
+  "PythonEditor.MsgConfirmCrossInsert": "将代码片段 {2}.{3} 的内容插入 {0}.{1}？",
   "PythonEditor.MsgNoExecutor": "未设置 Python 执行环境。请设置 Executor 属性。",
   "PythonEditor.MsgSaveTempBeforeRun": "将修改的代码保存到临时文件并运行？",
   "PythonEditor.MsgTempFail": "创建临时文件失败: {0}",

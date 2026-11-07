@@ -861,6 +861,12 @@ namespace PowerSimBuilder
                     openEditorInstance = cmdArgs[i + 1];
                 }
             }
+            // Phase C: --test-open-role-snippets (boolean flag, may appear anywhere)
+            bool openRoleSnippets = false;
+            for (int i = 0; i < cmdArgs.Length; i++)
+            {
+                if (cmdArgs[i] == "--test-open-role-snippets") { openRoleSnippets = true; break; }
+            }
             if (projectPath != null)
             {
                 Test_LoadProjectFromPath(projectPath);
@@ -872,6 +878,41 @@ namespace PowerSimBuilder
                     System.Threading.Thread.Sleep(500);
                     Test_OpenEditorForInstance(openEditorInstance);
                 }));
+            }
+            if (openRoleSnippets)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    System.Threading.Thread.Sleep(1500);
+                    Test_OpenRoleSnippetsInEditor();
+                }));
+            }
+        }
+
+        /// <summary>
+        /// Test-only: find the PythonEditorForm that is currently open and trigger
+        /// its Role Snippets dialog (bypasses flaky context-menu automation).
+        /// </summary>
+        internal void Test_OpenRoleSnippetsInEditor()
+        {
+            try
+            {
+                Test_Log("Test_OpenRoleSnippetsInEditor START");
+                foreach (Form f in Application.OpenForms)
+                {
+                    if (f is PythonEditorForm editor)
+                    {
+                        Test_Log("  found editor: " + f.Name);
+                        editor.Test_ShowRoleSnippetsDialog();
+                        Test_Log("  dialog invoked");
+                        return;
+                    }
+                }
+                Test_Log("  no PythonEditorForm found");
+            }
+            catch (System.Exception ex)
+            {
+                Test_Log("  FAILED: " + ex.Message);
             }
         }
 

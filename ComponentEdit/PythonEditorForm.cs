@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using PowerSimBuilder.ComponentEdit;
 
@@ -269,7 +270,7 @@ if (filePath != null)
             });
 
             AppendLineOpsMenuItems(contextMenu);
-            var menuItemRoleSnippets = new ToolStripMenuItem(I18n.T("PythonEditor.MenuRoleSnippets"));
+            var menuItemRoleSnippets = new ToolStripMenuItem(I18n.T("PythonEditor.MenuRoleSnippets")) { Name = "menuItemRoleSnippets" };
             menuItemRoleSnippets.Click += (s, e) => ShowRoleSnippetsDialog();
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add(menuItemRoleSnippets);
@@ -418,13 +419,106 @@ if (filePath != null)
                     catch { }
                 }
 
+                private (string layer, string func) DetectRoleFunctionAtCaret()
+                {
+                    if (textEditor == null) { LogSnippet("DetectFail", ("reason", "noEditor")); return (null, null); }
+                    var caret = textEditor.SelectionStart;
+                    var text = textEditor.Text ?? "";
+                    LogSnippet("DetectStart", ("caret", (object)caret), ("textLen", (object)text.Length));
+                    if (caret < 0 || caret > text.Length) { LogSnippet("DetectFail", ("reason", "caretOutOfRange")); return (null, null); }
+                    const string SP = "# STABLE_USER_CODE_START:";
+                    const string EP = "# STABLE_USER_CODE_END:";
+                    var searchEnd = Math.Min(caret, text.Length - 1);
+                    if (searchEnd < 0) { LogSnippet("DetectFail", ("reason", "searchEndLt0")); return (null, null); }
+                    var startIdx = text.LastIndexOf(SP, searchEnd, System.StringComparison.Ordinal);
+                    LogSnippet("DetectStartFound", ("startIdx", (object)startIdx));
+                    if (startIdx < 0) { LogSnippet("DetectFail", ("reason", "noStartBeforeCaret")); return (null, null); }
+                    var endIdx = text.IndexOf(EP, startIdx + SP.Length, System.StringComparison.Ordinal);
+                    LogSnippet("DetectEndFound", ("endIdx", (object)endIdx));
+                    if (endIdx < 0) { LogSnippet("DetectFail", ("reason", "noEndAfterStart")); return (null, null); }
+                    if (caret < startIdx || caret > endIdx)
+                    {
+                        LogSnippet("DetectFail", ("reason", "caretNotInside"), ("startIdx", (object)startIdx), ("endIdx", (object)endIdx), ("caret", (object)caret));
+                        return (null, null);
+                    }
+                    var sLine = ReadMarkerLine(text, startIdx + SP.Length);
+                    var eLine = ReadMarkerLine(text, endIdx + EP.Length);
+                    LogSnippet("DetectMarkers", ("sLine", (object)(sLine ?? "")), ("eLine", (object)(eLine ?? "")));
+                    if (sLine == null || eLine == null || sLine != eLine) { LogSnippet("DetectFail", ("reason", "markersMismatch")); return (null, null); }
+                    var dot = sLine.IndexOf('.');
+                    if (dot <= 0 || dot >= sLine.Length - 1) { LogSnippet("DetectFail", ("reason", "badFormat")); return (null, null); }
+                    var layer = sLine.Substring(0, dot);
+                    var func = sLine.Substring(dot + 1);
+                    LogSnippet("DetectRoleFunctionOK", ("caret", (object)caret), ("layer", (object)layer), ("func", (object)func));
+                    return (layer, func);
+                }
+
+                private static string ReadMarkerLine(string text, int afterMarker)
+                {
+                    var end = text.IndexOf('\n', afterMarker);
+                    if (end < 0) end = text.Length;
+                    var s = text.Substring(afterMarker, end - afterMarker).Trim();
+                    return string.IsNullOrEmpty(s) ? null : s;
+                }
+                /// <summary>
+                /// Test hook: invoke ShowRoleSnippetsDialog from the UI test.
+                /// </summary>
+                internal void Test_ShowRoleSnippetsDialog() => ShowRoleSnippetsDialog();
+
                 private void ShowRoleSnippetsDialog()
                 {
-                    using var dlg = new RoleSnippetForm();
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    var (targetLayer, targetFunc) = DetectRoleFunctionAtCaret();
+                    var available = ParseAvailableRoleFunctions();
+                    LogSnippet("RoleSnippetsOpen",
+                        ("caret", (object)(textEditor?.SelectionStart ?? -1)),
+                        ("targetLayer", (object)(targetLayer ?? "")),
+                        ("targetFunc", (object)(targetFunc ?? "")),
+                        ("availableCount", (object)available.Count));
+
+                    using var dlg = new RoleSnippetForm(targetLayer, targetFunc, available);
+                    if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+                    string actualLayer = dlg.SelectedLayer;
+                    string actualFunc = dlg.SelectedFunc;
+
+                    // Always confirm — this is a destructive replace operation.
+                    var msg = string.Format(
+                        I18n.T("PythonEditor.MsgConfirmCrossInsert"),
+                        actualLayer, actualFunc,
+                        dlg.SelectedSnippetLayer, dlg.SelectedSnippetFunc);
+                    if (MessageBox.Show(this, msg,
+                            I18n.T("PythonEditor.RoleSnippetsTitle"),
+                            MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                        return;
+
+                    // DIAGNOSTIC: log both the snippet identity and the insertion target
+                    bool isOwn = (actualLayer == dlg.SelectedSnippetLayer && actualFunc == dlg.SelectedSnippetFunc);
+                    LogSnippet("SnippetInsertPlan",
+                        ("snippetLayer", (object)(dlg.SelectedSnippetLayer ?? "")),
+                        ("snippetFunc", (object)(dlg.SelectedSnippetFunc ?? "")),
+                        ("targetLayer", (object)(actualLayer ?? "")),
+                        ("targetFunc", (object)(actualFunc ?? "")),
+                        ("isSnippetOwn", (object)isOwn),
+                        ("mode", (object)(isOwn ? "OWN" : "CROSS")));
+
+                    InsertRoleSnippet(actualLayer, actualFunc, dlg.SelectedCode);
+                }
+
+                private System.Collections.Generic.List<string> ParseAvailableRoleFunctions()
+                {
+                    var result = new List<string>();
+                    var text = textEditor?.Text ?? "";
+                    const string SP = "STABLE_USER_CODE_START:";
+                    int idx = 0;
+                    while ((idx = text.IndexOf(SP, idx, System.StringComparison.Ordinal)) >= 0)
                     {
-                        InsertRoleSnippet(dlg.SelectedLayer, dlg.SelectedFunc, dlg.SelectedCode);
+                        var end = text.IndexOf('\n', idx);
+                        if (end < 0) end = text.Length;
+                        var s = text.Substring(idx + SP.Length, end - idx - SP.Length).Trim();
+                        if (!string.IsNullOrEmpty(s) && !result.Contains(s)) result.Add(s);
+                        idx = end;
                     }
+                    return result;
                 }
 
                 private void InsertRoleSnippet(string layer, string func, string code)

@@ -106,6 +106,7 @@
   "PythonEditor.RoleSnippetsTitle": "Role Snippets",
   "PythonEditor.MsgRoleSnippetNoMarkers": "Markers not found for {0}.{1}",
   "PythonEditor.MsgRoleSnippetInserted": "Inserted {0}.{1} ({2} chars)",
+  "PythonEditor.MsgConfirmCrossInsert": "Insert snippet body into {0}.{1} (snippet: {2}.{3})?",
   "PythonEditor.MsgNoExecutor": "Python execution environment is not set. Please set the Executor property.",
   "PythonEditor.MsgSaveTempBeforeRun": "Save the modified code to a temporary file and run?",
   "PythonEditor.MsgTempFail": "Failed to create temporary file: {0}",
