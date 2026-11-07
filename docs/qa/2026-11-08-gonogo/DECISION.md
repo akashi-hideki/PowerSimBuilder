@@ -5,11 +5,11 @@ Environment: commit=4a9ac23 tag=v1.9.0-17-g4a9ac23 dirty=True
 
 ## 1. Decision
 
-- [ ] **GO** — proceed with 11/22 public release
+- [x] **GO** — proceed with 11/22 public release
 - [ ] **NO-GO** — postpone
 - [ ] **Conditional GO** — conditions in section 6
 
-**Decision by**: ________________  **Date**: ____________
+**Decision by**: Hideki Akashi  **Date**: 2026-11-08
 
 ## 2. Quantitative evidence (auto-filled)
 
