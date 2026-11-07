@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-07
+
+### Added
+
+- **Role Snippets B: Register** — extract the `F_xxx` function at the caret
+  and reuse it across projects.
+  - Right-click `Register as Snippet...` + toolbar `Register Snippet`
+  - `STABLE_USER_CODE_START` marker presence gates the entry points
+    (component-agnostic: works for any file with role functions, not only ControllerBox)
+  - Overwrite confirmation with optional description
+  - i18n 12 new keys (en / zh, 374 total)
+- **FlaUI E2E for Register Snippet** (`RoleSnippetRegisterE2ETests`)
+  - End-to-end path: `--test-project` -> editor -> register dialog -> `RegisterSnippetSuccess` event
+- **`verify_all.ps1` `[4c]` / `[4d]`**
+  - `[4c]`: 29 unit tests for `RoleSnippetRegistrar` / `RoleSnippetStorage` / `RoleSnippetVisibility`
+  - `[4d]`: FlaUI E2E for the Register dialog
+- **`RoleSnippetVisibilityTests`** (15) covering:
+  - L1 `ContainsRoleMarkers` (9 theory cases)
+  - L2 `Form_*` (6 facts: initial state, code changes, `SetPythonCode`, `MenuItemRoleSnippets`)
+
+### Changed
+
+- `SetPythonCode` / `LoadFile` now call `UpdateRegisterSnippetAvailability()`
+  automatically (B-3c) — Register button reflects the current file without manual refresh.
+- `menuItemRoleSnippets` (Insert) visibility now follows the same marker check.
+- `gcommit.ps1` stops any running `PowerSimBuilder.exe` before git operations (Trap #80).
+- `verify_all.ps1` `[4/6]` E2E now sleeps 3s and retries once on failure (Trap #85).
+
+### Fixed
+
+- Register Snippet visibility false negatives caused by inline regex
+  `@"^\\s*..."` (Trap #84) — extracted to `RoleSnippetRegistrar.ContainsRoleMarkers`.
+- FlaUI E2E cannot see `ShowDialog` + `ShowInTaskbar=false` modals in the
+  UIA3 desktop tree (Trap #15 / #86) — Win32 `EnumWindows` fallback added.
+- `TextBox.Name` in UIA returns the AutomationId, not the value — use
+  `AsTextBox().Text` (Trap #86).
+
+### Testing
+
+| Suite | Result |
+|---|---|
+| C# unit tests | 599 pass / 2 skip / 0 fail |
+| UI E2E | 16 pass / 1 skip / 0 fail |
+| RoleSnippet tests | 30 (Registrar 8 + Storage 6 + Visibility 15 + FlaUI E2E 1) |
+| Python | 463 pass |
+
 ## [1.8.0] - 2026-11-01
 
 ### Added

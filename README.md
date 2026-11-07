@@ -3,7 +3,7 @@
 [![CI](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-528%20C%23%20%2B%2012%20E2E%20%2B%20463%20Py%20pass-green.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-599%20C%23%20%2B%2016%20E2E%20%2B%20463%20Py%20pass-green.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Windows%20only-lightgrey.svg)]()
 
 **Visual simulation companion to [StaTable](https://github.com/akashi-hideki/StaTable) — load StaTable XML, build Python state-machine controllers, run end-to-end simulations with signal plots.**
@@ -48,7 +48,11 @@ python tools\verify_controller_box.py examples\demos\oven_control_statable.psbpr
    - StaTable-generated `*_powersim.py` files contain `# STABLE_USER_CODE_START:Layer.F_xxx` markers.
 4. **Manual C → Python conversion**
    - Open the toolbar `C to Python Reference` for the conversion cheat sheet.
-5. **Physics models (MVP-1.2)**
+5. **Role Snippets**
+   - Right-click inside any `F_xxx` function -> **Register as Snippet...**
+   - Toolbar **Register Snippet** works the same way (visible only when the file contains `STABLE_USER_CODE_START`)
+   - **Insert Snippet** (existing) offers `(snippet's own)` and cross-function modes
+6. **Physics models (MVP-1.2)**
    - Double-click any non-`ControllerBox` component -> click **Add Physics** in the left panel.
    - Pick a model from `user_physics_models/`; snippets are inserted into `__init__` and `update()`.
    - See [Physics Model Integration](#physics-model-integration-mvp-12) below.
@@ -182,6 +186,18 @@ StaTable alone answers **"does it compile?"**. PowerSimBuilder answers
 
 ---
 
+## What's New in v1.9.0
+
+- **Role Snippets (Register)**: extract and reuse role function implementations.
+  - **Right-click `Register as Snippet...`** or toolbar **Register Snippet** to snapshot the `F_xxx` function at the caret.
+  - `STABLE_USER_CODE_START` marker presence gates the entry points — works for any file with role functions, not just `ControllerBox`.
+  - **Insert Snippet** dialog (3 columns: Target / Snippets / Code) with `(snippet's own)` and cross-function modes.
+  - i18n 12 new keys (en / zh, 374 total).
+- **FlaUI E2E for Register Snippet** (`RoleSnippetRegisterE2ETests`): verifies register dialog -> file creation -> `RegisterSnippetSuccess` log.
+- **`verify_all.ps1` `[4c]` / `[4d]`**: 29 RoleSnippet unit tests + 1 FlaUI E2E, one-command regression.
+- **Tooling hardening**: `gcommit.ps1` auto-stops PowerSimBuilder before git ops (Trap #80); `verify_all.ps1` retries flaky E2E once (Trap #85).
+- **Fixed**: `SetPythonCode` / `LoadFile` now auto-refresh Register Snippet visibility; `menuItemRoleSnippets` follows marker presence; Win32 `EnumWindows` fallback for `ShowInTaskbar=false` modals (Trap #86).
+
 ## What's New in v1.8.0
 
 - **GUI FMU E2E**: `AddPhysicsAndRun_Dahlquist_Completes` verifies the full path Add Physics -> Dahlquist -> Run in the WinForms UI.
@@ -300,6 +316,8 @@ PowerSimBuilder closes that gap:
 - ✅ **StaTable XML import** with per-project port derivation (A+C+α)
 - ✅ **Canvas wiring**: drag components, click ports, draw connections
 - ✅ **Python controller generation** (`.py` from StaTable XML)
+- ✅ **Role Snippets**: register / insert reusable `F_xxx` implementations
+  (marker-gated, cross-function insert, FlaUI E2E)
 - ✅ **Simulation runtime**: StaTable 7-layer state machine + 12+ physical
   components (PowerSource, Engine, Generator, DiodeBridge, InductionMotor,
   HeaterBlock, FaultDevice, ...)

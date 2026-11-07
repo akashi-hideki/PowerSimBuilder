@@ -3,7 +3,7 @@
 > **対象**: PowerSimBuilder v1.9.0 以降
 > **目的**: 一般ユーザーがロール関数を GUI で編集・挿入できるようにする
 > **最終更新**: 2026-11-03
-> **状態**: SPEC 策定済み / 実装未着手
+> **状態**: 実装完了（B-1〜B-5 / 2026-11-07）— 詳細は §10 実装完了サマリ参照
 
 ---
 
@@ -285,3 +285,37 @@ templates/role_snippets/
 | 4 | Cross-insert 確認 | 挿入先 != スニペット名のときのみ |
 | 5 | 一覧での user 表示 | 先頭に `[user]` バッジ |
 | 6 | 実装順序 | A -> B |
+
+
+## 10. 実装完了サマリ（2026-11-07）
+
+| サブタスク | コミット | 内容 |
+|---|---|---|
+| B-1 | `76c4986` / `cc75e12` | `RoleSnippetRegistrar` + `RoleSnippetStorage` 統合 |
+| B-3a | `049826d` | `RegisterSnippetDialog` + 右クリック + i18n 11 キー |
+| B-3b | `6f6ba80` | `STABLE_USER_CODE_START` マーカー存在判定（component-agnostic） |
+| B-4 | `d092499` | テスト自動化 27 本 + `InternalsVisibleTo` |
+| B-3c | `1e5d58e` | `SetPythonCode` / `LoadFile` 後の自動再評価 + `menuItemRoleSnippets` 統一 |
+| B-5 | `7650d34` | FlaUI E2E（`RoleSnippetRegisterE2ETests`）+ `LogSnippet` + Trap #15 fallback |
+| verify | `7354d8c` / `897478c` | `verify_all.ps1` `[4c]` / `[4d]` 統合 |
+
+### テスト構成（30 本）
+
+| テストクラス | 件数 | 内容 |
+|---|---:|---|
+| `RoleSnippetRegistrarTests` | 8 | Extract / Register / バリデーション |
+| `RoleSnippetStorageTests` | 6 | index.json / .py ファイル I/O |
+| `RoleSnippetVisibilityTests` | 15 | L1 `ContainsRoleMarkers` (9) + L2 `Form_*` (6) |
+| `RoleSnippetRegisterE2ETests` | 1 | FlaUI E2E（ダイアログ → ファイル生成） |
+
+### 関連 Trap
+
+| # | 罠 |
+|---|---|
+| 80 | `dotnet build \| Select-String "error CS"` は MSB3027/3021 を見逃す → `"error (CS\|MSB)"` |
+| 81 | `<ClassName>Test.cs` / `<ClassName>Tests.cs` で CS0101+CS0111 |
+| 82 | `rfind("</ItemGroup>")` 直前挿入は既存 ItemGroup 内にネスト → MSB4232 |
+| 83 | WinForms `Control.Visible` は親 Form 非表示時 false → 内部フラグで観測 |
+| 84 | 文字列リテラル内の `@"^\\s*..."` は regex 不正 |
+| 85 | `[4/6]` FlaUI flaky → Start-Sleep 3 + retry-once |
+| 86 | `TextBox.Name` は AutomationId / `ShowInTaskbar=false` modal は Win32 EnumWindows 必須 |
