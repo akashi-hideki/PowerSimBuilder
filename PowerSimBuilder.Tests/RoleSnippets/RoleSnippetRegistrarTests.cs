@@ -60,7 +60,7 @@ namespace PowerSimBuilder.Tests.RoleSnippets
             Assert.DoesNotContain("STABLE_USER_CODE", content);
             var list = _sut.ListSnippets("MwOven");
             Assert.Single(list);
-            Assert.Equal("n1", list[0].Notes);
+            Assert.Equal("n1", list[0].Description);
         }
 
         [Fact]

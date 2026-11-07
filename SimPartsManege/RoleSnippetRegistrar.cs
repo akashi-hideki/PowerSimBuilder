@@ -3,24 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace PowerSimBuilder.SimPartsManege
 {
     /// <summary>
-    /// Registers the role function at the current cursor as a reusable snippet.
-    /// Layout:
-    ///   user_role_snippets/
-    ///     register.json            metadata list
-    ///     &lt;Layer&gt;/
-    ///       F_xxx.py               dedented body (STABLE markers stripped)
+    /// Extracts a role function (F_xxx) from the Python editor text at the caret
+    /// and registers it as a reusable snippet via <see cref="RoleSnippetStorage"/>.
+    /// Storage layout (templates/role_snippets/):
+    ///   index.json
+    ///   &lt;Layer&gt;.&lt;Func&gt;.py
     /// </summary>
     public class RoleSnippetRegistrar
     {
-        public const string RootFolderName = "user_role_snippets";
-        public const string RegisterJsonName = "register.json";
-
         private static readonly Regex DefLineRegex = new Regex(
             @"^(?<indent>[ \t]*)def\s+(?<name>F_[A-Za-z0-9_]+)\s*\(",
             RegexOptions.Compiled);
@@ -33,24 +28,17 @@ namespace PowerSimBuilder.SimPartsManege
             @"#\s*STABLE_USER_CODE_END:(?<layer>[A-Za-z0-9_]+)\.(?<func>F_[A-Za-z0-9_]+)",
             RegexOptions.Compiled);
 
-        private readonly string _root;
-        public string Root => _root;
+        private readonly string? _root;
 
-        public RoleSnippetRegistrar(string? root = null) => _root = root ?? FindRoot();
+        /// <param name="root">
+        /// Optional explicit snippet folder (for tests). When null, falls back to
+        /// <see cref="RoleSnippetStorage.ResolveFolder"/> (repo templates/role_snippets).
+        /// </param>
+        public RoleSnippetRegistrar(string? root = null) => _root = root;
 
-        public static string FindRoot()
-        {
-            var dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
-            while (dir != null)
-            {
-                if (File.Exists(Path.Combine(dir.FullName, "PowerSimBuilder.sln")))
-                    return Path.Combine(dir.FullName, RootFolderName);
-                dir = dir.Parent;
-            }
-            return Path.Combine(Directory.GetCurrentDirectory(), RootFolderName);
-        }
+        private string ResolveFolder() => _root ?? RoleSnippetStorage.ResolveFolder();
 
-        // ---- extraction ----
+        // ---- extraction (unchanged from B-1) ----
 
         public class ExtractedFunction
         {
@@ -135,16 +123,7 @@ namespace PowerSimBuilder.SimPartsManege
             return sb.ToString();
         }
 
-        // ---- registration ----
-
-        public class SnippetMetadata
-        {
-            public string Name { get; set; } = "";
-            public string Layer { get; set; } = "";
-            public string SourceFile { get; set; } = "";
-            public string RegisteredAt { get; set; } = "";
-            public string? Notes { get; set; }
-        }
+        // ---- registration (delegates to RoleSnippetStorage) ----
 
         public class RegisterResult
         {
@@ -156,10 +135,8 @@ namespace PowerSimBuilder.SimPartsManege
 
         public bool Exists(string layerName, string functionName)
             => !string.IsNullOrEmpty(layerName) && !string.IsNullOrEmpty(functionName)
-               && File.Exists(SnippetPath(layerName, functionName));
-
-        public string SnippetPath(string layerName, string functionName)
-            => Path.Combine(_root, layerName, functionName + ".py");
+               && RoleSnippetStorage.LoadAll(ResolveFolder())
+                    .Any(s => s.Layer == layerName && s.Func == functionName);
 
         public RegisterResult Register(
             ExtractedFunction fn, string sourceFile, string? notes = null, bool allowOverwrite = false)
@@ -170,16 +147,26 @@ namespace PowerSimBuilder.SimPartsManege
             if (string.IsNullOrEmpty(fn.Name) || !fn.Name.StartsWith("F_"))
                 return new RegisterResult { Error = "Function name must start with F_" };
 
+            var folder = ResolveFolder();
             if (Exists(fn.LayerName, fn.Name) && !allowOverwrite)
                 return new RegisterResult { RequiresOverwrite = true };
 
             try
             {
-                Directory.CreateDirectory(Path.Combine(_root, fn.LayerName));
-                var path = SnippetPath(fn.LayerName, fn.Name);
-                File.WriteAllText(path, fn.Body, new UTF8Encoding(false));
-                UpdateMetadata(fn.LayerName, fn.Name, sourceFile ?? "", notes);
-                return new RegisterResult { Success = true, SavedPath = path };
+                Directory.CreateDirectory(folder);
+                var snippet = new RoleSnippet
+                {
+                    Layer = fn.LayerName,
+                    Func = fn.Name,
+                    DisplayName = fn.Name,
+                    Description = notes ?? "",
+                };
+                RoleSnippetStorage.Save(snippet, fn.Body, folder);
+                return new RegisterResult
+                {
+                    Success = true,
+                    SavedPath = Path.Combine(folder, snippet.File),
+                };
             }
             catch (Exception ex)
             {
@@ -187,42 +174,10 @@ namespace PowerSimBuilder.SimPartsManege
             }
         }
 
-        private void UpdateMetadata(string layer, string name, string sourceFile, string? notes)
+        public IReadOnlyList<RoleSnippet> ListSnippets(string? layerName = null)
         {
-            var list = LoadMetadata();
-            list.RemoveAll(m => m.Layer == layer && m.Name == name);
-            list.Add(new SnippetMetadata
-            {
-                Name = name, Layer = layer, SourceFile = sourceFile,
-                RegisteredAt = DateTime.UtcNow.ToString("o"), Notes = notes,
-            });
-            SaveMetadata(list);
-        }
-
-        public List<SnippetMetadata> LoadMetadata()
-        {
-            var path = Path.Combine(_root, RegisterJsonName);
-            if (!File.Exists(path)) return new List<SnippetMetadata>();
-            try
-            {
-                return JsonSerializer.Deserialize<List<SnippetMetadata>>(
-                           File.ReadAllText(path, Encoding.UTF8)) ?? new List<SnippetMetadata>();
-            }
-            catch { return new List<SnippetMetadata>(); }
-        }
-
-        private void SaveMetadata(List<SnippetMetadata> list)
-        {
-            Directory.CreateDirectory(_root);
-            File.WriteAllText(Path.Combine(_root, RegisterJsonName),
-                JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true }),
-                new UTF8Encoding(false));
-        }
-
-        public IReadOnlyList<SnippetMetadata> ListSnippets(string? layerName = null)
-        {
-            var all = LoadMetadata();
-            return layerName == null ? all : all.Where(m => m.Layer == layerName).ToList();
+            var all = RoleSnippetStorage.LoadAll(ResolveFolder());
+            return layerName == null ? all : all.Where(s => s.Layer == layerName).ToList();
         }
     }
 }
