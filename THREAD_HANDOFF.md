@@ -190,6 +190,75 @@ GO/NO-GO・週次・リリース前の定量証跡を **1 コマンド** で `do
 
 ---
 
+## IP ドキュメント更新（2026-11-07 追加）
+
+`docs/ip/` の 9 ファイルを **1 コマンド** で最新化する。リリース時・公開前に実行。
+
+### クイックスタート
+
+```powershell
+python tools/refresh_ip_docs.py --dry-run
+python tools/refresh_ip_docs.py --version v1.9.0 --test-counts 599,457,16,30
+python tools/refresh_ip_docs.py
+```
+
+### パラメータ
+
+| 引数 | 既定値 | 用途 |
+|---|---|---|
+| `--version` | `git describe --tags --abbrev=0` | タグ。WHITE_PAPER/OSS_COMPLIANCE に反映 |
+| `--test-counts` | WHITE_PAPER.md から抽出 | `C#,Python,UITests,RoleSnippet` |
+| `--dry-run` | off | 変更予定のみ表示 |
+
+### 更新される 9 ファイル
+
+| ファイル | 生成元 |
+|---|---|
+| `git_branches.txt` | `git for-each-ref refs/heads refs/remotes` |
+| `git_log.txt` | `git log --all -1000` |
+| `git_stats.txt` | コミット数 / タグ数 / 開発者 |
+| `git_tags.txt` | `git for-each-ref refs/tags` |
+| `nuget_packages.json` | `dotnet list --include-transitive --format json` |
+| `licenses_nuget.csv` | 同上（MIT マッピング） |
+| `licenses_full.csv` | nuget + python_fmpy 結合 |
+| `WHITE_PAPER.md` | version / date / status（test counts） |
+| `OSS_COMPLIANCE.md` | header / conclusion（version） |
+
+### 更新されない（手動管理）
+
+| ファイル | 理由 |
+|---|---|
+| `licenses_python_fmpy.csv` | fmpy バージョン固定 |
+| `FAQ.md` | 内容レビューが必要 |
+| `LAWYER_CANDIDATES.md` | 法務判断 |
+| `LAWYER_CONSULTATION.md` | **ローカルのみ（tracked なら警告）** |
+
+### 冪等性
+
+- `git_*` / `nuget_packages.json` / `licenses_*.csv`: 毎回同一内容で再生成
+- `WHITE_PAPER.md` / `OSS_COMPLIANCE.md`: **2 回目は `(no change)`**
+  - Trap #91: status regex は `[^\n]*` で行末まで match（`[^*]*\*\*` だとサフィックス重複）
+
+### リリースフロー
+
+```powershell
+python tools/refresh_ip_docs.py --version v1.9.x --test-counts 599,457,16,30
+git diff docs/ip/
+.\tools\gcommit.ps1 "docs(ip): refresh for vX.Y.Z" -Push
+```
+
+### トラブルシュート
+
+| 症状 | 対処 |
+|---|---|
+| `no git tag found` | `--version vX.Y.Z` を明示 |
+| `[WARN] dotnet list failed` | .NET SDK 確認 |
+| `[WARN] LAWYER_CONSULTATION.md is TRACKED` | `git rm --cached docs/ip/LAWYER_CONSULTATION.md` |
+| dry-run で `WHITE_PAPER.md (status)` が毎回出る | Trap #91 確認 |
+
+---
+```
+
 ## 2026-11-03 更新サマリ
 
 | 項目 | 値 |

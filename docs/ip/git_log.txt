@@ -1,3 +1,154 @@
+1741473 | 2026-11-07 20:09:01 +0900 | HIdeki.Akashi | docs(qa): Legal risk reclassified Medium (lawyer consultation on-issue, not pre-release blocker)
+6872e76 | 2026-11-07 20:04:48 +0900 | HIdeki.Akashi | docs(handoff): Trap #89/#90 + gen_decision.py tool
+2765deb | 2026-11-07 20:04:21 +0900 | HIdeki.Akashi | feat(qa): DECISION.md auto-gen + Trap #90 fix (utf-8-sig, ascii exit.txt, va_ok unification)
+036d95f | 2026-11-07 19:57:17 +0900 | HIdeki.Akashi | docs(handoff): fix QA Snapshot dup sections + BOM + update header (v1.9.0 + Trap #88)
+771adc8 | 2026-11-07 19:54:01 +0900 | HIdeki.Akashi | docs(handoff): QA Snapshot usage section (quickstart / params / use cases / troubleshooting / Trap #88-89)
+97f536e | 2026-11-07 19:32:59 +0900 | HIdeki.Akashi | docs(handoff): Trap #88 + QA snapshot tools
+28925b1 | 2026-11-07 19:32:05 +0900 | HIdeki.Akashi | feat(qa): one-action QA snapshot (qa_snapshot.ps1 + capture_env/downsample/patch helpers) + GO/NO-GO snapshots (2026-11-07 / 2026-11-08)
+1f5a6af | 2026-11-07 18:12:02 +0900 | HIdeki.Akashi | docs: v1.9.0 consistency - README (badge/features/dev-notes) + HANDOFF (Trap #85-#87 + release.py complete)
+7cee789 | 2026-11-07 18:06:30 +0900 | HIdeki.Akashi | docs(handoff): Trap #87 + Python test count 457 (measured)
+c3e0914 | 2026-11-07 18:06:01 +0900 | HIdeki.Akashi | test(release): add 3 idempotency tests (Trap #87 regression guard)
+da10873 | 2026-11-07 18:00:40 +0900 | HIdeki.Akashi | fix(release): idempotent release.py - tag_exists_remote + release_exists + --force + resume mode (Trap #87)
+28f383d | 2026-11-07 16:15:56 +0900 | HIdeki.Akashi | docs(release): v1.9.0 - Role Snippets Register (CHANGELOG + README + SPEC completion)
+347b14c | 2026-11-07 15:58:34 +0900 | HIdeki.Akashi | docs(handoff): fix false-positive - mark B-5 FlaUI E2E complete (7650d34)
+897478c | 2026-11-07 15:57:20 +0900 | HIdeki.Akashi | chore(verify+handoff): [4d] RoleSnippet Register E2E + mark B-5 complete
+7650d34 | 2026-11-07 15:53:24 +0900 | HIdeki.Akashi | feat(role-snippets): B-5 FlaUI E2E - RoleSnippetRegisterE2ETests (1 test) + LogSnippet events + Trap #15 fallback
+acde867 | 2026-11-07 15:38:14 +0900 | HIdeki.Akashi | fix(verify): [4/6] FlaUI flaky mitigation - Start-Sleep 3 + retry-once (Trap #85)
+535357b | 2026-11-07 15:22:17 +0900 | HIdeki.Akashi | chore(tools): Trap #80 mitigation - stop PowerSimBuilder.exe before git ops in gcommit.ps1
+e011855 | 2026-11-07 15:16:36 +0900 | HIdeki.Akashi | docs(handoff): B-3c + verify_all [4c] integration
+7354d8c | 2026-11-07 15:13:49 +0900 | HIdeki.Akashi | chore(verify): add [4c] RoleSnippet visibility check to verify_all.ps1
+1e5d58e | 2026-11-07 15:08:47 +0900 | HIdeki.Akashi | feat(role-snippets): B-3c - auto-update visibility on SetPythonCode/LoadFile + unify menuItemRoleSnippets marker check
+0485976 | 2026-11-07 15:03:59 +0900 | HIdeki.Akashi | docs(handoff): 2026-11-07 summary - Role Snippets B-3 + Trap #80-#84
+d092499 | 2026-11-07 15:00:11 +0900 | HIdeki.Akashi | test(role-snippets): automate Register Snippet visibility (27 tests) + InternalsVisibleTo + regex/visibility fixes
+6f6ba80 | 2026-11-07 14:36:57 +0900 | HIdeki.Akashi | feat(role-snippets): B-3b - Register Snippet visible only when file contains STABLE_USER_CODE markers (component-agnostic)
+049826d | 2026-11-07 13:34:56 +0900 | HIdeki.Akashi | feat(role-snippets): B-3a - RegisterSnippetDialog + right-click menu + i18n 11 keys
+cc75e12 | 2026-11-07 13:31:41 +0900 | HIdeki.Akashi | fix(role-snippets): remove stale singular RoleSnippetRegistrarTest.cs (old .Notes API); keep Tests.cs
+76c4986 | 2026-11-07 13:21:50 +0900 | HIdeki.Akashi | feat(role-snippets): B-1/B-4 - RoleSnippetRegistrar + 8 unit tests
+61af23b | 2026-11-07 13:02:40 +0900 | HIdeki.Akashi | feat(role-snippets): A1 complete - 3-column UI + cross-insert + FlaUI E2E (OWN/CROSS both pass)
+c72ca5f | 2026-11-07 09:57:35 +0900 | HIdeki.Akashi | docs: SPEC_ROLE_SNIPPETS Phase 2 - Cross-insert + Register
+3a8dfaf | 2026-11-07 09:33:39 +0900 | HIdeki.Akashi | feat(role-snippets): Phase 3+4+5 - RoleSnippetForm UI + editor integration + i18n
+e9a1ecf | 2026-11-07 08:28:23 +0900 | HIdeki.Akashi | feat(role-snippets): Phase 1+2 - storage + 3 sample snippets + 6 unit tests (camelCase JSON fix)
+3605874 | 2026-11-03 17:24:34 +0900 | HIdeki.Akashi | docs(handoff): session-specific notes (process rules, file snapshot, next-time checklist)
+0da3ef0 | 2026-11-03 17:19:36 +0900 | HIdeki.Akashi | docs(handoff): Role Snippets SPEC + next decision pending
+9c9ab80 | 2026-11-03 17:18:12 +0900 | HIdeki.Akashi | docs: add SPEC_ROLE_SNIPPETS (GUI role function snippet editor)
+9050e48 | 2026-11-03 16:58:07 +0900 | HIdeki.Akashi | docs(handoff): Trap #79 + GUI Run 300s verification
+d3cc138 | 2026-11-03 16:55:49 +0900 | HIdeki.Akashi | fix(codegen): emit absolute generated_path (GUI Run CWD fix, Trap #79)
+738579b | 2026-11-03 16:22:01 +0900 | HIdeki.Akashi | docs(handoff): Trap #78 + real simulation verification
+cffd5c5 | 2026-11-03 16:21:13 +0900 | HIdeki.Akashi | fix(mainform): RepairGeneratedPaths JsonElement + relative path resolution (Trap #78)
+c20f083 | 2026-11-03 15:35:33 +0900 | HIdeki.Akashi | tools(verify_all): add [4b] C1/C2 ControllerBox edit E2E + handoff note
+bee609d | 2026-11-03 15:29:07 +0900 | HIdeki.Akashi | docs(handoff): Phase C completion + Trap #75-76
+5e4bc96 | 2026-11-03 15:27:24 +0900 | HIdeki.Akashi | test(e2e): Phase C - FlaUI + log verification for ControllerBox edit paths (C1/C2)
+ac83da1 | 2026-11-03 15:11:32 +0900 | HIdeki.Akashi | feat(debug): structured JSON Lines log (PSB_EDIT_LOG/PSB_EDIT_SESSION) for automated edit-path tests
+41a64da | 2026-11-03 15:00:22 +0900 | HIdeki.Akashi | fix(canvas): ControllerBox edit - JsonElement + prompt for *_powersim.py; docs: handoff 2026-11-03
+ea985ba | 2026-11-03 14:19:49 +0900 | HIdeki.Akashi | chore: remove test_gropu.psbgroup (typo artifact) + ignore *.psbgroup
+1a20211 | 2026-11-03 14:16:54 +0900 | HIdeki.Akashi | test: M2-err GroupManager.Load error handling (6 cases)
+23eef69 | 2026-11-03 13:39:52 +0900 | HIdeki.Akashi | test: M3 multi-drag coordinates + M5 i18n group keys (en/zh)
+1206fc3 | 2026-11-03 13:22:25 +0900 | HIdeki.Akashi | docs: UI_TEST_MANUAL for multi-select + group save/load (manual checklist)
+6a2bde5 | 2026-11-03 13:17:32 +0900 | HIdeki.Akashi | test: A1 multi-select group round-trip + .gitattributes eol=crlf for C#
+7de8468 | 2026-11-03 13:13:18 +0900 | HIdeki.Akashi | fix(canvas): Ctrl+click multi-select via HandleComponentSelectedChanged
+6b8fbe4 | 2026-11-03 13:02:15 +0900 | HIdeki.Akashi | feat(ui): Load Group toolbar button (.psbgroup → append to canvas)
+e581119 | 2026-11-03 13:00:30 +0900 | HIdeki.Akashi | feat(group): GroupManager.LoadAndAppend + CanvasManager bulk insert API
+2f335a8 | 2026-11-03 12:49:20 +0900 | HIdeki.Akashi | feat(ui): Save Selection as Group toolbar button (.psbgroup)
+32b7598 | 2026-11-03 12:46:24 +0900 | HIdeki.Akashi | feat(group): GroupManager.Extract/Save/Load for .psbgroup (relative positions)
+49357ef | 2026-11-03 12:42:16 +0900 | HIdeki.Akashi | fix(canvas): SelectComponent(additive:true) toggles membership (Ctrl+click)
+d42f9e8 | 2026-11-03 12:35:45 +0900 | HIdeki.Akashi | feat(canvas): multi-drag (move all selected components together)
+830553b | 2026-11-03 12:25:52 +0900 | HIdeki.Akashi | feat(canvas): multi-select core API (SelectedComponents + SelectComponent + ClearSelection)
+096bb9f | 2026-11-03 12:13:14 +0900 | HIdeki.Akashi | feat: multi-select SPEC + self-contained psbproj + hide t_end in non-run editor
+96e79be | 2026-11-03 11:28:43 +0900 | HIdeki.Akashi | fix(codegen): propagate MainForm tEnd into demo_main.py (was hardcoded 5.0)
+6848ba3 | 2026-11-03 11:11:52 +0900 | HIdeki.Akashi | fix(archive): exclude temp_*.py from bundled components
+8b5d2c2 | 2026-11-03 10:59:59 +0900 | HIdeki.Akashi | feat(archive): bundle + extract StaTable *_powersim.py in .psbproj
+31e19e4 | 2026-11-03 10:23:23 +0900 | HIdeki.Akashi | chore: untrack generated/*_powersim.py (regenerated artifacts)
+02f728c | 2026-11-03 10:22:21 +0900 | HIdeki.Akashi | docs: add Trap #64 (ControllerBox ports vs psbproj curation)
+b371f7c | 2026-11-03 10:19:57 +0900 | HIdeki.Akashi | test: strict assertion for ControllerBoxDescriptorBuilder (Stage 1, 22/20 ports)
+4a235da | 2026-11-03 10:17:52 +0900 | HIdeki.Akashi | tools: add enable-utf8.ps1 (fix console mojibake in PS 5.1)
+8d2ec33 | 2026-11-03 09:47:03 +0900 | HIdeki.Akashi | tools(verify_all): add StaTable psbproj metrics check
+4c08a5e | 2026-11-03 09:41:33 +0900 | HIdeki.Akashi | test: add StaTable E2E (deterministic codegen + psbproj metrics)
+0fc8410 | 2026-11-03 09:12:54 +0900 | HIdeki.Akashi | docs: add Trap #63 (verify_all E2E filter gap)
+61830e8 | 2026-11-03 09:08:56 +0900 | HIdeki.Akashi | tools(verify_all): run full UITests (12), not just ProjectRoundTripTests
+f29f681 | 2026-11-01 13:05:57 +0900 | HIdeki.Akashi | docs: bump version to v1.8.0 (GUI FMU E2E, Python runtime spec)
+6c449e8 | 2026-11-01 12:57:47 +0900 | HIdeki.Akashi | docs: record product improvements from GUI E2E work (Run status, new-component Run)
+9b745ca | 2026-11-01 12:30:45 +0900 | HIdeki.Akashi | docs: record GUI FMU E2E completion in THREAD_HANDOFF
+cbacbf5 | 2026-11-01 12:29:13 +0900 | HIdeki.Akashi | feat(uitests): add GUI E2E for Add Physics -> Dahlquist -> Run
+e56ff0b | 2026-11-01 11:43:03 +0900 | HIdeki.Akashi | test(uitests): disable parallel execution (flakiness persists; see handoff)
+9a9d30a | 2026-11-01 11:22:16 +0900 | HIdeki.Akashi | chore: keep scan_imports.py improvement patch for reference
+71f58b0 | 2026-11-01 11:21:51 +0900 | HIdeki.Akashi | tools: improve scan_imports.py (utf-8-sig, .pytest_tmp, recursive local, --exclude)
+64d3115 | 2026-11-01 11:10:07 +0900 | HIdeki.Akashi | tools: add AST-based import scanner (scan_imports.py)
+9ddb053 | 2026-11-01 11:08:38 +0900 | HIdeki.Akashi | docs: replace unused lxml with pyyaml (runtime manifest loader)
+e1cce22 | 2026-11-01 10:58:39 +0900 | HIdeki.Akashi | docs: add Python runtime spec (en/zh) + pin fmpy, add lxml to requirements
+346a6f4 | 2026-11-01 09:48:58 +0900 | HIdeki.Akashi | docs(handoff): update THREAD_HANDOFF for 2026-11-01 (85d755c)
+85d755c | 2026-11-01 09:42:02 +0900 | HIdeki.Akashi | docs(handoff): add trap #57 (fmpy 0.3.32 API + unzip)
+1ee6b2a | 2026-11-01 09:36:53 +0900 | HIdeki.Akashi | fix(controller_box): legacy fixture priority + remove stale stub (restores test suite)
+4d0062a | 2026-11-01 09:27:43 +0900 | HIdeki.Akashi | fix(physics): fmu_adapter unzip + fmpy 0.3.32 getReal API (Trap #57)
+579dbc2 | 2026-11-01 08:45:49 +0900 | HIdeki.Akashi | chore: ignore + untrack user_components/ (user data)
+6da9266 | 2026-11-01 08:41:34 +0900 | HIdeki.Akashi | chore: untrack user_physics_models/ and user_components/ (user data, gitignored) + pre_public_check.ps1
+50ebbd5 | 2026-11-01 08:27:54 +0900 | HIdeki.Akashi | feat(demo): add oven_control_from_design_xml.psbproj (full StaTable XML -> simulation pipeline)
+36d8584 | 2026-11-01 08:19:27 +0900 | HIdeki.Akashi | docs: v1.8.0 CHANGELOG + README demos section + traps #53-#56
+07d7750 | 2026-11-01 08:12:44 +0900 | HIdeki.Akashi | feat(demos): add oven_control_statable.psbproj (StaTable 7-layer gating, ss=200.68/ovs=1.45%/settle=64.6s) + README section 5
+f95fb6a | 2026-11-01 00:03:20 +0900 | HIdeki.Akashi | fix(pytest): pre-push hook basetemp=.pytest_tmp (consistent with pyproject.toml)
+22bfd86 | 2026-10-31 23:59:39 +0900 | HIdeki.Akashi | fix(pytest): basetemp=.pytest_tmp to avoid missing tmp/ in CI fresh checkout (trap #31 extension)
+0cc0dbb | 2026-10-31 23:49:13 +0900 | HIdeki.Akashi | chore(ci): temporarily remove workflows (billing issue, restore after public release)
+86d2b93 | 2026-10-31 23:37:23 +0900 | HIdeki.Akashi | docs(qa): fix remaining date references (QA_LOG header + THREAD_HANDOFF footer)
+52ffbac | 2026-10-31 23:34:29 +0900 | HIdeki.Akashi | docs(qa): correct dates to 2026-10-31 (QA Day 1-3 completed today)
+1f552fd | 2026-10-31 23:22:10 +0900 | HIdeki.Akashi | test(qa): add qa_day3.ps1 (8 error-handling cases, all passed) + Day 3 log
+3b071e8 | 2026-10-31 23:09:53 +0900 | HIdeki.Akashi | docs(qa): record setpoint sensitivity experiment (200 vs 300)
+ce2707a | 2026-10-31 23:05:38 +0900 | HIdeki.Akashi | docs(qa): complete QA Day 1-2 (4 demos quantitative + UI/UX + regression guards)
+f9a9653 | 2026-10-31 22:57:51 +0900 | HIdeki.Akashi | test: add tEnd metadata + SimTimeOverride regression tests (3-layer guard)
+bdaa25d | 2026-10-31 22:45:29 +0900 | HIdeki.Akashi | fix(ui): re-apply PythonEditorForm button visibility in Shown (first-launch layout race)
+ab38f4b | 2026-10-31 22:16:58 +0900 | HIdeki.Akashi | fix(demos): pid_closed_loop IMC tuning (ki=1.0, aw=True, out_max=2) to eliminate steady-state error
+4e49e3b | 2026-10-31 22:06:17 +0900 | HIdeki.Akashi | fix(demos): correct ROOT path after examples/demos/ relocation
+4df818e | 2026-10-31 22:02:13 +0900 | HIdeki.Akashi | chore(tools): fix verify_all.ps1 UTF-8 output (trap #37)
+b907773 | 2026-10-31 21:46:21 +0900 | HIdeki.Akashi | docs(demos): add oven_control section + restructure README
+6692492 | 2026-10-31 21:36:36 +0900 | HIdeki.Akashi | feat(persist): save t_end to .psbproj metadata + oven_control demo (no_aw PID)
+cf48b4c | 2026-10-31 17:35:43 +0900 | HIdeki.Akashi | feat(components): add OvenChamber (StaTable oven integration, wraps ThermalMass)
+fffe416 | 2026-10-31 15:44:17 +0900 | HIdeki.Akashi | docs(handoff): update THREAD_HANDOFF for demo project completion (159395a)
+178d948 | 2026-10-31 15:42:11 +0900 | HIdeki.Akashi | docs(handoff): update THREAD_HANDOFF for demo project completion (159395a)
+159395a | 2026-10-31 15:38:37 +0900 | HIdeki.Akashi | docs(demos): add pid_closed_loop section to demos README
+5dc275e | 2026-10-31 15:35:12 +0900 | HIdeki.Akashi | feat(demos): add pid_closed_loop.psbproj (PID + FOL closed loop)
+a310dba | 2026-10-31 15:17:45 +0900 | HIdeki.Akashi | chore(tools): add status_check.ps1 (session dashboard, UTF-8 BOM for trap #37)
+0ed6454 | 2026-10-31 15:09:40 +0900 | HIdeki.Akashi | docs(handoff): add traps #50/#51 (modal ShowDialog + MPLBACKEND separation)
+b48dfd2 | 2026-10-31 15:06:42 +0900 | HIdeki.Akashi | docs(handoff): add trap #52 (psbproj descriptor=PascalCase, connections=camelCase)
+477d343 | 2026-10-31 14:29:04 +0900 | HIdeki.Akashi | docs(handoff): record UI fixes (non-modal editor + ForceHeadlessBackend + Save As) + traps #50/#51
+3a2428d | 2026-10-31 14:22:37 +0900 | HIdeki.Akashi | fix(ui): non-modal editor + ForceHeadlessBackend + Save As button
+4279de2 | 2026-10-31 11:27:38 +0900 | HIdeki.Akashi | docs(handoff): update tail sections for 2026-10-31 state (demos in examples/demos/)
+150dc87 | 2026-10-31 11:17:05 +0900 | HIdeki.Akashi | feat(demos): add two closed-loop demos + README (PID standalone, StaTable runtime)
+538411b | 2026-10-27 22:57:35 +0900 | HIdeki.Akashi | docs(handoff): correct workspace integration status (UI complete, auto-extract partial)
+ab26d71 | 2026-10-27 22:51:45 +0900 | HIdeki.Akashi | docs(handoff): record 2026-10-27 full E2E automation + trap #49 (pipe fill)
+2fbcab5 | 2026-10-27 22:42:53 +0900 | HIdeki.Akashi | feat(test): complete full E2E automation - Canvas->FMU->Generate->Run->PNG->Save->Load (5 tests passing)
+d781d9b | 2026-10-27 22:09:32 +0900 | HIdeki.Akashi | test(project): add E2E test for Canvas->FMU->Generate->Save (4 tests passing)
+b81fbe5 | 2026-10-27 22:07:11 +0900 | HIdeki.Akashi | feat(test): automated Canvas->FMU->Generate->Save E2E (Phase B complete)
+ef515b8 | 2026-10-27 21:39:22 +0900 | HIdeki.Akashi | feat(project): complete Phase A - automated psbproj round-trip tests (3 passed)
+16fefd5 | 2026-10-27 21:26:03 +0900 | HIdeki.Akashi | feat(fmu): manifest.json reading + external FMU missing dialog (Round 3)
+0ea706f | 2026-10-27 21:21:41 +0900 | HIdeki.Akashi | feat(fmu): license-gated FMU bundling with manifest.json (BSD/redistributable whitelist)
+5d012c9 | 2026-10-27 21:10:08 +0900 | HIdeki.Akashi | feat(workspace): per-project subdirectory extraction + component filter
+7cc0c0e | 2026-10-27 20:59:17 +0900 | HIdeki.Akashi | feat(workspace): add workspace structure + HANDOFF project-integrity section
+a9cbf0f | 2026-10-27 20:43:58 +0900 | HIdeki.Akashi | test(project): full integrity verification — params/locations/closed-loop/archive (10 tests green)
+73ebbf2 | 2026-10-27 20:31:05 +0900 | HIdeki.Akashi | test(project): verify connection round-trip (2 components + 1 wire) — 6 tests green
+e61217a | 2026-10-27 20:24:07 +0900 | HIdeki.Akashi | test(project): set InstanceName to 'first order lag' in Test_CreateDemoSimulation
+7f9de7c | 2026-10-27 20:18:42 +0900 | HIdeki.Akashi | test(project): Phase B — headless Canvas build + FMU insert + round-trip (5 tests green)
+5ae104e | 2026-10-27 20:05:32 +0900 | HIdeki.Akashi | refactor(project): align ProjectFileV2 Parameters type with ComponentModel (non-nullable object)
+ff056d6 | 2026-10-27 20:04:26 +0900 | HIdeki.Akashi | test(project): headless CLI harness + .psbproj round-trip tests (Phase A complete)
+4d489b8 | 2026-10-26 20:18:27 +0900 | HIdeki.Akashi | feat(project): add ProjectFileV2 schema + ProjectArchive (.psbproj ZIP save/load) with tests
+c5bc737 | 2026-10-25 17:15:28 +0900 | HIdeki.Akashi | chore(ip): exclude LAWYER_CANDIDATES.md from public release
+c3c64b3 | 2026-10-25 16:55:06 +0900 | HIdeki.Akashi | docs(handoff): task 7 complete — GUI E2E works (existing btnRun path activated by bug #2/#6 fixes)
+fd990e8 | 2026-10-25 16:34:38 +0900 | HIdeki.Akashi | feat(simulation): generate plot_config from ComponentInstances + reorder plt.savefig before show (task 6a/6b)
+91d01bb | 2026-10-25 16:15:12 +0900 | HIdeki.Akashi | docs(handoff): record 2026-10-25 GUI E2E completion (bugs #2/#5 fixed, traps #47/#48)
+08bd436 | 2026-10-25 16:09:42 +0900 | HIdeki.Akashi | fix(physics): auto-map FMU output to 'output' (bug #5) + import FMU component in demo_main (bug #2)
+8461c99 | 2026-10-25 15:30:26 +0900 | HIdeki.Akashi | fix(physics): auto-map single FMU output to 'output' (bug #5, handle model.yaml self-map)
+167d557 | 2026-10-25 15:11:58 +0900 | HIdeki.Akashi | docs(handoff): record 2026-10-25 path B E2E progress (bugs #1/#4 fixed, #2/#5 pending, trap #46)
+d9ba1b3 | 2026-10-25 14:52:33 +0900 | HIdeki.Akashi | fix(physics): insert FMU code into top-level class method, not try/except fallback (bug #4)
+3b102e1 | 2026-10-25 13:31:27 +0900 | HIdeki.Akashi | feat(physics): use fmu_wrapper for FMU import (v1.8.0 task 0b/0c) + auto-instantiate
+eb6af21 | 2026-10-25 13:09:19 +0900 | HIdeki.Akashi | chore: remove one-shot fmpy patch scripts
+88a8701 | 2026-10-25 13:08:28 +0900 | HIdeki.Akashi | feat(python): add fmu_wrapper.py (PyFMI-compatible load_fmu via FMPy FMU2Slave)
+e612921 | 2026-10-25 12:24:21 +0900 | HIdeki.Akashi | feat(tools): add handoff_editor.py with 3-mode GUI + docs(handoff) v1.7.0
+8049e7a | 2026-10-25 12:04:49 +0900 | HIdeki.Akashi | docs(handoff): defer public release to 11/22 with revised roadmap
+93b52c6 | 2026-10-25 11:40:27 +0900 | HIdeki.Akashi | docs(handoff): v1.6.1 完了（docs/ip + 死コード削除 + NuGet スリム化）+ 罠 #44
+290ce29 | 2026-10-25 11:31:24 +0900 | HIdeki.Akashi | docs(readme): update for v1.6.1 (Catalog tab + docs/ip + cleanup)
+fa09edc | 2026-10-25 11:07:56 +0900 | HIdeki.Akashi | docs(ip): remove deleted NuGet packages from license inventory
+094912f | 2026-10-25 10:57:52 +0900 | HIdeki.Akashi | chore(deps): remove 4 unused NuGet packages
+0183306 | 2026-10-25 10:44:43 +0900 | HIdeki.Akashi | docs(handoff): v1.6.0 以降の作業（docs/ip + 死コード削除）+ 罠 #38〜#43
+9c77187 | 2026-10-25 10:30:48 +0900 | HIdeki.Akashi | chore(parts): remove unused files (9 files)
+46cae6f | 2026-10-25 10:07:49 +0900 | HIdeki.Akashi | docs(ip): add lawyer candidates + exclude consultation from git
+7ac8adf | 2026-10-25 09:53:18 +0900 | HIdeki.Akashi | docs(ip): add complete git history (346 commits, 31 tags)
 6bd1157 | 2026-10-25 09:41:19 +0900 | HIdeki.Akashi | docs(ip): initial IP documentation (FAQ + OSS compliance + licenses)
 40cb4bd | 2026-10-25 08:50:55 +0900 | HIdeki.Akashi | docs(v1.6.0): defer public catalog distribution until public repo + local dev source
 6cd71b3 | 2026-10-25 08:27:15 +0900 | HIdeki.Akashi | fix(tools): safe clone cleanup with retry + rename fallback
