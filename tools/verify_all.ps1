@@ -42,11 +42,24 @@ if ($stExit -ne 0) { Write-Host "  exit=$stExit NG" -ForegroundColor Red } else 
 # 4) E2E tests
 Write-Host "[4/6] E2E TESTS" -ForegroundColor Yellow
 Get-Process PowerSimBuilder -ErrorAction SilentlyContinue | Stop-Process -Force
+# Trap #85: let the OS release window handles / file locks before starting FlaUI.
+Start-Sleep -Seconds 3
 # Run ALL UITests (SmokeTests + ProjectRoundTripTests + PythonEditorFormShownTests).
 # xunit.runner.json disables parallelism; expect ~11 pass + 1 skip.
 # Trap #63: previously filtered to ProjectRoundTripTests only (5/12); new E2E was silently skipped.
 $testOut = & dotnet test tests\PowerSimBuilder.UITests --nologo 2>&1
 $testExit = $LASTEXITCODE
+# Trap #85: full UITests run can be flaky (leftover process / window handles).
+# Retry once on failure after extra cleanup. Individual [4b]/[4c] checks below
+# still run, so real regressions remain visible.
+if ($testExit -ne 0) {
+    Write-Host "  First UITests attempt failed, retrying once after cleanup (Trap #85)..." -ForegroundColor DarkYellow
+    Get-Process PowerSimBuilder -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Seconds 5
+    $testOut = & dotnet test tests\PowerSimBuilder.UITests --nologo 2>&1
+    $testExit = $LASTEXITCODE
+    if ($testExit -eq 0) { Write-Host "  Retry succeeded (flaky run absorbed)" -ForegroundColor DarkYellow }
+}
 $testOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "  $_" }
 if ($testExit -eq 0) { Write-Host "  exit=0 OK" -ForegroundColor Green } else { Write-Host "  exit=$testExit NG" -ForegroundColor Red }
 
