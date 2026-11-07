@@ -2,7 +2,7 @@
 
 > **用途**: 新スレッド開始時にこのファイル 1 つ読めば即座に作業再開できる「現在の状態」を記録する。
 > **累積履歴**: `HANDOFF_MVP1_2.md`（バージョン別・罠 #1〜#57）を参照。
-> **最終更新**: 2026-11-07（Role Snippets B-3a〜c 完了 + verify_all [4c] + Trap #80-#84）
+> **最終更新**: 2026-11-07（v1.9.0 リリース + QA snapshot 1 アクション化 + Trap #80-#88）
 
 ---
 
@@ -11,7 +11,7 @@
 
 | 項目 | 値 |
 |--------|------------------------------|
-| origin/main | `7cee789`（tag `v1.9.0`） |
+| origin/main | `97f536e`（tag `v1.9.0`） |
 | C# テスト | 599 passed / 2 skipped |
 | Python テスト | 457 passed |
 | E2E (UITests) | 15 passed / 1 skip |
@@ -34,7 +34,7 @@
 | `RoleSnippetRegistrarTests` | 8 | Extract / Register / バリデーション |
 | `RoleSnippetStorageTests` | 6 | index.json / .py ファイル I/O |
 
-### 追加された罠（Trap #80-#87）
+### 追加された罠（Trap #80-#88）
 
 | # | 罠 |
 |---|---|
@@ -66,7 +66,7 @@
 
 ---
 
-﻿
+
 ## QA Snapshot の使い方（2026-11-07 追加）
 
 GO/NO-GO・週次・リリース前の定量証跡を **1 コマンド** で `docs/qa/<Label>/` に生成する。
@@ -139,24 +139,6 @@ GO/NO-GO・週次・リリース前の定量証跡を **1 コマンド** で `do
 | `ovs` | 1.45% |
 | `settle` | 64.6s |
 | gating | `MwOven:PidHeating` PASS |
-
-### 終了コード
-
-| code | 意味 |
-|:---:|---|
-| 0 | 成功（verify_all 失敗も WARN として記録され exit 0） |
-| 1 | 前提不足 / ステップ失敗（project 不在、demo_main.py 不在、python エラー等） |
-
-### トラブルシュート
-
-| 症状 | 原因 | 対処 |
-|---|---|---|
-| `[ERR] project not found` | `-Project` パス誤り | GUI で Open したプロジェクトのパスを指定 |
-| `[ERR] generated\demo_main.py not found` | Create Simulation 未実行 | GUI で Open → Create Simulation |
-| `[ERR] ... already exists` | 既存 `docs/qa/<Label>/` あり | `-Force` または別 `-Label` |
-| `exit code: -1` / `NativeCommandError` | PS 5.1 の native stderr 扱い | 修正版 `qa_snapshot.ps1` の `Invoke-PythonChecked` で回避済み |
-| `tag=(no tag)` | dirty working tree | 正常動作（commit を残すため） |
-| `simulation_signals.png` が小さい（114KB） | `[8/8] verify_all` 内 `[3.5/6]` が上書き | 内容は同じ波形。`-SkipVerifyAll` で回避可 |
 
 ### 終了コード
 
