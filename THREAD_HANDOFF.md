@@ -46,6 +46,7 @@
 | 85 | `verify_all.ps1` `[4/6]` FlaUI flaky → Start-Sleep 3 + 1 回リトライ（retry-once） |
 | 86 | WinForms `TextBox.Name` は UIA で AutomationId を返す（値は `AsTextBox().Text`）+ `ShowInTaskbar=false` modal は UIA3 desktop tree に出ない → Win32 `EnumWindows` フォールバック必要（Trap #15 再発） |
 | 87 | `release.py` は部分成功で非冪等（タグ Push 後 `gh` 認証切れ → 再実行不可で `v1.9.0` リリース手動復旧）→ `tag_exists_remote` / `release_exists` / `--force` / resume モード追加で構造的解消 |
+| 88 | `generated/demo_main.py` は `PSB_DUMP_CSV` 非対応 → QA で毎回手動パッチ必要。`PythonSimulationMainBuilder` に組み込むのが恒久対策（post-GO/NO-GO） |
 
 ### verify_all.ps1 統合
 
@@ -428,6 +429,10 @@ cd C:\dev\PowerSimBuilder
 | `examples/demos/README.md` | デモ説明（StaTable 7層 + ハイブリッドパターン） |
 | `tools/status_check.ps1` | セッション開始時 status dashboard |
 | `tools/verify_all.ps1` | 一括検証（build + metadata + PID + E2E + git） |
+| `tools/qa_snapshot.ps1` | 1 アクションで GO/NO-GO 定量データ一式を生成 |
+| `tools/capture_env.py` | 環境情報 JSON 生成 |
+| `tools/downsample_csv.py` | 145MB CSV → 1Hz / 主要列のみ |
+| `tools/patch_demo_main_csv.py` | demo_main.py に PSB_DUMP_CSV 対応追加（Trap #88） |
 | `tests/PowerSimBuilder.UITests/ProjectRoundTripTests.cs` | E2E 5 テスト |
 
 ---
