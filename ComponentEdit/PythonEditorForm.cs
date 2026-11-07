@@ -33,6 +33,31 @@ namespace PowerSimBuilder
         private PythonExecutor _executor;
 
         public bool IsModified { get; private set; }
+
+        /// <summary>
+        /// Structured JSON-lines log for Role Snippet insertion diagnostics.
+        /// Writes to PSB_EDIT_LOG (default %TEMP%\psb_edit_debug.log).
+        /// </summary>
+        private static void LogSnippet(string evt, params (string key, object val)[] fields)
+        {
+            try
+            {
+                var path = System.Environment.GetEnvironmentVariable("PSB_EDIT_LOG")
+                    ?? System.IO.Path.Combine(System.IO.Path.GetTempPath(), "psb_edit_debug.log");
+                var session = System.Environment.GetEnvironmentVariable("PSB_EDIT_SESSION") ?? "?";
+                var obj = new System.Collections.Generic.Dictionary<string, object>
+                {
+                    ["ts"] = System.DateTime.Now.ToString("HH:mm:ss.fff"),
+                    ["session"] = session,
+                    ["event"] = evt,
+                    ["source"] = "PythonEditorForm",
+                };
+                if (fields != null) foreach (var (k, v) in fields) obj[k] = v;
+                var json = System.Text.Json.JsonSerializer.Serialize(obj);
+                System.IO.File.AppendAllText(path, json + System.Environment.NewLine);
+            }
+            catch { }
+        }
         public string PythonCode => textEditor.Text;
 
         public bool SuppressDialogs { get; set; } = false;
@@ -244,6 +269,10 @@ if (filePath != null)
             });
 
             AppendLineOpsMenuItems(contextMenu);
+            var menuItemRoleSnippets = new ToolStripMenuItem(I18n.T("PythonEditor.MenuRoleSnippets"));
+            menuItemRoleSnippets.Click += (s, e) => ShowRoleSnippetsDialog();
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add(menuItemRoleSnippets);
             textEditor.ContextMenuStrip = contextMenu;
         }
 
@@ -389,6 +418,76 @@ if (filePath != null)
                     catch { }
                 }
 
+                private void ShowRoleSnippetsDialog()
+                {
+                    using var dlg = new RoleSnippetForm();
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        InsertRoleSnippet(dlg.SelectedLayer, dlg.SelectedFunc, dlg.SelectedCode);
+                    }
+                }
+
+                private void InsertRoleSnippet(string layer, string func, string code)
+                {
+                    if (string.IsNullOrEmpty(layer) || string.IsNullOrEmpty(func)) { LogSnippet("SnippetInsertSkipEmpty"); return; }
+                    LogSnippet("SnippetInsertStart", ("layer", layer), ("func", func), ("codeLen", (code ?? "").Length));
+                    var text = textEditor.Text;
+                    var nl = text.Contains("\r\n") ? "\r\n" : "\n";
+                    var startMarker = "# STABLE_USER_CODE_START:" + layer + "." + func;
+                    var endMarker = "# STABLE_USER_CODE_END:" + layer + "." + func;
+                    var startIdx = text.IndexOf(startMarker, System.StringComparison.Ordinal);
+                    var endIdx = text.IndexOf(endMarker, System.StringComparison.Ordinal);
+                    if (startIdx < 0 || endIdx < 0 || endIdx < startIdx)
+                    {
+                        MessageBox.Show(this,
+                            string.Format(I18n.T("PythonEditor.MsgRoleSnippetNoMarkers"), layer, func),
+                            I18n.T("PythonEditor.RoleSnippetsTitle"),
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    var lineEnd = text.IndexOf(nl, startIdx);
+                    if (lineEnd < 0) lineEnd = text.Length;
+                    else lineEnd += nl.Length;
+                    var lineStart = text.LastIndexOf(nl, endIdx);
+                    if (lineStart < 0) lineStart = 0;
+                    else lineStart += nl.Length;
+                    var sb = new System.Text.StringBuilder();
+                    var codeLines = (code ?? "").Replace("\r\n", "\n").Split('\n');
+                    foreach (var ln in codeLines)
+                    {
+                        if (string.IsNullOrWhiteSpace(ln)) { sb.Append(nl); continue; }
+                        sb.Append("        ");
+                        sb.Append(ln.TrimStart());
+                        sb.Append(nl);
+                    }
+                    LogSnippet("SnippetMarkersFound", ("startIdx", startIdx), ("endIdx", endIdx), ("bodyNewLen", sb.Length), ("oldTotalLen", text.Length));
+                    var newText = text.Substring(0, lineEnd) + sb.ToString() + text.Substring(lineStart);
+                    var beforeLen = textEditor.Text.Length;
+                    textEditor.Text = newText;
+                    var afterLen = textEditor.Text.Length;
+                    LogSnippet("SnippetInsertDone",
+                        ("beforeLen", beforeLen),
+                        ("afterLen", afterLen),
+                        ("delta", afterLen - beforeLen),
+                        ("editorType", textEditor.GetType().Name),
+                        ("isModified", IsModified));
+                    // Move caret + select inserted region so the user sees the change.
+                    try
+                    {
+                        textEditor.SelectionStart = lineEnd;
+                        textEditor.SelectionLength = Math.Min(sb.Length, Math.Max(0, textEditor.Text.Length - lineEnd));
+                        textEditor.ScrollToCaret();
+                        textEditor.Focus();
+                    }
+                    catch { }
+                    // Status feedback.
+                    if (lblStatus != null)
+                    {
+                        lblStatus.Text = string.Format(
+                            I18n.T("PythonEditor.MsgRoleSnippetInserted"),
+                            layer, func, sb.Length);
+                    }
+                }
                 private void BtnReload_Click(object sender, EventArgs e)
                 {
                     if (IsModified)
