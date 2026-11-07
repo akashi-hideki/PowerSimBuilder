@@ -13,7 +13,7 @@
 |--------|------------------------------|
 | origin/main | `7354d8c` |
 | C# テスト | 599 passed / 2 skipped |
-| Python テスト | 463 passed |
+| Python テスト | 457 passed |
 | E2E (UITests) | 15 passed / 1 skip |
 
 ### 完了機能: Role Snippets B（Register）
@@ -67,7 +67,7 @@
 |--------|------------------------------|
 | origin/main | `1a20211` + 本コミット |
 | C# テスト | 567 passed / 2 skipped |
-| Python テスト | 463 passed |
+| Python テスト | 457 passed |
 | E2E (UITests) | 12 passed / 1 skip |
 
 ### 完了機能
