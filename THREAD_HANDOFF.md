@@ -2,7 +2,7 @@
 
 > **用途**: 新スレッド開始時にこのファイル 1 つ読めば即座に作業再開できる「現在の状態」を記録する。
 > **累積履歴**: `HANDOFF_MVP1_2.md`（バージョン別・罠 #1〜#57）を参照。
-> **最終更新**: 2026-11-07（Role Snippets B-3 完了 + Trap #80-#84）
+> **最終更新**: 2026-11-07（Role Snippets B-3a〜c 完了 + verify_all [4c] + Trap #80-#84）
 
 ---
 
@@ -11,8 +11,8 @@
 
 | 項目 | 値 |
 |--------|------------------------------|
-| origin/main | `d092499` |
-| C# テスト | 597 passed / 2 skipped |
+| origin/main | `7354d8c` |
+| C# テスト | 599 passed / 2 skipped |
 | Python テスト | 463 passed |
 | E2E (UITests) | 15 passed / 1 skip |
 
@@ -24,12 +24,13 @@
 | `STABLE_USER_CODE_START` マーカー存在判定（コンポーネント型非依存） | ✅ |
 | 上書き確認 + メタデータ（Layer/Func/Description） | ✅ |
 | i18n 12 キー追加（374 keys） | ✅ |
+| B-3c: `SetPythonCode` / `LoadFile` 後の自動再評価 + `menuItemRoleSnippets` マーカー判定統一 | ✅ |
 
-### テスト自動化（27 本）
+### テスト自動化（29 本）
 
 | テストクラス | 件数 | 内容 |
 |---|---:|---|
-| `RoleSnippetVisibilityTests` | 13 | L1: `ContainsRoleMarkers` Theory 9 / L2: `Form_*` Fact 4 |
+| `RoleSnippetVisibilityTests` | 15 | L1: `ContainsRoleMarkers` Theory 9 / L2: `Form_*` + `SetPythonCode` + `MenuItemRoleSnippets` Fact 6 |
 | `RoleSnippetRegistrarTests` | 8 | Extract / Register / バリデーション |
 | `RoleSnippetStorageTests` | 6 | index.json / .py ファイル I/O |
 
@@ -43,13 +44,19 @@
 | 83 | WinForms `Control.Visible` は親 Form 非表示時 **常に false** → 内部フラグ `_registerSnippetAvailable` で意図観測 |
 | 84 | C# verbatim 文字列内の `@"^\\s*..."`（二重バックスラッシュ）は regex 不正 → 純粋関数 `ContainsRoleMarkers` に切り出し |
 
-### 未着手（B-3c 候補）
+### verify_all.ps1 統合
+
+`[4c] RoleSnippets (Register Snippet visibility)` を `[4b]` 直後に追加。
+`verify_all.ps1` 一発で B-3a〜c の回帰検出が可能。
+
+### 未着手（次セッション候補）
 
 | # | 内容 | 規模 |
 |:---:|---|:---:|
-| 1 | `SetPythonCode` / `BtnReload_Click` 後の `UpdateRegisterSnippetAvailability()` 再評価 | S |
-| 2 | `menuItemRoleSnippets`（Insert メニュー）のマーカー判定統一 | S |
-| 3 | `gcommit.ps1` 冒頭で `PowerSimBuilder.exe` kill（Trap #80 恒久対策） | S |
+| 1 | **B-5 FlaUI E2E**: `Test_ShowRegisterSnippetDialog` 経由でダイアログ自動化 | M |
+| 2 | `gcommit.ps1` 冒頭で `PowerSimBuilder.exe` kill（Trap #80 恒久対策） | S |
+| 3 | 11/08 GO/NO-GO 準備（README / 告知文面） | M |
+| 4 | v1.9.0 リリース準備（CHANGELOG） | M |
 
 ---
 
