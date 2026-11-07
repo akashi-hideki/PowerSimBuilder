@@ -28,6 +28,13 @@ namespace PowerSimBuilder.SimPartsManege
             @"#\s*STABLE_USER_CODE_END:(?<layer>[A-Za-z0-9_]+)\.(?<func>F_[A-Za-z0-9_]+)",
             RegexOptions.Compiled);
 
+        // Anchored start-of-line marker used for visibility detection.
+        // Matches "    # STABLE_USER_CODE_START:Layer.F_Func" but NOT a
+        // similar substring inside a string literal.
+        private static readonly Regex MarkerLineRegex = new Regex(
+            @"^\s*#\s*STABLE_USER_CODE_START:",
+            RegexOptions.Compiled | RegexOptions.Multiline);
+
         private readonly string? _root;
 
         /// <param name="root">
@@ -37,6 +44,18 @@ namespace PowerSimBuilder.SimPartsManege
         public RoleSnippetRegistrar(string? root = null) => _root = root;
 
         private string ResolveFolder() => _root ?? RoleSnippetStorage.ResolveFolder();
+
+        /// <summary>
+        /// True when <paramref name="text"/> contains at least one
+        /// STABLE_USER_CODE_START marker at the start of a line. Used by
+        /// <see cref="PythonEditorForm"/> to show/hide the Register Snippet
+        /// entry points only for files that actually contain role functions.
+        /// </summary>
+        public static bool ContainsRoleMarkers(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+            return MarkerLineRegex.IsMatch(text);
+        }
 
         // ---- extraction (unchanged from B-1) ----
 

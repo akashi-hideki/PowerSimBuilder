@@ -10,6 +10,7 @@ namespace PowerSimBuilder
     {
         private string _originalCode;
         private string _filePath;
+        private bool _registerSnippetAvailable;
 
         /// <summary>Simulation t_end (seconds). Persisted to .psbproj.</summary>
         public double SimTime
@@ -473,6 +474,10 @@ if (filePath != null)
 
                 internal void Test_ShowRegisterSnippetDialog() => ShowRegisterSnippetDialog();
 
+                internal void Test_UpdateRegisterSnippetAvailability() => UpdateRegisterSnippetAvailability();
+                internal bool Test_BtnRegisterSnippetVisible => _registerSnippetAvailable;
+                internal bool Test_MenuItemRegisterSnippetVisible => _registerSnippetAvailable;
+
                 private void ShowRoleSnippetsDialog()
                 {
                     var (targetLayer, targetFunc) = DetectRoleFunctionAtCaret();
@@ -538,10 +543,8 @@ if (filePath != null)
                 private void UpdateRegisterSnippetAvailability()
                 {
                     if (textEditor == null) return;
-                    bool hasMarkers = System.Text.RegularExpressions.Regex.IsMatch(
-                        textEditor.Text ?? "",
-                        @"^\s*#\s*STABLE_USER_CODE_START:",
-                        System.Text.RegularExpressions.RegexOptions.Multiline);
+                    bool hasMarkers = PowerSimBuilder.SimPartsManege.RoleSnippetRegistrar.ContainsRoleMarkers(textEditor.Text);
+                    _registerSnippetAvailable = hasMarkers;
                     if (btnRegisterSnippet != null)
                     {
                         btnRegisterSnippet.Visible = hasMarkers;

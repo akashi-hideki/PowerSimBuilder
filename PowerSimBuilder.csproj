@@ -67,5 +67,10 @@
     <Compile Remove="tmp/**" />
     <Compile Remove="user_physics_models/**" />
     <None Include="user_physics_models/**" />
+  
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="PowerSimBuilder.Tests" />
+    <InternalsVisibleTo Include="PowerSimBuilder.UITests" />
   </ItemGroup>
 </Project>
