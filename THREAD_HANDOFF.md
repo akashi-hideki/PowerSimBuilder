@@ -53,7 +53,7 @@
 
 | # | 内容 | 規模 |
 |:---:|---|:---:|
-| 1 | **B-5 FlaUI E2E**: `Test_ShowRegisterSnippetDialog` 経由でダイアログ自動化 | M |
+| 1 | **B-5 FlaUI E2E**: `Test_ShowRegisterSnippetDialog` 経由でダイアログ自動化 | ✅ 完了 `7650d34` |
 | 2 | `gcommit.ps1` 冒頭で `PowerSimBuilder.exe` kill（Trap #80 恒久対策） | ✅ 完了 `535357b` |
 | 2b | `verify_all.ps1` `[4/6]` FlaUI flaky 対策（Start-Sleep 3 + 1 回リトライ、Trap #85） | ✅ 完了（本コミット） |
 | 3 | 11/08 GO/NO-GO 準備（README / 告知文面） | M |
