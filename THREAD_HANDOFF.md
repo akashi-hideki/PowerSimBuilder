@@ -46,9 +46,9 @@
 | 85 | `verify_all.ps1` `[4/6]` FlaUI flaky → Start-Sleep 3 + 1 回リトライ（retry-once） |
 | 86 | WinForms `TextBox.Name` は UIA で AutomationId を返す（値は `AsTextBox().Text`）+ `ShowInTaskbar=false` modal は UIA3 desktop tree に出ない → Win32 `EnumWindows` フォールバック必要（Trap #15 再発） |
 | 87 | `release.py` は部分成功で非冪等（タグ Push 後 `gh` 認証切れ → 再実行不可で `v1.9.0` リリース手動復旧）→ `tag_exists_remote` / `release_exists` / `--force` / resume モード追加で構造的解消 |
-| 88 | `generated/demo_main.py` は `PSB_DUMP_CSV` 非対応 → QA で毎回手動パッチ必要。`PythonSimulationMainBuilder` に組み込むのが恒久対策（post-GO/NO-GO） |
+| 88 | `demo_main.py` に `PSB_DUMP_CSV` 非対応 → **恒久化完了**: `PythonSimulationMainBuilder` 生成テンプレートに組み込み |
 | 89 | `generated/demo_main.py` の `dump_csv` は 145MB（dt=0.001 × 全列） → `downsample_csv.py` で 1Hz / 主要 13 列に削減、`tmp/qa_full/` に退避 |
-| 90 | `& script.ps1 2>&1` は `Write-Host` 出力をキャプチャしない（PS 5.1 仕様）→ exit code を `verify_all.exit.txt` に別保存し、パーサ側で `utf-8-sig` + `startswith('exit=')` で読む |
+| 90 | `& script.ps1 2>&1` は `Write-Host` 出力をキャプチャしない（PS 5.1 仕様）→ **恒久化完了**: `qa_snapshot.ps1` の `*>&1` で全ストリーム捕捉（491B → 3.9KB） |
 
 ### verify_all.ps1 統合
 
