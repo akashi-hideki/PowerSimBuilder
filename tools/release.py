@@ -166,6 +166,47 @@ def tag_exists(tag: str) -> bool:
     return ok
 
 
+def tag_exists_remote(tag: str) -> bool:
+    """True if tag is already pushed to origin (idempotency check)."""
+    ok, out = try_run(["git", "ls-remote", "--tags", "origin", tag])
+    if not ok:
+        return False
+    return any(line.endswith(f"refs/tags/{tag}") for line in out.splitlines())
+
+
+def release_exists(tag: str) -> bool:
+    """True if a GitHub release already exists for tag."""
+    ok, _ = try_run(["gh", "release", "view", tag])
+    return ok
+
+
+def delete_tag_local(tag: str, dry_run: bool) -> None:
+    if dry_run:
+        print(f"[DRY] git tag -d {tag}")
+        return
+    run(["git", "tag", "-d", tag])
+    print(f"[OK] Deleted local tag {tag}")
+
+
+def delete_tag_remote(tag: str, dry_run: bool) -> None:
+    if dry_run:
+        print(f"[DRY] git push origin :refs/tags/{tag}")
+        return
+    run(["git", "push", "origin", f":refs/tags/{tag}"])
+    print(f"[OK] Deleted remote tag {tag}")
+
+
+def delete_release(tag: str, dry_run: bool) -> None:
+    if dry_run:
+        print(f"[DRY] gh release delete {tag} --yes")
+        return
+    ok, out = try_run(["gh", "release", "delete", tag, "--yes"])
+    if ok:
+        print(f"[OK] Deleted release {tag}")
+    else:
+        print(f"[WARN] Could not delete release {tag}: {out}", file=sys.stderr)
+
+
 def create_tag(version: str, message: str, dry_run: bool) -> None:
     if dry_run:
         print(f"[DRY] git tag -a {version} -m {message!r}")
@@ -234,6 +275,8 @@ def main() -> int:
     parser.add_argument("--title", help="Release title (default: version).")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--skip-checks", action="store_true")
+    parser.add_argument("--force", action="store_true",
+                        help="Delete existing tag/release and recreate (destructive).")
     parser.add_argument("--with-catalog", action="store_true", help="Build and attach FMU catalog to release.")
     args = parser.parse_args()
 
@@ -251,23 +294,42 @@ def main() -> int:
     version = resolve_version(args)
     print(f"[INFO] Target version: {version}")
 
-    if not args.skip_checks:
+# OLD pre-flight removed: idempotent version below is the only check
+
+    # --- Idempotency detection (Trap #87) ---
+    tag_local = tag_exists(version)
+    tag_remote = tag_exists_remote(version)
+    release_ok = release_exists(version)
+    print(f"[INFO] State: tag(local)={tag_local} tag(remote)={tag_remote} release={release_ok}")
+
+    if args.force:
+        print("[INFO] --force: deleting existing tag and/or release")
+        if release_ok:
+            delete_release(version, args.dry_run)
+        if tag_remote:
+            delete_tag_remote(version, args.dry_run)
+        if tag_local:
+            delete_tag_local(version, args.dry_run)
+        tag_local = tag_remote = release_ok = False
+
+    if tag_local and tag_remote and release_ok:
+        print(f"[DONE] {version} already tagged and released. Nothing to do.")
+        return 0
+
+    resuming = tag_local or tag_remote
+    if resuming:
+        print("[INFO] Resuming: tag already exists, will skip tag creation.")
+        if not args.notes:
+            print("[ERR] Resuming requires --notes <file> (tag already exists).", file=sys.stderr)
+            return 1
+
+    if not args.skip_checks and not resuming:
         errs = check_preconditions()
         if errs:
             print("[ERR] Pre-flight failed:", file=sys.stderr)
             for e in errs:
                 print(f"  - {e}", file=sys.stderr)
             return 1
-
-    if tag_exists(version):
-        print(f"[ERR] Tag {version} already exists.", file=sys.stderr)
-        return 1
-
-    latest = get_latest_tag()
-    commits = get_commits_since(latest)
-    if not commits:
-        print("[ERR] No commits since last tag.", file=sys.stderr)
-        return 1
 
     extra = None
     if args.notes:
@@ -277,27 +339,46 @@ def main() -> int:
         else:
             print(f"[WARN] Notes file not found: {extra_path}")
 
-    sections = generate_sections(commits)
-    md = format_markdown(version, sections, extra_notes=extra)
+    if resuming:
+        md = extra or f"## {version}\n\n_Resumed release._"
+    else:
+        latest = get_latest_tag()
+        commits = get_commits_since(latest)
+        if not commits:
+            print("[ERR] No commits since last tag.", file=sys.stderr)
+            return 1
+        sections = generate_sections(commits)
+        md = format_markdown(version, sections, extra_notes=extra)
 
     print("\n----- Release Notes -----")
     print(md)
     print("-------------------------\n")
 
     tag_message = args.title or f"{version} - release"
-    create_tag(version, tag_message, args.dry_run)
-    push_tag(version, args.dry_run)
-    create_release(version, md, args.title, args.dry_run)
+
+    if not tag_local:
+        create_tag(version, tag_message, args.dry_run)
+    else:
+        print(f"[SKIP] Tag {version} already exists locally")
+
+    if not tag_remote:
+        push_tag(version, args.dry_run)
+    else:
+        print(f"[SKIP] Tag {version} already pushed to origin")
+
+    if not release_ok:
+        create_release(version, md, args.title, args.dry_run)
+    else:
+        print(f"[SKIP] Release {version} already exists")
 
     if args.dry_run:
         print("[DRY] No changes made.")
-    # (create_release already printed "[OK] Released ...")
 
     if catalog_assets:
         if args.dry_run:
             print(f"[DRY] gh release upload {version} {" ".join(str(a) for a in catalog_assets)}")
         else:
-            run(["gh", "release", "upload", version, *[str(a) for a in catalog_assets]])
+            run(["gh", "release", "upload", version, *[str(a) for a in catalog_assets], "--clobber"])
             print(f"[OK] Catalog uploaded: {", ".join(str(a) for a in catalog_assets)}")
     return 0
 
