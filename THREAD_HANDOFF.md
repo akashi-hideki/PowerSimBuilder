@@ -11,7 +11,7 @@
 
 | 項目 | 値 |
 |--------|------------------------------|
-| origin/main | `7354d8c` |
+| origin/main | `7cee789`（tag `v1.9.0`） |
 | C# テスト | 599 passed / 2 skipped |
 | Python テスト | 457 passed |
 | E2E (UITests) | 15 passed / 1 skip |
@@ -34,7 +34,7 @@
 | `RoleSnippetRegistrarTests` | 8 | Extract / Register / バリデーション |
 | `RoleSnippetStorageTests` | 6 | index.json / .py ファイル I/O |
 
-### 追加された罠（Trap #80-#84）
+### 追加された罠（Trap #80-#87）
 
 | # | 罠 |
 |---|---|
@@ -43,6 +43,9 @@
 | 82 | `rfind("</ItemGroup>")` 直前挿入は既存 ItemGroup 内にネスト → MSB4232 → `</Project>` 直前へ |
 | 83 | WinForms `Control.Visible` は親 Form 非表示時 **常に false** → 内部フラグ `_registerSnippetAvailable` で意図観測 |
 | 84 | C# verbatim 文字列内の `@"^\\s*..."`（二重バックスラッシュ）は regex 不正 → 純粋関数 `ContainsRoleMarkers` に切り出し |
+| 85 | `verify_all.ps1` `[4/6]` FlaUI flaky → Start-Sleep 3 + 1 回リトライ（retry-once） |
+| 86 | WinForms `TextBox.Name` は UIA で AutomationId を返す（値は `AsTextBox().Text`）+ `ShowInTaskbar=false` modal は UIA3 desktop tree に出ない → Win32 `EnumWindows` フォールバック必要（Trap #15 再発） |
+| 87 | `release.py` は部分成功で非冪等（タグ Push 後 `gh` 認証切れ → 再実行不可で `v1.9.0` リリース手動復旧）→ `tag_exists_remote` / `release_exists` / `--force` / resume モード追加で構造的解消 |
 
 ### verify_all.ps1 統合
 
@@ -55,9 +58,10 @@
 |:---:|---|:---:|
 | 1 | **B-5 FlaUI E2E**: `Test_ShowRegisterSnippetDialog` 経由でダイアログ自動化 | ✅ 完了 `7650d34` |
 | 2 | `gcommit.ps1` 冒頭で `PowerSimBuilder.exe` kill（Trap #80 恒久対策） | ✅ 完了 `535357b` |
-| 2b | `verify_all.ps1` `[4/6]` FlaUI flaky 対策（Start-Sleep 3 + 1 回リトライ、Trap #85） | ✅ 完了（本コミット） |
+| 2b | `verify_all.ps1` `[4/6]` FlaUI flaky 対策（Start-Sleep 3 + 1 回リトライ、Trap #85） | ✅ 完了 `acde867` |
+| 2c | `release.py` の冪等化（Trap #87：タグ既存 + gh 失敗後の再実行可能化） | ✅ 完了 `da10873` |
 | 3 | 11/08 GO/NO-GO 準備（README / 告知文面） | M |
-| 4 | v1.9.0 リリース準備（CHANGELOG） | M |
+| 4 | v1.9.0 リリース準備（CHANGELOG） | ✅ 完了 `28f383d` |
 
 ---
 

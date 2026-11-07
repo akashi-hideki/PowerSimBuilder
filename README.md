@@ -3,7 +3,7 @@
 [![CI](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10%20LTS-512BD4)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-599%20C%23%20%2B%2016%20E2E%20%2B%20463%20Py%20pass-green.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-599%20C%23%20%2B%2016%20E2E%20%2B%20457%20Py%20pass-green.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Windows%20only-lightgrey.svg)]()
 
 **Visual simulation companion to [StaTable](https://github.com/akashi-hideki/StaTable) — load StaTable XML, build Python state-machine controllers, run end-to-end simulations with signal plots.**
@@ -327,7 +327,7 @@ PowerSimBuilder closes that gap:
 - ✅ **Demo driver** (`auto_events="demo_oven"`): drives the controller
   with synthetic events so a first simulation runs immediately
 - **FMU physics integration** (v1.2.0): embed a CoSimulation FMU into any non-ControllerBox component; typed I/O, yaml port mapping, timing warnings, and FMU info viewer
-- ✅ **496 C# tests + 42 Python tests**, 4-matrix CI green
+- ✅ **599 C# tests + 457 Python tests**, 4-matrix CI green
 - ✅ **.NET 10 LTS**, Windows-only (WinForms)
 
 ---
@@ -454,6 +454,7 @@ Both tools are intentionally separate so that:
 | [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) | Redistributed NuGet package licenses |
 | [docs/SPEC_PYTHON_RUNTIME.en.md](docs/SPEC_PYTHON_RUNTIME.en.md) | Python runtime setup (English) |
 | [docs/SPEC_PYTHON_RUNTIME.zh.md](docs/SPEC_PYTHON_RUNTIME.zh.md) | Python runtime setup (中文) |
+| [docs/SPEC_ROLE_SNIPPETS.md](docs/SPEC_ROLE_SNIPPETS.md) | Role Snippets SPEC (Register / Insert) |
 
 ---
 
@@ -482,7 +483,7 @@ dotnet build -c Debug
 dotnet test PowerSimBuilder.Tests\PowerSimBuilder.Tests.csproj --no-build
 ```
 
-Expected: **496 test cases pass** (2 skipped; `[Theory]+[InlineData]` expanded).
+Expected: **599 test cases pass** (2 skipped; `[Theory]+[InlineData]` expanded).
 
 ### CI
 
@@ -496,7 +497,7 @@ runtime tests on `ubuntu-latest` (4 Python versions).
 
 ## Development Notes (Handoff)
 
-- **Current state**: MVP-1.2 physics integration landed on `main` (commit `ca6e92d`).
+- **Current state**: v1.9.0 released (Role Snippets B complete, tag `v1.9.0`); MVP-1.2 physics integration still on `main`.
 - **Physics tests**: 66 (all green; see `PowerSimBuilder.Tests/Physics*` and `FmuInfoReaderTests` / `ModelYamlTests`).
 - **Known limitations**
   - Only CoSimulation FMUs are supported; ModelExchange is rejected.
@@ -505,7 +506,7 @@ runtime tests on `ubuntu-latest` (4 Python versions).
   - There is no UI for removing an inserted physics block (delete the marker-delimited range manually).
   - Multiple physics models run in insertion order; no dependency-based ordering yet.
 - **Next candidates**
-  - E2E automation for the "generate -> insert -> run" path.
+  - E2E automation for the "generate -> insert -> run" path. (B-5 FlaUI E2E for Register Snippet is already done; Physics E2E remains.)
   - Picker search / filter for large model catalogs.
   - Physics block removal / update UI.
   - Restore `_physicsCache` when opening an existing file (status bar detail).
