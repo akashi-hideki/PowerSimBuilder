@@ -2,10 +2,56 @@
 
 > **用途**: 新スレッド開始時にこのファイル 1 つ読めば即座に作業再開できる「現在の状態」を記録する。
 > **累積履歴**: `HANDOFF_MVP1_2.md`（バージョン別・罠 #1〜#57）を参照。
-> **最終更新**: 2026-11-03（FMU Adapter 修正 + Trap #57 + controller_box legacy 優先）
+> **最終更新**: 2026-11-07（Role Snippets B-3 完了 + Trap #80-#84）
 
 ---
 
+
+## 2026-11-07 更新サマリ（Role Snippets B-3 完了）
+
+| 項目 | 値 |
+|--------|------------------------------|
+| origin/main | `d092499` |
+| C# テスト | 597 passed / 2 skipped |
+| Python テスト | 463 passed |
+| E2E (UITests) | 15 passed / 1 skip |
+
+### 完了機能: Role Snippets B（Register）
+
+| 機能 | 状態 |
+|---|---|
+| `RegisterSnippetDialog`（右クリック + ツールバー導線） | ✅ |
+| `STABLE_USER_CODE_START` マーカー存在判定（コンポーネント型非依存） | ✅ |
+| 上書き確認 + メタデータ（Layer/Func/Description） | ✅ |
+| i18n 12 キー追加（374 keys） | ✅ |
+
+### テスト自動化（27 本）
+
+| テストクラス | 件数 | 内容 |
+|---|---:|---|
+| `RoleSnippetVisibilityTests` | 13 | L1: `ContainsRoleMarkers` Theory 9 / L2: `Form_*` Fact 4 |
+| `RoleSnippetRegistrarTests` | 8 | Extract / Register / バリデーション |
+| `RoleSnippetStorageTests` | 6 | index.json / .py ファイル I/O |
+
+### 追加された罠（Trap #80-#84）
+
+| # | 罠 |
+|---|---|
+| 80 | `dotnet build \| Select-String "error CS"` は MSB3027/3021（ファイルロック）を見逃す → `"error (CS\|MSB)"` + `Stop-Process` |
+| 81 | `<ClassName>Test.cs`（単数）/ `<ClassName>Tests.cs`（複数）で CS0101+CS0111 → 作成前に `Get-ChildItem *<ClassName>*.cs` |
+| 82 | `rfind("</ItemGroup>")` 直前挿入は既存 ItemGroup 内にネスト → MSB4232 → `</Project>` 直前へ |
+| 83 | WinForms `Control.Visible` は親 Form 非表示時 **常に false** → 内部フラグ `_registerSnippetAvailable` で意図観測 |
+| 84 | C# verbatim 文字列内の `@"^\\s*..."`（二重バックスラッシュ）は regex 不正 → 純粋関数 `ContainsRoleMarkers` に切り出し |
+
+### 未着手（B-3c 候補）
+
+| # | 内容 | 規模 |
+|:---:|---|:---:|
+| 1 | `SetPythonCode` / `BtnReload_Click` 後の `UpdateRegisterSnippetAvailability()` 再評価 | S |
+| 2 | `menuItemRoleSnippets`（Insert メニュー）のマーカー判定統一 | S |
+| 3 | `gcommit.ps1` 冒頭で `PowerSimBuilder.exe` kill（Trap #80 恒久対策） | S |
+
+---
 
 ## 2026-11-03 更新サマリ
 
