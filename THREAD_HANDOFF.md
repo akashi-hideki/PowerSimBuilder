@@ -47,7 +47,7 @@
 | 86 | WinForms `TextBox.Name` は UIA で AutomationId を返す（値は `AsTextBox().Text`）+ `ShowInTaskbar=false` modal は UIA3 desktop tree に出ない → Win32 `EnumWindows` フォールバック必要（Trap #15 再発） |
 | 87 | `release.py` は部分成功で非冪等（タグ Push 後 `gh` 認証切れ → 再実行不可で `v1.9.0` リリース手動復旧）→ `tag_exists_remote` / `release_exists` / `--force` / resume モード追加で構造的解消 |
 | 88 | `demo_main.py` に `PSB_DUMP_CSV` 非対応 → **恒久化完了**: `PythonSimulationMainBuilder` 生成テンプレートに組み込み |
-| 89 | `generated/demo_main.py` の `dump_csv` は 145MB（dt=0.001 × 全列） → `downsample_csv.py` で 1Hz / 主要 13 列に削減、`tmp/qa_full/` に退避 |
+| 89 | `dump_csv` は 145MB（dt=0.001 × 全列） → **恒久化完了**: `PSB_DUMP_CSV_HZ` / `PSB_DUMP_CSV_COLUMNS` で書き込み時に 1Hz / 13 列へフィルタ（**145MB → 53KB / 99.96% 削減**）。`downsample_csv.py` は後方互換のため残置 |
 | 90 | `& script.ps1 2>&1` は `Write-Host` 出力をキャプチャしない（PS 5.1 仕様）→ **恒久化完了**: `qa_snapshot.ps1` の `*>&1` で全ストリーム捕捉（491B → 3.9KB） |
 | 91 | `refresh_ip_docs.py` の WHITE_PAPER status regex は `[^\n]*` で行末まで match する必要あり（`[^*]*\*\*` だと閉じ `**` で止まり ` (StaTable...)` サフィックスが重複 → 非冪等） |
 | 92 | `qa_snapshot.ps1` は既存 `generated/demo_main.py` を無条件実行 → 別プロジェクト由来（FirstOrderLag）だと 0MB CSV。UITests（Dahlquist）が `demo_main.py` を上書き → 次回実行で壊れる。**恒久化完了**: `[0/8]` 事前検証 + `[8/8]` 前後で `demo_main.py` preserve/restore |
