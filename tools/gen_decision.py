@@ -69,6 +69,22 @@ commit = (env.get("git_commit") or "?")[:7]
 tag = env.get("git_tag") or "(no tag)"
 dirty = env.get("git_dirty", "?")
 
+def _try_float(s):
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return None
+
+
+_psb_f = _try_float(psb_ss)
+_met_f = _try_float(met_ss)
+if _psb_f is None or _met_f is None:
+    _steady_match = "N/A (data missing)"
+elif abs(_psb_f - _met_f) < 0.01:
+    _steady_match = "OK"
+else:
+    _steady_match = "CHECK"
+
 md = f"""# GO/NO-GO Decision Sheet — {QA_DIR.name}
 
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
@@ -86,7 +102,7 @@ Environment: commit={commit} tag={tag} dirty={dirty}
 
 | Metric | Expected | `.psbproj` direct | CSV 1Hz recompute | Match |
 |---|---:|---:|---:|:---:|
-| Steady-state temp | 200.68 degC | **{psb_ss}** | **{met_ss}** | {'OK' if abs(float(psb_ss) - float(met_ss)) < 0.01 else 'CHECK' if psb_ss != '?' and met_ss != '?' else '?'} |
+| Steady-state temp | 200.68 degC | **{psb_ss}** | **{met_ss}** | {_steady_match} |
 | Overshoot | 1.45 % | **{psb_ovs}** | **{met_ovs}** | {'OK' if psb_ovs == met_ovs else 'CHECK'} |
 | Settling time | 64.6 s | **{psb_settle}** | **{met_settle}** (1Hz) | OK (1Hz tolerance) |
 | ControllerBox gating | MwOven:PidHeating | **{gating_pass}** | — | OK |

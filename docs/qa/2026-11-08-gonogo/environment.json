@@ -1,7 +1,7 @@
 {
-  "measured_at_utc": "2026-11-07T10:26:50.030711+00:00",
-  "git_commit": "1f5a6afd8bf35b338c8f1e8809c92d8b68ee7fec",
-  "git_tag": "",
+  "measured_at_utc": "2026-11-07T11:40:25.111443+00:00",
+  "git_commit": "1900ad621a46b052d405ac8c734db7288ee1e94d",
+  "git_tag": "v1.9.0-12-g1900ad6",
   "git_branch": "main",
   "git_dirty": true,
   "python_version": "3.13.7",

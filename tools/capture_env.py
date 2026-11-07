@@ -35,7 +35,10 @@ def main() -> int:
     env = {
         "measured_at_utc": datetime.now(timezone.utc).isoformat(),
         "git_commit": sh(["git", "rev-parse", "HEAD"]),
-        "git_tag": _optional(["git", "describe", "--tags", "--exact-match", "HEAD"]),
+        "git_tag": (
+            _optional(["git", "describe", "--tags", "--exact-match", "HEAD"])
+            or _optional(["git", "describe", "--tags", "HEAD"])
+        ),
         "git_branch": sh(["git", "rev-parse", "--abbrev-ref", "HEAD"]),
         "git_dirty": bool(sh(["git", "status", "--porcelain"])),
         "python_version": sys.version.split()[0],

@@ -1,7 +1,7 @@
 # GO/NO-GO Decision Sheet — 2026-11-08-gonogo
 
-Generated: 2026-11-07 20:08:34
-Environment: commit=1f5a6af tag=(no tag) dirty=True
+Generated: 2026-11-07 20:40:25
+Environment: commit=1900ad6 tag=v1.9.0-12-g1900ad6 dirty=True
 
 ## 1. Decision
 
