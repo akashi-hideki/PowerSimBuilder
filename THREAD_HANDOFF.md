@@ -59,7 +59,7 @@
 | 89 | `dump_csv` は 145MB（dt=0.001 × 全列） → **恒久化完了**: `PSB_DUMP_CSV_HZ` / `PSB_DUMP_CSV_COLUMNS` で書き込み時に 1Hz / 13 列へフィルタ（**145MB → 53KB / 99.96% 削減**）。`downsample_csv.py` は後方互換のため残置 |
 | 90 | `& script.ps1 2>&1` は `Write-Host` 出力をキャプチャしない（PS 5.1 仕様）→ **恒久化完了**: `qa_snapshot.ps1` の `*>&1` で全ストリーム捕捉（491B → 3.9KB） |
 | 91 | `refresh_ip_docs.py` の WHITE_PAPER status regex は `[^\n]*` で行末まで match する必要あり（`[^*]*\*\*` だと閉じ `**` で止まり ` (StaTable...)` サフィックスが重複 → 非冪等） |
-| 92 | `qa_snapshot.ps1` は既存 `generated/demo_main.py` を無条件実行 → 別プロジェクト由来（FirstOrderLag）だと 0MB CSV。UITests（Dahlquist）が `demo_main.py` を上書き → 次回実行で壊れる。**恒久化完了**: `[0/8]` 事前検証 + `[8/8]` 前後で `demo_main.py` preserve/restore |
+| 92 | `qa_snapshot.ps1` は既存 `generated/demo_main.py` を無条件実行 → 別プロジェクト由来（FirstOrderLag）だと 0MB CSV。UITests（Dahlquist）が `demo_main.py` を上書き → 次回実行で壊れる。**恒久化完了**: `[0/7]` 事前検証 + `[7/7]` 前後で `demo_main.py` preserve/restore |
 
 ### verify_all.ps1 統合
 
@@ -131,17 +131,16 @@ GO/NO-GO・週次・リリース前の定量証跡を **1 コマンド** で `do
 | `verify_all.log` | 全 6 セクションのテストログ | ~3 分 |
 | `README.md` | 要約 + 再生成コマンド | <1s |
 
-### 内部ステップ（8 段階）
+### 内部ステップ（7 段階 + 事前チェック）
 
 ```
-[1/8] demo_main.py に PSB_DUMP_CSV 対応追加（Trap #88、冪等）
-[2/8] capture_env.py → environment.json
-[3/8] MPLBACKEND=Agg + PSB_DUMP_CSV で demo_main.py 実行 → full CSV
-[4/8] downsample_csv.py → 1Hz / 主要列のみ
-[5/8] verify_statable_psbproj.py → statable_psbproj.txt
-[6/8] analyze_sim_csv.py → metrics.txt
-[7/8] verify_controller_box.py → controller_box_gating.txt
-[8/8] verify_all.ps1 → verify_all.log（-SkipVerifyAll で省略可）
+[1/7] capture_env.py → environment.json
+[2/7] MPLBACKEND=Agg + PSB_DUMP_CSV で demo_main.py 実行 → full CSV
+[3/7] downsample_csv.py → 1Hz / 主要列のみ
+[4/7] verify_statable_psbproj.py → statable_psbproj.txt
+[5/7] analyze_sim_csv.py → metrics.txt
+[6/7] verify_controller_box.py → controller_box_gating.txt
+[7/7] verify_all.ps1 → verify_all.log（-SkipVerifyAll で省略可）
 ```
 
 ### 期待値（oven_control_statable.psbproj）
@@ -169,14 +168,14 @@ GO/NO-GO・週次・リリース前の定量証跡を **1 コマンド** で `do
 | `[ERR] ... already exists` | 既存 `docs/qa/<Label>/` あり | `-Force` または別 `-Label` |
 | `exit code: -1` / `NativeCommandError` | PS 5.1 の native stderr 扱い | 修正版 `qa_snapshot.ps1` の `Invoke-PythonChecked` で回避済み |
 | `tag=(no tag)` | dirty working tree | 正常動作（commit を残すため） |
-| `simulation_signals.png` が小さい（114KB） | `[8/8] verify_all` 内 `[3.5/6]` が上書き | 内容は同じ波形。`-SkipVerifyAll` で回避可 |
+| `simulation_signals.png` が小さい（114KB） | `[7/7] verify_all` 内 `[3.5/6]` が上書き | 内容は同じ波形。`-SkipVerifyAll` で回避可 |
 
 ### 前提ファイル（既存）
 
 | ファイル | 役割 |
 |---|---|
 | `tools/capture_env.py` | 環境情報 JSON 生成 |
-| `tools/patch_demo_main_csv.py` | `demo_main.py` に `PSB_DUMP_CSV` 対応（冪等） |
+| ~~`tools/patch_demo_main_csv.py`~~ | **削除済み**（Trap #88 恒久化で不要化） |
 | `tools/downsample_csv.py` | 145MB CSV → 1Hz / KEY_COLUMNS 13 列 |
 | `tools/verify_statable_psbproj.py` | `.psbproj` 直接シミュレーション + 指標 |
 | `tools/analyze_sim_csv.py` | CSV から ss / ovs / settle / IAE 再計算 |
@@ -636,7 +635,7 @@ cd C:\dev\PowerSimBuilder
 | `tools/qa_snapshot.ps1` | 1 アクションで GO/NO-GO 定量データ一式を生成 |
 | `tools/capture_env.py` | 環境情報 JSON 生成 |
 | `tools/downsample_csv.py` | 145MB CSV → 1Hz / 主要列のみ |
-| `tools/patch_demo_main_csv.py` | demo_main.py に PSB_DUMP_CSV 対応追加（Trap #88） |
+| ~~`tools/patch_demo_main_csv.py`~~ | demo_main.py に PSB_DUMP_CSV 対応追加（Trap #88） → **削除済み** |
 | `tools/gen_decision.py` | QA snapshot から GO/NO-GO 判定シート（DECISION.md）を生成 |
 | `tests/PowerSimBuilder.UITests/ProjectRoundTripTests.cs` | E2E 5 テスト |
 

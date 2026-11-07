@@ -94,8 +94,8 @@ try {
         New-Item -ItemType Directory -Path $fullDir -Force | Out-Null
     }
 
-    # --- [0/8] Check demo_main.py matches $Project (Trap #92) ---
-    Write-Host "`n[0/8] Check demo_main.py matches $Project" -ForegroundColor Yellow
+    # --- [0/7] Check demo_main.py matches $Project (Trap #92) ---
+    Write-Host "`n[0/7] Check demo_main.py matches $Project" -ForegroundColor Yellow
     $projBase = Split-Path $Project -Leaf
     $demoContent = Get-Content "generated\demo_main.py" -Raw -Encoding UTF8
     # 簡易ヒューリスティック: プロジェクト名と demo_main の主要コンポーネントが一致しない場合は警告
@@ -109,17 +109,8 @@ try {
     }
     Write-Host "  [OK] demo_main.py appears consistent" -ForegroundColor Green
 
-    # --- [1/8] patch demo_main.py ---
-    Write-Host "`n[1/8] Ensure PSB_DUMP_CSV in demo_main.py" -ForegroundColor Yellow
-    if ($DryRun) {
-        Write-Host "  [DRY] python tools\patch_demo_main_csv.py --apply" -ForegroundColor DarkYellow
-    } else {
-        $out = Invoke-PythonChecked -PythonArgs @("tools\patch_demo_main_csv.py", "--apply") -StepLabel "patch failed"
-        $out | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
-    }
-
-    # --- [2/8] environment ---
-    Write-Host "[2/8] Environment snapshot" -ForegroundColor Yellow
+    # --- [1/7] environment ---
+    Write-Host "[1/7] Environment snapshot" -ForegroundColor Yellow
     if ($DryRun) {
         Write-Host "  [DRY] python tools\capture_env.py $qaDir\environment.json" -ForegroundColor DarkYellow
     } else {
@@ -146,8 +137,8 @@ try {
         "controller box.outputs.error_code"
     ) -join ","
 
-    # --- [3/8] headless demo_main.py ---
-    Write-Host "[3/8] Run demo_main.py (headless, CSV+PNG)" -ForegroundColor Yellow
+    # --- [2/7] headless demo_main.py ---
+    Write-Host "[2/7] Run demo_main.py (headless, CSV+PNG)" -ForegroundColor Yellow
     if ($DryRun) {
         Write-Host "  [DRY] PSB_DUMP_CSV=$fullCsv MPLBACKEND=Agg; cd generated; python demo_main.py" -ForegroundColor DarkYellow
     } else {
@@ -182,8 +173,8 @@ try {
         Write-Host "  [OK] full CSV: ${sizeMB} MB" -ForegroundColor Green
     }
 
-    # --- [4/8] downsample ---
-    Write-Host "[4/8] Downsample -> $CsvHz Hz" -ForegroundColor Yellow
+    # --- [3/7] downsample ---
+    Write-Host "[3/7] Downsample -> $CsvHz Hz" -ForegroundColor Yellow
     if ($DryRun) {
         Write-Host "  [DRY] python tools\downsample_csv.py $fullCsv $qaDir\simulation_signals_1hz.csv $CsvHz" -ForegroundColor DarkYellow
     } else {
@@ -191,8 +182,8 @@ try {
         $out | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
     }
 
-    # --- [5/8] verify_statable_psbproj ---
-    Write-Host "[5/8] .psbproj direct metrics" -ForegroundColor Yellow
+    # --- [4/7] verify_statable_psbproj ---
+    Write-Host "[4/7] .psbproj direct metrics" -ForegroundColor Yellow
     if ($DryRun) {
         Write-Host "  [DRY] python tools\verify_statable_psbproj.py $Project > $qaDir\statable_psbproj.txt" -ForegroundColor DarkYellow
     } else {
@@ -202,8 +193,8 @@ try {
         if ($m) { Write-Host "  ss=$($m.Matches[0].Groups[1].Value) ovs=$($m.Matches[0].Groups[4].Value)% settle=$($m.Matches[0].Groups[5].Value)s" -ForegroundColor Green }
     }
 
-    # --- [6/8] analyze_sim_csv ---
-    Write-Host "[6/8] CSV-recomputed metrics" -ForegroundColor Yellow
+    # --- [5/7] analyze_sim_csv ---
+    Write-Host "[5/7] CSV-recomputed metrics" -ForegroundColor Yellow
     if ($DryRun) {
         Write-Host "  [DRY] python tools\analyze_sim_csv.py $qaDir\simulation_signals_1hz.csv --target $Target > $qaDir\metrics.txt" -ForegroundColor DarkYellow
     } else {
@@ -211,8 +202,8 @@ try {
         $out | Set-Content -Path "$qaDir\metrics.txt" -Encoding UTF8
     }
 
-    # --- [7/8] controller_box_gating ---
-    Write-Host "[7/8] ControllerBox gating verification" -ForegroundColor Yellow
+    # --- [6/7] controller_box_gating ---
+    Write-Host "[6/7] ControllerBox gating verification" -ForegroundColor Yellow
     if ($DryRun) {
         Write-Host "  [DRY] python tools\verify_controller_box.py $Project > $qaDir\controller_box_gating.txt" -ForegroundColor DarkYellow
     } else {
@@ -222,8 +213,8 @@ try {
         if ($g) { Write-Host "  [OK] $($g.Line.Trim())" -ForegroundColor Green }
     }
 
-    # --- [8/8] verify_all ---
-    Write-Host "[8/8] verify_all.ps1 (full test suite)" -ForegroundColor Yellow
+    # --- [7/7] verify_all ---
+    Write-Host "[7/7] verify_all.ps1 (full test suite)" -ForegroundColor Yellow
     if ($SkipVerifyAll) {
         Write-Host "  [SKIP] -SkipVerifyAll" -ForegroundColor DarkYellow
     } elseif ($DryRun) {
