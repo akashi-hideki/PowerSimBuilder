@@ -200,6 +200,9 @@ try {
             $ErrorActionPreference = $prevEAP
         }
         $vaOut | Set-Content -Path "$qaDir\verify_all.log" -Encoding UTF8
+        # Trap #90: Write-Host in verify_all.ps1 is not captured by 2>&1;
+        # persist the exit code separately so gen_decision.py can read it.
+        "exit=$vaExit" | Set-Content -Path "$qaDir\verify_all.exit.txt" -Encoding ascii
         if ($vaExit -ne 0) {
             Write-Host "  [WARN] verify_all exit=$vaExit (recorded in log, not failing snapshot)" -ForegroundColor DarkYellow
         } else {
