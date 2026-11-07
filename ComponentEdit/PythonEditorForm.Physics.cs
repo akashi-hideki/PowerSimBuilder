@@ -49,6 +49,7 @@ public partial class PythonEditorForm
     {
         if (textEditor == null) return;
         textEditor.Text = code ?? "";
+        UpdateRegisterSnippetAvailability();
     }
 
     protected override void OnLoad(EventArgs e)

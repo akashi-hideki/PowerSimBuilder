@@ -32,6 +32,7 @@ namespace PowerSimBuilder
         private ToolStripMenuItem menuItemTryCatch;
         private ToolStripMenuItem menuItemComment;
         private ToolStripMenuItem menuItemRegisterSnippet;
+        private ToolStripMenuItem menuItemRoleSnippets;
 
         private PythonExecutor _executor;
 
@@ -274,7 +275,7 @@ if (filePath != null)
             });
 
             AppendLineOpsMenuItems(contextMenu);
-            var menuItemRoleSnippets = new ToolStripMenuItem(I18n.T("PythonEditor.MenuRoleSnippets")) { Name = "menuItemRoleSnippets" };
+            menuItemRoleSnippets = new ToolStripMenuItem(I18n.T("PythonEditor.MenuRoleSnippets")) { Name = "menuItemRoleSnippets" };
             menuItemRoleSnippets.Click += (s, e) => ShowRoleSnippetsDialog();
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add(menuItemRoleSnippets);
@@ -293,6 +294,7 @@ if (filePath != null)
                 IsModified = false;
                 UpdateTitle();
                 UpdateStatus();
+                UpdateRegisterSnippetAvailability();
             }
             catch (Exception ex)
             {
@@ -477,6 +479,7 @@ if (filePath != null)
                 internal void Test_UpdateRegisterSnippetAvailability() => UpdateRegisterSnippetAvailability();
                 internal bool Test_BtnRegisterSnippetVisible => _registerSnippetAvailable;
                 internal bool Test_MenuItemRegisterSnippetVisible => _registerSnippetAvailable;
+                internal bool Test_MenuItemRoleSnippetsVisible => _registerSnippetAvailable;
 
                 private void ShowRoleSnippetsDialog()
                 {
@@ -552,6 +555,8 @@ if (filePath != null)
                     }
                     if (menuItemRegisterSnippet != null)
                         menuItemRegisterSnippet.Visible = hasMarkers;
+                    if (menuItemRoleSnippets != null)
+                        menuItemRoleSnippets.Visible = hasMarkers;
                 }
 
                 private void ShowRegisterSnippetDialog()

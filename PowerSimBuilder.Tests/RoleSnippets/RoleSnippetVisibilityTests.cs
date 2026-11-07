@@ -83,5 +83,33 @@ namespace PowerSimBuilder.Tests.RoleSnippets
             form.Test_UpdateRegisterSnippetAvailability();
             Assert.True(form.Test_BtnRegisterSnippetVisible);
         }
+
+        [Fact]
+        public void SetPythonCode_UpdatesVisibilityAutomatically()
+        {
+            using var form = new PythonEditorForm(null, false);
+            form.Test_UpdateRegisterSnippetAvailability();
+            Assert.False(form.Test_BtnRegisterSnippetVisible);
+
+            form.SetPythonCode("class A:\n    # STABLE_USER_CODE_START:A.F_A\n    def F_A(self): pass\n");
+            Assert.True(form.Test_BtnRegisterSnippetVisible);   // SetPythonCode auto-updates
+
+            form.SetPythonCode("class A:\n    def foo(self): pass\n");
+            Assert.False(form.Test_BtnRegisterSnippetVisible);
+        }
+
+        [Fact]
+        public void MenuItemRoleSnippets_VisibilityFollowsMarkers()
+        {
+            using var form = new PythonEditorForm(null, false);
+            form.Test_UpdateRegisterSnippetAvailability();
+            Assert.False(form.Test_MenuItemRoleSnippetsVisible);
+
+            form.SetPythonCode("class A:\n    # STABLE_USER_CODE_START:A.F_A\n");
+            Assert.True(form.Test_MenuItemRoleSnippetsVisible);
+
+            form.SetPythonCode("class A:\n    def foo(self): pass\n");
+            Assert.False(form.Test_MenuItemRoleSnippetsVisible);
+        }
     }
 }
