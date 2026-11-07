@@ -129,6 +129,23 @@ try {
         Write-Host "  commit=$($envJson.git_commit.Substring(0,7)) tag=$tagDisp dirty=$($envJson.git_dirty)" -ForegroundColor Gray
     }
 
+    # QA CSV columns (matches tools/downsample_csv.py KEY_COLUMNS for consistency)
+    $csvColumns = @(
+        "time",
+        "ovenchamber.outputs.oven_current_temp",
+        "ovenchamber.outputs.thermistor_top",
+        "ovenchamber.outputs.thermistor_middle",
+        "ovenchamber.outputs.thermistor_bottom",
+        "ovenchamber.inputs.heater_top_duty",
+        "ovenchamber.inputs.heater_bottom_duty",
+        "ovenchamber.outputs.heater_power",
+        "pid controller.inputs.setpoint",
+        "pid controller.inputs.measured",
+        "pid controller.outputs.control",
+        "controller box.outputs.heater_top_duty",
+        "controller box.outputs.error_code"
+    ) -join ","
+
     # --- [3/8] headless demo_main.py ---
     Write-Host "[3/8] Run demo_main.py (headless, CSV+PNG)" -ForegroundColor Yellow
     if ($DryRun) {
@@ -138,6 +155,11 @@ try {
         $prevMpl  = $env:MPLBACKEND
         $prevWarn = $env:PYTHONWARNINGS
         $env:PSB_DUMP_CSV = (Resolve-Path $fullDir).Path + "\simulation_signals_full.csv"
+        # Trap #89: filter at write time (avoids 145MB intermediate)
+        $prevHz = $env:PSB_DUMP_CSV_HZ
+        $prevCols = $env:PSB_DUMP_CSV_COLUMNS
+        $env:PSB_DUMP_CSV_HZ = "$CsvHz"
+        $env:PSB_DUMP_CSV_COLUMNS = $csvColumns
         $env:MPLBACKEND = "Agg"
         $env:PYTHONWARNINGS = "ignore"
         Push-Location generated
@@ -147,6 +169,8 @@ try {
         } finally {
             Pop-Location
             $env:PSB_DUMP_CSV = $prevCsv
+            $env:PSB_DUMP_CSV_HZ = $prevHz
+            $env:PSB_DUMP_CSV_COLUMNS = $prevCols
             $env:MPLBACKEND = $prevMpl
             $env:PYTHONWARNINGS = $prevWarn
         }

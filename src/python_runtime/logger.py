@@ -123,25 +123,52 @@ def collect_keys(logs: Iterable[dict[str, Any]]) -> list[str]:
     return sorted(keys)
 
 
-def dump_csv(sim_data: Any, path: str | Path) -> Path:
-    """SimulationData.logs を CSV に書き出す。"""
+def dump_csv(
+    sim_data: Any,
+    path: str | Path,
+    hz: float | None = None,
+    columns: list[str] | None = None,
+) -> Path:
+    """SimulationData.logs を CSV に書き出す。
+
+    Args:
+        hz: サンプリング周波数。None / 0 以下 = 全行。例: 1.0 で 1 秒間隔
+        columns: 出力する列名リスト（"time" を含む想定）。None = 全列
+    """
     logs = getattr(sim_data, "logs", [])
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
     keys = collect_keys(logs)
-    fieldnames = ["time"] + keys
+    all_fieldnames = ["time"] + keys
+    if columns:
+        missing = [c for c in columns if c not in all_fieldnames]
+        if missing:
+            print(f"[WARN] CSV columns not found (skipped): {missing}")
+        fieldnames = [c for c in columns if c in all_fieldnames]
+        if not fieldnames:
+            fieldnames = ["time"]
+    else:
+        fieldnames = all_fieldnames
+
+    interval = (1.0 / hz) if hz and hz > 0 else None
+    last_t: float | None = None
 
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for entry in logs:
+            if interval is not None:
+                t = entry.get("time", 0.0)
+                if last_t is not None and (t - last_t) < interval - 1e-9:
+                    continue
+                last_t = t
             row: dict[str, Any] = {"time": entry.get("time", 0.0)}
             for cid, cdata in entry.get("components", {}).items():
                 for section in _SECTIONS:
                     for k, v in cdata.get(section, {}).items():
                         row[f"{cid}.{section}.{k}"] = v
-            writer.writerow(row)
+            writer.writerow({k: row.get(k, "") for k in fieldnames})
     return path
 
 

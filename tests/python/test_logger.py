@@ -70,6 +70,70 @@ def test_dump_csv_header_and_rows(tmp_path):
     assert rows[1]["c1.inputs.state"] == "1"
 
 
+def test_dump_csv_hz_samples_rows(tmp_path):
+    """hz parameter reduces row count to ~target frequency."""
+    sd = _make_sim(n=100)
+    times = [log["time"] for log in sd.logs]
+    dt = times[1] - times[0]
+    interval = 10 * dt  # keep every 10th row
+    target_hz = 1.0 / interval
+
+    out = tmp_path / "hz.csv"
+    dump_csv(sd, out, hz=target_hz)
+
+    with out.open(newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+
+    # ~10 rows expected (100 / 10)
+    assert 9 <= len(rows) <= 11
+    row_times = [float(r["time"]) for r in rows]
+    for a, b in zip(row_times, row_times[1:], strict=False):
+        assert b - a >= interval - 1e-9
+
+
+def test_dump_csv_columns_filters_output(tmp_path):
+    """columns parameter restricts the output to the specified columns."""
+    sd = _make_sim(n=3)
+    all_keys = collect_keys(sd.logs)
+    target = ["time"] + all_keys[:2]
+
+    out = tmp_path / "cols.csv"
+    dump_csv(sd, out, columns=target)
+
+    with out.open(newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        assert reader.fieldnames == target
+        rows = list(reader)
+
+    assert len(rows) == 3
+    for r in rows:
+        assert set(r.keys()) == set(target)
+
+
+def test_dump_csv_hz_and_columns_combined(tmp_path):
+    """hz and columns work together."""
+    sd = _make_sim(n=100)
+    times = [log["time"] for log in sd.logs]
+    dt = times[1] - times[0]
+    interval = 10 * dt
+    target_hz = 1.0 / interval
+
+    all_keys = collect_keys(sd.logs)
+    target = ["time"] + all_keys[:3]
+
+    out = tmp_path / "combined.csv"
+    dump_csv(sd, out, hz=target_hz, columns=target)
+
+    with out.open(newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        assert reader.fieldnames == target
+        rows = list(reader)
+
+    assert 9 <= len(rows) <= 11
+    for r in rows:
+        assert set(r.keys()) == set(target)
+
+
 def test_dump_csv_creates_parent_directory(tmp_path):
     sd = _make_sim(n=1)
     out = tmp_path / "nested" / "dir" / "out.csv"

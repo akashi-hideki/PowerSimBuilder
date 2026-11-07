@@ -465,13 +465,19 @@ namespace PowerSimBuilder
             AddSimulationLoopInFunction();
 
             AddLineToSection("function_def", "");
-            AddLineToSection("function_def", "    # Trap #88: dump CSV when PSB_DUMP_CSV is set (permanent)");
+            AddLineToSection("function_def", "    # Trap #88/#89: dump CSV with optional hz/columns filtering");
             AddLineToSection("function_def", "    import os as _os");
             AddLineToSection("function_def", "    _csv_path = _os.environ.get(\"PSB_DUMP_CSV\", \"\")");
             AddLineToSection("function_def", "    if _csv_path:");
             AddLineToSection("function_def", "        from python_runtime.logger import dump_csv as _dump_csv");
-            AddLineToSection("function_def", "        _dump_csv(sim_data, _csv_path)");
-            AddLineToSection("function_def", "        print(f\"[CSV] {_csv_path}\")");
+            AddLineToSection("function_def", "        try:");
+            AddLineToSection("function_def", "            _hz = float(_os.environ.get(\"PSB_DUMP_CSV_HZ\", \"0\") or \"0\")");
+            AddLineToSection("function_def", "        except ValueError:");
+            AddLineToSection("function_def", "            _hz = 0.0");
+            AddLineToSection("function_def", "        _cols_env = _os.environ.get(\"PSB_DUMP_CSV_COLUMNS\", \"\")");
+            AddLineToSection("function_def", "        _cols = [c.strip() for c in _cols_env.split(\",\") if c.strip()] or None");
+            AddLineToSection("function_def", "        _dump_csv(sim_data, _csv_path, hz=_hz or None, columns=_cols)");
+            AddLineToSection("function_def", "        print(f\"[CSV] {_csv_path} (hz={_hz or 'all'}, cols={len(_cols) if _cols else 'all'})\")");
             AddLineToSection("function_def", "    # シミュレーション実行後のプロット");
             AddLineToSection("function_def", "    plot_signals(sim_data, plot_config)");
             AddLineToSection("function_def", "    print(\"シミュレーション完了\")");
