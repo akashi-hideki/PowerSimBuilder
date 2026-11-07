@@ -82,6 +82,15 @@ $rExit = $LASTEXITCODE
 $rOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "    $_" }
 if ($rExit -eq 0) { Write-Host "    exit=0 OK (29 RoleSnippet tests)" -ForegroundColor Green } else { Write-Host "    exit=$rExit NG (RoleSnippet)" -ForegroundColor Red }
 
+# 4d) RoleSnippets: Register dialog FlaUI E2E (B-5)
+Write-Host "  [4d] RoleSnippet Register E2E (FlaUI)" -ForegroundColor Yellow
+Get-Process PowerSimBuilder -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Seconds 2
+$dOut = & dotnet test tests\PowerSimBuilder.UITests --nologo --filter "FullyQualifiedName~RoleSnippetRegisterE2ETests" 2>&1
+$dExit = $LASTEXITCODE
+$dOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "    $_" }
+if ($dExit -eq 0) { Write-Host "    exit=0 OK (B-5 Register E2E)" -ForegroundColor Green } else { Write-Host "    exit=$dExit NG (B-5)" -ForegroundColor Red }
+
 # 5) Demo files
 Write-Host "[5/6] DEMO FILES" -ForegroundColor Yellow
 Get-ChildItem examples\demos | Select-Object Name, Length | ForEach-Object { Write-Host ("  {0,-32} {1,8}" -f $_.Name, $_.Length) }
