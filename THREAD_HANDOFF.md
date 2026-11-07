@@ -47,14 +47,14 @@
 
 | # | 罠 |
 |---|---|
-| 80 | `dotnet build \| Select-String "error CS"` は MSB3027/3021（ファイルロック）を見逃す → `"error (CS\|MSB)"` + `Stop-Process` |
+| 80 | **✅ 恒久化完了**: `gcommit.ps1` 冒頭で `Stop-Process PowerSimBuilder`（`error (CS\|MSB)` 検出も併用） → `"error (CS\|MSB)"` + `Stop-Process` |
 | 81 | `<ClassName>Test.cs` / `<ClassName>Tests.cs` で CS0101+CS0111 → **恒久化完了**: `tools/check_known_traps.py` で重複 public 非 partial クラスを検出（pre-commit + verify_all [0/6] の 2 段階） |
 | 82 | `<ItemGroup>` ネスト → MSB4232 → **恒久化完了**: `tools/check_known_traps.py` で `xml.etree` により構造検証（pre-commit + verify_all [0/6]） |
-| 83 | WinForms `Control.Visible` は親 Form 非表示時 **常に false** → 内部フラグ `_registerSnippetAvailable` で意図観測 |
+| 83 | **✅ テスト実装済み**: WinForms `Control.Visible` は親 Form 非表示時 **常に false** → 内部フラグ `_registerSnippetAvailable` で意図観測 |
 | 84 | C# verbatim 文字列内の `@"^\\s*..."`（二重バックスラッシュ）は regex 不正 → 純粋関数 `ContainsRoleMarkers` に切り出し |
-| 85 | `verify_all.ps1` `[4/6]` FlaUI flaky → Start-Sleep 3 + 1 回リトライ（retry-once） |
-| 86 | WinForms `TextBox.Name` は UIA で AutomationId を返す（値は `AsTextBox().Text`）+ `ShowInTaskbar=false` modal は UIA3 desktop tree に出ない → Win32 `EnumWindows` フォールバック必要（Trap #15 再発） |
-| 87 | `release.py` は部分成功で非冪等（タグ Push 後 `gh` 認証切れ → 再実行不可で `v1.9.0` リリース手動復旧）→ `tag_exists_remote` / `release_exists` / `--force` / resume モード追加で構造的解消 |
+| 85 | **✅ 恒久化完了**: `verify_all.ps1` `[4/6]` FlaUI flaky → Start-Sleep 3 + 1 回リトライ（retry-once） |
+| 86 | **✅ 恒久化完了**: WinForms `TextBox.Name` は UIA で AutomationId を返す（値は `AsTextBox().Text`）+ `ShowInTaskbar=false` modal は UIA3 desktop tree に出ない → Win32 `EnumWindows` フォールバック必要（Trap #15 再発） |
+| 87 | **✅ 恒久化完了**: `release.py` は部分成功で非冪等（タグ Push 後 `gh` 認証切れ → 再実行不可で `v1.9.0` リリース手動復旧）→ `tag_exists_remote` / `release_exists` / `--force` / resume モード追加で構造的解消 |
 | 88 | `demo_main.py` に `PSB_DUMP_CSV` 非対応 → **恒久化完了**: `PythonSimulationMainBuilder` 生成テンプレートに組み込み |
 | 89 | `dump_csv` は 145MB（dt=0.001 × 全列） → **恒久化完了**: `PSB_DUMP_CSV_HZ` / `PSB_DUMP_CSV_COLUMNS` で書き込み時に 1Hz / 13 列へフィルタ（**145MB → 53KB / 99.96% 削減**）。`downsample_csv.py` は後方互換のため残置 |
 | 90 | `& script.ps1 2>&1` は `Write-Host` 出力をキャプチャしない（PS 5.1 仕様）→ **恒久化完了**: `qa_snapshot.ps1` の `*>&1` で全ストリーム捕捉（491B → 3.9KB） |
