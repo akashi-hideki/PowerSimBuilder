@@ -1,6 +1,6 @@
 # GO/NO-GO Decision Sheet — 2026-11-08-gonogo
 
-Generated: 2026-11-07 20:03:36
+Generated: 2026-11-07 20:08:34
 Environment: commit=1f5a6af tag=(no tag) dirty=True
 
 ## 1. Decision
@@ -50,7 +50,7 @@ Both agree within 1Hz sampling tolerance. This removes single-method bias from t
 | Functional | Trap #88: `demo_main.py` の `PSB_DUMP_CSV` 対応は手動パッチ | Low | `qa_snapshot.ps1` が自動化済み、恒久対策は v1.9.1 |
 | Tooling | Trap #89: 145MB CSV がデフォルト出力 | Low | `downsample_csv.py` で 54KB に削減済み |
 | CI | GitHub Actions workflow 停止中（billing） | Medium | public 化後に復元予定 |
-| Legal | IP 弁護士相談結果待ち | High | public 化前に確認必須 |
+| Legal | IP 弁護士相談は問題発生時に対応（公開前必須ではない） | Medium | 問題発生時に速やかに相談。OSS 公開は先に進める |
 | Flaky | `[4/6]` 全 UITests が稀に 2 件失敗 | Low | Trap #85 retry で自動吸収（実戦発動実績あり） |
 
 ## 6. Conditions (if Conditional GO)
