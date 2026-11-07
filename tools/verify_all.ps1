@@ -59,6 +59,16 @@ $cExit = $LASTEXITCODE
 $cOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "    $_" }
 if ($cExit -eq 0) { Write-Host "    exit=0 OK (C1+C2)" -ForegroundColor Green } else { Write-Host "    exit=$cExit NG (C1/C2)" -ForegroundColor Red }
 
+# 4c) RoleSnippets: Register Snippet visibility (L1 + L2 unit tests, 29 cases)
+# Lives in PowerSimBuilder.Tests (not UITests). Protects the STABLE_USER_CODE
+# marker based visibility logic (B-3a..B-3c) against regressions.
+Write-Host "  [4c] RoleSnippets (Register Snippet visibility)" -ForegroundColor Yellow
+Get-Process PowerSimBuilder -ErrorAction SilentlyContinue | Stop-Process -Force
+$rOut = & dotnet test PowerSimBuilder.Tests --nologo --filter "FullyQualifiedName~RoleSnippet" 2>&1
+$rExit = $LASTEXITCODE
+$rOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "    $_" }
+if ($rExit -eq 0) { Write-Host "    exit=0 OK (29 RoleSnippet tests)" -ForegroundColor Green } else { Write-Host "    exit=$rExit NG (RoleSnippet)" -ForegroundColor Red }
+
 # 5) Demo files
 Write-Host "[5/6] DEMO FILES" -ForegroundColor Yellow
 Get-ChildItem examples\demos | Select-Object Name, Length | ForEach-Object { Write-Host ("  {0,-32} {1,8}" -f $_.Name, $_.Length) }
