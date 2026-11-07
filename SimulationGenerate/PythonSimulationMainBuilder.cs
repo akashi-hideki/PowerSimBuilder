@@ -465,6 +465,13 @@ namespace PowerSimBuilder
             AddSimulationLoopInFunction();
 
             AddLineToSection("function_def", "");
+            AddLineToSection("function_def", "    # Trap #88: dump CSV when PSB_DUMP_CSV is set (permanent)");
+            AddLineToSection("function_def", "    import os as _os");
+            AddLineToSection("function_def", "    _csv_path = _os.environ.get(\"PSB_DUMP_CSV\", \"\")");
+            AddLineToSection("function_def", "    if _csv_path:");
+            AddLineToSection("function_def", "        from python_runtime.logger import dump_csv as _dump_csv");
+            AddLineToSection("function_def", "        _dump_csv(sim_data, _csv_path)");
+            AddLineToSection("function_def", "        print(f\"[CSV] {_csv_path}\")");
             AddLineToSection("function_def", "    # シミュレーション実行後のプロット");
             AddLineToSection("function_def", "    plot_signals(sim_data, plot_config)");
             AddLineToSection("function_def", "    print(\"シミュレーション完了\")");

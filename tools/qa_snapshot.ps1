@@ -94,6 +94,21 @@ try {
         New-Item -ItemType Directory -Path $fullDir -Force | Out-Null
     }
 
+    # --- [0/8] Check demo_main.py matches $Project (Trap #92) ---
+    Write-Host "`n[0/8] Check demo_main.py matches $Project" -ForegroundColor Yellow
+    $projBase = Split-Path $Project -Leaf
+    $demoContent = Get-Content "generated\demo_main.py" -Raw -Encoding UTF8
+    # 簡易ヒューリスティック: プロジェクト名と demo_main の主要コンポーネントが一致しない場合は警告
+    $isOven = ($projBase -match 'oven|statable')
+    $hasCbox = ($demoContent -match 'ControllerBox')
+    if ($isOven -and -not $hasCbox) {
+        Write-Host "  [ERR] demo_main.py is stale (FirstOrderLag/Dahlquist?) but project is oven/statable." -ForegroundColor Red
+        Write-Host "  [HINT] Open '$Project' in GUI -> Create Simulation -> re-run this script." -ForegroundColor Yellow
+        Write-Host "  [HINT] (Or run: start the GUI, Create Simulation, close, then re-run.)" -ForegroundColor Yellow
+        exit 1
+    }
+    Write-Host "  [OK] demo_main.py appears consistent" -ForegroundColor Green
+
     # --- [1/8] patch demo_main.py ---
     Write-Host "`n[1/8] Ensure PSB_DUMP_CSV in demo_main.py" -ForegroundColor Yellow
     if ($DryRun) {
@@ -191,15 +206,29 @@ try {
         Write-Host "  [DRY] .\tools\verify_all.ps1 > $qaDir\verify_all.log" -ForegroundColor DarkYellow
     } else {
         Get-Process PowerSimBuilder -ErrorAction SilentlyContinue | Stop-Process -Force
+        # Trap #92: verify_all.ps1 runs UITests which regenerate demo_main.py
+        # (FirstOrderLag/Dahlquist), poisoning the next snapshot run. Preserve
+        # the correct demo_main.py across the verify_all call.
+        $preservedDemo = "$fullDir\demo_main.py.preserve"
+        Copy-Item "generated\demo_main.py" $preservedDemo -Force -ErrorAction SilentlyContinue
         $prevEAP = $ErrorActionPreference
         $ErrorActionPreference = 'Continue'
         try {
-            $vaOut = & .\tools\verify_all.ps1 2>&1
+            # Trap #90: `*>&1` captures Write-Host (Information stream, 6)
+            # in addition to stdout/stderr. `2>&1` alone misses Write-Host
+            # output (PS 5.1), which previously forced gen_decision.py to
+            # fall back on verify_all.exit.txt.
+            $vaOut = & .\tools\verify_all.ps1 *>&1
             $vaExit = $LASTEXITCODE
         } finally {
             $ErrorActionPreference = $prevEAP
         }
         $vaOut | Set-Content -Path "$qaDir\verify_all.log" -Encoding UTF8
+        # Trap #92: restore demo_main.py overwritten by UITests
+        if (Test-Path $preservedDemo) {
+            Copy-Item $preservedDemo "generated\demo_main.py" -Force
+            Write-Host "  [Trap #92] restored demo_main.py after verify_all" -ForegroundColor DarkYellow
+        }
         # Trap #90: Write-Host in verify_all.ps1 is not captured by 2>&1;
         # persist the exit code separately so gen_decision.py can read it.
         "exit=$vaExit" | Set-Content -Path "$qaDir\verify_all.exit.txt" -Encoding ascii
