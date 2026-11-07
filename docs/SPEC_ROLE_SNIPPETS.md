@@ -195,3 +195,93 @@ private void InsertRoleSnippet(string layer, string func, string code)
   - 例: `F_ReadThermistors` / `F_SetTopHeaterDuty` / `F_CheckOvenOverheat`
 - `docs/UI_TEST_MANUAL.md`（手動テストリスト）
 - `THREAD_HANDOFF.md`（Trap #65〜#79 に開発経緯）
+---
+
+## 9. Phase 2 拡張: Cross-insert + Register
+
+> **状態**: 仕様確定 / 実装 A から着手
+> **決定事項**: 下記「未決事項の解決」参照
+
+### 9.1 機能 A: Cross-insert（任意スニペットをカーソル位置の関数へ）
+
+| 状況 | 挿入先 |
+|---|---|
+| カーソルが STABLE_USER_CODE ブロック内 | カーソル位置の Layer.Func |
+| カーソルがブロック外 | スニペット自身の Layer.Func |
+| 挿入先 != スニペット名 | 確認ダイアログを表示 |
+
+**UI**:
+- ダイアログタイトル: `Role Snippets  ->  Insert into: {Layer}.{Func}`
+- 上部に黄色ラベル: `Insert into: {Layer}.{Func}`
+- 挿入先 != スニペット名時: `MsgConfirmCrossInsert`
+
+**ロジック**:
+- `DetectRoleFunctionAtCaret()`: カーソル前の最後の START と、カーソル後の最初の END を照合
+- 両マーカーの Layer.Func が一致する場合のみ挿入先として採用
+
+### 9.2 機能 B: Register（選択関数をスニペット登録）
+
+カーソルが STABLE_USER_CODE ブロック内のとき、その body をスニペットとして保存する。
+
+**UI**:
+- メニュー: `Register Current Function as Snippet...`（ブロック外ではグレーアウト）
+- ダイアログ項目:
+  - Snippet ID（既定 = 現在の Layer.Func、カスタム名も許可）
+  - Display name
+  - Description
+  - Overwrite if exists（既定 OFF）
+- 保存先: `templates/role_snippets/user/`（gitignore 対象）
+
+**衝突時**:
+- Overwrite ON: 確認ダイアログ後、上書き
+- Overwrite OFF: エラー `MsgRegisterSnippetAlreadyExists`
+
+### 9.3 ストレージ拡張
+
+```
+templates/role_snippets/
+├── index.json                    # builtin 3 サンプル（tracked）
+├── MwOven.F_ReadThermistors.py
+├── MwOven.F_SetTopHeaterDuty.py
+├── MwOven.F_CheckOvenOverheat.py
+└── user/                         # gitignore
+    ├── index.user.json
+    └── *.py
+```
+
+`LoadAll()` は builtin + user をマージ。**同名 Layer.Func は user 優先**。
+
+### 9.4 追加メニュー項目
+
+| メニュー | 有効条件 | 動作 |
+|---|---|---|
+| Role Snippets... | 常に | Cross-insert 対応ダイアログ |
+| Register Current Function as Snippet... | カーソルがブロック内 | 登録ダイアログ |
+
+### 9.5 追加 i18n キー（10 キー）
+
+`MenuRegisterSnippet` / `RegisterSnippetTitle` / `RegisterSnippetId` / `RegisterSnippetDisplayName` / `RegisterSnippetDescription` / `RegisterSnippetOverwrite` / `MsgRegisterSnippetInvalidId` / `MsgRegisterSnippetAlreadyExists` / `MsgRegisterSnippetSaved` / `MsgConfirmCrossInsert`
+
+### 9.6 実装フェーズ
+
+| Phase | 内容 | 見積 |
+|---|---|---|
+| A1 | DetectRoleFunctionAtCaret + Cross-insert | 1.5h |
+| A2 | Cross-insert GUI テスト | 1h |
+| B1 | user/ 対応（LoadAll マージ） | 1h |
+| B2 | RegisterSnippetForm | 2h |
+| B3 | メニュー項目 + グレーアウト | 30m |
+| B4 | Register GUI テスト | 1h |
+| C | i18n 10 キー x 2 言語 | 30m |
+| D | .gitignore + doc | 15m |
+
+### 9.7 未決事項の解決（2026-11-07 確定）
+
+| # | 項目 | 決定 |
+|---|---|---|
+| 1 | Register の既定 ID | 現在の Layer.Func |
+| 2 | カスタム名 | 許可 |
+| 3 | user/ の gitignore | 追加する |
+| 4 | Cross-insert 確認 | 挿入先 != スニペット名のときのみ |
+| 5 | 一覧での user 表示 | 先頭に `[user]` バッジ |
+| 6 | 実装順序 | A -> B |
