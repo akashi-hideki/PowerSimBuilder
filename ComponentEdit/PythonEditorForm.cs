@@ -476,6 +476,22 @@ if (filePath != null)
 
                 internal void Test_ShowRegisterSnippetDialog() => ShowRegisterSnippetDialog();
 
+                internal void Test_ShowRegisterSnippetDialogAtFunc(string funcName)
+                {
+                    if (textEditor == null) return;
+                    var text = textEditor.Text ?? "";
+                    var needle = "def " + funcName + "(";
+                    var idx = text.IndexOf(needle, StringComparison.Ordinal);
+                    if (idx < 0)
+                    {
+                        LogSnippet("RegisterSnippetFuncNotFound", ("func", (object)funcName));
+                        return;
+                    }
+                    textEditor.SelectionStart = idx + needle.Length;
+                    textEditor.SelectionLength = 0;
+                    ShowRegisterSnippetDialog();
+                }
+
                 internal void Test_UpdateRegisterSnippetAvailability() => UpdateRegisterSnippetAvailability();
                 internal bool Test_BtnRegisterSnippetVisible => _registerSnippetAvailable;
                 internal bool Test_MenuItemRegisterSnippetVisible => _registerSnippetAvailable;
@@ -568,14 +584,26 @@ if (filePath != null)
                                  .ExtractFunctionAtCursor(text, line);
                     if (fn == null || string.IsNullOrEmpty(fn.LayerName))
                     {
+                        LogSnippet("RegisterSnippetNoFunction",
+                            ("caret", (object)(textEditor.SelectionStart)));
                         MessageBox.Show(this, I18n.T("RegisterSnippet.MsgNoFunction"),
                             I18n.T("RegisterSnippet.Title"),
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
 
+                    LogSnippet("RegisterSnippetDialogOpen",
+                        ("layer", (object)fn.LayerName),
+                        ("func", (object)fn.Name));
+
                     using var dlg = new RegisterSnippetDialog(fn);
-                    if (dlg.ShowDialog(this) != DialogResult.OK) return;
+                    if (dlg.ShowDialog(this) != DialogResult.OK)
+                    {
+                        LogSnippet("RegisterSnippetCancelled",
+                            ("layer", (object)fn.LayerName),
+                            ("func", (object)fn.Name));
+                        return;
+                    }
 
                     var registrar = new PowerSimBuilder.SimPartsManege.RoleSnippetRegistrar();
                     var source = _filePath ?? "(editor)";
@@ -583,16 +611,28 @@ if (filePath != null)
 
                     if (result.RequiresOverwrite)
                     {
+                        LogSnippet("RegisterSnippetOverwritePrompt",
+                            ("layer", (object)fn.LayerName),
+                            ("func", (object)fn.Name));
                         var ask = string.Format(I18n.T("RegisterSnippet.MsgOverwriteConfirm"),
                             fn.LayerName, fn.Name);
                         if (MessageBox.Show(this, ask, I18n.T("RegisterSnippet.Title"),
                                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                        {
+                            LogSnippet("RegisterSnippetOverwriteCancelled",
+                                ("layer", (object)fn.LayerName),
+                                ("func", (object)fn.Name));
                             return;
+                        }
                         result = registrar.Register(fn, source, dlg.Description, allowOverwrite: true);
                     }
 
                     if (result.Success)
                     {
+                        LogSnippet("RegisterSnippetSuccess",
+                            ("layer", (object)fn.LayerName),
+                            ("func", (object)fn.Name),
+                            ("path", (object)(result.SavedPath ?? "")));
                         MessageBox.Show(this,
                             string.Format(I18n.T("RegisterSnippet.MsgSuccess"), fn.LayerName, fn.Name),
                             I18n.T("RegisterSnippet.Title"),
@@ -600,6 +640,10 @@ if (filePath != null)
                     }
                     else
                     {
+                        LogSnippet("RegisterSnippetFailure",
+                            ("layer", (object)fn.LayerName),
+                            ("func", (object)fn.Name),
+                            ("error", (object)(result.Error ?? "")));
                         MessageBox.Show(this,
                             string.Format(I18n.T("RegisterSnippet.MsgFailure"), result.Error ?? ""),
                             I18n.T("RegisterSnippet.Title"),

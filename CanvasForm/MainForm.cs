@@ -850,6 +850,7 @@ namespace PowerSimBuilder
             var cmdArgs = Environment.GetCommandLineArgs();
             string projectPath = null;
             string openEditorInstance = null;
+            string openRegisterSnippetFunc = null;
             for (int i = 0; i < cmdArgs.Length - 1; i++)
             {
                 if (cmdArgs[i] == "--test-project" && File.Exists(cmdArgs[i + 1]))
@@ -859,6 +860,10 @@ namespace PowerSimBuilder
                 else if (cmdArgs[i] == "--test-open-editor" && !string.IsNullOrEmpty(cmdArgs[i + 1]))
                 {
                     openEditorInstance = cmdArgs[i + 1];
+                }
+                else if (cmdArgs[i] == "--test-open-register-snippet" && !string.IsNullOrEmpty(cmdArgs[i + 1]))
+                {
+                    openRegisterSnippetFunc = cmdArgs[i + 1];
                 }
             }
             // Phase C: --test-open-role-snippets (boolean flag, may appear anywhere)
@@ -887,6 +892,15 @@ namespace PowerSimBuilder
                     Test_OpenRoleSnippetsInEditor();
                 }));
             }
+
+            if (openRegisterSnippetFunc != null)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    System.Threading.Thread.Sleep(1500);
+                    Test_OpenRegisterSnippetInEditor(openRegisterSnippetFunc);
+                }));
+            }
         }
 
         /// <summary>
@@ -904,6 +918,29 @@ namespace PowerSimBuilder
                     {
                         Test_Log("  found editor: " + f.Name);
                         editor.Test_ShowRoleSnippetsDialog();
+                        Test_Log("  dialog invoked");
+                        return;
+                    }
+                }
+                Test_Log("  no PythonEditorForm found");
+            }
+            catch (System.Exception ex)
+            {
+                Test_Log("  FAILED: " + ex.Message);
+            }
+        }
+
+        internal void Test_OpenRegisterSnippetInEditor(string funcName)
+        {
+            try
+            {
+                Test_Log("Test_OpenRegisterSnippetInEditor START: " + funcName);
+                foreach (Form f in Application.OpenForms)
+                {
+                    if (f is PythonEditorForm editor)
+                    {
+                        Test_Log("  found editor: " + f.Name);
+                        editor.Test_ShowRegisterSnippetDialogAtFunc(funcName);
                         Test_Log("  dialog invoked");
                         return;
                     }
