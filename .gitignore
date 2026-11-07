@@ -248,3 +248,6 @@ generated/temp_*.py
 
 # Group files (user-generated, not source)
 *.psbgroup
+
+# QA: full-resolution CSV (regenerable)
+docs/qa/**/simulation_signals_full.csv

@@ -1,0 +1,8 @@
+﻿=== Controller Box ===
+
+[tick sequence - gating test]
+  [start] heater_command=0.7  MwOven=PidHeating  heater_top_duty=0.7
+  [on] heater_command=0.7  MwOven=PidHeating  heater_top_duty=0.7
+  [blocked] heater_command=0.7  MwOven=OvIdle  heater_top_duty=0
+
+[PASS] gating verified both directions (pass + block)

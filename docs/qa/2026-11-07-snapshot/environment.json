@@ -1,0 +1,11 @@
+{
+  "measured_at_utc": "2026-11-07T10:25:44.397766+00:00",
+  "git_commit": "1f5a6afd8bf35b338c8f1e8809c92d8b68ee7fec",
+  "git_tag": "",
+  "git_branch": "main",
+  "git_dirty": true,
+  "python_version": "3.13.7",
+  "dotnet_version": "10.0.403",
+  "os": "Windows 11",
+  "hostname": "MAIN-PC-2025"
+}

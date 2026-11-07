@@ -1,0 +1,16 @@
+﻿=== oven_control_statable.psbproj ===
+  t_end=300.0s dt=0.01 components=['Controller Box', 'PID Controller', 'OvenChamber']
+  connections: 4
+    PID Controller.control -> Controller Box.heater_command
+    OvenChamber.oven_current_temp -> Controller Box.oven_current_temp
+    Controller Box.heater_top_duty -> OvenChamber.heater_top_duty
+    OvenChamber.oven_current_temp -> PID Controller.measured
+
+  target (from PID setpoint): 200.0
+  signal                                               ss      err      peak    ovs%   settle(s)
+  ----------------------------------------------------------------------------------------------
+  OvenChamber.oven_current_temp                     200.681   -0.681   202.906    1.45        64.6
+  Controller Box.heater_top_duty                         0.350              1.000
+  PID Controller.control                                 0.350              1.000
+
+  Controller Box final states: {'DriverInput': 'InIdle', 'DriverOutput': 'OutHeating', 'MwMicrowave': 'MwIdle', 'MwOven': 'PidHeating', 'MwGrill': 'GrIdle', 'MwSteam': 'StIdle', 'Application': 'Idle'}
