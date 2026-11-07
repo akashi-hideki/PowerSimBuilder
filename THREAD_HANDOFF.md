@@ -49,6 +49,8 @@
 | 88 | `demo_main.py` に `PSB_DUMP_CSV` 非対応 → **恒久化完了**: `PythonSimulationMainBuilder` 生成テンプレートに組み込み |
 | 89 | `generated/demo_main.py` の `dump_csv` は 145MB（dt=0.001 × 全列） → `downsample_csv.py` で 1Hz / 主要 13 列に削減、`tmp/qa_full/` に退避 |
 | 90 | `& script.ps1 2>&1` は `Write-Host` 出力をキャプチャしない（PS 5.1 仕様）→ **恒久化完了**: `qa_snapshot.ps1` の `*>&1` で全ストリーム捕捉（491B → 3.9KB） |
+| 91 | `refresh_ip_docs.py` の WHITE_PAPER status regex は `[^\n]*` で行末まで match する必要あり（`[^*]*\*\*` だと閉じ `**` で止まり ` (StaTable...)` サフィックスが重複 → 非冪等） |
+| 92 | `qa_snapshot.ps1` は既存 `generated/demo_main.py` を無条件実行 → 別プロジェクト由来（FirstOrderLag）だと 0MB CSV。UITests（Dahlquist）が `demo_main.py` を上書き → 次回実行で壊れる。**恒久化完了**: `[0/8]` 事前検証 + `[8/8]` 前後で `demo_main.py` preserve/restore |
 
 ### verify_all.ps1 統合
 
@@ -176,7 +178,7 @@ GO/NO-GO・週次・リリース前の定量証跡を **1 コマンド** で `do
 
 | # | 罠 | 対応 |
 |---|---|---|
-| 88 | `demo_main.py` の `PSB_DUMP_CSV` 対応が毎回手動 | `qa_snapshot.ps1` が `[1/8]` で自動パッチ。恒久対策は `PythonSimulationMainBuilder`（post-GO/NO-GO） |
+| 88 | `demo_main.py` の `PSB_DUMP_CSV` 対応が毎回手動 | **恒久化完了**: `PythonSimulationMainBuilder` テンプレート組込（`d699001`） |
 | 89 | 145MB CSV がデフォルト出力 | `downsample_csv.py` で 1Hz / 13 列に削減、`tmp/qa_full/` に退避 |
 
 ---
