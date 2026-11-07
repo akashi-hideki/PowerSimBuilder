@@ -371,5 +371,6 @@
   "RegisterSnippet.MsgNoFunction": "Place the caret inside an F_xxx function to register it.",
   "RegisterSnippet.MsgOverwriteConfirm": "A snippet for {0}.{1} already exists. Overwrite?",
   "RegisterSnippet.MsgSuccess": "Registered: {0}.{1}",
-  "RegisterSnippet.MsgFailure": "Registration failed: {0}"
+  "RegisterSnippet.MsgFailure": "Registration failed: {0}",
+  "PythonEditor.BtnRegisterSnippet": "Register Snippet"
 }

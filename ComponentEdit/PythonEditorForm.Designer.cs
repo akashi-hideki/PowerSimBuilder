@@ -16,6 +16,7 @@ namespace PowerSimBuilder
         private System.Windows.Forms.Button btnRun;
         private System.Windows.Forms.Button btnReload;
         private System.Windows.Forms.Button btnOpenFolder;
+        private System.Windows.Forms.Button btnRegisterSnippet;
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.Label lblSimTime;
         private System.Windows.Forms.NumericUpDown numSimTime;
@@ -45,6 +46,7 @@ namespace PowerSimBuilder
             this.btnRun = new System.Windows.Forms.Button();
             this.btnReload = new System.Windows.Forms.Button();
             this.btnOpenFolder = new System.Windows.Forms.Button();
+            this.btnRegisterSnippet = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
             this.lblSimTime = new System.Windows.Forms.Label();
             this.numSimTime = new System.Windows.Forms.NumericUpDown();
@@ -133,6 +135,7 @@ namespace PowerSimBuilder
             this.panelTop.Controls.Add(this.btnRun);
             this.panelTop.Controls.Add(this.btnReload);
             this.panelTop.Controls.Add(this.btnOpenFolder);
+            this.panelTop.Controls.Add(this.btnRegisterSnippet);
             this.panelTop.Controls.Add(this.lblSimTime);
             this.panelTop.Controls.Add(this.numSimTime);
             this.panelTop.Controls.Add(this.lblStatus);
@@ -144,7 +147,7 @@ namespace PowerSimBuilder
             // lblSimTime
             //
             this.lblSimTime.AutoSize = false;
-            this.lblSimTime.Location = new System.Drawing.Point(276, 13);
+            this.lblSimTime.Location = new System.Drawing.Point(404, 13);
             this.lblSimTime.Name = "lblSimTime";
             this.lblSimTime.Size = new System.Drawing.Size(55, 15);
             this.lblSimTime.TabIndex = 4;
@@ -154,7 +157,7 @@ namespace PowerSimBuilder
             //
             this.numSimTime.DecimalPlaces = 0;
             this.numSimTime.Increment = new decimal(new int[] { 10, 0, 0, 0 });
-            this.numSimTime.Location = new System.Drawing.Point(335, 10);
+            this.numSimTime.Location = new System.Drawing.Point(463, 10);
             this.numSimTime.Maximum = 3600m;
             this.numSimTime.Minimum = 0.1m;
             this.numSimTime.Name = "numSimTime";
@@ -195,12 +198,22 @@ namespace PowerSimBuilder
             this.btnOpenFolder.UseVisualStyleBackColor = true;
             this.btnOpenFolder.Click += new System.EventHandler(this.BtnOpenFolder_Click);
             //
+            // btnRegisterSnippet
+            //
+            this.btnRegisterSnippet.Location = new System.Drawing.Point(276, 8);
+            this.btnRegisterSnippet.Name = "btnRegisterSnippet";
+            this.btnRegisterSnippet.Size = new System.Drawing.Size(120, 24);
+            this.btnRegisterSnippet.TabIndex = 3;
+            this.btnRegisterSnippet.Text = I18n.T("PythonEditor.BtnRegisterSnippet");
+            this.btnRegisterSnippet.UseVisualStyleBackColor = true;
+            this.btnRegisterSnippet.Click += new System.EventHandler(this.BtnRegisterSnippet_Click);
+            //
             // lblStatus
             //
             this.lblStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lblStatus.AutoEllipsis = true;
-            this.lblStatus.Location = new System.Drawing.Point(415, 12);
+            this.lblStatus.Location = new System.Drawing.Point(543, 12);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(561, 20);
             this.lblStatus.TabIndex = 3;

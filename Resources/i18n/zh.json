@@ -371,5 +371,6 @@
   "RegisterSnippet.MsgNoFunction": "将光标放在 F_xxx 函数内以注册。",
   "RegisterSnippet.MsgOverwriteConfirm": "{0}.{1} 的片段已存在。是否覆盖？",
   "RegisterSnippet.MsgSuccess": "已注册: {0}.{1}",
-  "RegisterSnippet.MsgFailure": "注册失败: {0}"
+  "RegisterSnippet.MsgFailure": "注册失败: {0}",
+  "PythonEditor.BtnRegisterSnippet": "注册片段"
 }

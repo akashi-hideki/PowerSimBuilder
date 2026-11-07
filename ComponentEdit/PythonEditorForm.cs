@@ -30,6 +30,7 @@ namespace PowerSimBuilder
         private ToolStripMenuItem menuItemImport;
         private ToolStripMenuItem menuItemTryCatch;
         private ToolStripMenuItem menuItemComment;
+        private ToolStripMenuItem menuItemRegisterSnippet;
 
         private PythonExecutor _executor;
 
@@ -112,6 +113,7 @@ namespace PowerSimBuilder
             lblStatus.Visible = enableRunButtons;
             if (lblSimTime != null) lblSimTime.Visible = enableRunButtons;
             if (numSimTime != null) numSimTime.Visible = enableRunButtons;
+            btnRegisterSnippet.Visible = false; // set by UpdateRegisterSnippetAvailability
 
             
             // Re-apply button visibility after the form is fully shown.
@@ -127,6 +129,7 @@ namespace PowerSimBuilder
                 lblStatus.Visible = enableRunButtons;
                 if (lblSimTime != null) lblSimTime.Visible = enableRunButtons;
                 if (numSimTime != null) numSimTime.Visible = enableRunButtons;
+                UpdateRegisterSnippetAvailability();
                 panelTop.PerformLayout();
                 panelTop.Invalidate(true);
                 panelTop.Update();
@@ -274,7 +277,7 @@ if (filePath != null)
             menuItemRoleSnippets.Click += (s, e) => ShowRoleSnippetsDialog();
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add(menuItemRoleSnippets);
-            var menuItemRegisterSnippet = new ToolStripMenuItem(I18n.T("PythonEditor.MenuRegisterSnippet")) { Name = "menuItemRegisterSnippet" };
+            menuItemRegisterSnippet = new ToolStripMenuItem(I18n.T("PythonEditor.MenuRegisterSnippet")) { Name = "menuItemRegisterSnippet" };
             menuItemRegisterSnippet.Click += (s, e) => ShowRegisterSnippetDialog();
             contextMenu.Items.Add(menuItemRegisterSnippet);
             textEditor.ContextMenuStrip = contextMenu;
@@ -526,6 +529,28 @@ if (filePath != null)
                     return result;
                 }
 
+                /// <summary>
+                /// Show the Register Snippet entry points only when the current file
+                /// contains at least one STABLE_USER_CODE_START marker. This is
+                /// content-based so it works for any component type, not just
+                /// ControllerBox (e.g. hand-authored or future codegen outputs).
+                /// </summary>
+                private void UpdateRegisterSnippetAvailability()
+                {
+                    if (textEditor == null) return;
+                    bool hasMarkers = System.Text.RegularExpressions.Regex.IsMatch(
+                        textEditor.Text ?? "",
+                        @"^\s*#\s*STABLE_USER_CODE_START:",
+                        System.Text.RegularExpressions.RegexOptions.Multiline);
+                    if (btnRegisterSnippet != null)
+                    {
+                        btnRegisterSnippet.Visible = hasMarkers;
+                        if (hasMarkers) btnRegisterSnippet.BringToFront();
+                    }
+                    if (menuItemRegisterSnippet != null)
+                        menuItemRegisterSnippet.Visible = hasMarkers;
+                }
+
                 private void ShowRegisterSnippetDialog()
                 {
                     if (textEditor == null) return;
@@ -635,6 +660,11 @@ if (filePath != null)
                             layer, func, sb.Length);
                     }
                 }
+                private void BtnRegisterSnippet_Click(object sender, EventArgs e)
+                {
+                    ShowRegisterSnippetDialog();
+                }
+
                 private void BtnReload_Click(object sender, EventArgs e)
                 {
                     if (IsModified)
