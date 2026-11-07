@@ -1,9 +1,9 @@
 {
-  "measured_at_utc": "2026-11-07T11:40:25.111443+00:00",
-  "git_commit": "1900ad621a46b052d405ac8c734db7288ee1e94d",
-  "git_tag": "v1.9.0-12-g1900ad6",
+  "measured_at_utc": "2026-11-07T11:42:11.615766+00:00",
+  "git_commit": "101054a76f927e329db092b15c812bbbb4b93999",
+  "git_tag": "v1.9.0-13-g101054a",
   "git_branch": "main",
-  "git_dirty": true,
+  "git_dirty": false,
   "python_version": "3.13.7",
   "dotnet_version": "10.0.403",
   "os": "Windows 11",
