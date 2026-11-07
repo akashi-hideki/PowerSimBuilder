@@ -66,6 +66,137 @@
 
 ---
 
+﻿
+## QA Snapshot の使い方（2026-11-07 追加）
+
+GO/NO-GO・週次・リリース前の定量証跡を **1 コマンド** で `docs/qa/<Label>/` に生成する。
+145MB の full CSV は `tmp/qa_full/` に退避（gitignore）、1Hz / 主要 13 列のみ追跡。
+
+### クイックスタート
+
+```powershell
+# GUI で oven_control_statable.psbproj を Open → Create Simulation 実行済みが前提
+
+# GO/NO-GO フル証跡（~3 分、verify_all 含む）
+.\tools\qa_snapshot.ps1 -Label 2026-11-08-gonogo
+
+# 高速（verify_all スキップ、~30 秒）
+.\tools\qa_snapshot.ps1 -SkipVerifyAll
+```
+
+### パラメータ
+
+| 引数 | 既定値 | 用途 |
+|---|---|---|
+| `-Label` | `yyyy-MM-dd`（今日） | `docs/qa/<Label>/` のサブディレクトリ名 |
+| `-Project` | `examples\demos\oven_control_statable.psbproj` | 対象 `.psbproj` |
+| `-Target` | `ovenchamber.outputs.oven_current_temp=200` | `analyze_sim_csv.py --target` |
+| `-CsvHz` | `1.0` | ダウンサンプル周波数 |
+| `-SkipVerifyAll` | off | `verify_all.ps1` をスキップ（高速モード） |
+| `-Force` | off | 既存 `docs/qa/<Label>/` を上書き |
+| `-DryRun` | off | 実行内容の表示のみ（ファイル書き込みなし） |
+
+### ユースケース
+
+```powershell
+.\tools\qa_snapshot.ps1 -DryRun                                  # 計画確認（実行なし）
+.\tools\qa_snapshot.ps1 -SkipVerifyAll                           # 高速チェック（~30 秒）
+.\tools\qa_snapshot.ps1                                          # 週次（今日の日付）
+.\tools\qa_snapshot.ps1 -Label 2026-11-08-gonogo -Force          # GO/NO-GO 証跡
+```
+
+### 生成される 8 ファイル
+
+| ファイル | 内容 | 所要 |
+|---|---|---:|
+| `environment.json` | commit / tag / Python / .NET / OS / dirty | <1s |
+| `statable_psbproj.txt` | `.psbproj` 直接指標（ss / ovs / settle） | 5s |
+| `metrics.txt` | CSV 再計算指標（ss / ovs / settle / IAE） | <1s |
+| `controller_box_gating.txt` | gating 双方向検証（pass + block） | <1s |
+| `simulation_signals_1hz.csv` | 301 行 / 13 列 / ~54KB | <1s |
+| `simulation_signals.png` | 波形画像 | （生成済みコピー） |
+| `verify_all.log` | 全 6 セクションのテストログ | ~3 分 |
+| `README.md` | 要約 + 再生成コマンド | <1s |
+
+### 内部ステップ（8 段階）
+
+```
+[1/8] demo_main.py に PSB_DUMP_CSV 対応追加（Trap #88、冪等）
+[2/8] capture_env.py → environment.json
+[3/8] MPLBACKEND=Agg + PSB_DUMP_CSV で demo_main.py 実行 → full CSV
+[4/8] downsample_csv.py → 1Hz / 主要列のみ
+[5/8] verify_statable_psbproj.py → statable_psbproj.txt
+[6/8] analyze_sim_csv.py → metrics.txt
+[7/8] verify_controller_box.py → controller_box_gating.txt
+[8/8] verify_all.ps1 → verify_all.log（-SkipVerifyAll で省略可）
+```
+
+### 期待値（oven_control_statable.psbproj）
+
+| 指標 | 期待値 |
+|---|---:|
+| `ss` | 200.68°C |
+| `ovs` | 1.45% |
+| `settle` | 64.6s |
+| gating | `MwOven:PidHeating` PASS |
+
+### 終了コード
+
+| code | 意味 |
+|:---:|---|
+| 0 | 成功（verify_all 失敗も WARN として記録され exit 0） |
+| 1 | 前提不足 / ステップ失敗（project 不在、demo_main.py 不在、python エラー等） |
+
+### トラブルシュート
+
+| 症状 | 原因 | 対処 |
+|---|---|---|
+| `[ERR] project not found` | `-Project` パス誤り | GUI で Open したプロジェクトのパスを指定 |
+| `[ERR] generated\demo_main.py not found` | Create Simulation 未実行 | GUI で Open → Create Simulation |
+| `[ERR] ... already exists` | 既存 `docs/qa/<Label>/` あり | `-Force` または別 `-Label` |
+| `exit code: -1` / `NativeCommandError` | PS 5.1 の native stderr 扱い | 修正版 `qa_snapshot.ps1` の `Invoke-PythonChecked` で回避済み |
+| `tag=(no tag)` | dirty working tree | 正常動作（commit を残すため） |
+| `simulation_signals.png` が小さい（114KB） | `[8/8] verify_all` 内 `[3.5/6]` が上書き | 内容は同じ波形。`-SkipVerifyAll` で回避可 |
+
+### 終了コード
+
+| code | 意味 |
+|:---:|---|
+| 0 | 成功（verify_all 失敗も WARN として記録され exit 0） |
+| 1 | 前提不足 / ステップ失敗（project 不在、demo_main.py 不在、python エラー等） |
+
+### トラブルシュート
+
+| 症状 | 原因 | 対処 |
+|---|---|---|
+| `[ERR] project not found` | `-Project` パス誤り | GUI で Open したプロジェクトのパスを指定 |
+| `[ERR] generated\demo_main.py not found` | Create Simulation 未実行 | GUI で Open → Create Simulation |
+| `[ERR] ... already exists` | 既存 `docs/qa/<Label>/` あり | `-Force` または別 `-Label` |
+| `exit code: -1` / `NativeCommandError` | PS 5.1 の native stderr 扱い | 修正版 `qa_snapshot.ps1` の `Invoke-PythonChecked` で回避済み |
+| `tag=(no tag)` | dirty working tree | 正常動作（commit を残すため） |
+| `simulation_signals.png` が小さい（114KB） | `[8/8] verify_all` 内 `[3.5/6]` が上書き | 内容は同じ波形。`-SkipVerifyAll` で回避可 |
+
+### 前提ファイル（既存）
+
+| ファイル | 役割 |
+|---|---|
+| `tools/capture_env.py` | 環境情報 JSON 生成 |
+| `tools/patch_demo_main_csv.py` | `demo_main.py` に `PSB_DUMP_CSV` 対応（冪等） |
+| `tools/downsample_csv.py` | 145MB CSV → 1Hz / KEY_COLUMNS 13 列 |
+| `tools/verify_statable_psbproj.py` | `.psbproj` 直接シミュレーション + 指標 |
+| `tools/analyze_sim_csv.py` | CSV から ss / ovs / settle / IAE 再計算 |
+| `tools/verify_controller_box.py` | gating pass/block 検証 |
+| `tools/verify_all.ps1` | 全テストスイート |
+
+### 関連 Trap
+
+| # | 罠 | 対応 |
+|---|---|---|
+| 88 | `demo_main.py` の `PSB_DUMP_CSV` 対応が毎回手動 | `qa_snapshot.ps1` が `[1/8]` で自動パッチ。恒久対策は `PythonSimulationMainBuilder`（post-GO/NO-GO） |
+| 89 | 145MB CSV がデフォルト出力 | `downsample_csv.py` で 1Hz / 13 列に削減、`tmp/qa_full/` に退避 |
+
+---
+
 ## 2026-11-03 更新サマリ
 
 | 項目 | 値 |
