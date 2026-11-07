@@ -360,5 +360,16 @@
   "EditPanel.MsgPhysicsInserted": "已插入物理模型: {0}",
   "EditPanel.MsgPhysicsInsertFail": "物理模型插入失败。",
   "EditPanel.MsgPhysicsInsertedAtLines": "已插入物理模型: {0} (第 {1}-{2} 行)",
-  "EditPanel.MsgPhysicsInsertedAtLinesBoth": "已插入物理模型: {0} (init {1}-{2}, update {3}-{4})"
+  "EditPanel.MsgPhysicsInsertedAtLinesBoth": "已插入物理模型: {0} (init {1}-{2}, update {3}-{4})",
+  "PythonEditor.MenuRegisterSnippet": "注册为片段...",
+  "RegisterSnippet.Title": "注册角色片段",
+  "RegisterSnippet.LabelLayer": "层:",
+  "RegisterSnippet.LabelFunc": "函数:",
+  "RegisterSnippet.LabelDescription": "描述:",
+  "RegisterSnippet.BtnOK": "注册",
+  "RegisterSnippet.BtnCancel": "取消",
+  "RegisterSnippet.MsgNoFunction": "将光标放在 F_xxx 函数内以注册。",
+  "RegisterSnippet.MsgOverwriteConfirm": "{0}.{1} 的片段已存在。是否覆盖？",
+  "RegisterSnippet.MsgSuccess": "已注册: {0}.{1}",
+  "RegisterSnippet.MsgFailure": "注册失败: {0}"
 }

@@ -274,6 +274,9 @@ if (filePath != null)
             menuItemRoleSnippets.Click += (s, e) => ShowRoleSnippetsDialog();
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add(menuItemRoleSnippets);
+            var menuItemRegisterSnippet = new ToolStripMenuItem(I18n.T("PythonEditor.MenuRegisterSnippet")) { Name = "menuItemRegisterSnippet" };
+            menuItemRegisterSnippet.Click += (s, e) => ShowRegisterSnippetDialog();
+            contextMenu.Items.Add(menuItemRegisterSnippet);
             textEditor.ContextMenuStrip = contextMenu;
         }
 
@@ -465,6 +468,8 @@ if (filePath != null)
                 /// </summary>
                 internal void Test_ShowRoleSnippetsDialog() => ShowRoleSnippetsDialog();
 
+                internal void Test_ShowRegisterSnippetDialog() => ShowRegisterSnippetDialog();
+
                 private void ShowRoleSnippetsDialog()
                 {
                     var (targetLayer, targetFunc) = DetectRoleFunctionAtCaret();
@@ -519,6 +524,54 @@ if (filePath != null)
                         idx = end;
                     }
                     return result;
+                }
+
+                private void ShowRegisterSnippetDialog()
+                {
+                    if (textEditor == null) return;
+                    var text = textEditor.Text ?? "";
+                    int line = textEditor.GetLineFromCharIndex(textEditor.SelectionStart);
+                    var fn = PowerSimBuilder.SimPartsManege.RoleSnippetRegistrar
+                                 .ExtractFunctionAtCursor(text, line);
+                    if (fn == null || string.IsNullOrEmpty(fn.LayerName))
+                    {
+                        MessageBox.Show(this, I18n.T("RegisterSnippet.MsgNoFunction"),
+                            I18n.T("RegisterSnippet.Title"),
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
+
+                    using var dlg = new RegisterSnippetDialog(fn);
+                    if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+                    var registrar = new PowerSimBuilder.SimPartsManege.RoleSnippetRegistrar();
+                    var source = _filePath ?? "(editor)";
+                    var result = registrar.Register(fn, source, dlg.Description);
+
+                    if (result.RequiresOverwrite)
+                    {
+                        var ask = string.Format(I18n.T("RegisterSnippet.MsgOverwriteConfirm"),
+                            fn.LayerName, fn.Name);
+                        if (MessageBox.Show(this, ask, I18n.T("RegisterSnippet.Title"),
+                                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                            return;
+                        result = registrar.Register(fn, source, dlg.Description, allowOverwrite: true);
+                    }
+
+                    if (result.Success)
+                    {
+                        MessageBox.Show(this,
+                            string.Format(I18n.T("RegisterSnippet.MsgSuccess"), fn.LayerName, fn.Name),
+                            I18n.T("RegisterSnippet.Title"),
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show(this,
+                            string.Format(I18n.T("RegisterSnippet.MsgFailure"), result.Error ?? ""),
+                            I18n.T("RegisterSnippet.Title"),
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
 
                 private void InsertRoleSnippet(string layer, string func, string code)

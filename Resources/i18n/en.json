@@ -360,5 +360,16 @@
   "EditPanel.MsgPhysicsInserted": "Physics model inserted: {0}",
   "EditPanel.MsgPhysicsInsertFail": "Physics model insertion failed.",
   "EditPanel.MsgPhysicsInsertedAtLines": "Physics model inserted: {0} (lines {1}-{2})",
-  "EditPanel.MsgPhysicsInsertedAtLinesBoth": "Physics model inserted: {0} (init {1}-{2}, update {3}-{4})"
+  "EditPanel.MsgPhysicsInsertedAtLinesBoth": "Physics model inserted: {0} (init {1}-{2}, update {3}-{4})",
+  "PythonEditor.MenuRegisterSnippet": "Register as Snippet...",
+  "RegisterSnippet.Title": "Register Role Snippet",
+  "RegisterSnippet.LabelLayer": "Layer:",
+  "RegisterSnippet.LabelFunc": "Function:",
+  "RegisterSnippet.LabelDescription": "Description:",
+  "RegisterSnippet.BtnOK": "Register",
+  "RegisterSnippet.BtnCancel": "Cancel",
+  "RegisterSnippet.MsgNoFunction": "Place the caret inside an F_xxx function to register it.",
+  "RegisterSnippet.MsgOverwriteConfirm": "A snippet for {0}.{1} already exists. Overwrite?",
+  "RegisterSnippet.MsgSuccess": "Registered: {0}.{1}",
+  "RegisterSnippet.MsgFailure": "Registration failed: {0}"
 }
