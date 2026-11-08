@@ -1,3 +1,18 @@
+a9edf2e | 2026-11-08 17:45:02 +0900 | HIdeki.Akashi | docs(release): prepare v1.10.0 (README / CHANGELOG / RELEASE_NOTES)
+efa4a06 | 2026-11-08 17:33:29 +0900 | HIdeki.Akashi | feat(psblog): add FlaUI E2E + test hooks + verify_all [4e]
+45c7d32 | 2026-11-08 17:16:34 +0900 | HIdeki.Akashi | feat(ui): add PsblogImportForm + toolbar button + 22 i18n keys
+b981fb3 | 2026-11-08 16:32:40 +0900 | HIdeki.Akashi | feat(psblog): add C# parser wrapper + 3 unit tests
+ca7cbcf | 2026-11-08 16:24:57 +0900 | HIdeki.Akashi | feat(analysis): add signal_classifier with 16 tests
+ad3a173 | 2026-11-08 16:06:28 +0900 | HIdeki.Akashi | feat(component): add RecordedSignal for psblog replay
+f066b74 | 2026-11-08 15:59:49 +0900 | HIdeki.Akashi | feat(psblog): add glob parser + CLI --json-out + 5 tests
+6a9c3f5 | 2026-11-08 15:37:25 +0900 | HIdeki.Akashi | test(psblog): add 24 tests + 4 sample logs + verify_all [3.6]
+d29ca44 | 2026-11-08 15:11:10 +0900 | HIdeki.Akashi | fix(psblog): tolerate UTF-8 BOM (utf-8-sig) + add BOM test
+f0cc964 | 2026-11-08 14:58:37 +0900 | HIdeki.Akashi | docs(psblog): add SPEC_PSBLOG_IMPORT (Reader-side spec v1)
+bf044e2 | 2026-11-08 12:40:57 +0900 | HIdeki.Akashi | docs(psblog): incorporate StaTable answers (v1 confirmed, Q1-Q7 resolved, role/rotation/@dropped)
+93ab07c | 2026-11-08 11:36:01 +0900 | HIdeki.Akashi | docs: add psblog/v1 log format spec (PowerSimBuilder → PStaTable contract)
+7f2fc27 | 2026-11-08 11:08:24 +0900 | HIdeki.Akashi | docs(handoff): add Role Snippets Common library section (9181a0c)
+9181a0c | 2026-11-08 11:01:22 +0900 | HIdeki.Akashi | feat(role-snippets): add Common (lib) snippets for filters + math helpers (MovingAverage / EMA / Median / RateLimiter / clamp)
+fb144a7 | 2026-11-08 10:06:12 +0900 | HIdeki.Akashi | docs(ip): refresh for HEAD 0429105 (517 commits, 2026-11-08)
 0429105 | 2026-11-08 09:52:37 +0900 | HIdeki.Akashi | docs: add 'Try it (5 minutes)' to README + RELEASE_NOTES_v1.9.0_zh.md (Chinese) + gitignore exceptions for v1.8/v1.9 release notes
 79520c0 | 2026-11-08 09:43:00 +0900 | HIdeki.Akashi | docs(handoff): mark 2026-11-01 CI-disabled note as historical (resolved 2026-11-08)
 794d7a2 | 2026-11-08 09:36:20 +0900 | HIdeki.Akashi | fix(tools): replace PEP 701 f-strings (release.py x2, verify_pid_ascii.py x1) for Python 3.10/3.11 CI

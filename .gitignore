@@ -215,6 +215,7 @@ test-output*.txt
 
 # Release notes (generated per-release)
 RELEASE_NOTES_v*.md
+!RELEASE_NOTES_v1.10.0.md
 !RELEASE_NOTES_v1.9.0.md
 !RELEASE_NOTES_v1.9.0_zh.md
 !RELEASE_NOTES_v1.8.0.md
