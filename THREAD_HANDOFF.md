@@ -16,6 +16,46 @@
 
 ---
 
+## Role Snippets Common library（2026-11-08 追加 / `9181a0c`）
+
+`F_xxx` 関数から `import` 可能な信号処理ライブラリを追加。Role Snippets 経由で GUI から 3 クリックで挿入可能。
+
+### 機能
+
+| モジュール | Exports |
+|---|---|
+| `src/python_runtime/lib/filters.py` | `MovingAverage` / `ExponentialMovingAverage` / `MedianFilter` / `RateLimiter` |
+| `src/python_runtime/lib/math_utils.py` | `clamp` / `saturate` / `deadband` / `ramp` |
+
+### Common Snippets（5 件）
+
+| Layer | Func | 用途 |
+|---|---|---|
+| `Common` | `ImportFilters` | `from python_runtime.lib.filters import ...` |
+| `Common` | `ImportMath` | `from python_runtime.lib.math_utils import ...` |
+| `Common` | `MovingAverage` | setup + update（window=10） |
+| `Common` | `EMA` | setup + update（alpha=0.1） |
+| `Common` | `Clamp` | 値を `[lo, hi]` に飽和 |
+
+### 使い方
+
+`*_powersim.py` の `F_xxx` 内で右クリック → **Insert Snippet** → `Common` → 選択 → Insert。
+
+### テスト・検証
+
+- `tests/python/test_lib_filters.py`: **19 tests**
+- Python 全体: 460 → **479 passed**
+- `verify_all.ps1`: 全セクション Green
+- CI: Python 4-matrix + Windows 全緑（`9181a0c` push 時）
+
+### 設計判断
+
+- **`dt` 非依存**: F_xxx は `dt` を受け取らないため、EMA は `alpha` 直接指定、`RateLimiter` は `max_step` per call
+- **状態永続化**: `hasattr(self, "_x")` ガードで初回のみインスタンス化
+- **`pip install -e .` 互換**: `pyproject.toml` の `packages` に `python_runtime.lib` を追加済み
+
+---
+
 ## 2026-11-07 更新サマリ（Role Snippets B-3 完了）
 
 | 項目 | 値 |
