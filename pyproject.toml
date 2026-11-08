@@ -39,6 +39,7 @@ packages = [
     "python_runtime",
     "python_runtime.components",
     "python_runtime.statable",
+    "python_runtime.lib",
     "examples",
 ]
 

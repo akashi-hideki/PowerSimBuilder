@@ -319,3 +319,47 @@ templates/role_snippets/
 | 84 | 文字列リテラル内の `@"^\\s*..."` は regex 不正 |
 | 85 | `[4/6]` FlaUI flaky → Start-Sleep 3 + retry-once |
 | 86 | `TextBox.Name` は AutomationId / `ShowInTaskbar=false` modal は Win32 EnumWindows 必須 |
+
+## Common (lib) snippets
+
+Library-grade snippets that import from `python_runtime.lib`. Intended for
+reuse inside `*_powersim.py` `F_xxx` functions via **Insert Snippet** in the
+Python editor.
+
+### Library: `src/python_runtime/lib/`
+
+| Module | Exports |
+|---|---|
+| `filters.py` | `MovingAverage(window)`, `ExponentialMovingAverage(alpha, initial)`, `MedianFilter(window)`, `RateLimiter(max_step)` |
+| `math_utils.py` | `clamp(x, lo, hi)`, `saturate(x, lo=0, hi=1)`, `deadband(x, width)`, `ramp(current, target, step)` |
+
+All filters are stateful: instantiate once via `hasattr(self, "_x")` guard on
+first call, then call `.update(x)` each cycle. F_xxx functions do not receive
+`dt`, so alpha-based smoothing (`EMA(alpha=...)`) and per-call `max_step`
+(`RateLimiter(max_step=max_rate*dt)`) are used.
+
+### Snippets (5)
+
+| Layer | Func | Purpose |
+|---|---|---|
+| `Common` | `ImportFilters` | `from python_runtime.lib.filters import ...` |
+| `Common` | `ImportMath` | `from python_runtime.lib.math_utils import ...` |
+| `Common` | `MovingAverage` | setup + update (`window=10`) |
+| `Common` | `EMA` | setup + update (`alpha=0.1`) |
+| `Common` | `Clamp` | clamp a value into `[lo, hi]` |
+
+### Example usage
+
+```python
+def F_SetTopHeaterDuty(self):
+    # STABLE_USER_CODE_START:MwOven.F_SetTopHeaterDuty
+    from python_runtime.lib.filters import ExponentialMovingAverage
+    from python_runtime.lib.math_utils import clamp
+
+    if not hasattr(self, "_ema_target"):
+        self._ema_target = ExponentialMovingAverage(alpha=0.1)
+    target = self._ema_target.update(self.globals.get("oven_target_temp", 200))
+    err = target - self.globals.get("oven_current_temp", 25)
+    self.globals["heater_top_duty"] = clamp(0.01 * err, 0.0, 1.0)
+    return 0
+    # STABLE_USER_CODE_END

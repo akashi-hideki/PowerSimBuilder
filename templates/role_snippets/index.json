@@ -20,6 +20,41 @@
       "displayName": "Oven overheat guard",
       "description": "Fire OV_OVERHEAT when thermistor_top > 250C",
       "file": "MwOven.F_CheckOvenOverheat.py"
+    },
+    {
+      "layer": "Common",
+      "func": "ImportFilters",
+      "displayName": "Import filters (lib)",
+      "description": "from python_runtime.lib.filters import MovingAverage, EMA, MedianFilter, RateLimiter",
+      "file": "Common.ImportFilters.py"
+    },
+    {
+      "layer": "Common",
+      "func": "ImportMath",
+      "displayName": "Import math helpers (lib)",
+      "description": "from python_runtime.lib.math_utils import clamp, saturate, deadband, ramp",
+      "file": "Common.ImportMath.py"
+    },
+    {
+      "layer": "Common",
+      "func": "MovingAverage",
+      "displayName": "Moving average (setup + update)",
+      "description": "MovingAverage(window=10). Edit window/keys as needed.",
+      "file": "Common.MovingAverage.py"
+    },
+    {
+      "layer": "Common",
+      "func": "EMA",
+      "displayName": "Exponential moving average (setup + update)",
+      "description": "ExponentialMovingAverage(alpha=0.1). Lower alpha = smoother.",
+      "file": "Common.EMA.py"
+    },
+    {
+      "layer": "Common",
+      "func": "Clamp",
+      "displayName": "Clamp a value into [lo, hi]",
+      "description": "clamp(raw, 0.0, 1.0). Edit key names / bounds.",
+      "file": "Common.Clamp.py"
     }
   ]
 }
