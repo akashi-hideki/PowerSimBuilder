@@ -532,7 +532,7 @@ Script: python tools\edit_role_function.py <powersim.py> <Layer> <F_Func> --body
 
 ### 制約
 
-- CI workflow 停止中（`tmp/ci_disabled/`）、public 化後に復元
+- ~~CI workflow 停止中（`tmp/ci_disabled/`）、public 化後に復元~~ → **2026-11-08 復元 + 完全緑化済み**（履歴）
 - Public 化保留（`pre_public_check.ps1` 全 [OK]、いつでも可）
 
 ---
