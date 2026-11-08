@@ -211,6 +211,21 @@ StaTable alone answers **"does it compile?"**. PowerSimBuilder answers
 
 ---
 
+## What's New in v1.10.0
+
+- **`.psblog` Import**: read UART monitor logs (`.psblog`, `psblog/v1`) written by StaTable.
+  - **File → Import Signal Log...** (or toolbar) opens `PsblogImportForm`.
+  - Variable list + waveform classification (`constant` / `ramp` / `step` / `exponential` / `pwm` / `digital`).
+  - `role=` hints (SPEC §6.2) override the classifier with `confidence = 1.0`.
+  - Selected variables become `RecordedSignal` components on the Canvas.
+  - **Variable sets are per-log** (SPEC §1): no fixed schema, PSB trusts the VarTable verbatim.
+- **Python API** (`python_runtime.psblog`): `parse_psblog`, `parse_psblog_glob`, `to_json`
+  with `python -m python_runtime.psblog <file> --json-out <out> [--classify]` CLI.
+- **`signal_classifier`** (`python_runtime.analysis.signal_classifier`): `classify` / `classify_all`.
+- **`RecordedSignal`** component registered in the palette (Category: Source).
+- **Sample logs**: `examples/logs/` (4 shapes + rotation concat).
+- **Testing**: `verify_all.ps1` sections `[3.6]` (29 psblog tests), `[3.7]` (5 sample sanity), `[4e]` (2 FlaUI E2E).
+
 ## What's New in v1.9.0
 
 - **Role Snippets (Register)**: extract and reuse role function implementations.

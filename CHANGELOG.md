@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-11-08
+
+### Added
+- `.psblog` Import: read UART monitor logs (`psblog/v1`) written by StaTable.
+- `PsblogImportForm` + toolbar button `Import Signal Log...` (22 i18n keys, en/zh).
+- `python_runtime.psblog` parser (`parse_psblog`, `parse_psblog_glob`, `to_json`, CLI `--json-out --classify`).
+- `RecordedSignal` component (Category: Source) for time-series replay.
+- `python_runtime.analysis.signal_classifier` (`classify`, `classify_all`).
+- Sample logs in `examples/logs/` (5 files incl. rotation concat).
+- `tools/verify_psblog.py` + `verify_all.ps1` sections `[3.6]`, `[3.7]`, `[4e]`.
+- FlaUI E2E: `PsblogImportE2ETests` (2 tests).
+
+### Fixed
+- BOM tolerance: `psblog` reader accepts UTF-8 BOM via `utf-8-sig`.
+- Signal classifier: pure linear ramps are no longer misclassified as exponential.
+- JSON snake_case → C# PascalCase mapping (`[JsonPropertyName]` on `PsblogTraceDto`).
+
+### Testing
+- Python: 29 (parser) + 5 (RecordedSignal) + 16 (classifier) = 50 pass.
+- C# unit: +7 (psblog) +2 (import form).
+- UI E2E: 19 (18 pass / 1 skip).
+
 ## [1.9.0] - 2026-11-07
 
 ### Added
