@@ -53,5 +53,25 @@ namespace PowerSimBuilder.Tests.Psblog
             Assert.Equal("output", dto.Vars["oven_current_temp"].Role);
             Assert.Equal("error", dto.Vars["error_code"].Role);
         }
+
+        [Fact]
+        public void Parse_WithClassify_ReturnsClassifications()
+        {
+            var dto = PsblogParser.Parse(
+                SamplePath("sample_minimal.psblog"),
+                includeClassifications: true);
+            Assert.NotNull(dto.Classifications);
+            Assert.Single(dto.Classifications);
+            Assert.Equal("door_open", dto.Classifications[0].VarName);
+            Assert.Equal("digital", dto.Classifications[0].Category);
+            Assert.Equal("DigitalInput", dto.Classifications[0].ProposedComponent);
+        }
+
+        [Fact]
+        public void Parse_WithoutClassify_EmptyClassifications()
+        {
+            var dto = PsblogParser.Parse(SamplePath("sample_minimal.psblog"));
+            Assert.Empty(dto.Classifications);
+        }
     }
 }

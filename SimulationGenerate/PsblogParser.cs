@@ -12,7 +12,7 @@ namespace PowerSimBuilder
     /// </summary>
     public static class PsblogParser
     {
-        public static PsblogTraceDto Parse(string psblogPath, int timeoutMs = 30000)
+        public static PsblogTraceDto Parse(string psblogPath, bool includeClassifications = false, int timeoutMs = 30000)
         {
             if (string.IsNullOrWhiteSpace(psblogPath))
                 throw new PsblogParseException("psblog path is empty");
@@ -32,7 +32,8 @@ namespace PowerSimBuilder
                 var psi = new ProcessStartInfo("python")
                 {
                     Arguments =
-                        $"-m python_runtime.psblog \"{fullPath}\" --json-out \"{tmpJson}\"",
+                        $"-m python_runtime.psblog \"{fullPath}\" --json-out \"{tmpJson}\""
+                        + (includeClassifications ? " --classify" : ""),
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,

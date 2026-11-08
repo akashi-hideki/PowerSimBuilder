@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PowerSimBuilder
 {
@@ -11,7 +12,10 @@ namespace PowerSimBuilder
         public List<JsonElement[]> Rows { get; set; } = new();
         public Dictionary<string, string> Footer { get; set; } = new();
         public int Warnings { get; set; }
+        [JsonPropertyName("source_files")]
         public List<string> SourceFiles { get; set; } = new();
+        [JsonPropertyName("classifications")]
+        public List<PsblogClassificationDto> Classifications { get; set; } = new();
 
         public string Schema =>
             Header.TryGetValue("schema", out var s) ? s : "";
@@ -31,5 +35,24 @@ namespace PowerSimBuilder
         public string Group { get; set; } = "";
         public string Description { get; set; } = "";
         public string Role { get; set; } = "";
+    }
+
+
+    public sealed class PsblogClassificationDto
+    {
+        [JsonPropertyName("var_name")]
+        public string VarName { get; set; } = "";
+
+        [JsonPropertyName("category")]
+        public string Category { get; set; } = "";
+
+        [JsonPropertyName("confidence")]
+        public double Confidence { get; set; }
+
+        [JsonPropertyName("proposed_component")]
+        public string? ProposedComponent { get; set; }
+
+        [JsonPropertyName("reasoning")]
+        public string Reasoning { get; set; } = "";
     }
 }

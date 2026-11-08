@@ -284,7 +284,11 @@ def parse_psblog_glob(base: str | Path) -> SignalTrace:
     return merged
 
 
-def to_json(trace: SignalTrace, out_path: str | Path) -> None:
+def to_json(
+    trace: SignalTrace,
+    out_path: str | Path,
+    include_classifications: bool = False,
+) -> None:
     """Write SignalTrace as JSON (for C# subprocess consumption, Trap #49)."""
     import json
 
@@ -306,6 +310,19 @@ def to_json(trace: SignalTrace, out_path: str | Path) -> None:
         "warnings": trace.warnings,
         "source_files": [str(p) for p in trace.source_files],
     }
+    if include_classifications:
+        from python_runtime.analysis.signal_classifier import classify_all
+
+        data["classifications"] = [
+            {
+                "var_name": c.var_name,
+                "category": c.category,
+                "confidence": c.confidence,
+                "proposed_component": c.proposed_component,
+                "reasoning": c.reasoning,
+            }
+            for c in classify_all(trace)
+        ]
     Path(out_path).write_text(
         json.dumps(data, ensure_ascii=False, indent=2),
         encoding="utf-8",
@@ -329,6 +346,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Treat <path> as base for rotated files (SPEC §4.3)",
     )
+    parser.add_argument(
+        "--classify",
+        action="store_true",
+        help="Include waveform classifications (signal_classifier)",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -341,7 +363,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if args.json_out:
-        to_json(trace, args.json_out)
+        to_json(trace, args.json_out, include_classifications=args.classify)
     else:
         print(f"vars={len(trace.vars)} rows={len(trace.rows)} " f"warnings={trace.warnings}")
     return 0

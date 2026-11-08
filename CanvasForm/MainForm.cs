@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -314,6 +314,79 @@ namespace PowerSimBuilder
             };
             loadGroupButton.Click += loadGroupButton_Click;
             toolStrip1.Items.Add(loadGroupButton);
+
+            // Phase 5-2b: Import signal log
+            var importPsblogButton = new ToolStripButton
+            {
+                Name = "importPsblogButton",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Text = I18n.T("MainForm.BtnImportPsblog"),
+            };
+            importPsblogButton.Click += importPsblogButton_Click;
+            toolStrip1.Items.Add(importPsblogButton);
+        }
+
+        private void importPsblogButton_Click(object? sender, EventArgs e)
+        {
+            using var dlg = new PsblogImportForm();
+            if (dlg.ShowDialog(this) != DialogResult.OK || dlg.Result == null) return;
+
+            var result = dlg.Result;
+            var baseDescriptor = ComponentDescriptorDictionary.Descriptors["Recorded Signal"];
+            int x = 100, y = 100, added = 0;
+
+            foreach (var varName in result.SelectedVariables)
+            {
+                var clonedParams = new System.Collections.Generic.List<ParameterDescriptor>();
+                foreach (var p in baseDescriptor.Parameters)
+                {
+                    clonedParams.Add(new ParameterDescriptor
+                    {
+                        Name = p.Name,
+                        Type = p.Type,
+                        DefaultValue = p.Name == "psblog_path" ? result.PsblogPath
+                                     : p.Name == "var_name" ? (object)varName
+                                     : p.DefaultValue,
+                    });
+                }
+
+                var descriptor = new ComponentDescriptor
+                {
+                    Name = baseDescriptor.Name,
+                    Type = baseDescriptor.Type,
+                    Category = baseDescriptor.Category,
+                    Parameters = clonedParams,
+                    InputPorts = baseDescriptor.InputPorts,
+                    OutputPorts = baseDescriptor.OutputPorts,
+                };
+                designCanvas1.AddComponent(descriptor, new Point(x, y));
+                added++;
+                x += 180;
+                if (x > 800) { x = 100; y += 120; }
+
+                if (result.PlaceInferredComponents
+                    && result.ProposedComponents.TryGetValue(varName, out var proposedType)
+                    && !string.IsNullOrEmpty(proposedType))
+                {
+                    ComponentDescriptor? propDesc = null;
+                    foreach (var d in ComponentDescriptorDictionary.Descriptors.Values)
+                    {
+                        if (string.Equals(d.Type, proposedType, StringComparison.OrdinalIgnoreCase))
+                        {
+                            propDesc = d;
+                            break;
+                        }
+                    }
+                    if (propDesc != null)
+                        designCanvas1.AddComponent(propDesc, new Point(x, y + 100));
+                }
+            }
+
+            designCanvas1.ArrangeComponents();
+            MessageBox.Show(this,
+                I18n.T("PsblogImport.Complete", added),
+                I18n.T("PsblogImport.Title"),
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void saveGroupButton_Click(object sender, EventArgs e)
