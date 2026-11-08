@@ -540,6 +540,23 @@ namespace PowerSimBuilder
                         InputPorts = new[] { "current", "reset" },
                         OutputPorts = new[] { "tripped", "peak" }
                     }
+                },
+                {
+                    "Recorded Signal", new ComponentDescriptor
+                    {
+                        Name = "Recorded Signal",
+                        Type = "RecordedSignal",
+                        Category = "Source",
+                        Parameters = new List<ParameterDescriptor>
+                        {
+                            new ParameterDescriptor { Name = "psblog_path", Type = "string", DefaultValue = "" },
+                            new ParameterDescriptor { Name = "var_name", Type = "string", DefaultValue = "" },
+                            new ParameterDescriptor { Name = "loop", Type = "bool", DefaultValue = false },
+                            new ParameterDescriptor { Name = "hold_last", Type = "bool", DefaultValue = true }
+                        },
+                        InputPorts = new string[] { },
+                        OutputPorts = new[] { "value" }
+                    }
                 }
             };
         }
