@@ -1888,12 +1888,23 @@ private void ClearCanvas()
             return value.ToString();
         }
 
-        private static readonly bool _editDebugEnabled =
+        // Evaluated lazily so tests can toggle PSB_EDIT_LOG / PSB_EDIT_DEBUG
+        // at runtime. Also treats a set PSB_EDIT_LOG as an opt-in for Release
+        // builds (CI runs Release without PSB_EDIT_DEBUG).
+        private static bool IsEditDebugEnabled
+        {
+            get
+            {
 #if DEBUG
-            true;
+                return true;
 #else
-            System.Environment.GetEnvironmentVariable("PSB_EDIT_DEBUG") == "1";
+                if (System.Environment.GetEnvironmentVariable("PSB_EDIT_DEBUG") == "1")
+                    return true;
+                var log = System.Environment.GetEnvironmentVariable("PSB_EDIT_LOG");
+                return !string.IsNullOrEmpty(log);
 #endif
+            }
+        }
 
         private static readonly string _editSession =
             System.Environment.GetEnvironmentVariable("PSB_EDIT_SESSION")
@@ -1906,7 +1917,7 @@ private void ClearCanvas()
         /// </summary>
         private static void EditLogEvent(string evt, params (string key, object val)[] fields)
         {
-            if (!_editDebugEnabled) return;
+            if (!IsEditDebugEnabled) return;
             try
             {
                 var obj = new System.Collections.Generic.Dictionary<string, object>

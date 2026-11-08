@@ -104,12 +104,51 @@ def metrics(values, target):
     return dict(ss=ss, err=target - ss, peak=peak, ovs=ovs, settle=settle)
 
 
+def _extract_bundled_components(zf, proj, extract_dir):
+    """If a ControllerBox generated_path points to a non-existent file but the
+    same basename exists under components/ inside the ZIP, extract it to
+    extract_dir and rewrite the parameter. Returns dict of rewrites for log.
+    """
+    rewrites = {}
+    for comp in proj.get("components", []):
+        desc = comp.get("descriptor", {})
+        if desc.get("type") != "ControllerBox":
+            continue
+        params = desc.get("parameters", {})
+        gp = params.get("generated_path") or ""
+        if not gp:
+            continue
+        if Path(gp).is_file():
+            continue
+        basename = Path(gp).name
+        zip_key = f"components/{basename}"
+        try:
+            data = zf.read(zip_key)
+        except KeyError:
+            continue
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        out = extract_dir / basename
+        out.write_bytes(data)
+        params["generated_path"] = str(out.resolve())
+        rewrites[basename] = str(out)
+    return rewrites
+
+
 def main():
     if len(sys.argv) < 2:
         print("usage: python tools/verify_statable_psbproj.py <file.psbproj>")
         sys.exit(2)
     p = sys.argv[1]
-    proj = json.loads(zipfile.ZipFile(p).read("project.json"))
+    zf = zipfile.ZipFile(p)
+    proj = json.loads(zf.read("project.json"))
+    # Trap #93: v181-style .psbproj bundles components/*.py inside the ZIP
+    # but project.json's generated_path still points to generated/. On a fresh
+    # CI checkout that path doesn't exist -> extract from ZIP to a temp dir.
+    import tempfile as _tf
+    _tmp = Path(_tf.mkdtemp(prefix="psb_v181_"))
+    _rewrites = _extract_bundled_components(zf, proj, _tmp)
+    for name, path in _rewrites.items():
+        print(f"[extract] {name} -> {path} (from ZIP components/)")
     comps, conns, log, dt, t_end = run(proj)
 
     print(f"=== {Path(p).name} ===")
