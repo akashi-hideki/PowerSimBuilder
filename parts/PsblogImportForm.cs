@@ -44,6 +44,7 @@ namespace PowerSimBuilder
 
         public PsblogImportForm()
         {
+            Name = "PsblogImportForm";
             Text = I18n.T("PsblogImport.Title");
             Width = 960;
             Height = 640;
@@ -97,6 +98,7 @@ namespace PowerSimBuilder
             };
             _lvVariables = new ListView
             {
+                Name = "LvVariables",
                 Dock = DockStyle.Fill,
                 View = View.Details,
                 CheckBoxes = true,
@@ -120,6 +122,7 @@ namespace PowerSimBuilder
             };
             _btnCancel = new Button
             {
+                Name = "BtnCancel",
                 Text = I18n.T("PsblogImport.Cancel"),
                 Location = new Point(690, 15),
                 Width = 110,
@@ -127,6 +130,7 @@ namespace PowerSimBuilder
             };
             _btnAddToCanvas = new Button
             {
+                Name = "BtnAddToCanvas",
                 Text = I18n.T("PsblogImport.AddToCanvas"),
                 Location = new Point(810, 15),
                 Width = 130,
@@ -144,6 +148,12 @@ namespace PowerSimBuilder
             AcceptButton = _btnAddToCanvas;
             CancelButton = _btnCancel;
         }
+
+        /// <summary>Test hook: pre-load a log file (used by FlaUI E2E).</summary>
+        public void Test_LoadLog(string path) => LoadLog(path);
+
+        /// <summary>Test hook: number of variables loaded.</summary>
+        public int Test_VariableCount => _lvVariables.Items.Count;
 
         private void OnBrowse(object? sender, EventArgs e)
         {

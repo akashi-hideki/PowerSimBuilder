@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Continue"
+﻿$ErrorActionPreference = "Continue"
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $OutputEncoding = [Text.Encoding]::UTF8
 Write-Host ""
@@ -120,6 +120,15 @@ $dOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Ob
 if ($dExit -eq 0) { Write-Host "    exit=0 OK (B-5 Register E2E)" -ForegroundColor Green } else { Write-Host "    exit=$dExit NG (B-5)" -ForegroundColor Red }
 
 # 5) Demo files
+# [4e] PsblogImport E2E (FlaUI)
+Write-Host "  [4e] PsblogImport E2E (FlaUI)" -ForegroundColor Yellow
+try {
+    dotnet test tests\PowerSimBuilder.UITests --filter "PsblogImportE2ETests" -v n
+    if ($LASTEXITCODE -ne 0) { $failures += "PsblogImport E2E" }
+} catch {
+    $failures += "PsblogImport E2E (exception)"
+}
+
 Write-Host "[5/6] DEMO FILES" -ForegroundColor Yellow
 Get-ChildItem examples\demos | Select-Object Name, Length | ForEach-Object { Write-Host ("  {0,-32} {1,8}" -f $_.Name, $_.Length) }
 

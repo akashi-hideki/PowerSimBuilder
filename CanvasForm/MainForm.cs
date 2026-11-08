@@ -250,6 +250,7 @@ namespace PowerSimBuilder
 
             _canvasManager = new CanvasManager(designCanvas1, componentPalette1);
             SubscribeToEvents();
+            this.Shown += OnPsblogImportTestShown;
 
             // デザイナーファイルから移動した設定
             designCanvas1.ConnectionRenderer = new BezierConnectionRenderer();
@@ -387,6 +388,20 @@ namespace PowerSimBuilder
                 I18n.T("PsblogImport.Complete", added),
                 I18n.T("PsblogImport.Title"),
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void OnPsblogImportTestShown(object? sender, EventArgs e)
+        {
+            var path = Environment.GetEnvironmentVariable("PSB_PSBLOG_IMPORT");
+            if (string.IsNullOrEmpty(path)) return;
+            Test_Log("PSB_PSBLOG_IMPORT: " + path);
+            BeginInvoke(new Action(() =>
+            {
+                using var dlg = new PsblogImportForm();
+                dlg.Test_LoadLog(path);
+                dlg.ShowDialog(this);
+                Test_Log("PsblogImportForm closed: vars=" + dlg.Test_VariableCount);
+            }));
         }
 
         private void saveGroupButton_Click(object sender, EventArgs e)
