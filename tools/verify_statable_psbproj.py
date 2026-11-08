@@ -105,17 +105,27 @@ def metrics(values, target):
 
 
 def _extract_bundled_components(zf, proj, extract_dir):
-    """If a ControllerBox generated_path points to a non-existent file but the
-    same basename exists under components/ inside the ZIP, extract it to
-    extract_dir and rewrite the parameter. Returns dict of rewrites for log.
+    """v181-style .psbproj bundles components/*.py inside the ZIP but
+    project.json's component-level `parameters.generated_path` still points
+    to generated/. On a fresh CI checkout that path doesn't exist ->
+    extract to a temp dir and rewrite the parameter.
+
+    Schema note (Trap #52 variant):
+      - descriptor.Type  (PascalCase)        -> component type
+      - component.parameters.generated_path  -> actual value (camelCase)
+      - descriptor.Parameters (list)         -> only schema metadata (no values)
     """
     rewrites = {}
-    for comp in proj.get("components", []):
-        desc = comp.get("descriptor", {})
-        if desc.get("type") != "ControllerBox":
+    comps = proj.get("components") or proj.get("Components") or []
+    for comp in comps:
+        desc = comp.get("descriptor") or comp.get("Descriptor") or {}
+        ctype = desc.get("type") or desc.get("Type") or ""
+        if ctype != "ControllerBox":
             continue
-        params = desc.get("parameters", {})
-        gp = params.get("generated_path") or ""
+        params = comp.get("parameters") or comp.get("Parameters") or {}
+        if not isinstance(params, dict):
+            continue
+        gp = params.get("generated_path") or params.get("GeneratedPath") or ""
         if not gp:
             continue
         if Path(gp).is_file():
@@ -129,7 +139,13 @@ def _extract_bundled_components(zf, proj, extract_dir):
         extract_dir.mkdir(parents=True, exist_ok=True)
         out = extract_dir / basename
         out.write_bytes(data)
-        params["generated_path"] = str(out.resolve())
+        # Update whichever key actually exists (camelCase preferred)
+        for key in ("generated_path", "GeneratedPath"):
+            if key in params:
+                params[key] = str(out.resolve())
+                break
+        else:
+            params["generated_path"] = str(out.resolve())
         rewrites[basename] = str(out)
     return rewrites
 
