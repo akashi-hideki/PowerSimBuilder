@@ -1,0 +1,20 @@
+# sample_minimal.psblog — SPEC §1: 1-variable log is valid
+@schema       psblog/v1
+@captured_at  2026-11-09T10:30:00.000+09:00
+@source       uart:COM3
+@firmware     StaTable v1.9.0
+@protocol     pstable-uart/v1
+@baud         115200
+@period_ms    10
+
+@var door_open          uint8_t  -       Hardware "Door open flag"
+
+@0      door_open=0
+@100    door_open=1
+@150    door_open=0
+@200    door_open=1
+@250    door_open=0
+
+@end      2026-11-09T10:30:01.000+09:00
+@samples  5
+@dropped  0

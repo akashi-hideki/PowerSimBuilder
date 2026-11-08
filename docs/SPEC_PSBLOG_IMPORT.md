@@ -164,6 +164,9 @@ def main(argv: list[str] | None = None) -> int: ...          # Phase 2B
 | `@schema` != `psblog/v1` | **`ValueError`**（唯一の致命的エラー） | 致命的 |
 | `@captured_at` 欠落 | **`ValueError`** | 致命的 |
 | `@dropped != 0` | footer 記録、UI で警告表示 | — |
+| ファイル先頭 BOM | `utf-8-sig` で透過除去（防御的寛容性） | — |
+
+**注**: SPEC §4.1 は Writer に「BOM 付与禁止」を課す。Reader は防御的に BOM を許容する（誤設定ツールとの相互運用）。これは §10.1 の「Fault tolerant」原則に沿う。
 
 ### 2.6 ローテーション結合 (SPEC §4.3)
 
