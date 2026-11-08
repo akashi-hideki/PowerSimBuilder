@@ -1,0 +1,16 @@
+# log.psblog — rotation example, file 1 of 2
+@schema       psblog/v1
+@captured_at  2026-11-09T10:30:00.000+09:00
+@source       uart:COM3
+@firmware     StaTable v1.9.0
+
+@var g_system_tick uint32_t 1ms Timer "System tick"
+@var oven_current_temp uint16_t degC Hardware "Oven temp"
+
+@0     g_system_tick=0 oven_current_temp=25
+@100   g_system_tick=100 oven_current_temp=30
+@200   g_system_tick=200 oven_current_temp=40
+
+@end      2026-11-09T10:30:00.200+09:00
+@samples  3
+@dropped  0

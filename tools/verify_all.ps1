@@ -59,6 +59,15 @@ $stOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-O
 if ($stExit -ne 0) { Write-Host "  exit=$stExit NG" -ForegroundColor Red } else { Write-Host "  exit=0 OK" }
 
 # 4) E2E tests
+# [3.7/6] psblog sample log sanity
+Write-Host "[3.7/6] PSBLOG SAMPLE SANITY" -ForegroundColor Yellow
+try {
+    python tools/verify_psblog.py
+    if ($LASTEXITCODE -ne 0) { $failures += "psblog sample sanity" }
+} catch {
+    $failures += "psblog sample sanity (exception)"
+}
+
 Write-Host "[4/6] E2E TESTS" -ForegroundColor Yellow
 Get-Process PowerSimBuilder -ErrorAction SilentlyContinue | Stop-Process -Force
 # Trap #85: let the OS release window handles / file locks before starting FlaUI.

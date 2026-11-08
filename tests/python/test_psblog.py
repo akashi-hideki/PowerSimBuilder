@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 from python_runtime.psblog import parse_psblog
 
@@ -368,3 +373,84 @@ def test_different_var_sets_are_independent() -> None:
     # No cross-contamination
     assert "door_open" not in pid.vars
     assert "zc_count" not in minimal.vars
+
+
+# ---------------------------------------------------------------------------
+# Phase 2B: glob + CLI tests (#25-#29)
+# ---------------------------------------------------------------------------
+
+
+def test_glob_concatenates_rotated_files() -> None:
+    """SPEC §4.3: <base>.psblog + <base>.1.psblog are merged."""
+    from python_runtime.psblog import parse_psblog_glob
+
+    p = _sample_path("sample_rotated/log.psblog")
+    trace = parse_psblog_glob(p)
+    assert len(trace.source_files) == 2
+    assert len(trace.rows) > 0
+    t_values = [r[0] for r in trace.rows]
+    assert t_values == sorted(t_values)
+
+
+def test_glob_resorts_by_captured_at(tmp_path: Path) -> None:
+    """Files are sorted by @captured_at even if names are reversed."""
+    from python_runtime.psblog import parse_psblog_glob
+
+    (tmp_path / "log.psblog").write_text(
+        "@schema psblog/v1\n"
+        "@captured_at 2026-11-09T10:00:10+09:00\n"
+        "@var a uint8_t - A\n"
+        "@0 a=2\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (tmp_path / "log.1.psblog").write_text(
+        "@schema psblog/v1\n"
+        "@captured_at 2026-11-09T10:00:00+09:00\n"
+        "@var a uint8_t - A\n"
+        "@0 a=1\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    trace = parse_psblog_glob(tmp_path / "log.psblog")
+    assert (0, "a", 1) in trace.rows
+    assert (10000, "a", 2) in trace.rows
+
+
+def test_schema_mismatch_raises(tmp_path: Path) -> None:
+    content = (
+        "@schema psblog/v2\n" "@captured_at 2026-11-09T10:30:00+09:00\n" "@var a uint8_t - A\n"
+    )
+    with pytest.raises(ValueError, match="unsupported schema"):
+        parse_psblog(_write(tmp_path, content))
+
+
+def test_missing_captured_at_raises(tmp_path: Path) -> None:
+    content = "@schema psblog/v1\n" "@var a uint8_t - A\n" "@0 a=1\n"
+    with pytest.raises(ValueError, match="missing @captured_at"):
+        parse_psblog(_write(tmp_path, content))
+
+
+def test_cli_json_out(tmp_path: Path) -> None:
+    """CLI: python -m python_runtime.psblog <file> --json-out <out>."""
+    sample = _sample_path("sample_minimal.psblog")
+    out = tmp_path / "out.json"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "python_runtime.psblog",
+            str(sample),
+            "--json-out",
+            str(out),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=str(Path(__file__).resolve().parents[2]),
+    )
+    assert result.returncode == 0, result.stderr
+    assert out.is_file()
+    data = json.loads(out.read_text(encoding="utf-8"))
+    assert data["header"]["schema"] == "psblog/v1"
+    assert "door_open" in data["vars"]
+    assert data["warnings"] == 0

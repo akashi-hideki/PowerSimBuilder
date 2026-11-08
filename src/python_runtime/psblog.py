@@ -243,3 +243,111 @@ def parse_psblog(path: str | Path) -> SignalTrace:
 
     _parse_footer(lines, trace, j)
     return trace
+
+
+def parse_psblog_glob(base: str | Path) -> SignalTrace:
+    """Parse <base>.psblog and <base>.N.psblog (SPEC §4.3).
+
+    Files are sorted by @captured_at; later files' t_ms are offset by
+    the elapsed time from the first file's @captured_at. Rotation
+    boundary sample loss is allowed by SPEC §4.3.
+    """
+    p = Path(base)
+    parent = p.parent
+    stem = p.stem
+    pattern = f"{stem}*.psblog"
+    files = sorted(parent.glob(pattern))
+    if not files:
+        raise FileNotFoundError(f"no psblog files matching {parent / pattern}")
+
+    traces = [parse_psblog(f) for f in files]
+    traces.sort(key=lambda t: t.captures_at())
+    base_dt = traces[0].captures_at()
+
+    merged = SignalTrace()
+    merged.header = traces[0].header.copy()
+    merged.vars = traces[0].vars.copy()
+    merged.source_files = [t.source_files[0] for t in traces]
+
+    for trace in traces:
+        offset_ms = int((trace.captures_at() - base_dt).total_seconds() * 1000)
+        for t_ms, name, val in trace.rows:
+            merged.rows.append((t_ms + offset_ms, name, val))
+        merged.warnings += trace.warnings
+
+    total_dropped = sum(int(t.footer.get("dropped", 0) or 0) for t in traces)
+    merged.footer["dropped"] = str(total_dropped)
+    merged.footer["samples"] = str(len(merged.rows))
+    if traces[-1].footer.get("end"):
+        merged.footer["end"] = traces[-1].footer["end"]
+
+    return merged
+
+
+def to_json(trace: SignalTrace, out_path: str | Path) -> None:
+    """Write SignalTrace as JSON (for C# subprocess consumption, Trap #49)."""
+    import json
+
+    data = {
+        "header": trace.header,
+        "vars": {
+            name: {
+                "name": m.name,
+                "type": m.type,
+                "unit": m.unit,
+                "group": m.group,
+                "description": m.description,
+                "role": m.role,
+            }
+            for name, m in trace.vars.items()
+        },
+        "rows": [[t, name, val] for t, name, val in trace.rows],
+        "footer": trace.footer,
+        "warnings": trace.warnings,
+        "source_files": [str(p) for p in trace.source_files],
+    }
+    Path(out_path).write_text(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point. Writes JSON via --json-out (Trap #49)."""
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(prog="python_runtime.psblog")
+    parser.add_argument("path", help=".psblog file or base path")
+    parser.add_argument(
+        "--json-out",
+        default=None,
+        help="Write SignalTrace JSON to this path (recommended; Trap #49)",
+    )
+    parser.add_argument(
+        "--glob",
+        action="store_true",
+        help="Treat <path> as base for rotated files (SPEC §4.3)",
+    )
+    args = parser.parse_args(argv)
+
+    try:
+        if args.glob:
+            trace = parse_psblog_glob(args.path)
+        else:
+            trace = parse_psblog(args.path)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+
+    if args.json_out:
+        to_json(trace, args.json_out)
+    else:
+        print(f"vars={len(trace.vars)} rows={len(trace.rows)} " f"warnings={trace.warnings}")
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())
