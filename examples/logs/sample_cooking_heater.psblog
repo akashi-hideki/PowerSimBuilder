@@ -1,0 +1,35 @@
+# sample_cooking_heater.psblog — SPEC §11 full example (9 vars, 300 s)
+@schema       psblog/v1
+@captured_at  2026-11-09T10:30:00.000+09:00
+@source       uart:COM3
+@firmware     StaTable v1.9.0
+@protocol     pstable-uart/v1
+@baud         115200
+@period_ms    10
+
+@var g_system_tick      uint32_t 1ms     Timer    "System tick"
+@var error_code         uint8_t  -       System   "Error code"
+@var oven_target_temp   uint16_t degC    Hardware "Target oven temperature"
+@var oven_current_temp  uint16_t degC    Hardware "Current oven temperature"
+@var thermistor_top     uint16_t degC    Hardware "Top thermistor"
+@var thermistor_middle  uint16_t degC    Hardware "Middle thermistor"
+@var heater_top_duty    uint8_t  %       Hardware "Top heater PWM duty"
+@var fan_duty           uint8_t  %       Hardware "Convection fan duty"
+@var door_open          uint8_t  -       Hardware "Door open flag"
+
+@0      g_system_tick=0 error_code=0 oven_target_temp=200 oven_current_temp=25 door_open=0
+@10     g_system_tick=10 heater_top_duty=0
+@10     oven_current_temp=25
+@20     g_system_tick=20 heater_top_duty=100
+@20     oven_current_temp=25
+@30     g_system_tick=30 oven_current_temp=26 thermistor_top=31
+@40     g_system_tick=40 heater_top_duty=85
+@40     oven_current_temp=27
+@100    g_system_tick=100 oven_current_temp=35 thermistor_top=40
+@100    heater_top_duty=45
+@200    g_system_tick=200 oven_current_temp=78 thermistor_top=83
+@200    heater_top_duty=38
+
+@end      2026-11-09T10:35:00.000+09:00
+@samples  12
+@dropped  0

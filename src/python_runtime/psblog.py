@@ -230,10 +230,13 @@ def parse_psblog(path: str | Path) -> SignalTrace:
         if s.startswith("@end") or s.startswith("@samples") or s.startswith("@dropped"):
             break
         if not s.startswith("@"):
+            trace.warnings += 1
             continue
         first = s[1:].split(None, 1)
         if first and first[0].isdigit():
             _parse_data_line(line, trace)
+        elif first and first[0].startswith("@"):
+            trace.warnings += 1
         # 未知 @meta は無視（SPEC §10.1）
     else:
         j = len(lines)

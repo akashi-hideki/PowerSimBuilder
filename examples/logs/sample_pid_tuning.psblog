@@ -1,0 +1,21 @@
+# sample_pid_tuning.psblog — SPEC §1: PID-tuning subset (4 vars)
+@schema       psblog/v1
+@captured_at  2026-11-09T11:00:00.000+09:00
+@source       uart:COM3
+@firmware     StaTable v1.9.0
+
+@var oven_target_temp   uint16_t degC    Hardware "Target oven temperature" role=target
+@var oven_current_temp  uint16_t degC    Hardware "Current oven temperature" role=output
+@var heater_top_duty    uint8_t  %       Hardware "Top heater PWM duty"     role=pid_out
+@var error_code         uint8_t  -       System   "Error code"              role=error
+
+@0      oven_target_temp=200 oven_current_temp=25 heater_top_duty=0 error_code=0
+@100    oven_current_temp=45 heater_top_duty=80
+@200    oven_current_temp=120 heater_top_duty=60
+@300    oven_current_temp=175 heater_top_duty=30
+@400    oven_current_temp=195 heater_top_duty=10
+@500    oven_current_temp=200 heater_top_duty=0
+
+@end      2026-11-09T11:00:05.000+09:00
+@samples  6
+@dropped  0

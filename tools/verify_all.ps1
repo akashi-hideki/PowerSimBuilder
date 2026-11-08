@@ -44,6 +44,15 @@ if (Test-Path "tools\verify_pid.py") {
 
 # 3.5) StaTable psbproj metrics
 Write-Host "[3.5/6] STATABLE PSBPROJ METRICS" -ForegroundColor Yellow
+
+# [3.6/6] psblog parser tests
+Write-Host "[3.6/6] PSBLOG PARSER TESTS" -ForegroundColor Yellow
+try {
+    python -m pytest tests/python/test_psblog.py -q
+    if ($LASTEXITCODE -ne 0) { $failures += "psblog parser tests" }
+} catch {
+    $failures += "psblog parser tests (exception)"
+}
 $stOut = & python -m pytest tests\python\test_statable_psbproj_metrics.py -q 2>&1
 $stExit = $LASTEXITCODE
 $stOut | Where-Object { "$_".Trim() -ne "" } | Select-Object -Last 2 | ForEach-Object { Write-Host "  $_" }

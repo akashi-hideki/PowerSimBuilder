@@ -254,3 +254,6 @@ generated/temp_*.py
 
 # QA: full-resolution CSV (regenerable)
 docs/qa/**/simulation_signals_full.csv
+
+# User-recorded signal logs (may contain sensitive plant data)
+user_logs/
