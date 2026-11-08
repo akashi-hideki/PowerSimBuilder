@@ -3,8 +3,8 @@
 | 項目 | 値 |
 |---|---|
 | Document owner | PowerSimBuilder |
-| Target implementer | **PStaTable** (UART monitor writer) |
-| Status | **Draft for PStaTable review** |
+| Target implementer | **StaTable** (UART monitor writer) |
+| Status | **v1 confirmed** (StaTable approved 2026-11-08) |
 | Version | v1 (2026-11-08) |
 | Companion | `THREAD_HANDOFF.md` / `docs/SPEC_ROLE_SNIPPETS.md` |
 
@@ -12,14 +12,20 @@
 
 ## 1. Purpose
 
-PStaTable が **UART モニタ** で出力するログファイルのフォーマットを定義する。
+StaTable が **UART モニタ** で出力するログファイルのフォーマットを定義する。
 PowerSimBuilder はこのファイルを読み込み、以下を行う:
+
+> **監視対象変数はログごとに異なる**。ユーザーが記録開始時に選択した
+> `g_xxx` のみが VarTable に含まれる。同一ファームウェアでも、
+> 目的（PID チューニング / 温度監視 / ハードウェア診断）によって変数
+> セットは変化する。PSB は VarTable をそのまま信頼し、宣言済み変数の
+> みを扱う。
 
 1. **信号再生**: 記録された時系列を `RecordedSignal` コンポーネントとして Canvas に配置
 2. **コンポーネント推論**: 波形形状から `ThermalMass` / `FirstOrderLag` / `PIDController` 等の候補を提示
 3. **定量検証**: 実機波形とシミュレーション結果の比較
 
-> **重要**: UART フレーミング / CRC / コマンド ID / 変数 ID の割当は **PStaTable の所有物** であり、本仕様書の範囲外。本仕様は **ログファイル（テキスト）のみ** を定める。
+> **重要**: UART フレーミング / CRC / コマンド ID / 変数 ID の割当は **StaTable の所有物** であり、本仕様書の範囲外。本仕様は **ログファイル（テキスト）のみ** を定める。
 
 ---
 
@@ -35,7 +41,7 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 - 破損行への耐性
 - バージョニング
 
-### Out of scope (PStaTable 側の自由)
+### Out of scope (StaTable 側の自由)
 
 - UART フレーム（SOF/LEN/CRC/EOF）
 - コマンド体系（R/W/Start/Stop 等）
@@ -79,9 +85,23 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 
 ### 4.2 コメント行
 
-行頭（空白後）が `#` で始まる行はコメント。PStaTable は自由に出力してよい。
+行頭（空白後）が `#` で始まる行はコメント。StaTable は自由に出力してよい。
 
 ---
+
+### 4.3 Log rotation（10 MB 既定, v1 確定）
+
+StaTable SDK は `LogOptions` の既定値として **10 MB** のサイズローテーションを行う。
+
+| ファイル | 意味 |
+|---|---|
+| `<base>.psblog` | 最新 |
+| `<base>.1.psblog` | 1 世代前 |
+| `<base>.2.psblog` | 2 世代前 |
+
+- PSB は `<base>*.psblog` の glob で連番を自動収集
+- 各ファイルの `@captured_at` で時系列順に結合
+- ローテーション境界でのサンプル欠落は許容
 
 ## 5. Header セクション
 
@@ -91,8 +111,8 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 @schema       psblog/v1
 @captured_at  2026-11-09T10:30:00.000+09:00
 @source       uart:COM3
-@firmware     PStaTable v1.9.0
-@protocol     pstable-uart/v1
+@firmware     StaTable v1.9.0
+@protocol     statable-uart/v1
 @baud         115200
 @period_ms    10
 ```
@@ -102,8 +122,8 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 | `@schema` | ✅ | 本仕様のバージョン | `psblog/v1` |
 | `@captured_at` | ✅ | 記録開始時刻（ISO 8601 with TZ） | `2026-11-09T10:30:00+09:00` |
 | `@source` | ✅ | 入力元識別子 | `uart:COM3`, `usb:/dev/ttyACM0` |
-| `@firmware` | 推奨 | PStaTable バージョン | `PStaTable v1.9.0` |
-| `@protocol` | 推奨 | wire protocol ID（PSB は不透明文字列として扱う） | `pstable-uart/v1` |
+| `@firmware` | 推奨 | StaTable バージョン | `StaTable v1.9.0` |
+| `@protocol` | 推奨 | wire protocol ID（PSB は不透明文字列として扱う） | `statable-uart/v1` |
 | `@baud` | 推奨 | 整数 | `115200` |
 | `@period_ms` | 推奨 | 公称サンプル周期（整数 ms） | `10` |
 
@@ -114,6 +134,19 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 ## 6. VarTable セクション
 
 監視対象の **各 `g_xxx` 変数につき 1 行**。Data より前に置くこと。
+
+> **変数セットはログごとに異なる**。これは仕様の **正常な使い方** であり、
+> 固定セットを要求しない。StaTable はユーザーの選択に応じて VarTable を
+> 動的に構成する。
+>
+> 例:
+> - **PID チューニング用**: `oven_target_temp` / `oven_current_temp` / `heater_top_duty` / `error_code`
+> - **温度監視用**: `thermistor_top` / `thermistor_middle` / `thermistor_bottom` / `oven_current_temp`
+> - **ハードウェア診断用**: `zc_count` / `ir_value` / `steam_sensor` / `mw_anode_current`
+> - **全変数（30 個）**: デバッグ・回帰解析用
+>
+> PSB 側は **VarTable に宣言された変数のみ** を処理する。宣言にない変数が
+> Data 行に現れた場合は警告のみで skip する（§10.1）。
 
 ```
 @var <name> <type> <unit> <group> [<description>]
@@ -141,6 +174,21 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 @var fan_duty           uint8_t  %       Hardware "Convection fan duty"
 @var door_open          uint8_t  -       Hardware "Door open flag"
 ```
+### 6.2 `role` ヒント（任意, v1 拡張）
+
+VarTable の `@var` 行末尾に `role=<role>` を任意で追加可能。
+
+| role | 意味 |
+|---|---|
+| `input` | 外部入力 / センサー |
+| `output` | アクチュエータ出力 |
+| `state` | 内部状態 / フラグ |
+| `pid_out` | PID 制御出力 |
+| `target` | 目標値 / 設定値 |
+| `error` | エラーコード / 診断 |
+| `-` | 未指定（既定） |
+
+PSB の利用: `role` は波形分類の精度向上に使う。未指定でも分類可能。
 
 ---
 
@@ -226,9 +274,16 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 
 ---
 
+### 9.1 `@dropped` の意味（v1 確定）
+
+`@dropped` は **シーケンスギャップ + CRC エラー** の合計数（Q6 回答）。
+
+- StaTable 側は SEQ コマンドで最終シーケンス番号を取得可能
+- PSB 側は `@dropped != 0` で警告のみ（処理継続）
+
 ## 10. Error handling
 
-| 状況 | PStaTable の推奨動作 | PSB 側の対処 |
+| 状況 | StaTable の推奨動作 | PSB 側の対処 |
 |---|---|---|
 | 1 変数のみ到着 | 1 行に 1 変数で書く | 正常受理 |
 | 複数変数が同一サンプル | 1 行にまとめる or 複数行 | どちらも受理 |
@@ -244,7 +299,7 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 - 数値パース失敗 → その行の該当トークンを skip
 - 行全体が壊れている → その行のみ skip、継続
 
-**ファイル全体を止めない** ことが PStaTable への唯一の要求。
+**ファイル全体を止めない** ことが StaTable への唯一の要求。
 
 ---
 
@@ -253,12 +308,12 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 以下は cooking_heater_controller.xml の変数を使った **完全な例**:
 
 ```psblog
-# PStaTable UART Monitor Log
+# StaTable UART Monitor Log
 @schema       psblog/v1
 @captured_at  2026-11-09T10:30:00.000+09:00
 @source       uart:COM3
-@firmware     PStaTable v1.9.0
-@protocol     pstable-uart/v1
+@firmware     StaTable v1.9.0
+@protocol     statable-uart/v1
 @baud         115200
 @period_ms    10
 
@@ -298,29 +353,34 @@ PowerSimBuilder はこのファイルを読み込み、以下を行う:
 - `psblog/v1` は **ファイル形式の互換性契約**
 - 破壊的変更（既存キーの意味変更、行構造の変更）は `psblog/v2` に上げる
 - 追加変更（新 `@` キー、新 `<type>`）は v1 のまま拡張可能（PSB は未知キーを無視）
-- PStaTable は将来 `psblog/v2` を出力できるよう、フォーマットバージョンを設定で選択可能にすることを推奨
+- StaTable は将来 `psblog/v2` を出力できるよう、フォーマットバージョンを設定で選択可能にすることを推奨
 
 ---
 
-## 13. Open questions for PStaTable
+## 13. Resolved questions (StaTable 承認済み, 2026-11-08)
 
-以下は **本仕様の採用前に PStaTable 側と合意したい項目** です:
+StaTable 側からの回答を反映し、**v1 仕様として確定** した。
 
-| # | 質問 | PSB の希望 | 代替案 |
-|:---:|---|---|---|
-| Q1 | 変数選択は起動時固定か、動的追加可能か | **起動時固定**（VarTable で全宣言） | 動的追加する場合は `@add-var` 行を追加仕様化 |
-| Q2 | データはポーリング応答 or 自発ストリームか | **どちらでも可**（ログ形式に現れない） | — |
-| Q3 | タイムスタンプは MCU tick か PC 受信時刻か | **PC 受信時刻** を `@captured_at` + `t_ms` で | MCU tick の場合は `@time_source mcu` 追加 |
-| Q4 | 同時接続（2 つ目のモニタ）を許容するか | **許容**（PSB は単一ファイルとして読む） | — |
-| Q5 | ファイルサイズ上限 | **10 MB 以下** を推奨（PSB のメモリ考慮） | 超える場合は回転 or 分割 |
-| Q6 | `@dropped` カウンタの計算方法 | **`seq` ギャップ検出** を PStaTable 側で | — |
-| Q7 | 変数の **役割ヒント**（入力/出力/PID 出力等）を追加するか | **任意**（`@var ... role=output` 拡張） | 追加する場合は v1 拡張可 |
+| # | 質問 | StaTable の回答 |
+|:---:|---|---|
+| Q1 | 変数セットはログ生成時固定でよいか | **固定**。SDK の `logger.Start()` 時に `variables` で確定。ログ途中追加は v1 では非対応 |
+| Q2 | ポーリング or 自発ストリーム | **両対応**。ログ用途は STREAM 推奨。ポーリングは `ReadAsync` で個別取得 |
+| Q3 | タイムスタンプ | **PC 受信時刻** を採用（`@captured_at` + `t_ms`）。MCU tick は `g_system_tick` 変数で参照可能 |
+| Q4 | 同時接続 | **許容**。`StaTableMonitor` を複数生成可能、各インスタンス独立ロガー |
+| Q5 | ファイルサイズ上限 | **10 MB ローテーション** を SDK 既定 `LogOptions` に設定、変更可 |
+| Q6 | `@dropped` の計算方法 | **シーケンスギャップ + CRC エラー**。`SEQ` コマンドで最終シーケンス確認可 |
+| Q7 | 役割ヒント（入力/出力等） | v1 拡張として INFO 末尾に `role=<role>` 追加可能。未指定時 `-`、PSB は未知キー無視 |
 
----
+### 13.1 回答から導かれる v1 仕様の追記
+
+- **(a) `role` ヒント**: §6.2 で正式化（末尾任意 `role=<role>`）
+- **(b) ログローテーション**: §4.3 で正式化（`<base>.N.psblog`、10 MB 既定）
+- **(c) `@dropped` の意味**: §9.1 で正式化（seq gap + CRC error）
+
 
 ## 14. PowerSimBuilder 側の受け入れ準備状況
 
-PStaTable 仕様確定後、PSB は以下を実装予定:
+StaTable 仕様確定後、PSB は以下を実装予定:
 
 | Phase | 内容 | 規模 |
 |:---:|---|---:|
@@ -330,7 +390,7 @@ PStaTable 仕様確定後、PSB は以下を実装予定:
 | 4 | `signal_classifier.py`（波形分類 → 候補提示） | M |
 | 5 | `File → Import UART Log` UI | S |
 
-PStaTable 側の実装状況と並走できるよう、Phase 2 は **本仕様のみで着手可能** です。
+StaTable 側の実装状況と並走できるよう、Phase 2 は **本仕様のみで着手可能** です。
 
 ---
 
@@ -375,7 +435,7 @@ pump_on            uint8_t            Hardware -
 mag_on             uint8_t            Hardware -
 ```
 
-PStaTable 側は、ユーザーが選択した変数のみ VarTable に含めればよい（全 30 変数を出す必要はない）。
+StaTable 側は、ユーザーが選択した変数のみ VarTable に含めればよい（全 30 変数を出す必要はない）。
 
 ---
 
@@ -384,12 +444,12 @@ PStaTable 側は、ユーザーが選択した変数のみ VarTable に含めれ
 | 項目 | 内容 |
 |---|---|
 | Document owner | PowerSimBuilder (`akashi.hideki@gmail.com`) |
-| Review requested from | **PStaTable maintainer** |
-| Agreed version | _（PStaTable 承認後に記入）_ |
+| Review requested from | **StaTable maintainer** |
+| Agreed version | _（StaTable 承認後に記入）_ |
 | Agreed date | _（同上）_ |
 
-**PStaTable 側の承認をもって `psblog/v1` を確定** とする。
+**StaTable 側の承認をもって `psblog/v1` を確定** とする。
 
 ---
 
-*This document is the contract between PStaTable (writer) and PowerSimBuilder (reader) for `.psblog` log files.*
+*This document is the contract between StaTable (writer) and PowerSimBuilder (reader) for `.psblog` log files.*
