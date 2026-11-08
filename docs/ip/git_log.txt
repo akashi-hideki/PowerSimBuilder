@@ -1,3 +1,23 @@
+0429105 | 2026-11-08 09:52:37 +0900 | HIdeki.Akashi | docs: add 'Try it (5 minutes)' to README + RELEASE_NOTES_v1.9.0_zh.md (Chinese) + gitignore exceptions for v1.8/v1.9 release notes
+79520c0 | 2026-11-08 09:43:00 +0900 | HIdeki.Akashi | docs(handoff): mark 2026-11-01 CI-disabled note as historical (resolved 2026-11-08)
+794d7a2 | 2026-11-08 09:36:20 +0900 | HIdeki.Akashi | fix(tools): replace PEP 701 f-strings (release.py x2, verify_pid_ascii.py x1) for Python 3.10/3.11 CI
+18cd0bc | 2026-11-08 09:26:23 +0900 | HIdeki.Akashi | fix(ci): verify_statable_psbproj ZIP fallback uses component.parameters (Trap #52 variant)
+fa22e58 | 2026-11-08 09:23:20 +0900 | HIdeki.Akashi | fix(ci): enable EditLogEvent in Release when PSB_EDIT_LOG is set (dynamic evaluation)
+e238850 | 2026-11-08 09:09:01 +0900 | HIdeki.Akashi | test(ci): use v181 self-contained psbproj (generated/*_powersim.py is gitignored; fixes CI fresh checkout)
+0941e5c | 2026-11-08 08:54:44 +0900 | HIdeki.Akashi | ci: restore workflows (billing issue resolved, public release prep)
+fbbf5ec | 2026-11-08 08:44:04 +0900 | HIdeki.Akashi | chore(qa): remove patch_demo_main_csv.py (Trap #88 no longer needs it) + renumber qa_snapshot [0/7]-[7/7]
+d74a273 | 2026-11-08 08:26:28 +0900 | HIdeki.Akashi | docs(handoff): normalize Trap #80-#92 descriptions (100% permanent fixes marked)
+3f500be | 2026-11-08 08:24:05 +0900 | HIdeki.Akashi | feat(traps): #81/#82 permanent fix - check_known_traps.py + pre-commit hook + verify_all [0/6] (100% trap coverage)
+91db4d1 | 2026-11-08 08:14:49 +0900 | HIdeki.Akashi | docs(handoff): GO decision for 2026-11-22 public release recorded
+dce9e90 | 2026-11-08 08:13:36 +0900 | HIdeki.Akashi | decision(gonogo): GO for 2026-11-22 public release (approved 2026-11-08) + fill_decision.py tool
+afe5958 | 2026-11-08 08:09:08 +0900 | HIdeki.Akashi | docs(handoff): Trap #89 permanent fix (write-time CSV filtering, 99.96% reduction)
+49d1e63 | 2026-11-08 08:08:47 +0900 | HIdeki.Akashi | feat(trap89): PSB_DUMP_CSV_HZ/COLUMNS write-time filtering (145MB -> 53KB) + regenerate gonogo snapshot
+4a9ac23 | 2026-11-07 21:18:14 +0900 | HIdeki.Akashi | docs(handoff): add Trap #91/#92 to trap table + update duplicate #88 description
+a67c03e | 2026-11-07 21:16:02 +0900 | HIdeki.Akashi | docs(handoff): Trap #88/#90/#92 permanent fixes recorded
+d699001 | 2026-11-07 21:14:20 +0900 | HIdeki.Akashi | fix(traps): #92 qa_snapshot pre-check + demo_main.py preserve/restore + regenerate gonogo snapshot (Trap #88/#90 confirmed)
+df92f3c | 2026-11-07 20:42:16 +0900 | HIdeki.Akashi | docs(qa): regenerate DECISION with clean tree (dirty=False)
+101054a | 2026-11-07 20:41:02 +0900 | HIdeki.Akashi | fix(qa): restore QA snapshot from git + safe gen_decision for '?' + capture_env tag fallback
+1900ad6 | 2026-11-07 20:31:19 +0900 | HIdeki.Akashi | feat(ip): one-command IP docs refresh (refresh_ip_docs.py) + idempotent WHITE_PAPER status regex (Trap #91) + v1.9.0 docs/ip + HANDOFF usage
 1741473 | 2026-11-07 20:09:01 +0900 | HIdeki.Akashi | docs(qa): Legal risk reclassified Medium (lawyer consultation on-issue, not pre-release blocker)
 6872e76 | 2026-11-07 20:04:48 +0900 | HIdeki.Akashi | docs(handoff): Trap #89/#90 + gen_decision.py tool
 2765deb | 2026-11-07 20:04:21 +0900 | HIdeki.Akashi | feat(qa): DECISION.md auto-gen + Trap #90 fix (utf-8-sig, ascii exit.txt, va_ok unification)

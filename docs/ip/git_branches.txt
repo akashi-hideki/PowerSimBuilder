@@ -1,4 +1,4 @@
-main | 1741473 | 2026-11-07 | docs(qa): Legal risk reclassified Medium (lawyer consultation on-issue, not pre-release blocker)
-origin | 1741473 | 2026-11-07 | docs(qa): Legal risk reclassified Medium (lawyer consultation on-issue, not pre-release blocker)
-origin/main | 1741473 | 2026-11-07 | docs(qa): Legal risk reclassified Medium (lawyer consultation on-issue, not pre-release blocker)
+main | 0429105 | 2026-11-08 | docs: add 'Try it (5 minutes)' to README + RELEASE_NOTES_v1.9.0_zh.md (Chinese) + gitignore exceptions for v1.8/v1.9 release notes
+origin | 0429105 | 2026-11-08 | docs: add 'Try it (5 minutes)' to README + RELEASE_NOTES_v1.9.0_zh.md (Chinese) + gitignore exceptions for v1.8/v1.9 release notes
+origin/main | 0429105 | 2026-11-08 | docs: add 'Try it (5 minutes)' to README + RELEASE_NOTES_v1.9.0_zh.md (Chinese) + gitignore exceptions for v1.8/v1.9 release notes
 origin/feat/dotnet10-migration | 1bfcde9 | 2026-10-18 | fix(gui): HasExited-based double-launch guard + remove redundant MessageBox
