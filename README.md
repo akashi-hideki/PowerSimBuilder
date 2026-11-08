@@ -8,6 +8,31 @@
 
 **Visual simulation companion to [StaTable](https://github.com/akashi-hideki/StaTable) — load StaTable XML, build Python state-machine controllers, run end-to-end simulations with signal plots.**
 
+## Try it (5 minutes)
+
+### Standalone Python (fastest, no .NET needed)
+python examples\demos\demo_pid_first_order_lag.py
+
+text
+
+### Full setup (Windows + .NET 10 + Python 3.10+)
+git clone https://github.com/akashi-hideki/PowerSimBuilder.git
+cd PowerSimBuilder
+dotnet build -c Debug
+python -m pip install -e .
+.\bin\Debug\net10.0-windows\PowerSimBuilder.exe
+
+text
+
+File -> Open -> `examples\demos\oven_control_statable.psbproj` -> Create Simulation -> Run.
+
+### Verify everything
+.\tools\verify_all.ps1
+
+text
+
+Expected: all sections exit=0 OK (599 C# + 16 E2E + 29 RoleSnippet + 460 Python).
+
 ## Demos
 
 Five ready-to-run demos in `examples/demos/` (see [README](examples/demos/README.md)):
