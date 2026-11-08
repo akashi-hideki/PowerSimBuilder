@@ -376,10 +376,10 @@ def main() -> int:
 
     if catalog_assets:
         if args.dry_run:
-            print(f"[DRY] gh release upload {version} {" ".join(str(a) for a in catalog_assets)}")
+            print(f"[DRY] gh release upload {version} {' '.join(str(a) for a in catalog_assets)}")
         else:
             run(["gh", "release", "upload", version, *[str(a) for a in catalog_assets], "--clobber"])
-            print(f"[OK] Catalog uploaded: {", ".join(str(a) for a in catalog_assets)}")
+            print(f"[OK] Catalog uploaded: {', '.join(str(a) for a in catalog_assets)}")
     return 0
 
 

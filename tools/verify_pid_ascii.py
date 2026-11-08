@@ -32,7 +32,7 @@ def ascii_plot(T, U, target, width=60, height=12, t_end=300.0):
     tmax = max(T)
     tmin = min(T)
     print(f"\n=== Temperature (target={target}, max={tmax:.1f}, min={tmin:.1f}) ===")
-    print(f"t_axis: 0{"":>8}{t_end/2:>8.0f}{t_end:>8.0f} s")
+    print(f"t_axis: 0{'':>8}{t_end/2:>8.0f}{t_end:>8.0f} s")
     for h in range(height, -1, -1):
         level = tmin + (tmax - tmin) * h / height
         row = ""
