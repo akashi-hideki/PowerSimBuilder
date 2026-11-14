@@ -32,6 +32,7 @@ from .pid_controller import PIDController
 from .power_source import PowerSource
 from .pwm_3phase import PWM3Phase
 from .rate_limiter import RateLimiter
+from .recorded_signal import RecordedSignal
 from .sine_wave import SineWave
 from .sine_wave_sum import SineWaveSum
 from .state_machine import StateMachine
@@ -64,6 +65,7 @@ __all__ = [
     "PowerSource",
     "PWM3Phase",
     "RateLimiter",
+    "RecordedSignal",
     "SineWave",
     "SineWaveSum",
     "StateMachine",

@@ -334,58 +334,82 @@ namespace PowerSimBuilder
 
             var result = dlg.Result;
             var baseDescriptor = ComponentDescriptorDictionary.Descriptors["Recorded Signal"];
-            int x = 100, y = 100, added = 0;
+            int x = 200, y = 200, added = 0;
+            var addedVarNames = new System.Collections.Generic.List<string>();
 
-            foreach (var varName in result.SelectedVariables)
+            // U1: capture the ComponentControl that AddComponent just created,
+            // so we can give it a descriptive name like 'RecordedSignal [g_system_tick]'.
+            ComponentControl? lastAdded = null;
+            void CaptureAdded(object? s, ComponentEventArgs args) => lastAdded = args.Component;
+
+            designCanvas1.ComponentAdded += CaptureAdded;
+            try
             {
-                var clonedParams = new System.Collections.Generic.List<ParameterDescriptor>();
-                foreach (var p in baseDescriptor.Parameters)
+                foreach (var varName in result.SelectedVariables)
                 {
-                    clonedParams.Add(new ParameterDescriptor
+                    var clonedParams = new System.Collections.Generic.List<ParameterDescriptor>();
+                    foreach (var p in baseDescriptor.Parameters)
                     {
-                        Name = p.Name,
-                        Type = p.Type,
-                        DefaultValue = p.Name == "psblog_path" ? result.PsblogPath
-                                     : p.Name == "var_name" ? (object)varName
-                                     : p.DefaultValue,
-                    });
-                }
-
-                var descriptor = new ComponentDescriptor
-                {
-                    Name = baseDescriptor.Name,
-                    Type = baseDescriptor.Type,
-                    Category = baseDescriptor.Category,
-                    Parameters = clonedParams,
-                    InputPorts = baseDescriptor.InputPorts,
-                    OutputPorts = baseDescriptor.OutputPorts,
-                };
-                designCanvas1.AddComponent(descriptor, new Point(x, y));
-                added++;
-                x += 180;
-                if (x > 800) { x = 100; y += 120; }
-
-                if (result.PlaceInferredComponents
-                    && result.ProposedComponents.TryGetValue(varName, out var proposedType)
-                    && !string.IsNullOrEmpty(proposedType))
-                {
-                    ComponentDescriptor? propDesc = null;
-                    foreach (var d in ComponentDescriptorDictionary.Descriptors.Values)
-                    {
-                        if (string.Equals(d.Type, proposedType, StringComparison.OrdinalIgnoreCase))
+                        clonedParams.Add(new ParameterDescriptor
                         {
-                            propDesc = d;
-                            break;
-                        }
+                            Name = p.Name,
+                            Type = p.Type,
+                            DefaultValue = p.Name == "psblog_path" ? result.PsblogPath
+                                         : p.Name == "var_name" ? (object)varName
+                                         : p.DefaultValue,
+                        });
                     }
-                    if (propDesc != null)
-                        designCanvas1.AddComponent(propDesc, new Point(x, y + 100));
+
+                    var descriptor = new ComponentDescriptor
+                    {
+                        Name = baseDescriptor.Name,
+                        Type = baseDescriptor.Type,
+                        Category = baseDescriptor.Category,
+                        Parameters = clonedParams,
+                        InputPorts = baseDescriptor.InputPorts,
+                        OutputPorts = baseDescriptor.OutputPorts,
+                    };
+
+                    lastAdded = null;
+                    designCanvas1.AddComponent(descriptor, new Point(x, y));
+                    if (lastAdded != null)
+                    {
+                        lastAdded.InstanceName = "RecordedSignal [" + varName + "]";
+                    }
+                    addedVarNames.Add(varName);
+                    added++;
+                    x += 180;
+                    if (x > 800) { x = 200; y += 120; }
+
+                    if (result.PlaceInferredComponents
+                        && result.ProposedComponents.TryGetValue(varName, out var proposedType)
+                        && !string.IsNullOrEmpty(proposedType))
+                    {
+                        ComponentDescriptor? propDesc = null;
+                        foreach (var d in ComponentDescriptorDictionary.Descriptors.Values)
+                        {
+                            if (string.Equals(d.Type, proposedType, StringComparison.OrdinalIgnoreCase))
+                            {
+                                propDesc = d;
+                                break;
+                            }
+                        }
+                        if (propDesc != null)
+                            designCanvas1.AddComponent(propDesc, new Point(x, y + 100));
+                    }
                 }
+            }
+            finally
+            {
+                designCanvas1.ComponentAdded -= CaptureAdded;
             }
 
             designCanvas1.ArrangeComponents();
+
+            // U3: include variable names in the completion message.
+            var varList = string.Join(", ", addedVarNames);
             MessageBox.Show(this,
-                I18n.T("PsblogImport.Complete", added),
+                I18n.T("PsblogImport.CompleteWithVars", added, varList),
                 I18n.T("PsblogImport.Title"),
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }

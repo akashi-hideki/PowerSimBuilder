@@ -394,5 +394,6 @@
   "PsblogImport.CapturedLabel": "Captured:",
   "PsblogImport.DurationLabel": "Duration:",
   "PsblogImport.WarningsLabel": "Warnings:",
-  "PsblogImport.DroppedLabel": "Dropped:"
+  "PsblogImport.DroppedLabel": "Dropped:",
+  "PsblogImport.CompleteWithVars": "{0} signal(s) added:\n{1}"
 }
