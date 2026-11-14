@@ -73,5 +73,25 @@ namespace PowerSimBuilder.Tests.Psblog
             var dto = PsblogParser.Parse(SamplePath("sample_minimal.psblog"));
             Assert.Empty(dto.Classifications);
         }
+
+        [Fact]
+        public void Parse_Succeeds_FromTempFileOutsideRepo()
+        {
+            var sample = SamplePath("sample_minimal.psblog");
+            var tmp = Path.Combine(Path.GetTempPath(), "psblog_outside_" + Guid.NewGuid().ToString("N") + ".psblog");
+            File.Copy(sample, tmp);
+            try
+            {
+                var dto = PsblogParser.Parse(tmp);
+                Assert.NotNull(dto);
+                Assert.Equal("psblog/v1", dto.Schema);
+                Assert.Contains("door_open", dto.Vars.Keys);
+                Assert.Equal(5, dto.Rows.Count);
+            }
+            finally
+            {
+                try { File.Delete(tmp); } catch { /* ignore */ }
+            }
+        }
     }
 }

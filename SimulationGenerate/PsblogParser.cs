@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -20,10 +20,11 @@ namespace PowerSimBuilder
                 throw new PsblogParseException($"psblog file not found: {psblogPath}");
 
             var fullPath = Path.GetFullPath(psblogPath);
-            var repoRoot = FindRepoRoot(Path.GetDirectoryName(fullPath));
-            if (repoRoot == null)
-                throw new PsblogParseException(
-                    "repo root (containing src/python_runtime) not found");
+
+            // Bug fix: search repo root from the app base directory, not
+            // from the psblog file location. User logs typically live
+            // outside the repo; walking up from them never finds src/python_runtime.
+            var repoRoot = FindRepoRoot();
 
             var tmpJson = Path.Combine(
                 Path.GetTempPath(), $"psb_{Guid.NewGuid():N}.json");
@@ -38,17 +39,30 @@ namespace PowerSimBuilder
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     CreateNoWindow = true,
-                    WorkingDirectory = repoRoot,
                 };
-                psi.EnvironmentVariables["PYTHONPATH"] =
-                    Path.Combine(repoRoot, "src");
+
+                // Only set PYTHONPATH if the repo's src/ exists.
+                // Installed package mode (pip install) provides python_runtime
+                // on sys.path already; PYTHONPATH is unnecessary.
+                if (repoRoot != null)
+                {
+                    var srcDir = Path.Combine(repoRoot, "src");
+                    if (Directory.Exists(srcDir))
+                        psi.EnvironmentVariables["PYTHONPATH"] = srcDir;
+                }
                 psi.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
 
                 using var p = Process.Start(psi);
                 if (p == null)
                     throw new PsblogParseException("failed to start python");
 
+                var stdoutSb = new StringBuilder();
                 var stderrSb = new StringBuilder();
+                p.OutputDataReceived += (_, e) =>
+                {
+                    if (!string.IsNullOrEmpty(e.Data))
+                        stdoutSb.AppendLine(e.Data);
+                };
                 p.ErrorDataReceived += (_, e) =>
                 {
                     if (!string.IsNullOrEmpty(e.Data))
@@ -64,9 +78,12 @@ namespace PowerSimBuilder
                         $"python timed out after {timeoutMs} ms");
                 }
 
+                // The only fatal condition: python -m python_runtime.psblog
+                // exited non-zero (parser error, import error, etc).
                 if (p.ExitCode != 0)
                     throw new PsblogParseException(
-                        $"python exited with code {p.ExitCode}: {stderrSb}");
+                        $"psblog parser failed (exit {p.ExitCode}).\n"
+                        + $"stderr:\n{stderrSb}\nstdout:\n{stdoutSb}");
 
                 if (!File.Exists(tmpJson))
                     throw new PsblogParseException(
@@ -88,15 +105,32 @@ namespace PowerSimBuilder
             }
         }
 
-        private static string? FindRepoRoot(string? startDir)
+        /// <summary>
+        /// Locate the repo root (containing <c>src/python_runtime</c>) by walking up
+        /// from the application base directory, then from the current directory.
+        /// Returns <c>null</c> when not found (installed-package mode); the caller
+        /// continues and lets python report errors.
+        /// </summary>
+        private static string? FindRepoRoot()
         {
-            if (string.IsNullOrEmpty(startDir)) return null;
-            var dir = new DirectoryInfo(startDir);
-            while (dir != null)
+            foreach (var seed in new[]
+                     {
+                         AppContext.BaseDirectory,
+                         Directory.GetCurrentDirectory(),
+                     })
             {
-                if (Directory.Exists(Path.Combine(dir.FullName, "src", "python_runtime")))
-                    return dir.FullName;
-                dir = dir.Parent;
+                if (string.IsNullOrEmpty(seed))
+                    continue;
+                DirectoryInfo? dir;
+                try { dir = new DirectoryInfo(seed); }
+                catch { continue; }
+                while (dir != null)
+                {
+                    if (Directory.Exists(
+                            Path.Combine(dir.FullName, "src", "python_runtime")))
+                        return dir.FullName;
+                    dir = dir.Parent;
+                }
             }
             return null;
         }
