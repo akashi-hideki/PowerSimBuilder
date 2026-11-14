@@ -25,6 +25,7 @@ public class PsblogImportE2ETests
             WorkingDirectory = TestPaths.ProjectRoot,
         };
         psi.EnvironmentVariables["PSB_PSBLOG_IMPORT"] = psblogPath;
+        psi.EnvironmentVariables["PSB_E2E_TEST"] = "1";
         return FlaUI.Core.Application.Launch(psi);
     }
 

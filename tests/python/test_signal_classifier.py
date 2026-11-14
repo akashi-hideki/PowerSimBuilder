@@ -148,7 +148,7 @@ def test_classify_all_on_sample_log() -> None:
     trace = parse_psblog(_sample_path())
     results = classify_all(trace)
     assert len(results) == len(trace.vars)
-    valid = {"constant", "ramp", "step", "exponential", "pwm", "digital", "unknown"}
+    valid = {"constant", "ramp", "step", "exponential", "pwm", "digital", "oscillating", "unknown"}
     for r in results:
         assert isinstance(r, Classification)
         assert r.category in valid
@@ -185,3 +185,40 @@ def test_ramp_not_exponential(tmp_path: Path) -> None:
     c = classify(parse_psblog(p), "a")
     assert c.category == "ramp"
     assert c.proposed_component == "Integrator"
+
+
+def test_oscillating(tmp_path: Path) -> None:
+    """Triangle wave (3 cycles) → oscillating."""
+    rows = "\n".join(
+        [
+            "@0 a=0",
+            "@10 a=1",
+            "@20 a=2",
+            "@30 a=3",
+            "@40 a=2",
+            "@50 a=1",
+            "@60 a=0",
+            "@70 a=1",
+            "@80 a=2",
+            "@90 a=3",
+            "@100 a=2",
+            "@110 a=1",
+            "@120 a=0",
+            "@130 a=1",
+            "@140 a=2",
+            "@150 a=3",
+        ]
+    )
+    p = _trace(tmp_path, rows + "\n")
+    c = classify(parse_psblog(p), "a")
+    assert c.category == "oscillating"
+    assert c.confidence >= 0.5
+
+
+def test_large_range_ramp_not_auto_selected(tmp_path: Path) -> None:
+    """Large-range ramp (e.g. g_system_tick, rng > 10000) → confidence 0.3."""
+    rows = "\n".join([f"@{i * 100} a={i * 1000}" for i in range(15)])
+    p = _trace(tmp_path, rows + "\n")
+    c = classify(parse_psblog(p), "a")
+    assert c.category == "ramp"
+    assert c.confidence < 0.5

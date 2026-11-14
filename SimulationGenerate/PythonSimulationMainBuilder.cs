@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
@@ -820,6 +820,42 @@ namespace PowerSimBuilder
         /// <summary>
         /// プロット設定セクションを生成する
         /// </summary>
+        private static string GetFirstOutputPortName(object comp)
+        {
+            try
+            {
+                // Case 1: ComponentControl (has .Descriptor)
+                var descProp = comp.GetType().GetProperty("Descriptor");
+                if (descProp != null)
+                {
+                    var desc = descProp.GetValue(comp) as ComponentDescriptor;
+                    if (desc != null && desc.OutputPorts != null && desc.OutputPorts.Length > 0)
+                    {
+                        var p0 = desc.OutputPorts[0];
+                        if (!string.IsNullOrEmpty(p0)) return p0;
+                    }
+                }
+
+                // Case 2: ComponentDescriptor directly (has .Type)
+                var typeProp = comp.GetType().GetProperty("Type");
+                var typeName = typeProp?.GetValue(comp) as string;
+                if (!string.IsNullOrEmpty(typeName))
+                {
+                    foreach (var desc in ComponentDescriptorDictionary.Descriptors.Values)
+                    {
+                        if (string.Equals(desc.Type, typeName, StringComparison.OrdinalIgnoreCase)
+                            && desc.OutputPorts != null && desc.OutputPorts.Length > 0)
+                        {
+                            var p0 = desc.OutputPorts[0];
+                            if (!string.IsNullOrEmpty(p0)) return p0;
+                        }
+                    }
+                }
+                return "output";
+            }
+            catch { return "output"; }
+        }
+
         private void GeneratePlotConfigSection()
         {
             AddLineToSection("plot_config", "# プロット設定（ベースデータ）");
@@ -883,8 +919,9 @@ namespace PowerSimBuilder
                         if (string.IsNullOrEmpty(comp.InstanceName)) continue;
                         var compKey = comp.InstanceName.ToLower();
                         var compColor = compColors[compColorIdx % compColors.Count];
+                        var _outPort = GetFirstOutputPortName(comp);
                         AddLineToSection("plot_config",
-                            $"        {{'name': '{compKey}_output', 'component': '{compKey}', 'port': 'output', 'enabled': True, 'color': '{compColor}', 'line_style': '-'}},");
+                            $"        {{'name': '{compKey}_{_outPort}', 'component': '{compKey}', 'port': '{_outPort}', 'enabled': True, 'color': '{compColor}', 'line_style': '-'}},");
                         compColorIdx++;
                     }
                 }
@@ -902,8 +939,9 @@ namespace PowerSimBuilder
                         if (string.IsNullOrEmpty(comp.Name)) continue;
                         var compKey = comp.Name.ToLower();
                         var compColor = compColors[compColorIdx % compColors.Count];
+                        var _outPort = GetFirstOutputPortName(comp);
                         AddLineToSection("plot_config",
-                            $"        {{'name': '{compKey}_output', 'component': '{compKey}', 'port': 'output', 'enabled': True, 'color': '{compColor}', 'line_style': '-'}},");
+                            $"        {{'name': '{compKey}_{_outPort}', 'component': '{compKey}', 'port': '{_outPort}', 'enabled': True, 'color': '{compColor}', 'line_style': '-'}},");
                         compColorIdx++;
                     }
                 }

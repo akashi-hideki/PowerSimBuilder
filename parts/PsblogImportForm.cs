@@ -135,6 +135,7 @@ namespace PowerSimBuilder
                 Location = new Point(810, 15),
                 Width = 130,
                 Enabled = false,
+                DialogResult = DialogResult.OK,
             };
             _btnAddToCanvas.Click += OnAddToCanvas;
             bottomPanel.Controls.AddRange(new Control[] { _chkPlaceInferred, _btnCancel, _btnAddToCanvas });
@@ -147,6 +148,10 @@ namespace PowerSimBuilder
 
             AcceptButton = _btnAddToCanvas;
             CancelButton = _btnCancel;
+            this.FormClosing += (s, e) =>
+            {
+                TraceDiag($"FormClosing: CloseReason={e.CloseReason} Cancel={e.Cancel} DialogResult={DialogResult}");
+            };
         }
 
         /// <summary>Test hook: pre-load a log file (used by FlaUI E2E).</summary>
@@ -252,7 +257,8 @@ namespace PowerSimBuilder
 
         private void OnAddToCanvas(object? sender, EventArgs e)
         {
-            if (_dto == null || string.IsNullOrEmpty(_fullPath)) return;
+            TraceDiag($"OnAddToCanvas: _dto={( _dto == null ? "null" : "set") } _fullPath='{_fullPath}' items={_lvVariables.Items.Count}");
+            if (_dto == null || string.IsNullOrEmpty(_fullPath)) { TraceDiag("  early return: _dto null or path empty"); return; }
 
             var selected = new List<string>();
             var proposed = new Dictionary<string, string?>();
@@ -265,7 +271,8 @@ namespace PowerSimBuilder
                     ? c.ProposedComponent
                     : null;
             }
-            if (selected.Count == 0) return;
+            TraceDiag($"OnAddToCanvas: checked={selected.Count} vars=[{string.Join(",", selected)}]");
+            if (selected.Count == 0) { TraceDiag("  early return: selected.Count == 0"); return; }
 
             Result = new PsblogImportResult
             {
@@ -274,7 +281,40 @@ namespace PowerSimBuilder
                 PlaceInferredComponents = _chkPlaceInferred.Checked,
                 ProposedComponents = proposed,
             };
+            TraceDiag($"OnAddToCanvas: Result set (selected={Result.SelectedVariables.Count})");
+            TraceDiag($"OnAddToCanvas: about to set DialogResult (current={DialogResult})");
             DialogResult = DialogResult.OK;
+            TraceDiag($"OnAddToCanvas: DialogResult now={DialogResult}, IsDisposed={IsDisposed}, Visible={Visible}");
+            TraceDiag("OnAddToCanvas: END");
         }
-    }
+    
+        private static void TraceDiag(string msg)
+        {
+            // [v1.10.1] TraceDiag: no-op in Release
+#if DEBUG
+
+            var path = System.Environment.GetEnvironmentVariable("PSB_TRACE_LOG");
+            if (string.IsNullOrEmpty(path)) return;
+            var line = $"[{DateTime.Now:HH:mm:ss.fff}] [tid={System.Threading.Thread.CurrentThread.ManagedThreadId}] {msg}\n";
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                try
+                {
+                    using var fs = new System.IO.FileStream(
+                        path, System.IO.FileMode.Append, System.IO.FileAccess.Write,
+                        System.IO.FileShare.ReadWrite);
+                    var bytes = System.Text.Encoding.UTF8.GetBytes(line);
+                    fs.Write(bytes, 0, bytes.Length);
+                    return;
+                }
+                catch (System.IO.IOException)
+                {
+                    System.Threading.Thread.Sleep(5);
+                }
+                catch { return; }
+            }
+                    #endif
+        }
+
+}
 }

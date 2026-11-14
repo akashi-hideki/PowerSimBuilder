@@ -327,10 +327,40 @@ namespace PowerSimBuilder
             toolStrip1.Items.Add(importPsblogButton);
         }
 
+        private static void TraceDiag(string msg)
+        {
+            // [v1.10.1] TraceDiag: no-op in Release
+#if DEBUG
+
+            var path = System.Environment.GetEnvironmentVariable("PSB_TRACE_LOG");
+            if (string.IsNullOrEmpty(path)) return;
+            var line = $"[{DateTime.Now:HH:mm:ss.fff}] [tid={System.Threading.Thread.CurrentThread.ManagedThreadId}] [MainForm] {msg}\n";
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                try
+                {
+                    using var fs = new System.IO.FileStream(
+                        path, System.IO.FileMode.Append, System.IO.FileAccess.Write,
+                        System.IO.FileShare.ReadWrite);
+                    var bytes = System.Text.Encoding.UTF8.GetBytes(line);
+                    fs.Write(bytes, 0, bytes.Length);
+                    return;
+                }
+                catch (System.IO.IOException)
+                {
+                    System.Threading.Thread.Sleep(5);
+                }
+                catch { return; }
+            }
+                    #endif
+        }
+
         private void importPsblogButton_Click(object? sender, EventArgs e)
         {
             using var dlg = new PsblogImportForm();
-            if (dlg.ShowDialog(this) != DialogResult.OK || dlg.Result == null) return;
+            var _dlgResult = dlg.ShowDialog(this);
+            TraceDiag($"[import] ShowDialog returned {_dlgResult}, Result null? {dlg.Result == null}");
+            if (_dlgResult != DialogResult.OK || dlg.Result == null) return;
 
             var result = dlg.Result;
             var baseDescriptor = ComponentDescriptorDictionary.Descriptors["Recorded Signal"];
@@ -404,6 +434,23 @@ namespace PowerSimBuilder
                 designCanvas1.ComponentAdded -= CaptureAdded;
             }
 
+            // Pattern A diagnostics: log the state right before ArrangeComponents.
+            var _traceLog = System.Environment.GetEnvironmentVariable("PSB_TRACE_LOG");
+            if (!string.IsNullOrEmpty(_traceLog))
+            {
+                try
+                {
+                    var _canvasCount = designCanvas1.Controls.Count;
+                    var _first = designCanvas1.Controls.Count > 0 ? designCanvas1.Controls[0].GetType().Name : "(none)";
+                    System.IO.File.AppendAllText(_traceLog,
+                        $"[{DateTime.Now:HH:mm:ss.fff}] psblogImport: added={added} "
+                        + $"vars={addedVarNames.Count} canvasControls={_canvasCount} first={_first} "
+                        + $"canvasSize={designCanvas1.Width}x{designCanvas1.Height} "
+                        + $"visible={designCanvas1.Visible}\n");
+                }
+                catch { /* diagnostics must not break the flow */ }
+            }
+
             designCanvas1.ArrangeComponents();
 
             // U3: include variable names in the completion message.
@@ -418,6 +465,14 @@ namespace PowerSimBuilder
         {
             var path = Environment.GetEnvironmentVariable("PSB_PSBLOG_IMPORT");
             if (string.IsNullOrEmpty(path)) return;
+            // [v1.10.1] Require explicit E2E flag to avoid accidental auto-open
+            // when a developer forgot to unset PSB_PSBLOG_IMPORT.
+            var e2eFlag = Environment.GetEnvironmentVariable("PSB_E2E_TEST");
+            if (e2eFlag != "1")
+            {
+                Test_Log("PSB_PSBLOG_IMPORT set but PSB_E2E_TEST != 1; skipping auto-open");
+                return;
+            }
             Test_Log("PSB_PSBLOG_IMPORT: " + path);
             BeginInvoke(new Action(() =>
             {

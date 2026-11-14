@@ -85,6 +85,39 @@ def _is_exponential(ts: list[float], ys: list[float]) -> tuple[bool, float]:
     return (r2 > 0.98, r2)
 
 
+def _is_oscillating(ts: list[float], ys: list[float]) -> tuple[bool, int]:
+    """Detect oscillating patterns (triangle / sine / saw).
+
+    Requires 10+ samples, 3+ direction changes, and intermediate values.
+    The `frac_middle > 0.3` check distinguishes continuous oscillation
+    (triangle / sine) from PWM (mostly extremes with few mid values).
+    """
+    if len(ys) < 10:
+        return False, 0
+    rng = max(ys) - min(ys)
+    if rng < 1e-6:
+        return False, 0
+    threshold = 0.05 * rng
+    diffs = [ys[i + 1] - ys[i] for i in range(len(ys) - 1)]
+    sign_changes = 0
+    prev_sign = 0
+    for d in diffs:
+        if abs(d) < threshold:
+            continue
+        s = 1 if d > 0 else -1
+        if prev_sign != 0 and s != prev_sign:
+            sign_changes += 1
+        prev_sign = s
+    if sign_changes < 3:
+        return False, sign_changes
+    lo, hi = min(ys), max(ys)
+    mid_lo = lo + 0.25 * rng
+    mid_hi = hi - 0.25 * rng
+    middle_count = sum(1 for y in ys if mid_lo <= y <= mid_hi)
+    frac_middle = middle_count / len(ys)
+    return frac_middle > 0.3, sign_changes
+
+
 def _classify_shape(ts: list[float], ys: list[float]) -> tuple[str, float, str]:
     if len(ts) < 2:
         return "constant", 0.9, "single sample"
@@ -108,6 +141,10 @@ def _classify_shape(ts: list[float], ys: list[float]) -> tuple[str, float, str]:
     if is_exp:
         return "exponential", 0.85, f"1st-order fit R²={r2_exp:.4f}"
 
+    is_osc, changes = _is_oscillating(ts, ys)
+    if is_osc:
+        return "oscillating", 0.85, f"{changes} direction changes"
+
     if len(jumps) > 5 and _distinct_levels(ys) <= 4:
         return "pwm", 0.85, f"{len(jumps)} jumps, {_distinct_levels(ys)} levels"
 
@@ -123,6 +160,8 @@ def _classify_shape(ts: list[float], ys: list[float]) -> tuple[str, float, str]:
         sxy = sum((ts[i] - mean_t) * (ys[i] - mean_y) for i in range(n))
         slope = sxy / sxx if sxx > 0 else 0.0
         if slope > 0:
+            if rng > 10000:
+                return "ramp", 0.3, f"linear R²={r2_lin:.4f}, range={rng:.0f} (too large)"
             return "ramp", 0.9, f"linear R²={r2_lin:.4f}, slope={slope:.3f}"
 
     return "unknown", 0.3, "no heuristic matched"

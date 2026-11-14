@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.10.1] - 2026-11-14
+
+### Fixed
+
+- `plot_config` emits `ComponentDescriptor.OutputPorts[0]` (e.g. `'value'`
+  for `RecordedSignal`) instead of the hardcoded `'output'`.
+- `GetFirstOutputPortName` reads `ComponentControl.Descriptor` directly.
+- `Add to Canvas` dialog closes reliably; `_btnAddToCanvas.DialogResult`
+  restored; `PSB_E2E_TEST=1` required for auto-open at startup.
+- `PsblogParser` locates repo root from `AppContext.BaseDirectory`.
+- `recorded_signal` export from `components/__init__.py`.
+
+### Added
+
+- `oscillating` waveform category (triangle / sine / saw detection at 0.85).
+- Large-ramp demotion (`range > 10000` → confidence 0.3) to avoid Y-axis domination.
+- Regression tests: `test_components_init.py` (3), `test_recorded_signal_integration.py` (3),
+  `test_signal_classifier.py` oscillating + large ramp (2).
+- `PSB_E2E_TEST=1` guard for `OnPsblogImportTestShown`.
+
+### Changed
+
+- `TraceDiag` in `MainForm` / `PsblogImportForm` is `#if DEBUG` (no-op in Release).
+
+### Testing
+
+- Python: 29 + 5 + 18 + 6 = 58+ pass.
+- C#: 599 + 11 psblog-related pass.
+- UI E2E: 19 (18 pass / 1 skip).
 
 ## [1.10.0] - 2026-11-08
 
