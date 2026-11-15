@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `docs/TUTORIAL_STATABLE_DEMO.ja.md` / `.en.md` — StaTable XML → PSB demo tutorial with role-function control architecture (PID → F_SetTopHeaterDuty → heater).
+
+## [Unreleased]
+
 ## [1.10.1] - 2026-11-14
 
 ### Fixed

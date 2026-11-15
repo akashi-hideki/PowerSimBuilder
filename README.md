@@ -1,4 +1,4 @@
-# PowerSimBuilder
+﻿# PowerSimBuilder
 
 [![CI](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/akashi-hideki/PowerSimBuilder/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -495,6 +495,8 @@ Both tools are intentionally separate so that:
 | [docs/SPEC_PYTHON_RUNTIME.en.md](docs/SPEC_PYTHON_RUNTIME.en.md) | Python runtime setup (English) |
 | [docs/SPEC_PYTHON_RUNTIME.zh.md](docs/SPEC_PYTHON_RUNTIME.zh.md) | Python runtime setup (中文) |
 | [docs/SPEC_ROLE_SNIPPETS.md](docs/SPEC_ROLE_SNIPPETS.md) | Role Snippets SPEC (Register / Insert) |
+| [docs/TUTORIAL_STATABLE_DEMO.ja.md](docs/TUTORIAL_STATABLE_DEMO.ja.md) | StaTable XML → PSB demo tutorial (日本語) |
+| [docs/TUTORIAL_STATABLE_DEMO.en.md](docs/TUTORIAL_STATABLE_DEMO.en.md) | StaTable XML → PSB demo tutorial (English) |
 
 ---
 
