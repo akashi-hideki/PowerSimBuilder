@@ -1,7 +1,7 @@
 # PowerSimBuilder Technical White Paper
 
 **Version**: 1.10
-**Date**: 2026-11-08
+**Date**: 2026-11-15
 **Author**: Hideki Akashi
 **Status**: Confidential — For Evaluation Purposes Only
 
@@ -20,8 +20,8 @@ models (FMU) on a Windows PC before deploying to MCU hardware.
 - **Multi-language** — English / Simplified Chinese
 - **Apache-2.0 licensed** — commercially usable
 
-**Current Status:** v1.10.0 released (2026-11-08).
-- Python tests: 50 passed
+**Current Status:** v1.10.1 released (2026-11-15).
+- Python tests: 58 passed
 - C# tests: 608 passed (2 skipped)
 - UI E2E: 19 passed (1 skipped)
 - RoleSnippet tests: 30 passed

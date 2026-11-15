@@ -1,7 +1,7 @@
 # OSS License Compliance Statement
 
-**Product**: PowerSimBuilder v1.10.0
-**Date**: 2026-11-08
+**Product**: PowerSimBuilder v1.10.1
+**Date**: 2026-11-15
 **Author**: Hideki Akashi
 
 ## Summary
@@ -67,7 +67,7 @@ No third-party binaries are bundled with PowerSimBuilder itself.
 
 ## Conclusion
 
-PowerSimBuilder v1.10.0 can be commercially distributed and sold without
+PowerSimBuilder v1.10.1 can be commercially distributed and sold without
 any OSS license restrictions on its own source code.
 
 

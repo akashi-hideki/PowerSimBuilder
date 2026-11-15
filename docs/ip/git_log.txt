@@ -1,3 +1,9 @@
+0951c57 | 2026-11-15 13:27:12 +0900 | HIdeki.Akashi | docs(tutorial): add Chinese (zh) translation of StaTable XML demo tutorial
+c758c48 | 2026-11-15 13:21:44 +0900 | HIdeki.Akashi | docs(tutorial): add StaTable XML → PSB demo tutorial (ja/en) with role-function control
+0c6db67 | 2026-11-14 22:10:14 +0900 | HIdeki.Akashi | feat(v1.10.1): plot_config port fix + oscillating classifier + large ramp demotion + E2E guard
+4d6a328 | 2026-11-14 20:39:23 +0900 | HIdeki.Akashi | fix(components): export RecordedSignal + UX improvements (descriptive names, center placement, var list in message) + regression tests
+5283dce | 2026-11-14 20:39:10 +0900 | HIdeki.Akashi | fix(psblog): find repo root from AppContext.BaseDirectory + regression test
+2681104 | 2026-11-08 17:50:37 +0900 | HIdeki.Akashi | docs: post-release v1.10.0 (ip refresh + release notes tracked)
 a9edf2e | 2026-11-08 17:45:02 +0900 | HIdeki.Akashi | docs(release): prepare v1.10.0 (README / CHANGELOG / RELEASE_NOTES)
 efa4a06 | 2026-11-08 17:33:29 +0900 | HIdeki.Akashi | feat(psblog): add FlaUI E2E + test hooks + verify_all [4e]
 45c7d32 | 2026-11-08 17:16:34 +0900 | HIdeki.Akashi | feat(ui): add PsblogImportForm + toolbar button + 22 i18n keys
