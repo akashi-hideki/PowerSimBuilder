@@ -497,6 +497,7 @@ Both tools are intentionally separate so that:
 | [docs/SPEC_ROLE_SNIPPETS.md](docs/SPEC_ROLE_SNIPPETS.md) | Role Snippets SPEC (Register / Insert) |
 | [docs/TUTORIAL_STATABLE_DEMO.ja.md](docs/TUTORIAL_STATABLE_DEMO.ja.md) | StaTable XML → PSB demo tutorial (日本語) |
 | [docs/TUTORIAL_STATABLE_DEMO.en.md](docs/TUTORIAL_STATABLE_DEMO.en.md) | StaTable XML → PSB demo tutorial (English) |
+| [docs/TUTORIAL_STATABLE_DEMO.zh.md](docs/TUTORIAL_STATABLE_DEMO.zh.md) | StaTable XML → PSB demo tutorial (中文) |
 
 ---
 
