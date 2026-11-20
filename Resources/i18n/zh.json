@@ -395,5 +395,8 @@
   "PsblogImport.DurationLabel": "时长:",
   "PsblogImport.WarningsLabel": "警告:",
   "PsblogImport.DroppedLabel": "丢弃:",
-  "PsblogImport.CompleteWithVars": "已添加 {0} 个信号:\n{1}"
+  "PsblogImport.CompleteWithVars": "已添加 {0} 个信号:\n{1}",
+  "MainForm.BtnNewProject": "新建项目",
+  "MainForm.NewProjectTitle": "新建项目",
+  "MainForm.MsgConfirmNewProject": "放弃未保存的更改并新建项目？"
 }

@@ -263,6 +263,12 @@ namespace PowerSimBuilder
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            // [v1.10.2] Ctrl+N: New Project
+            if (keyData == (Keys.Control | Keys.N))
+            {
+                newProjectButton_Click(this, EventArgs.Empty);
+                return true;
+            }
             if (keyData == (Keys.Control | Keys.Shift | Keys.D))
             {
                 I18nDumpUi.DumpAllForms();
@@ -325,6 +331,16 @@ namespace PowerSimBuilder
             };
             importPsblogButton.Click += importPsblogButton_Click;
             toolStrip1.Items.Add(importPsblogButton);
+
+            // [v1.10.2] New Project button (leftmost)
+            var newProjectButton = new ToolStripButton
+            {
+                Name = "newProjectButton",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Text = I18n.T("MainForm.BtnNewProject"),
+            };
+            newProjectButton.Click += newProjectButton_Click;
+            toolStrip1.Items.Insert(0, newProjectButton);
         }
 
         private static void TraceDiag(string msg)
@@ -353,6 +369,25 @@ namespace PowerSimBuilder
                 catch { return; }
             }
                     #endif
+        }
+
+        /// <summary>
+        /// [v1.10.2] Start a fresh project: clear Canvas / connections / state.
+        /// Prompts to discard unsaved changes when IsModified is true.
+        /// </summary>
+        private void newProjectButton_Click(object? sender, EventArgs e)
+        {
+            if (_canvasManager.IsModified)
+            {
+                var result = MessageBox.Show(this,
+                    I18n.T("MainForm.MsgConfirmNewProject"),
+                    I18n.T("MainForm.NewProjectTitle"),
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (result != DialogResult.Yes) return;
+            }
+
+            _canvasManager.Clear();  // clears _components, _connections, Canvas, IsModified=false
+            UpdateSaveStatus();
         }
 
         private void importPsblogButton_Click(object? sender, EventArgs e)

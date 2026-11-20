@@ -395,5 +395,8 @@
   "PsblogImport.DurationLabel": "Duration:",
   "PsblogImport.WarningsLabel": "Warnings:",
   "PsblogImport.DroppedLabel": "Dropped:",
-  "PsblogImport.CompleteWithVars": "{0} signal(s) added:\n{1}"
+  "PsblogImport.CompleteWithVars": "{0} signal(s) added:\n{1}",
+  "MainForm.BtnNewProject": "New Project",
+  "MainForm.NewProjectTitle": "New Project",
+  "MainForm.MsgConfirmNewProject": "Discard unsaved changes and start a new project?"
 }
