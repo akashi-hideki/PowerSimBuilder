@@ -93,7 +93,9 @@ namespace PowerSimBuilder
         public static ComponentDescriptor Build(
             string projectName,
             string generatedPyPath,
-            string sourceXmlPath = null)
+            string sourceXmlPath = null,
+            IReadOnlyList<string> selectedInputs = null,
+            IReadOnlyList<string> selectedOutputs = null)
         {
             if (string.IsNullOrWhiteSpace(projectName))
                 throw new ArgumentException("projectName is empty", nameof(projectName));
@@ -104,6 +106,12 @@ namespace PowerSimBuilder
 
             var py = File.ReadAllText(generatedPyPath, Encoding.UTF8);
             var (inputs, outputs) = ExtractPorts(py);
+
+            // Port selection override (docs/SPEC_PORT_SELECTION.md §3.2)
+            // null   = 旧挙動（Auto extract の結果をそのまま使用）
+            // 非 null = ユーザー選択で上書き（空リスト = 明示的にポート無し）
+            if (selectedInputs != null)  inputs  = new List<string>(selectedInputs);
+            if (selectedOutputs != null) outputs = new List<string>(selectedOutputs);
 
             var parameters = new List<ParameterDescriptor>
             {
