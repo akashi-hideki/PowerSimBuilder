@@ -199,4 +199,14 @@ dotnet build 2>&1 | Select-Object -Last 3
 | 116 | `PortSelectorControl.ItemCheck` 内の `BeginInvoke` が handle 未生成時（`ShowDialog` 前の `SetItemChecked`）に `InvalidOperationException` を投げ、`catch` で握り潰されて無音で PythonEditor へ進む | `if (IsHandleCreated)` ガードで解決（`patch_p2a_fix.py`）。catch は `MessageBox.Show` に変更し可視化（文言整理は v1.10.2 で） |
 | 117 | SPEC 記載（`parts/StaTableImportForm.cs`）と実体（`StaTableIntegration/StaTableImportForm.cs`）の乖離、および「XML パース直後にポート選択」の記述が実装（Save → 選択）と不整合 | SPEC 修正は v1.10.2 リリース時にまとめて対応 |
 | 0 | **P2b: MainForm 統合** — `CanvasForm\MainForm.cs:1695` の `Build(...)` に `SelectedInputPorts` / `SelectedOutputPorts` を渡す | S (30m) | 即時 |
+## 🎉 P2 完了（2026-11-21）
+
+| Phase | 状態 | コミット |
+|---|---|---|
+| P1 PortSelectorControl | ✅ | de114d9 |
+| P4 Build 拡張 | ✅ | 6a10b76 |
+| P2a ダイアログ統合 | ✅ | de114d9 |
+| P2a fix（BeginInvoke ガード） | ✅ | add2582 |
+| **P2b MainForm 統合** | ✅ | `<新ハッシュ>` |
+
 *最終更新: 2026-11-21 / v1.10.1 public 公開完了 + New Project コミット済み（15786bf）+ ポート選択 SPEC コミット済み*

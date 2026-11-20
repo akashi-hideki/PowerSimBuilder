@@ -1692,8 +1692,12 @@ namespace PowerSimBuilder
                     var srcXml = form.ImportedSourceXmlPath;
                     if (project == null || string.IsNullOrEmpty(genPath)) return;
 
+                    // P2b: forward port selection (null = 旧挙動 auto extract)
+                    var selectedInputs  = form.SelectedInputPorts;
+                    var selectedOutputs = form.SelectedOutputPorts;
+
                     var descriptor = ControllerBoxDescriptorBuilder.Build(
-                        project.Name, genPath, srcXml);
+                        project.Name, genPath, srcXml, selectedInputs, selectedOutputs);
 
                     // 既存チェック（同じプロジェクト名があれば上書き）
                     var existing = componentPalette1.AvailableComponents
