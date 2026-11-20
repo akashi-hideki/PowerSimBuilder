@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
@@ -32,6 +33,12 @@ namespace PowerSimBuilder
 
         /// <summary>取り込み元 XML の絶対パス (Task 3-C-6)</summary>
         public string ImportedSourceXmlPath { get; private set; }
+
+        /// <summary>P2: ユーザーが選択した Input ポート (null = 旧挙動 auto extract)</summary>
+        public IReadOnlyList<string> SelectedInputPorts { get; private set; }
+
+        /// <summary>P2: ユーザーが選択した Output ポート (null = 旧挙動 auto extract)</summary>
+        public IReadOnlyList<string> SelectedOutputPorts { get; private set; }
 
         // ==============================================================
         // Browse
@@ -168,6 +175,31 @@ namespace PowerSimBuilder
                 try
                 {
                     _generator.GenerateToFile(_currentProject, dlg.FileName);
+
+                    // P2a: PortSelectorDialog (docs/SPEC_PORT_SELECTION.md §2.1)
+                    // Cancel = null (旧挙動 auto extract) にフォールバック
+                    try
+                    {
+                        var pyText = File.ReadAllText(dlg.FileName, Encoding.UTF8);
+                        var globals = ControllerBoxDescriptorBuilder.ExtractGlobalsForSelection(pyText);
+                        if (PortSelectorDialog.TrySelect(this, globals, null, null,
+                                out var selIn, out var selOut))
+                        {
+                            SelectedInputPorts  = selIn;
+                            SelectedOutputPorts = selOut;
+                        }
+                        else
+                        {
+                            SelectedInputPorts  = null;
+                            SelectedOutputPorts = null;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("PortSelectorDialog failed: " + ex);
+                        SelectedInputPorts  = null;
+                        SelectedOutputPorts = null;
+                    }
                     // Task 3-C-6: MainForm が Descriptor を生成できるように公開
                     ImportedProject = _currentProject;
                     ImportedGeneratedPath = System.IO.Path.GetFullPath(dlg.FileName);

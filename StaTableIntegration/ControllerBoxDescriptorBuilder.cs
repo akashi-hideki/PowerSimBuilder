@@ -154,6 +154,26 @@ namespace PowerSimBuilder
             return ExtractFromGlobalVariables(pySource);
         }
 
+        /// <summary>
+        /// PortSelector 用: 3 段の抽出すべてを統合した「全 globals 候補」を返す。
+        /// SPEC: docs/SPEC_PORT_SELECTION.md §3.2 / §4
+        /// </summary>
+        public static IReadOnlyList<string> ExtractGlobalsForSelection(string pySource)
+        {
+            if (string.IsNullOrEmpty(pySource)) return Array.Empty<string>();
+            var set = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+            try { var (i1, o1) = ExtractFromGlobalsAccess(pySource);
+                  if (i1 != null) foreach (var s in i1) set.Add(s);
+                  if (o1 != null) foreach (var s in o1) set.Add(s); } catch { }
+            try { var (i2, o2) = ExtractFromPortHints(pySource);
+                  if (i2 != null) foreach (var s in i2) set.Add(s);
+                  if (o2 != null) foreach (var s in o2) set.Add(s); } catch { }
+            try { var (i3, o3) = ExtractFromGlobalVariables(pySource);
+                  if (i3 != null) foreach (var s in i3) set.Add(s);
+                  if (o3 != null) foreach (var s in o3) set.Add(s); } catch { }
+            return new List<string>(set);
+        }
+
         private static (List<string> inputs, List<string> outputs) ExtractFromGlobalsAccess(string pySource)
         {
             var readVars = new HashSet<string>(StringComparer.Ordinal);

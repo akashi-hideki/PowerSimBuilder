@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace StaTableIntegration
+namespace PowerSimBuilder
 {
     /// <summary>
     /// ControllerBox の Input/Output ポートを globals 候補から選択する UserControl。
