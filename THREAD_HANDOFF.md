@@ -195,5 +195,8 @@ dotnet build 2>&1 | Select-Object -Last 3
 | `tests/data/scenarios/cooking_heater/cooking_heater_controller.xml` | 対象 XML |
 
 ---
-
+| 115 | パッチ適用後 `dotnet build` を忘れ、旧バイナリで GUI 検証して「変更が反映されない」と誤認（バイナリ `8:17:24` / ソース `8:28:34` のタイムスタンプ乖離で判明、解決に 30 分） | パッチ後は必ず `dotnet build` → `Get-Item .\bin\Debug\net10.0-windows\PowerSimBuilder.exe \| Select LastWriteTime` で時刻確認 → GUI 起動 |
+| 116 | `PortSelectorControl.ItemCheck` 内の `BeginInvoke` が handle 未生成時（`ShowDialog` 前の `SetItemChecked`）に `InvalidOperationException` を投げ、`catch` で握り潰されて無音で PythonEditor へ進む | `if (IsHandleCreated)` ガードで解決（`patch_p2a_fix.py`）。catch は `MessageBox.Show` に変更し可視化（文言整理は v1.10.2 で） |
+| 117 | SPEC 記載（`parts/StaTableImportForm.cs`）と実体（`StaTableIntegration/StaTableImportForm.cs`）の乖離、および「XML パース直後にポート選択」の記述が実装（Save → 選択）と不整合 | SPEC 修正は v1.10.2 リリース時にまとめて対応 |
+| 0 | **P2b: MainForm 統合** — `CanvasForm\MainForm.cs:1695` の `Build(...)` に `SelectedInputPorts` / `SelectedOutputPorts` を渡す | S (30m) | 即時 |
 *最終更新: 2026-11-21 / v1.10.1 public 公開完了 + New Project コミット済み（15786bf）+ ポート選択 SPEC コミット済み*

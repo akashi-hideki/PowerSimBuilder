@@ -196,7 +196,9 @@ namespace PowerSimBuilder
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine("PortSelectorDialog failed: " + ex);
+                        MessageBox.Show(this,
+                            "PortSelectorDialog failed (P2a diagnostic):\n\n" + ex.ToString(),
+                            "P2a diagnostic", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         SelectedInputPorts  = null;
                         SelectedOutputPorts = null;
                     }

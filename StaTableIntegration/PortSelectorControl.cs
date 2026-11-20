@@ -72,7 +72,7 @@ namespace PowerSimBuilder
                 IntegralHeight = false,
                 SelectionMode = SelectionMode.One,
             };
-            _lstInputs.ItemCheck += (s, e) => BeginInvoke((Action)(() => RaiseSelectionChanged()));
+            _lstInputs.ItemCheck += (s, e) => { if (IsHandleCreated) BeginInvoke((Action)(() => RaiseSelectionChanged())); };
 
             // 順序: Fill → Bottom → Top (WinForms の dock 順序)
             pnlIn.Controls.Add(_lstInputs);
@@ -114,7 +114,7 @@ namespace PowerSimBuilder
                 IntegralHeight = false,
                 SelectionMode = SelectionMode.One,
             };
-            _lstOutputs.ItemCheck += (s, e) => BeginInvoke((Action)(() => RaiseSelectionChanged()));
+            _lstOutputs.ItemCheck += (s, e) => { if (IsHandleCreated) BeginInvoke((Action)(() => RaiseSelectionChanged())); };
 
             pnlOut.Controls.Add(_lstOutputs);
             pnlOut.Controls.Add(btnOutRow);
