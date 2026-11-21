@@ -234,7 +234,8 @@ namespace PowerSimBuilder
             if (IsExcluded(name)) return false;
             if (name.StartsWith("thermistor_", StringComparison.Ordinal)) return true;
             if (name.EndsWith("_sensor", StringComparison.Ordinal)) return true;
-            if (name.Contains("_current_")) return true;
+            if (name.Contains("_current_") ||
+                name.EndsWith("_current", StringComparison.Ordinal)) return true;
             if (name.StartsWith("door_", StringComparison.Ordinal)) return true;
             if (name.EndsWith("_command", StringComparison.Ordinal)) return true;
             if (name.EndsWith("_setpoint", StringComparison.Ordinal)) return true;

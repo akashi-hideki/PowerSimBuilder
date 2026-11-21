@@ -208,5 +208,28 @@ dotnet build 2>&1 | Select-Object -Last 3
 | P2a ダイアログ統合 | ✅ | de114d9 |
 | P2a fix（BeginInvoke ガード） | ✅ | add2582 |
 | **P2b MainForm 統合** | ✅ | `<新ハッシュ>` |
+## 🎉 P2 完了（2026-11-21）
 
+| Phase | 状態 | コミット |
+|---|---|---|
+| P1 PortSelectorControl | ✅ | de114d9 |
+| P4 Build 拡張 | ✅ | 6a10b76 |
+| P2a ダイアログ統合 | ✅ | de114d9 |
+| P2a fix（BeginInvoke ガード） | ✅ | add2582 |
+| **P2b MainForm 統合** | ✅ | `<新ハッシュ>` |
+| **P5 Auto-suggest（_current 末尾対応）** | ✅ | `<新ハッシュ>` |
+| **P7.1 定量テスト（61 PASS）** | ✅ | `<新ハッシュ>` |
+
+### 定量テスト結果（P7.1）
+
+| カテゴリ | ケース数 | 結果 |
+|---|---|---|
+| SuggestAsInput（SPEC §4.1） | 17 | ✅ |
+| SuggestAsOutput（SPEC §4.2） | 12 | ✅ |
+| IsExcluded（SPEC §4.3） | 12 | ✅ |
+| 相互排他性 | 6 | ✅ |
+| 除外 = Input/Output 両方 false | 5 | ✅ |
+| Build の explicit/null/empty/片側null | 6 | ✅ |
+| ExtractGlobalsForSelection | 3 | ✅ |
+| **合計** | **61** | **61/61** |
 *最終更新: 2026-11-21 / v1.10.1 public 公開完了 + New Project コミット済み（15786bf）+ ポート選択 SPEC コミット済み*
