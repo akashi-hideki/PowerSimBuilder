@@ -298,4 +298,34 @@ port_selection_version = [1]
 ### 次タスク
 - **v1.10.2 リリース準備**（バイナリ → タグ → リリースノート → 告知）
 
-*最終更新: 2026-11-21 / v1.10.1 public 公開完了 + New Project コミット済み（15786bf）+ ポート選択 SPEC コミット済み*
+## 🎉 Palette Import 連携完了（2026-11-22）
+`.psblog` Import で取り込んだ RecordedSignal をパレットに自動登録し、他プロジェクトで再利用可能に。
+
+### 変更内容（パッチ `tmp/patch_palette_import.py` 適用）
+| # | 変更 | 場所 |
+|:---:|---|---|
+| A1 | `PsblogImportResult.AddToPalette` フィールド追加 | `parts/PsblogImportForm.cs` |
+| A2 | `_chkAddToPalette` チェックボックス（既定 ON）宣言 | 同上 |
+| A3 | `_chkAddToPalette` 初期化ブロック追加 | 同上 |
+| A4 | `bottomPanel.Controls.AddRange` に `_chkAddToPalette` 追加 | 同上 |
+| A5 | `OnAddToCanvas` で `Result.AddToPalette` をセット | 同上 |
+| B1 | `importPsblogButton_Click` にパレット一括登録ブロック挿入 | `CanvasForm/MainForm.cs` |
+| C-en | `PsblogImport.AddToPalette` = "Also add to palette" | `Resources/i18n/en.json` |
+| C-zh | `PsblogImport.AddToPalette` = "也添加到调色板" | `Resources/i18n/zh.json` |
+
+### 設計
+- **Category**: 新規 `"Signal Log"` カテゴリ（既存 `"Source"` とは別）
+- **重複 Name 戦略**: `RecordedSignal [var]` → `(2)`, `(3)` ... サフィックス自動付与
+- **upsert パターン**: `staTableImportButton_Click` の単純追加版を踏襲（既存チェック → AddComponent → SaveDescriptors）
+- **パッチ適用ツール**: `tmp/patch_palette_import.py`（Python 製・冪等・バックアップ付き）
+
+### 検証結果
+| 項目 | 結果 |
+|---|---|
+| パッチ適用 | 8/8 APPLIED |
+| ビルド | 0 エラー / 9 警告 |
+| 回帰テスト | 599 passed / 2 skipped / 0 failed（ベースライン同等） |
+| 手動確認 | パレットに `Signal Log` カテゴリ表示、`RecordedSignal [var]` 追加、再起動後も永続化、新規プロジェクトでドラッグ＆ドロップ可能 |
+
+
+*最終更新: 2026-11-22 / v1.10.2 リリース（psblog Import のパレット連携追加）*

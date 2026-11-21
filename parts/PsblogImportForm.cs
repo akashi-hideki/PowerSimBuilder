@@ -13,6 +13,7 @@ namespace PowerSimBuilder
         public string PsblogPath { get; init; } = "";
         public IReadOnlyList<string> SelectedVariables { get; init; } = Array.Empty<string>();
         public bool PlaceInferredComponents { get; init; }
+        public bool AddToPalette { get; init; }
         public IReadOnlyDictionary<string, string?> ProposedComponents { get; init; }
             = new Dictionary<string, string?>();
     }
@@ -33,6 +34,7 @@ namespace PowerSimBuilder
         private readonly GroupBox _gbVars;
         private readonly ListView _lvVariables;
         private readonly CheckBox _chkPlaceInferred;
+        private readonly CheckBox _chkAddToPalette;
         private readonly Button _btnCancel;
         private readonly Button _btnAddToCanvas;
 
@@ -120,6 +122,13 @@ namespace PowerSimBuilder
                 Location = new Point(10, 18),
                 AutoSize = true,
             };
+            _chkAddToPalette = new CheckBox
+            {
+                Text = I18n.T("PsblogImport.AddToPalette"),
+                Location = new Point(260, 18),
+                AutoSize = true,
+                Checked = true,
+            };
             _btnCancel = new Button
             {
                 Name = "BtnCancel",
@@ -138,8 +147,7 @@ namespace PowerSimBuilder
                 DialogResult = DialogResult.OK,
             };
             _btnAddToCanvas.Click += OnAddToCanvas;
-            bottomPanel.Controls.AddRange(new Control[] { _chkPlaceInferred, _btnCancel, _btnAddToCanvas });
-
+            bottomPanel.Controls.AddRange(new Control[] { _chkPlaceInferred, _chkAddToPalette, _btnCancel, _btnAddToCanvas });
             // Docking order: fill added first, then bottom, then top (last wins for Top).
             Controls.Add(_gbVars);
             Controls.Add(bottomPanel);
@@ -279,6 +287,7 @@ namespace PowerSimBuilder
                 PsblogPath = _fullPath,
                 SelectedVariables = selected,
                 PlaceInferredComponents = _chkPlaceInferred.Checked,
+                AddToPalette = _chkAddToPalette.Checked,
                 ProposedComponents = proposed,
             };
             TraceDiag($"OnAddToCanvas: Result set (selected={Result.SelectedVariables.Count})");

@@ -486,6 +486,49 @@ namespace PowerSimBuilder
                 catch { /* diagnostics must not break the flow */ }
             }
 
+            // === [v1.10.x] パレットへの一括登録 ===
+            if (result.AddToPalette && addedVarNames.Count > 0)
+            {
+                int paletteAdded = 0;
+                foreach (var varName in addedVarNames)
+                {
+                    var palParams = new System.Collections.Generic.List<ParameterDescriptor>();
+                    foreach (var p in baseDescriptor.Parameters)
+                    {
+                        palParams.Add(new ParameterDescriptor
+                        {
+                            Name = p.Name,
+                            Type = p.Type,
+                            DefaultValue = p.Name == "psblog_path" ? (object)result.PsblogPath
+                                         : p.Name == "var_name" ? (object)varName
+                                         : p.DefaultValue,
+                        });
+                    }
+                    string baseName = "RecordedSignal [" + varName + "]";
+                    string uniqueName = baseName;
+                    int suffix = 2;
+                    while (componentPalette1.AvailableComponents.Any(d =>
+                        string.Equals(d.Name, uniqueName, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        uniqueName = baseName + " (" + suffix + ")";
+                        suffix++;
+                    }
+                    var palDescriptor = new ComponentDescriptor
+                    {
+                        Name = uniqueName,
+                        Type = baseDescriptor.Type,
+                        Category = "Signal Log",
+                        Parameters = palParams,
+                        InputPorts = baseDescriptor.InputPorts,
+                        OutputPorts = baseDescriptor.OutputPorts,
+                    };
+                    componentPalette1.AddComponent(palDescriptor);
+                    paletteAdded++;
+                }
+                ComponentPaletteStorage.SaveDescriptors(componentPalette1.AvailableComponents);
+                TraceDiag($"[import] palette added: {paletteAdded}");
+            }
+            
             designCanvas1.ArrangeComponents();
 
             // U3: include variable names in the completion message.

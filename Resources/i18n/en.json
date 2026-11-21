@@ -387,6 +387,7 @@
   "PsblogImport.PlaceInferred": "Place inferred components",
   "PsblogImport.Cancel": "Cancel",
   "PsblogImport.AddToCanvas": "Add to Canvas",
+  "PsblogImport.AddToPalette": "Also add to palette",
   "PsblogImport.Complete": "{0} signal(s) added.",
   "PsblogImport.ErrorParse": "Failed to parse: {0}",
   "PsblogImport.WarnDropped": "{0} samples dropped",

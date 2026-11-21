@@ -387,6 +387,7 @@
   "PsblogImport.PlaceInferred": "同时放置推定组件",
   "PsblogImport.Cancel": "取消",
   "PsblogImport.AddToCanvas": "添加到画布",
+  "PsblogImport.AddToPalette": "也添加到调色板",
   "PsblogImport.Complete": "已添加 {0} 个信号。",
   "PsblogImport.ErrorParse": "解析失败: {0}",
   "PsblogImport.WarnDropped": "{0} 个样本丢失",
