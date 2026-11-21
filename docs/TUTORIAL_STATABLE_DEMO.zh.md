@@ -84,7 +84,12 @@ cd C:\\dev\\PowerSimBuilder
 
 **预期**: Canvas 上出现 **`Controller Box`** 组件。
 
-> **注意**: `Controller Box` 的端口由 StaTable XML 自动派生。包括 `heater_command` (输入)、`heater_top_duty` (输出)、`oven_current_temp` (输入)、`error_code` (输出) 等。
+> **v1.10.2 Port Selection**: 在 XML 导入对话框中点击 **Generate** 后，
+> 会显示 **Port Selection Dialog**。可从 `globals` 变量中通过复选框选择输入/输出端口
+> （Auto-suggest 会预先勾选 `thermistor_*` → Input、`*_duty` → Output 等模式）。
+>
+> **旧行为 (v1.10.1 及更早)**: 端口仅由 StaTable XML 自动派生。当 role 函数为空桩时，
+> 端口数不足 (Trap #64)。详见 `docs/SPEC_PORT_SELECTION.md`。
 
 ### Step 3: 放置物理模型
 
@@ -221,6 +226,7 @@ def F_CheckOvenOverheat(self):
 | 方法 | 步骤 | 难度 |
 |---|---|---|
 | **(a) 编辑 XML** | 在 StaTable GUI 中，将 `F_SetTopHeaterDuty` 添加到 `PidHeating` 状态的 `do` 动作 → 重新导出 XML → PSB 重新导入 → 重新生成 ControllerBox | 中 |
+| **(a') 端口重选** (v1.10.2+) | 在画布上**右键点击** ControllerBox → **"Select Ports..."** 可增删端口（无需编辑 XML 或重新导入） | 易 |
 | **(b) 编辑生成的 Python** | 在 `generated/CookingHeaterController_powersim.py` 的主循环中添加 `self.F_SetTopHeaterDuty()` 等 | 中 |
 | **(c) 使用 Gating** | 不使用 role 函数，通过 `gate_layer` / `gate_states` 控制 | 易 |
 
@@ -341,6 +347,10 @@ examples\\demos\\my_oven_demo.psbproj
 ### 5.2 加载
 
 选择 **File → Open**，选中 `.psbproj`。
+
+> **v1.10.2**: 端口选择结果 (`selected_input_ports` / `selected_output_ports`)
+> 也会保存到 `.psbproj` 中。重新加载项目时，上次的选择会被恢复，
+> 因此可以在相同的端口配置下继续作业。
 
 ---
 

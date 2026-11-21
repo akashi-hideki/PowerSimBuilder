@@ -90,7 +90,14 @@ Press **Ctrl+N** or choose **File → New Project**.
 
 **Expected**: A **`Controller Box`** component appears on the Canvas.
 
-> **Note**: `Controller Box` ports are derived from the StaTable XML. They include `heater_command` (input), `heater_top_duty` (output), `oven_current_temp` (input), `error_code` (output), etc.
+> **v1.10.2 Port Selection**: After clicking **Generate** on the XML import dialog,
+> a **Port Selection Dialog** appears. You can select input/output ports from the
+> `globals` variables via checkboxes. Auto-suggest pre-checks patterns such as
+> `thermistor_*` → Input, `*_duty` → Output.
+>
+> **Legacy behavior (v1.10.1 and earlier)**: Ports were auto-derived from StaTable XML
+> only. When role functions were empty stubs, the port count was insufficient
+> (Trap #64). See `docs/SPEC_PORT_SELECTION.md` for details.
 
 ### Step 3: Place physical models
 
@@ -227,6 +234,7 @@ If the StaTable XML `PidHeating` state has an empty `do` action, role functions 
 | Method | Steps | Difficulty |
 |---|---|---|
 | **(a) Edit XML** | In StaTable GUI, add `F_SetTopHeaterDuty` to `PidHeating` state's `do` action → re-export XML → re-import in PSB → regenerate ControllerBox | Medium |
+| **(a') Re-select ports** (v1.10.2+) | **Right-click** the ControllerBox on the canvas → **"Select Ports..."** to add or remove ports (no XML edit or re-import needed) | Easy |
 | **(b) Edit generated Python** | Add `self.F_SetTopHeaterDuty()` etc. to `generated/CookingHeaterController_powersim.py` main loop | Medium |
 | **(c) Use gating** | Use `gate_layer` / `gate_states` instead of role functions | Easy |
 
@@ -347,6 +355,10 @@ examples\\demos\\my_oven_demo.psbproj
 ### 5.2 Load
 
 **File → Open** and select the `.psbproj`.
+
+> **v1.10.2**: Port selection (`selected_input_ports` / `selected_output_ports`)
+> is also persisted in `.psbproj`. When you reload the project, the previous
+> selection is restored, so you can continue with the same port configuration.
 
 ---
 

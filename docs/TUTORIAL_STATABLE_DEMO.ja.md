@@ -90,7 +90,14 @@ cd C:\\dev\\PowerSimBuilder
 
 **期待**: Canvas 上に **`Controller Box`** コンポーネントが配置される。
 
-> **注意**: `Controller Box` のポートは StaTable XML から自動導出されます。`heater_command` (入力)、`heater_top_duty` (出力)、`oven_current_temp` (入力)、`error_code` (出力) などが含まれます。
+> **v1.10.2 Port Selection**: XML インポートで **Generate** を押すと、
+> **Port Selection Dialog** が表示されます。`globals` 変数から入出力ポートを
+> チェックボックスで選択できます（Auto-suggest により `thermistor_*` → Input、
+> `*_duty` → Output 等が初期選択されます）。
+>
+> **旧挙動 (v1.10.1 以前)**: ポートは StaTable XML から自動導出のみ。role 関数が
+> 空スタブの場合にポート数が不足する問題 (Trap #64) がありました。
+> 詳細は `docs/SPEC_PORT_SELECTION.md` を参照。
 
 ### Step 3: 物理モデルの配置
 
@@ -227,6 +234,7 @@ StaTable XML の `PidHeating` 状態に `do` アクションが空の場合、ro
 | 方法 | 手順 | 難易度 |
 |---|---|---|
 | **(a) XML 編集** | StaTable GUI で `PidHeating` の `do` に `F_SetTopHeaterDuty` を追加 → XML 再出力 → PSB 再インポート → ControllerBox 再生成 | 中 |
+| **(a') ポート再選択** (v1.10.2+) | キャンバス上の ControllerBox を **右クリック →「Select Ports...」** でポートを追加・削除（XML 編集・再インポート不要） | 易 |
 | **(b) 生成 Python 編集** | `generated/CookingHeaterController_powersim.py` の main loop に `self.F_SetTopHeaterDuty()` 等を追加 | 中 |
 | **(c) Gating 使用** | Role 関数を使わず、`gate_layer` / `gate_states` で制御 | 易 |
 
@@ -347,6 +355,10 @@ examples\\demos\\my_oven_demo.psbproj
 ### 5.2 ロード
 
 **File → Open** で `.psbproj` を選択。
+
+> **v1.10.2**: ポート選択結果 (`selected_input_ports` / `selected_output_ports`) も
+> `.psbproj` に保存されます。再ロード時に前回の選択が復元されるため、
+> 同じプロジェクトを開けば同じポート構成で作業を継続できます。
 
 ---
 
