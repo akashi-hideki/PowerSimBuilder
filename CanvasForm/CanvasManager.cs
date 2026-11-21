@@ -380,10 +380,11 @@ namespace PowerSimBuilder
                 // パラメータ復元
                 foreach (var param in compModel.Parameters)
                 {
-                    if (component.Parameters.ContainsKey(param.Key))
-                    {
-                        component.Parameters[param.Key] = param.Value;
-                    }
+                    // P6: restore persisted params unconditionally.
+                    // Previously gated by ContainsKey which dropped keys
+                    // not present in Descriptor.Parameters
+                    // (e.g., selected_input_ports / selected_output_ports).
+                    component.Parameters[param.Key] = param.Value;
                 }
 
                 _components.Add(component);
@@ -484,10 +485,11 @@ namespace PowerSimBuilder
                 // パラメータ復元
                 foreach (var param in compModel.Parameters)
                 {
-                    if (component.Parameters.ContainsKey(param.Key))
-                    {
-                        component.Parameters[param.Key] = param.Value;
-                    }
+                    // P6: restore persisted params unconditionally.
+                    // Previously gated by ContainsKey which dropped keys
+                    // not present in Descriptor.Parameters
+                    // (e.g., selected_input_ports / selected_output_ports).
+                    component.Parameters[param.Key] = param.Value;
                 }
                 _components.Add(component);
             }

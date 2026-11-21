@@ -129,6 +129,37 @@ namespace PowerSimBuilder
                 },
             };
 
+        // P4.2: persist port selection into Parameters so that .psbproj
+        // round-trips work even without an explicit right-click edit.
+        if (selectedInputs != null)
+        {
+            parameters.Add(new ParameterDescriptor
+            {
+                Name = "selected_input_ports",
+                Type = "string",
+                DefaultValue = string.Join(",", selectedInputs),
+            });
+        }
+        if (selectedOutputs != null)
+        {
+            parameters.Add(new ParameterDescriptor
+            {
+                Name = "selected_output_ports",
+                Type = "string",
+                DefaultValue = string.Join(",", selectedOutputs),
+            });
+        }
+        if (selectedInputs != null || selectedOutputs != null)
+        {
+            parameters.Add(new ParameterDescriptor
+            {
+                Name = "port_selection_version",
+                Type = "string",
+                DefaultValue = "1",
+            });
+        }
+
+
             return new ComponentDescriptor
             {
                 Name = projectName,

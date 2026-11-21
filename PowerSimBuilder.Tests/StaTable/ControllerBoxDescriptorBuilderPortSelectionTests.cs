@@ -181,5 +181,65 @@ namespace PowerSimBuilder.Tests.StaTable
             var g = ControllerBoxDescriptorBuilder.ExtractGlobalsForSelection(null);
             Assert.Empty(g);
         }
-    }
+    
+        // ==== P4.2: ParameterDescriptor entries carry selected_*_ports ====
+
+        [Fact]
+        public void Build_WithExplicitSelection_AddsSelectedPortsToParameters()
+        {
+            var py = WriteTempPy();
+            try
+            {
+                var ins = new List<string> { "thermistor_top", "door_open" };
+                var outs = new List<string> { "heater_top_duty" };
+                var desc = ControllerBoxDescriptorBuilder.Build(
+                    "proj", py, null, ins, outs);
+
+                var inParam  = desc.Parameters.FirstOrDefault(p => p.Name == "selected_input_ports");
+                var outParam = desc.Parameters.FirstOrDefault(p => p.Name == "selected_output_ports");
+                var verParam = desc.Parameters.FirstOrDefault(p => p.Name == "port_selection_version");
+
+                Assert.NotNull(inParam);
+                Assert.NotNull(outParam);
+                Assert.NotNull(verParam);
+                Assert.Equal("thermistor_top,door_open", inParam.DefaultValue?.ToString());
+                Assert.Equal("heater_top_duty", outParam.DefaultValue?.ToString());
+                Assert.Equal("1", verParam.DefaultValue?.ToString());
+            }
+            finally { File.Delete(py); }
+        }
+
+        [Fact]
+        public void Build_WithNullSelection_DoesNotAddSelectedPortsParams()
+        {
+            var py = WriteTempPy();
+            try
+            {
+                var desc = ControllerBoxDescriptorBuilder.Build("proj", py, null, null, null);
+                Assert.DoesNotContain(desc.Parameters, p => p.Name == "selected_input_ports");
+                Assert.DoesNotContain(desc.Parameters, p => p.Name == "selected_output_ports");
+                Assert.DoesNotContain(desc.Parameters, p => p.Name == "port_selection_version");
+            }
+            finally { File.Delete(py); }
+        }
+
+        [Fact]
+        public void Build_WithEmptySelection_AddsEmptyCsvParams()
+        {
+            var py = WriteTempPy();
+            try
+            {
+                var desc = ControllerBoxDescriptorBuilder.Build(
+                    "proj", py, null, new List<string>(), new List<string>());
+                var inParam  = desc.Parameters.FirstOrDefault(p => p.Name == "selected_input_ports");
+                var outParam = desc.Parameters.FirstOrDefault(p => p.Name == "selected_output_ports");
+
+                Assert.NotNull(inParam);
+                Assert.NotNull(outParam);
+                Assert.Equal("", inParam.DefaultValue?.ToString());
+                Assert.Equal("", outParam.DefaultValue?.ToString());
+            }
+            finally { File.Delete(py); }
+        }
+}
 }

@@ -179,7 +179,13 @@ dotnet build 2>&1 | Select-Object -Last 3
 | 113 | `code code file.py` 誤タイプで `code` ファイルが作成・コミットされる | `gcommit.ps1` ホワイトリスト化（v1.10.2 候補）、または `.gitignore` に `/code` |
 | 114 | Stage 1 の `self.globals[...]` 抽出は role 関数が空スタブだと過少（3 ポート等）。Trap #64 の別側面 | `PortSelectorControl` でユーザー選択（本 SPEC で解決予定） |
 | 115 | 長い Markdown / Python スクリプトをチャット描画ビューからコピーすると、`*-`→`--` 変換や末尾欠落が起きる | VSCode で**直接 .md として保存**（`code <file>` + 貼り付け + Ctrl+S）。Python スクリプト経由は避ける |
-
+| 115 | パッチ適用後 `dotnet build` を忘れ、旧バイナリで GUI 検証して「変更が反映されない」と誤認（バイナリ `8:17:24` / ソース `8:28:34` のタイムスタンプ乖離で判明、解決に 30 分） | パッチ後は必ず `dotnet build` → `Get-Item .\bin\Debug\net10.0-windows\PowerSimBuilder.exe \| Select LastWriteTime` で時刻確認 → GUI 起動 |
+| 116 | `PortSelectorControl.ItemCheck` 内の `BeginInvoke` が handle 未生成時（`ShowDialog` 前の `SetItemChecked`）に `InvalidOperationException` を投げ、`catch` で握り潰されて無音で PythonEditor へ進む | `if (IsHandleCreated)` ガードで解決（`patch_p2a_fix.py`）。catch は `MessageBox.Show` に変更し可視化（文言整理は v1.10.2 で） |
+| 117 | SPEC 記載（`parts/StaTableImportForm.cs`）と実体（`StaTableIntegration/StaTableImportForm.cs`）の乖離、および「XML パース直後にポート選択」の記述が実装（Save → 選択）と不整合 | SPEC 修正は v1.10.2 リリース時にまとめて対応 |
+| 0 | **P2b: MainForm 統合** — `CanvasForm\MainForm.cs:1695` の `Build(...)` に `SelectedInputPorts` / `SelectedOutputPorts` を渡す | S (30m) | 即時 |
+| 123 | `ComponentControl.Parameters` は `Descriptor.Parameters` から初期化されるため、Descriptor に無いキー（`selected_*_ports`）はロード時の `ContainsKey` ガードで無視される | Descriptor=「型」、Instance=「実体」。Instance 独自キーは無条件復元に変更（P6） |
+| 124 | `Build` の戻り値 Descriptor に永続化対象パラメータを追加しないと、XML 取り込み直後の Save で消失（右クリック編集時のみ保存される罠） | `Build` で `ParameterDescriptor` として明示追加（P4.2） |
+| 125 | Python パッチの `OLD` 文字列でインデント（8 vs 12 スペース）を誤ると `anchor not found` で停止 | インデント非依存の `re` + 波括弧マッチング方式（v2）を標準化 |
 ---
 
 ## 参考ファイル
@@ -195,10 +201,7 @@ dotnet build 2>&1 | Select-Object -Last 3
 | `tests/data/scenarios/cooking_heater/cooking_heater_controller.xml` | 対象 XML |
 
 ---
-| 115 | パッチ適用後 `dotnet build` を忘れ、旧バイナリで GUI 検証して「変更が反映されない」と誤認（バイナリ `8:17:24` / ソース `8:28:34` のタイムスタンプ乖離で判明、解決に 30 分） | パッチ後は必ず `dotnet build` → `Get-Item .\bin\Debug\net10.0-windows\PowerSimBuilder.exe \| Select LastWriteTime` で時刻確認 → GUI 起動 |
-| 116 | `PortSelectorControl.ItemCheck` 内の `BeginInvoke` が handle 未生成時（`ShowDialog` 前の `SetItemChecked`）に `InvalidOperationException` を投げ、`catch` で握り潰されて無音で PythonEditor へ進む | `if (IsHandleCreated)` ガードで解決（`patch_p2a_fix.py`）。catch は `MessageBox.Show` に変更し可視化（文言整理は v1.10.2 で） |
-| 117 | SPEC 記載（`parts/StaTableImportForm.cs`）と実体（`StaTableIntegration/StaTableImportForm.cs`）の乖離、および「XML パース直後にポート選択」の記述が実装（Save → 選択）と不整合 | SPEC 修正は v1.10.2 リリース時にまとめて対応 |
-| 0 | **P2b: MainForm 統合** — `CanvasForm\MainForm.cs:1695` の `Build(...)` に `SelectedInputPorts` / `SelectedOutputPorts` を渡す | S (30m) | 即時 |
+
 ## 🎉 P2 完了（2026-11-21）
 
 | Phase | 状態 | コミット |
@@ -258,4 +261,41 @@ ControllerBox 右クリック → 「Select Ports...」メニュー実装。既�
 | 1 | 削除ポートへの接続線は**手動削除**（警告ダイアログで明示） | v1.10.3 |
 | 2 | `.psbproj` 未永続化（再起動で `selected_*_ports` 消失） | **P6 で解決** |
 | 3 | パレット Descriptor 未同期（キャンバスインスタンスのみ更新） | 将来検討 |
+
+## 🎉 P4.2 + P6 + P7.1 完了（2026-11-22）
+
+`.psbproj` の `selected_*_ports` 完全永続化を定量証明。
+
+### 2 つの修正
+
+| # | 変更 | 場所 |
+|:---:|---|---|
+| **P4.2** | Build の戻り値 `ParameterDescriptor` に `selected_input_ports` / `selected_output_ports` / `port_selection_version` を追加（初回保存対応） | `ControllerBoxDescriptorBuilder.cs:132-163` |
+| **P6** | ロード時の `ContainsKey` ガード削除 → 無条件復元（Descriptor に無いキーも復元） | `CanvasManager.cs:381-386, 485-490` |
+
+### 定量検証結果
+
+| 項目 | 結果 |
+|---|---|
+| ビルド | ✅ 0 エラー |
+| 単体テスト | ✅ **64/64 PASS**（既存 61 + 新規 3） |
+| `project.json` の `selected_*_ports` | ✅ **保存確認済み** |
+| 永続化キー | `generated_path` / `auto_events` / `selected_input_ports` / `selected_output_ports` / `port_selection_version` |
+
+### 検証ログ（実測値）
+nstance = CookingHeaterController
+all keys: [generated_path, auto_events, selected_input_ports, selected_output_ports, port_selection_version]
+selected_input_ports = [door_open,oven_current_temp,oven_target_temp]
+selected_output_ports = [heater_top_duty,heater_top_on]
+port_selection_version = [1]
+
+### P3 既知制限の解消
+
+| # | 制限 | 状態 |
+|:---:|---|---|
+| P3-2 | `.psbproj` 未永続化 | ✅ **解消** |
+
+### 次タスク
+- **v1.10.2 リリース準備**（バイナリ → タグ → リリースノート → 告知）
+
 *最終更新: 2026-11-21 / v1.10.1 public 公開完了 + New Project コミット済み（15786bf）+ ポート選択 SPEC コミット済み*
