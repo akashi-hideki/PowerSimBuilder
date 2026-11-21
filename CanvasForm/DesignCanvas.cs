@@ -1750,6 +1750,11 @@ private void ClearCanvas()
             editPythonCodeItem.Name = "MenuEditPythonCode";
             editPythonCodeItem.Click += EditPythonCodeItem_Click;
             contextMenu.Items.Add(editPythonCodeItem);
+
+            var selectPortsItem = new ToolStripMenuItem("Select Ports...");
+            selectPortsItem.Name = "MenuSelectPorts";
+            selectPortsItem.Click += SelectPortsItem_Click;
+            contextMenu.Items.Add(selectPortsItem);
             this.ContextMenuStrip = contextMenu;
         }
 
@@ -1758,6 +1763,132 @@ private void ClearCanvas()
         /// 機能: メニュー項目の表示/非表示を設定
         /// 注意點: 選択状態に応じて表示を切り替え
         /// </summary>
+        private void SelectPortsItem_Click(object sender, EventArgs e)
+        {
+            if (SelectedComponent?.Descriptor == null) return;
+            if (SelectedComponent.Descriptor.Type != "ControllerBox") return;
+
+            string generatedPath = null;
+            if (SelectedComponent.Parameters != null &&
+                SelectedComponent.Parameters.TryGetValue("generated_path", out var raw))
+            {
+                generatedPath = AsStringOrNull(raw);
+            }
+            if (string.IsNullOrEmpty(generatedPath) || !System.IO.File.Exists(generatedPath))
+            {
+                MessageBox.Show(this,
+                    "Generated .py not found. Set Parameters[\"generated_path\"] first.",
+                    "Select Ports", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            System.Collections.Generic.IReadOnlyList<string> globals;
+            try
+            {
+                var py = System.IO.File.ReadAllText(generatedPath, System.Text.Encoding.UTF8);
+                globals = ControllerBoxDescriptorBuilder.ExtractGlobalsForSelection(py);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Failed to read .py:\n" + ex.Message,
+                    "Select Ports", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (globals.Count == 0)
+            {
+                MessageBox.Show(this, "No globals found in generated .py.",
+                    "Select Ports", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var currentInputs  = ParseCsvParamOrNull(SelectedComponent, "selected_input_ports");
+            var currentOutputs = ParseCsvParamOrNull(SelectedComponent, "selected_output_ports");
+
+            if (!PortSelectorDialog.TrySelect(this, globals, currentInputs, currentOutputs,
+                    out var selIn, out var selOut))
+            {
+                EditLogEvent("PortsSelectCancelled",
+                    ("instance", SelectedComponent.InstanceName ?? ""));
+                return;
+            }
+
+            var removed = new System.Collections.Generic.List<string>();
+            removed.AddRange(DiffList(currentInputs,  selIn));
+            removed.AddRange(DiffList(currentOutputs, selOut));
+            if (removed.Count > 0)
+            {
+                var msg = "The following ports will be removed:\n\n" +
+                          string.Join("\n", removed) +
+                          "\n\nExisting connections to these ports must be recreated.\n\nProceed?";
+                if (MessageBox.Show(this, msg, "Confirm Port Removal",
+                        MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
+                {
+                    return;
+                }
+            }
+
+            try
+            {
+                var rebuilt = ControllerBoxDescriptorBuilder.Build(
+                    SelectedComponent.Descriptor.Name,
+                    generatedPath,
+                    null,
+                    selIn,
+                    selOut);
+
+                var d = SelectedComponent.Descriptor;
+                d.InputPorts  = rebuilt.InputPorts;
+                d.OutputPorts = rebuilt.OutputPorts;
+
+                if (SelectedComponent.Parameters != null)
+                {
+                    SelectedComponent.Parameters["selected_input_ports"]  = string.Join(",", selIn);
+                    SelectedComponent.Parameters["selected_output_ports"] = string.Join(",", selOut);
+                }
+
+                SelectedComponent.Invalidate();
+                EditLogEvent("PortsSelected",
+                    ("instance", SelectedComponent.InstanceName ?? ""),
+                    ("inputs",  string.Join(",", selIn)),
+                    ("outputs", string.Join(",", selOut)));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Rebuild failed:\n" + ex.Message,
+                    "Select Ports", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private static System.Collections.Generic.List<string> ParseCsvParamOrNull(
+            ComponentControl component, string key)
+        {
+            if (component?.Parameters == null) return null;
+            if (!component.Parameters.TryGetValue(key, out var raw)) return null;
+            var s = raw?.ToString();
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            var list = new System.Collections.Generic.List<string>();
+            foreach (var part in s.Split(','))
+            {
+                var t = part.Trim();
+                if (t.Length > 0) list.Add(t);
+            }
+            return list.Count > 0 ? list : (System.Collections.Generic.List<string>)null;
+        }
+
+        private static System.Collections.Generic.List<string> DiffList(
+            System.Collections.Generic.IEnumerable<string> before,
+            System.Collections.Generic.IEnumerable<string> after)
+        {
+            var afterSet = new System.Collections.Generic.HashSet<string>(
+                after ?? new string[0], StringComparer.Ordinal);
+            var result = new System.Collections.Generic.List<string>();
+            foreach (var x in (before ?? new string[0]))
+            {
+                if (!afterSet.Contains(x)) result.Add(x);
+            }
+            return result;
+        }
+
         private void ContextMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (ContextMenuStrip != null)
@@ -1766,6 +1897,12 @@ private void ClearCanvas()
                 ContextMenuStrip.Items[1].Visible = (SelectedComponent != null);
                 if (ContextMenuStrip.Items.Count > 2)
                     ContextMenuStrip.Items[2].Visible = (SelectedComponent != null);
+
+                if (ContextMenuStrip.Items.Count > 3)
+                    ContextMenuStrip.Items[3].Visible =
+                        (SelectedComponent != null &&
+                         SelectedComponent.Descriptor != null &&
+                         SelectedComponent.Descriptor.Type == "ControllerBox");
             }
         }
 

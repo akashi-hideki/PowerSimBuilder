@@ -232,4 +232,30 @@ dotnet build 2>&1 | Select-Object -Last 3
 | Build の explicit/null/empty/片側null | 6 | ✅ |
 | ExtractGlobalsForSelection | 3 | ✅ |
 | **合計** | **61** | **61/61** |
+## 🎉 P3 完了（2026-11-21）
+
+ControllerBox 右クリック → 「Select Ports...」メニュー実装。既存 ControllerBox のポートを UI から編集可能に。
+
+| Phase | 状態 | コミット |
+|---|---|---|
+| **P3 ControllerBox 右クリック統合** | ✅ | `<新ハッシュ>` |
+
+### 実装内容
+
+| 機能 | 実装 | 場所 |
+|---|---|---|
+| 右クリックメニュー「Select Ports...」 | ✅ `Items[3]`（末尾追加、既存 index 0-2 不変） | `DesignCanvas.cs:3507` |
+| 表示条件 | ControllerBox 選択時のみ（`Items.Count > 3` ガード） | `DesignCanvas.cs:3669` |
+| 既存選択の復元 | `Parameters["selected_input_ports"]` から CSV パース | `ParseCsvParamOrNull` |
+| 削除警告 | 削除ポート検出 → `MessageBox` 確認（OK/Cancel） | `DiffList` |
+| Descriptor インプレース更新 | `InputPorts`/`OutputPorts` 差し替え | `d.InputPorts = rebuilt.InputPorts` |
+| Parameters メモリ更新 | `selected_*_ports` 更新 | `SelectedComponent.Parameters[...]` |
+
+### 既知の制限（v1.10.2 リリースノートに明記）
+
+| # | 制限 | 対応予定 |
+|:---:|---|---|
+| 1 | 削除ポートへの接続線は**手動削除**（警告ダイアログで明示） | v1.10.3 |
+| 2 | `.psbproj` 未永続化（再起動で `selected_*_ports` 消失） | **P6 で解決** |
+| 3 | パレット Descriptor 未同期（キャンバスインスタンスのみ更新） | 将来検討 |
 *最終更新: 2026-11-21 / v1.10.1 public 公開完了 + New Project コミット済み（15786bf）+ ポート選択 SPEC コミット済み*
