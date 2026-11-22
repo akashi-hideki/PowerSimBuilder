@@ -73,6 +73,15 @@ python tools\verify_controller_box.py examples\demos\oven_control_statable.psbpr
    - StaTable-generated `*_powersim.py` files contain `# STABLE_USER_CODE_START:Layer.F_xxx` markers.
 4. **Manual C → Python conversion**
    - Open the toolbar `C to Python Reference` for the conversion cheat sheet.
+
+4.5. **Physics Management (left panel)**
+   - The left panel shows a list of physics models currently inserted
+     into the open Python file (detected from `# === physics: ... ===` markers).
+   - `[Physics]` button opens the canonical `PhysicsModelPickerForm` dialog
+     (same as the canvas right-click "Add Physics" flow).
+   - Select a model in the list and click **Remove Selected Model** to
+     delete the corresponding block from the source code.
+   - The list is refreshed automatically on every text change.
 5. **Role Snippets**
    - Right-click inside any `F_xxx` function -> **Register as Snippet...**
    - Toolbar **Register Snippet** works the same way (visible only when the file contains `STABLE_USER_CODE_START`)

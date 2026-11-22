@@ -329,3 +329,46 @@ port_selection_version = [1]
 
 
 *最終更新: 2026-11-22 / v1.10.2 リリース（psblog Import のパレット連携追加）*
+
+🎉 物理モデル管理UI統合完了（2026-11-22）
+Python エディタ左パネルに、挿入済み物理モデルの一覧表示・削除機能を統合。
+既存の `OnPhysicsRequested` フロー（`PythonEditorForm.Physics.cs`）を流用し、
+追加ボタンは正式な `PhysicsModelPickerForm` を開くように統一。
+
+変更内容
+| #|変更|場所|
+| ---|---|---|
+| A1|`PhysicsModelRemoveRequested` イベント定義|ComponentEdit/EditPanel.cs|
+| A2|`InitializePhysicsManagementUI()` で ListBox + Button を追加|EditPanel.cs|
+| A3|`RefreshPhysicsModelsList(currentCode)` で一覧更新|EditPanel.cs|
+| A4|`PhysicsModelRemoveRequested` の購読|PythonEditorForm.cs WireEditPanel|
+| A5|`OnPhysicsModelRemoveRequested` ハンドラ実装|PythonEditorForm.cs|
+| A6|`textEditor_TextChanged` でリスト同期|PythonEditorForm.cs|
+| A7|正規表現から `^` を除去しインデント許容|PhysicsBlockManager.cs|
+
+設計上の重要ポイント
+- **既存フローの尊重**: `PythonEditorForm.Physics.cs` 内の `OnPhysicsRequested` が
+  既に `PhysicsModelPickerForm` を開く実装を持っているため、
+  左パネルの [Physics] ボタンも同じ経路 (`editPanel.PhysicsRequested`) を経由する。
+- **削除ロジック**: `PhysicsBlockManager.RemovePhysicsBlock` は
+  `# === physics: <name> (auto-inserted) ===` 〜 `# === /physics: <name> ===`
+  のマーカー間を削除する。正規表現はインデントを許容する。
+- **リアルタイム同期**: `textEditor_TextChanged` で
+  `editPanel.RefreshPhysicsModelsList(textEditor.Text)` を呼び、
+  コード編集直後に左パネルへ反映。
+
+定量検証結果
+| 項目|結果|
+| ---|---|
+| ビルド|✅ 0 エラー|
+| `PhysicsBlockManagerTests`|✅ 4/4 PASS|
+| 手動確認|✅ 追加→一覧表示→削除の一連フローが動作|
+
+関連ファイル
+| ファイル|用途|
+| ---|---|
+| ComponentEdit/EditPanel.cs|左パネル UI + イベント定義|
+| ComponentEdit/PythonEditorForm.cs|イベント購読 + 削除ハンドラ|
+| ComponentEdit/PythonEditorForm.Physics.cs|既存の追加フロー（流用）|
+| ComponentEdit/PhysicsBlockManager.cs|マーカー検出・削除ロジック|
+| parts/Physics/PhysicsModelPickerForm.cs|モデル選択ダイアログ|

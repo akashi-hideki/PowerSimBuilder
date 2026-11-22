@@ -14,6 +14,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Palette registration for `.psblog` imports**: RecordedSignal components imported via `Import Signal Log...` are now also added to the palette (Category: `Signal Log`), making them reusable across projects. Checkbox "Also add to palette" (default ON) in the import dialog. Duplicate names get `(2)`, `(3)` suffixes. i18n key `PsblogImport.AddToPalette` added (en/zh).
 ## [Unreleased]
 
+### Added
+- **Physics Management UI** in Python editor left panel:
+  - `EditPanel` now shows a list of inserted physics models
+    (detected via `# === physics: <name> (auto-inserted) ===` markers).
+  - `Remove Selected Model` button deletes the corresponding block
+    from the current Python source.
+  - List is refreshed on every `textEditor_TextChanged` event.
+- `PhysicsBlockManager` (new): regex-based detection and removal of
+  physics blocks, tolerant to Python indentation.
+- `EditPanel.PhysicsModelRemoveRequested` event + test hooks
+  (`Test_PhysicsModelsList`, `Test_RemovePhysicsButton`).
+
+### Changed
+- `PythonEditorForm.WireEditPanel` now subscribes to
+  `editPanel.PhysicsModelRemoveRequested` and routes it through
+  `OnPhysicsModelRemoveRequested` -> `PhysicsBlockManager.RemovePhysicsBlock`.
+- Left-panel `[Physics]` button reuses the existing
+  `OnPhysicsRequested` flow in `PythonEditorForm.Physics.cs`,
+  opening the canonical `PhysicsModelPickerForm` dialog.
+
+### Fixed
+- Regex in `PhysicsBlockManager.GetInsertedModels` / `RemovePhysicsBlock`
+  no longer requires `^` anchor, so indented markers are correctly detected.
+
 ## [1.10.2] - 2026-11-22
 
 ### Added
