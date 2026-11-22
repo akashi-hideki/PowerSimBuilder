@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace PowerSimBuilder.ComponentEdit
@@ -20,14 +21,22 @@ namespace PowerSimBuilder.ComponentEdit
         public event EventHandler AdapterRequested;
         public event EventHandler ImportCRequested;
         public event EventHandler PhysicsRequested;
+        
+        // [PHYSICS_PATCH] 物理モデル削除イベント
+        public event EventHandler<string> PhysicsModelRemoveRequested;
 
         public string ProjectDir { get; set; }
+
+        // [PHYSICS_PATCH] 物理モデル管理用 UI 要素
+        private ListBox physicsModelsListBox;
+        private Button removePhysicsButton;
 
         public EditPanel()
         {
             InitializeComponent();
             ApplyI18n();
             WireEvents();
+            InitializePhysicsManagementUI();
         }
 
         public void ApplyI18n()
@@ -162,7 +171,7 @@ namespace PowerSimBuilder.ComponentEdit
             finally { treeComponents.EndUpdate(); }
         }
 
-                public void LoadRoleFunctions(IReadOnlyList<RoleFunctionInfo> roles)
+        public void LoadRoleFunctions(IReadOnlyList<RoleFunctionInfo> roles)
         {
             treeRoleFunctions.BeginUpdate();
             try
@@ -219,6 +228,60 @@ namespace PowerSimBuilder.ComponentEdit
             btnPhysics.Enabled = visible;
         }
 
+        // [PHYSICS_PATCH] 物理モデル管理用 UI 初期化
+        private void InitializePhysicsManagementUI()
+        {
+            physicsModelsListBox = new ListBox { Dock = DockStyle.Fill, Name = "LstPhysicsModels" };
+            removePhysicsButton = new Button 
+            { 
+                Text = "Remove Selected Model", 
+                Dock = DockStyle.Bottom, 
+                Height = 30,
+                Name = "BtnRemovePhysicsModel"
+            };
+            removePhysicsButton.Click += RemovePhysicsButton_Click;
+            
+            var panel = new Panel { Dock = DockStyle.Fill };
+            panel.Controls.Add(physicsModelsListBox);
+            panel.Controls.Add(removePhysicsButton);
+            
+            // tableLayout を Controls コレクションから探す (より堅牢)
+            var tbl = this.Controls.OfType<TableLayoutPanel>().FirstOrDefault();
+            if (tbl != null)
+            {
+                tbl.RowCount++;
+                tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 150F));
+                tbl.Controls.Add(panel, 0, tbl.RowCount - 1);
+            }
+            else
+            {
+                // フォールバック: 直接追加して最前面に表示
+                this.Controls.Add(panel);
+                panel.Dock = DockStyle.Bottom;
+                panel.Height = 150;
+                panel.BringToFront();
+            }
+        }
+
+        public void RefreshPhysicsModelsList(string currentCode)
+        {
+            var models = PhysicsBlockManager.GetInsertedModels(currentCode);
+            physicsModelsListBox.Items.Clear();
+            foreach (var model in models)
+            {
+                physicsModelsListBox.Items.Add(model);
+            }
+            removePhysicsButton.Enabled = models.Count > 0;
+        }
+
+        private void RemovePhysicsButton_Click(object sender, EventArgs e)
+        {
+            if (physicsModelsListBox.SelectedItem is string modelName)
+            {
+                PhysicsModelRemoveRequested?.Invoke(this, modelName);
+            }
+        }
+
         // -------- Test hooks (not for production use) --------
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TreeView Test_ComponentsTree { get { return treeComponents; } }
@@ -240,5 +303,9 @@ namespace PowerSimBuilder.ComponentEdit
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Button Test_PhysicsButton { get { return btnPhysics; } }
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public ListBox Test_PhysicsModelsList { get { return physicsModelsListBox; } }
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public Button Test_RemovePhysicsButton { get { return removePhysicsButton; } }
     }
 }
