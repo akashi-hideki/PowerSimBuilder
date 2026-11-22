@@ -322,6 +322,8 @@
   "PhysicsCatalog.Title": "物理模型目录",
   "PhysicsCatalog.LblSource": "目录 URL:",
   "PhysicsCatalog.BtnLoad": "加载",
+  "PhysicsCatalog.LblApiKey": "GitHub API 密钥:",
+  "PhysicsCatalog.ChkShowKey": "显示",
   "PhysicsCatalog.BtnDownload": "下载",
   "PhysicsCatalog.ColName": "名称",
   "PhysicsCatalog.ColSize": "大小",

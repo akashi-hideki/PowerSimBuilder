@@ -49,6 +49,9 @@ namespace PowerSimBuilder
         /// </summary>
         public static string UserPhysicsModelsRoot { get; set; } = "";
 
+        // FMU Catalog Browser (v1.11.0)
+        public static string GitHubApiKey { get; set; } = "";
+
         public static void Load()
         {
             try
@@ -115,6 +118,12 @@ namespace PowerSimBuilder
                     var upm = upmProp.GetString();
                     if (!string.IsNullOrEmpty(upm)) UserPhysicsModelsRoot = upm;
                 }
+                // FMU Catalog Browser (v1.11.0)
+                if (root.TryGetProperty("githubApiKey", out var gkProp)
+                    && gkProp.ValueKind == JsonValueKind.String)
+                {
+                    GitHubApiKey = gkProp.GetString() ?? "";
+                }
             }
             catch { /* best-effort */ }
         }
@@ -135,7 +144,8 @@ namespace PowerSimBuilder
                     allowedUrls = AllowedUrls ?? new List<string>(),
                     workspaceRoot = WorkspaceRoot ?? "",
                     fmuBundleMaxSizeKB = FmuBundleMaxSizeKB,
-                    userPhysicsModelsRoot = UserPhysicsModelsRoot ?? ""
+                    userPhysicsModelsRoot = UserPhysicsModelsRoot ?? "",
+                    githubApiKey = GitHubApiKey ?? ""
                 });
                 File.WriteAllText(_settingsPath, json);
             }

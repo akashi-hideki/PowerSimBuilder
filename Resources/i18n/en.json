@@ -322,6 +322,8 @@
   "PhysicsCatalog.Title": "Physics Model Catalog",
   "PhysicsCatalog.LblSource": "Catalog URL:",
   "PhysicsCatalog.BtnLoad": "Load",
+  "PhysicsCatalog.LblApiKey": "GitHub API Key:",
+  "PhysicsCatalog.ChkShowKey": "Show",
   "PhysicsCatalog.BtnDownload": "Download",
   "PhysicsCatalog.ColName": "Name",
   "PhysicsCatalog.ColSize": "Size",

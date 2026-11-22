@@ -23,6 +23,7 @@ public partial class PhysicsImportForm
     private ListView? _lstCatalog;
     private Label? _lblCatalogStatus;
     private ComboBox? _cmbCatalogSource;
+    private TextBox? _txtGitHubApiKey;
     private readonly List<CatalogItem> _catalogItems = new();
 
     private void BuildCatalogTabUi()
@@ -97,6 +98,32 @@ public partial class PhysicsImportForm
         };
         _btnCatalogDownload.Click += async (s, e) => await DownloadSelectedAsync();
         bottom.Controls.Add(_btnCatalogDownload);
+
+        var txtKey = new TextBox
+        {
+            Width = 220,
+            UseSystemPasswordChar = true,
+            Name = "TxtGitHubApiKey",
+            Text = AppSettings.GitHubApiKey ?? ""
+        };
+        _txtGitHubApiKey = txtKey;
+        var chkShowKey = new CheckBox
+        {
+            Text = I18n.T("PhysicsCatalog.ChkShowKey"),
+            AutoSize = true,
+            Name = "ChkShowGitHubApiKey",
+            Anchor = AnchorStyles.Left
+        };
+        chkShowKey.CheckedChanged += (s, e) => txtKey.UseSystemPasswordChar = !chkShowKey.Checked;
+        var lblKey = new Label
+        {
+            Text = I18n.T("PhysicsCatalog.LblApiKey"),
+            AutoSize = true,
+            Anchor = AnchorStyles.Left
+        };
+        bottom.Controls.Add(chkShowKey);
+        bottom.Controls.Add(txtKey);
+        bottom.Controls.Add(lblKey);
         root.Controls.Add(bottom, 0, 3);
         root.SetColumnSpan(bottom, 3);
 
@@ -181,21 +208,28 @@ public partial class PhysicsImportForm
 
         try
         {
-            var source = PhysicsCatalogSource.Detect(url);
             CatalogLoadResult result;
-            switch (source.Kind)
+            if (url.StartsWith("github:", StringComparison.OrdinalIgnoreCase))
             {
-                case CatalogSourceKind.GitHub:
-                    using (var gh = new GitHubReleaseClient())
-                        result = await gh.ListFmuAssetsAsync(url);
-                    break;
-                case CatalogSourceKind.Json:
-                    result = await PhysicsCatalogRegistry.LoadFromUrlAsync(url);
-                    break;
-                default:
-                    result = CatalogLoadResult.Fail(
-                        "URL must end with .json or be a GitHub repository URL.");
-                    break;
+                result = await LoadGitHubTreeAsync(url);
+            }
+            else
+            {
+                var source = PhysicsCatalogSource.Detect(url);
+                switch (source.Kind)
+                {
+                    case CatalogSourceKind.GitHub:
+                        using (var gh = new GitHubReleaseClient())
+                            result = await gh.ListFmuAssetsAsync(url);
+                        break;
+                    case CatalogSourceKind.Json:
+                        result = await PhysicsCatalogRegistry.LoadFromUrlAsync(url);
+                        break;
+                    default:
+                        result = CatalogLoadResult.Fail(
+                            "URL must end with .json, be a GitHub repository URL, or start with github:");
+                        break;
+                }
             }
 
             if (!result.Success)
@@ -248,6 +282,48 @@ public partial class PhysicsImportForm
         }
     }
 
+    /// <summary>
+    /// "github:{owner/repo}|{fmi version}|{cs|me}|{platform}" -> FMU list via GitHub Contents API.
+    /// </summary>
+    private async Task<CatalogLoadResult> LoadGitHubTreeAsync(string spec)
+    {
+        var parts = spec.Substring("github:".Length).Split('|');
+        if (parts.Length != 4)
+            return CatalogLoadResult.Fail("Invalid source: " + spec);
+
+        var apiKey = _txtGitHubApiKey?.Text?.Trim() ?? "";
+        if (apiKey != AppSettings.GitHubApiKey)
+        {
+            AppSettings.GitHubApiKey = apiKey;
+            AppSettings.Save();
+        }
+
+        var options = new DownloadOptions
+        {
+            TimeoutSeconds = AppSettings.DownloadTimeoutSeconds,
+            ProxyHost = AppSettings.ProxyHost ?? "",
+            ProxyPort = AppSettings.ProxyPort
+        };
+
+        try
+        {
+            using var client = new GitHubCatalogClient(apiKey, options);
+            // Continuations resume on the UI thread, so the label can be updated directly.
+            var models = await client.FetchAsync(parts[0], parts[1], parts[2], parts[3],
+                msg => { if (_lblCatalogStatus != null) _lblCatalogStatus.Text = msg; });
+
+            var items = models
+                .Select(m => new CatalogItem(m.Name, m.DownloadUrl,
+                    m.SizeBytes > 0 ? m.SizeBytes : (long?)null, null, m.Source))
+                .ToList();
+            return CatalogLoadResult.Ok(items);
+        }
+        catch (Exception ex)
+        {
+            return CatalogLoadResult.Fail(ex.Message);
+        }
+    }
+
     private async Task DownloadSelectedAsync()
     {
         if (_lstCatalog == null || _lstCatalog.SelectedItems.Count == 0) return;
@@ -279,5 +355,6 @@ public partial class PhysicsImportForm
     public ListView? Test_LstCatalog => _lstCatalog;
     public Label? Test_LblCatalogStatus => _lblCatalogStatus;
     public ComboBox? Test_CmbCatalogSource => _cmbCatalogSource;
+    public TextBox? Test_TxtGitHubApiKey => _txtGitHubApiKey;
     internal IReadOnlyList<CatalogItem> Test_CatalogItems => _catalogItems;
 }

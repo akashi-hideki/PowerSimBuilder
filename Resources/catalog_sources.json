@@ -2,6 +2,7 @@
     "version":  1,
     "_comment":  "Reference-FMUs publishes zip only, so github/ghproxy sources return 0 models. This is expected behavior.",
     "sources":  [
+                    { "id": "fmi-xc-2-cs-win64", "label": "FMI Cross Check (2.0 / CoSim / win64)", "url": "github:modelica/fmi-cross-check|2.0|cs|win64" },
                     {
                         "id":  "local-demo",
                         "label":  "Local demo (HTTP server)",
