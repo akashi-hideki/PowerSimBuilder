@@ -328,8 +328,6 @@ port_selection_version = [1]
 | 手動確認 | パレットに `Signal Log` カテゴリ表示、`RecordedSignal [var]` 追加、再起動後も永続化、新規プロジェクトでドラッグ＆ドロップ可能 |
 
 
-*最終更新: 2026-11-22 / v1.10.2 リリース（psblog Import のパレット連携追加）*
-
 🎉 物理モデル管理UI統合完了（2026-11-22）
 Python エディタ左パネルに、挿入済み物理モデルの一覧表示・削除機能を統合。
 既存の `OnPhysicsRequested` フロー（`PythonEditorForm.Physics.cs`）を流用し、
@@ -372,3 +370,5 @@ Python エディタ左パネルに、挿入済み物理モデルの一覧表示�
 | ComponentEdit/PythonEditorForm.Physics.cs|既存の追加フロー（流用）|
 | ComponentEdit/PhysicsBlockManager.cs|マーカー検出・削除ロジック|
 | parts/Physics/PhysicsModelPickerForm.cs|モデル選択ダイアログ|
+
+*最終更新: 2026-11-22 / v1.10.2 リリース（psblog Import パレット連携 + 物理モデル管理UI統合）*

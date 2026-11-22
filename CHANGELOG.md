@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -11,10 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `docs/TUTORIAL_STATABLE_DEMO.ja.md` / `.en.md` / `.zh.md` — StaTable XML → PSB demo tutorial with role-function control architecture (PID → F_SetTopHeaterDuty → heater).
 
-- **Palette registration for `.psblog` imports**: RecordedSignal components imported via `Import Signal Log...` are now also added to the palette (Category: `Signal Log`), making them reusable across projects. Checkbox "Also add to palette" (default ON) in the import dialog. Duplicate names get `(2)`, `(3)` suffixes. i18n key `PsblogImport.AddToPalette` added (en/zh).
-## [Unreleased]
+## [1.10.2] - 2026-11-22
 
 ### Added
+- **Palette registration for `.psblog` imports**: RecordedSignal components imported via `Import Signal Log...` are now also added to the palette (Category: `Signal Log`), making them reusable across projects. Checkbox "Also add to palette" (default ON) in the import dialog. Duplicate names get `(2)`, `(3)` suffixes. i18n key `PsblogImport.AddToPalette` added (en/zh).
 - **Physics Management UI** in Python editor left panel:
   - `EditPanel` now shows a list of inserted physics models
     (detected via `# === physics: <name> (auto-inserted) ===` markers).
@@ -38,10 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Regex in `PhysicsBlockManager.GetInsertedModels` / `RemovePhysicsBlock`
   no longer requires `^` anchor, so indented markers are correctly detected.
 
-## [1.10.2] - 2026-11-22
-
-### Added
-- **Palette registration for `.psblog` imports**: RecordedSignal components imported via `Import Signal Log...` are now also added to the palette (Category: `Signal Log`), making them reusable across projects. Checkbox "Also add to palette" (default ON) in the import dialog. Duplicate names get `(2)`, `(3)` suffixes. i18n key `PsblogImport.AddToPalette` added (en/zh).
 
 ## [1.10.1] - 2026-11-14
 
