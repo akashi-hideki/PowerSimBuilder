@@ -3,7 +3,7 @@
   "parameters": "--include-transitive",
   "projects": [
     {
-      "path": "C:/dev/powersimbuilder/PowerSimBuilder.csproj",
+      "path": "C:/dev/PowerSimBuilder/PowerSimBuilder.csproj",
       "frameworks": [
         {
           "framework": "net10.0-windows",

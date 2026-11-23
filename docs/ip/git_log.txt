@@ -1,3 +1,22 @@
+905831f | 2026-11-23 18:29:21 +0900 | HIdeki.Akashi | chore(release): prepare v1.11.0 (version bump, catalog registry and test updates)
+bf78fbc | 2026-11-23 15:21:20 +0900 | HIdeki.Akashi | docs(changelog): document ControllerBox Port Selection in v1.10.2 (Trap #64)
+7348ce1 | 2026-11-23 12:53:06 +0900 | HIdeki.Akashi | docs(v1.11.0): align FMU catalog docs with implementation (token save timing, Always allow, Releases, import layout)
+1d848e2 | 2026-11-23 08:58:10 +0900 | HIdeki.Akashi | feat(fmu-catalog): add GitHub API client and data model (Phase 1)
+c68662c | 2026-11-22 20:04:53 +0900 | HIdeki.Akashi | feat(v1.10.2): palette registration + physics management UI docs
+a963ce8 | 2026-11-22 19:44:53 +0900 | HIdeki.Akashi | docs: add physics management UI section (handoff / changelog / readme)
+9d95e33 | 2026-11-22 19:05:51 +0900 | HIdeki.Akashi | feat(physics-ui): 物理モデル管理UIの統合と削除機能の改善
+c430761 | 2026-11-22 06:44:57 +0900 | HIdeki.Akashi | feat(psblog): register imported signals in palette (v1.10.2)
+04fcc77 | 2026-11-22 03:26:13 +0900 | HIdeki.Akashi | docs(tutorial): add v1.10.2 port selection section (ja/en/zh)
+e0c666b | 2026-11-22 03:01:26 +0900 | HIdeki.Akashi | feat(port-selection): P4.2+P6+P7.1 - selected_*_ports persist through .psbproj round-trip (64 tests, traps #123-125)
+86b4185 | 2026-11-21 09:21:13 +0900 | HIdeki.Akashi | feat(port-selection): P3 - ControllerBox right-click 'Select Ports...' + handoff traps #121-122
+c66863e | 2026-11-21 09:05:56 +0900 | HIdeki.Akashi | feat(port-selection): P2b MainForm integration + P5 _current suffix + P7.1 tests (61 PASS) + handoff traps #118-120
+5d46efe | 2026-11-21 08:54:12 +0900 | HIdeki.Akashi | feat(port-selection): P2b - MainForm forwards selected ports to Build
+add2582 | 2026-11-21 08:44:50 +0900 | HIdeki.Akashi | fix(port-selection): guard BeginInvoke with IsHandleCreated + visible catch; handoff traps #115-117
+de114d9 | 2026-11-21 08:18:13 +0900 | HIdeki.Akashi | feat(port-selection): P2a - PortSelectorDialog + integrate into StaTableImportForm
+6a10b76 | 2026-11-21 08:10:53 +0900 | HIdeki.Akashi | feat(port-selection): extend ControllerBoxDescriptorBuilder.Build with selectedInputs/Outputs (P4)
+972b984 | 2026-11-21 08:01:27 +0900 | HIdeki.Akashi | docs: update handoff for v1.10.1 public release + port selection SPEC
+15786bf | 2026-11-21 07:44:10 +0900 | HIdeki.Akashi | docs: add port selection spec + update handoff (v1.10.1 public release)
+b850e2b | 2026-11-21 06:13:08 +0900 | HIdeki.Akashi | docs(ip): final refresh before v1.10.1 public release (540 commits, 37 tags)
 b353cd6 | 2026-11-15 13:35:39 +0900 | HIdeki.Akashi | chore: remove accidentally committed empty file 'code'
 4838559 | 2026-11-15 13:33:35 +0900 | HIdeki.Akashi | docs(ip): refresh for v1.10.1
 0951c57 | 2026-11-15 13:27:12 +0900 | HIdeki.Akashi | docs(tutorial): add Chinese (zh) translation of StaTable XML demo tutorial

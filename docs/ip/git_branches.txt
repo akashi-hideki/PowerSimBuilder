@@ -1,4 +1,4 @@
-main | b353cd6 | 2026-11-15 | chore: remove accidentally committed empty file 'code'
-origin | b353cd6 | 2026-11-15 | chore: remove accidentally committed empty file 'code'
-origin/main | b353cd6 | 2026-11-15 | chore: remove accidentally committed empty file 'code'
+main | 905831f | 2026-11-23 | chore(release): prepare v1.11.0 (version bump, catalog registry and test updates)
+origin | 905831f | 2026-11-23 | chore(release): prepare v1.11.0 (version bump, catalog registry and test updates)
+origin/main | 905831f | 2026-11-23 | chore(release): prepare v1.11.0 (version bump, catalog registry and test updates)
 origin/feat/dotnet10-migration | 1bfcde9 | 2026-10-18 | fix(gui): HasExited-based double-launch guard + remove redundant MessageBox
