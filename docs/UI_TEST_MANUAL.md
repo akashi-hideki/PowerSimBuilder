@@ -102,3 +102,22 @@ dotnet run --project PowerSimBuilder.csproj
 | `PowerSimBuilder.Tests/Manege/GroupManagerTests.cs` | Extract/Save/Load |
 | `PowerSimBuilder.Tests/Manege/GroupManagerLoadTests.cs` | LoadAndAppend |
 | `PowerSimBuilder.Tests/Manege/GroupMultiSelectE2ETests.cs` | E2E 統合 |
+
+
+## FMU Catalog / Import (v1.11.0)
+
+These checks cover the Catalog → URL → File flow. Use a test repository or FMU that is approved for development testing.
+
+| ID | Operation | Expected result |
+|---|---|---|
+| FMU-01 | Open Physics Model Import and select Catalog | Catalog source controls and model list are displayed |
+| FMU-02 | Load `github:modelica/fmi-cross-check|2.0|cs|win64` | Only `.fmu` entries (one per Tool/ToolVersion/Model) are listed when the GitHub source is reachable; other file types are not shown |
+| FMU-03 | Enter a GitHub API token and click Load again with a `github:` source | The token is used for the GitHub repository API requests and is saved to application settings when **Load** is executed (entering it alone does not save it) |
+| FMU-04 | Select a catalog row and click Download | The URL tab is selected and network-access confirmation is shown |
+| FMU-05 | Cancel network-access confirmation | The download does not proceed |
+| FMU-06 | Approve a valid Co-Simulation FMU download | The FMU is downloaded, parsed, and shown in the File tab |
+| FMU-07 | Inspect the variable grid | Only `input` and `output` causality variables are offered |
+| FMU-08 | Attempt to import a Model Exchange FMU | The importer rejects the unsupported FMI type |
+| FMU-09 | Select ports and click Import | The model is installed under the user physics model directory: `model.yaml` is generated, the original FMU is copied to `source/`, and `README.md` is created only if absent |
+| FMU-10 | In the network-access dialog select **Always allow**, then download the same URL again | The confirmation dialog is shown again (Always allow only stores the URL; it does not skip the confirmation) |
+| FMU-11 | Open the imported model folder after Import | `model.yaml`, `README.md` and `source/<original-fmu-file>.fmu` exist; `model.yaml` has `source`, `interface` (selected ports, `parameters: {}`), `units: {}` and `timing` (`fixed_step`, `dt_internal: 0.001`); `usage_example.py` is not created |

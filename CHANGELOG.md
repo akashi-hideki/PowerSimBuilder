@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-11-23
+
+### Added
+
+- **GitHub FMU catalog browsing** in the Physics Model Import dialog.
+  - Browse FMI Cross Check-style repository layouts through the GitHub API.
+  - Filter by FMI version, interface directory (`cs` / `me`), and platform.
+  - Listing uses the GitHub repository tree API: the platform directory is located with one contents request and its tree is read recursively. If GitHub reports the tree as `truncated`, an error is shown instead of an incomplete list.
+  - Optional GitHub API token support for authenticated repository-tree requests. The token is saved to application settings when **Load** is run with a `github:` source (typing it alone does not save it). It is not used for the GitHub Releases API and is not encrypted.
+  - Built-in catalog source presets are defined in `Resources/catalog_sources.json`.
+- **Catalog-to-import workflow**: selecting a catalog entry transfers its FMU URL to the URL tab, requests network-access approval, downloads and parses the FMU, and then presents its variables for port selection in the File tab.
+  - The network-access dialog is shown for every URL download. **Always allow** stores the URL in `AppSettings.AllowedUrls`, but the stored list is not consulted, so the confirmation appears again on the next download.
+
+### Changed
+
+- FMU import documentation now describes the current Catalog → URL → File workflow and the current Co-Simulation-only import restriction.
+
+### Notes
+
+- The catalog browser can list `cs` (Co-Simulation) and `me` (Model Exchange) entries, but the current import dialog accepts Co-Simulation FMUs only.
+- A GitHub Releases source uses the latest release only and lists only assets whose name ends in `.fmu` (case-insensitive). ZIP and other assets are not listed; ZIP assets are not extracted and FMUs inside them are not searched. The GitHub API token is not used for Releases.
+- The supplied `VERSION` file contains `0.9.0`. It is not changed here because the authoritative application/build version source has not been established from the supplied files.
+
 ## [Unreleased]
 
 ### Added
