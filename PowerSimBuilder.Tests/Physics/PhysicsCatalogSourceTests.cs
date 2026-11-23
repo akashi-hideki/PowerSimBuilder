@@ -9,6 +9,10 @@ public class PhysicsCatalogSourceTests
     [InlineData("https://ex.com/catalog.json")]
     [InlineData("http://localhost:8765/models.json")]
     [InlineData("https://ex.com/cat.json?v=1")]
+    // Local relative paths (bundled catalog) must also be detected as Json
+    [InlineData("catalog/fmu_catalog_fmi2_cs_win64.json")]
+    [InlineData("catalog\\fmu_catalog_fmi2_cs_win64.json")]
+    [InlineData("test_catalog_tmp/local_test.json")]
     public void Detect_Json(string url)
     {
         var info = PhysicsCatalogSource.Detect(url);
@@ -31,6 +35,16 @@ public class PhysicsCatalogSourceTests
     [InlineData("https://example.com/foo")]
     [InlineData("not a url")]
     public void Detect_Unknown(string url)
+    {
+        var info = PhysicsCatalogSource.Detect(url);
+        Assert.Equal(CatalogSourceKind.Unknown, info.Kind);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Detect_NullOrEmpty_ReturnsUnknown(string? url)
     {
         var info = PhysicsCatalogSource.Detect(url);
         Assert.Equal(CatalogSourceKind.Unknown, info.Kind);
