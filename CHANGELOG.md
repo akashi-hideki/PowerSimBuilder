@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.10.2] - 2026-11-22
 
 ### Added
+
+- **ControllerBox Port Selection UI** (Trap #64 resolved):
+  - **`PortSelectorControl`** (UserControl): globals 変数から Input/Output ポートを選択
+  - **`PortSelectorDialog`** (Form): XML インポート直後 + ControllerBox 右クリック時に表示
+  - **Auto-suggest heuristic**: `thermistor_*` → Input, `*_duty` → Output, `g_system_tick` / `seq_*` / `stage_*` → 除外
+  - **`ControllerBoxDescriptorBuilder.Build(..., selectedInputs, selectedOutputs)`**: 選択結果でポート上書き
+  - **`.psbproj` 永続化**: `selected_input_ports` / `selected_output_ports` / `port_selection_version` を保存・復元
+  - **右クリック「Select Ports...」**: 既存 ControllerBox のポートを後から変更
 - **Palette registration for `.psblog` imports**: RecordedSignal components imported via `Import Signal Log...` are now also added to the palette (Category: `Signal Log`), making them reusable across projects. Checkbox "Also add to palette" (default ON) in the import dialog. Duplicate names get `(2)`, `(3)` suffixes. i18n key `PsblogImport.AddToPalette` added (en/zh).
 - **Physics Management UI** in Python editor left panel:
   - `EditPanel` now shows a list of inserted physics models
