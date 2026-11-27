@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `docs/TUTORIAL_STATABLE_DEMO.ja.md` / `.en.md` / `.zh.md` — StaTable XML → PSB demo tutorial with role-function control architecture (PID → F_SetTopHeaterDuty → heater).
 
+## [1.10.3] - 2026-11-22
+
+### Changed
+- **Plot generation**: One y-scale per variable (stacked subplots layout) instead of a single shared y-axis. Figure width increased by 1.5x for better readability.
+
 ## [1.10.2] - 2026-11-22
 
 ### Added

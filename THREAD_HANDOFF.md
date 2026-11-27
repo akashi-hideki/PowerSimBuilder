@@ -371,4 +371,15 @@ Python エディタ左パネルに、挿入済み物理モデルの一覧表示�
 | ComponentEdit/PhysicsBlockManager.cs|マーカー検出・削除ロジック|
 | parts/Physics/PhysicsModelPickerForm.cs|モデル選択ダイアログ|
 
-*最終更新: 2026-11-22 / v1.10.2 リリース（psblog Import パレット連携 + 物理モデル管理UI統合）*
+
+## Plot improvements (2026-11-22)
+
+Generated simulation graphs: one y-scale per variable (stacked subplots) + 1.5x wider figure.
+
+| Changed | Location |
+|---|---|
+| Stacked subplot layout in `plot_signals()` | `SimulationGenerate/PythonSimulationMainBuilder.cs` |
+| Figure width 10 -> 15 inches | same |
+
+
+*最終更新: 2026-11-22 / v1.10.3 release (plot stacked subplots + 1.5x wider)
