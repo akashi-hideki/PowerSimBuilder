@@ -44,6 +44,7 @@ Five ready-to-run demos in `examples/demos/` (see [README](examples/demos/README
 | `pid_closed_loop.psbproj` | GUI project | ss=0.991, settle 3.9s |
 | `oven_control.psbproj` | GUI project (PID + OvenChamber) | ss=200.68, ovs=1.45%, settle 64.7s |
 | `oven_control_statable.psbproj` | GUI project (StaTable gating + PID + OvenChamber) | ss=200.68, ovs=1.45%, settle 64.6s |
+| `oven_control_simplified.psbproj` | GUI project (simplified StaTable demo) | ss=200.68, ovs=1.45%, settle 64.6s |
 
 ### StaTable gating demo (`oven_control_statable.psbproj`)
 
@@ -232,8 +233,11 @@ StaTable alone answers **"does it compile?"**. PowerSimBuilder answers
 
 See [FMU Catalog and Import Guide](docs/FMU_CATALOG_GUIDE.md) and [Physics Model Integration](docs/PHYSICS_MODEL_INTEGRATION.md).
 
-## What's New in v1.10.0
+## What's New in v1.10.2
 
+- **ControllerBox Port Selection (Trap #64)**: choose input/output ports from `globals` during XML import. Auto-suggest pre-selects sensible defaults; selection persisted in `.psbproj` and restored on reload. Right-click any ControllerBox -> **"Select Ports..."** to modify ports after import.
+- **`.psblog` palette registration**: imported `RecordedSignal` components also appear in the palette (Category: `Signal Log`) for cross-project reuse.
+- **Physics Management UI**: Python editor left panel lists inserted physics models with one-click removal (`PhysicsBlockManager`).
 - **`.psblog` Import**: read UART monitor logs (`.psblog`, `psblog/v1`) written by StaTable.
   - **File → Import Signal Log...** (or toolbar) opens `PsblogImportForm`.
   - Variable list + waveform classification (`constant` / `ramp` / `step` / `exponential` / `pwm` / `digital`).
