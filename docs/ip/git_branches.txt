@@ -1,4 +1,4 @@
-main | 905831f | 2026-11-23 | chore(release): prepare v1.11.0 (version bump, catalog registry and test updates)
-origin | 905831f | 2026-11-23 | chore(release): prepare v1.11.0 (version bump, catalog registry and test updates)
-origin/main | 905831f | 2026-11-23 | chore(release): prepare v1.11.0 (version bump, catalog registry and test updates)
+main | 57918d0 | 2026-11-28 | docs(release): remove duplicated content in v1.11.0 release notes
+origin | 57918d0 | 2026-11-28 | docs(release): remove duplicated content in v1.11.0 release notes
+origin/main | 57918d0 | 2026-11-28 | docs(release): remove duplicated content in v1.11.0 release notes
 origin/feat/dotnet10-migration | 1bfcde9 | 2026-10-18 | fix(gui): HasExited-based double-launch guard + remove redundant MessageBox

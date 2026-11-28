@@ -1,3 +1,9 @@
+57918d0 | 2026-11-28 09:14:15 +0900 | HIdeki.Akashi | docs(release): remove duplicated content in v1.11.0 release notes
+0e45739 | 2026-11-28 09:09:41 +0900 | HIdeki.Akashi | docs(release): add v1.11.0 release notes
+37faeed | 2026-11-28 08:33:01 +0900 | HIdeki.Akashi | docs(v1.11.0): plot improvements release
+a750880 | 2026-11-28 08:15:25 +0900 | HIdeki.Akashi | feat(plot): one y-scale per variable (stacked layout) and 1.5x wider figure in generated simulation graph
+3b47d24 | 2026-11-28 07:54:56 +0900 | HIdeki.Akashi | docs: add auto-generated C# source map (tools/gen_source_tree.py)
+64de6f7 | 2026-11-23 18:59:04 +0900 | HIdeki.Akashi | docs(ip): refresh for v1.11.0 (559 commits, 39 tags)
 905831f | 2026-11-23 18:29:21 +0900 | HIdeki.Akashi | chore(release): prepare v1.11.0 (version bump, catalog registry and test updates)
 bf78fbc | 2026-11-23 15:21:20 +0900 | HIdeki.Akashi | docs(changelog): document ControllerBox Port Selection in v1.10.2 (Trap #64)
 7348ce1 | 2026-11-23 12:53:06 +0900 | HIdeki.Akashi | docs(v1.11.0): align FMU catalog docs with implementation (token save timing, Always allow, Releases, import layout)

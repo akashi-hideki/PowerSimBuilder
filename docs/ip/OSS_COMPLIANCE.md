@@ -1,7 +1,7 @@
 # OSS License Compliance Statement
 
 **Product**: PowerSimBuilder v1.11.0
-**Date**: 2026-11-23
+**Date**: 2026-11-28
 **Author**: Hideki Akashi
 
 ## Summary
