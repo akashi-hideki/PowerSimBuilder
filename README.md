@@ -524,6 +524,8 @@ Both tools are intentionally separate so that:
 | [docs/TUTORIAL_STATABLE_DEMO.ja.md](docs/TUTORIAL_STATABLE_DEMO.ja.md) | StaTable XML → PSB demo tutorial (日本語) |
 | [docs/TUTORIAL_STATABLE_DEMO.en.md](docs/TUTORIAL_STATABLE_DEMO.en.md) | StaTable XML → PSB demo tutorial (English) |
 | [docs/TUTORIAL_STATABLE_DEMO.zh.md](docs/TUTORIAL_STATABLE_DEMO.zh.md) | StaTable XML → PSB demo tutorial (中文) |
+| [docs/FMU_CATALOG_GUIDE.md](docs/FMU_CATALOG_GUIDE.md) | FMU catalog + import workflow (v1.11.0) |
+| [docs/PHYSICS_MODEL_INTEGRATION.md](docs/PHYSICS_MODEL_INTEGRATION.md) | Physics model (FMU) integration guide |
 
 ---
 
@@ -566,7 +568,7 @@ runtime tests on `ubuntu-latest` (4 Python versions).
 
 ## Development Notes (Handoff)
 
-- **Current state**: v1.9.0 released (Role Snippets B complete, tag `v1.9.0`); MVP-1.2 physics integration still on `main`.
+- **Current state**: v1.11.0 released (GitHub FMU catalog browsing, Plot improvements, ControllerBox Port Selection carried from v1.10.2).
 - **Physics tests**: 66 (all green; see `PowerSimBuilder.Tests/Physics*` and `FmuInfoReaderTests` / `ModelYamlTests`).
 - **Known limitations**
   - Only CoSimulation FMUs are supported; ModelExchange is rejected.
