@@ -32,6 +32,7 @@ namespace PowerSimBuilder
         private ToolStripMenuItem menuItemRegisterSnippet;
         private ToolStripMenuItem menuItemRoleSnippets;
         private PythonExecutor _executor;
+        private System.Windows.Forms.Timer _debounceTimer;
         
         public bool IsModified { get; private set; }
         
@@ -92,6 +93,16 @@ namespace PowerSimBuilder
         public PythonEditorForm(string filePath, bool enableRunButtons, string initialCode, double initialTEnd = 5.0)
         {
             InitializeComponent();
+            // Debounce timer for TextChanged (300ms)
+            _debounceTimer = new System.Windows.Forms.Timer();
+            _debounceTimer.Interval = 300;
+            _debounceTimer.Tick += (s, ev) => {
+                _debounceTimer.Stop();
+                RefreshEditPanel();
+                editPanel.RefreshPhysicsModelsList(textEditor.Text);
+            };
+
+            ConfigureScintilla();
             InitializeContextMenu();
             WireEditPanel();
             _filePath = filePath;
@@ -180,7 +191,89 @@ namespace PowerSimBuilder
             // ▲▲▲ ▲▲▲
         }
         
-        public void RefreshEditPanel()
+        
+        // ================================================================
+        // Scintilla configuration: Python lexer, line numbers, indent
+        // guides, code folding, auto-indent, syntax colors.
+        // ================================================================
+        private void ConfigureScintilla()
+        {
+            if (textEditor == null) return;
+
+            // Python lexer
+            textEditor.LexerName = "python";
+
+            // Line numbers (margin 0)
+            textEditor.Margins[0].Type = ScintillaNET.MarginType.Number;
+            textEditor.Margins[0].Width = 40;
+
+            // Indent guides (vertical lines at each indent level)
+            textEditor.IndentationGuides = ScintillaNET.IndentView.LookForward;
+
+            // Code folding (margin 1) — collapsible def/class/if/for/while blocks
+            textEditor.SetProperty("fold", "1");
+            textEditor.SetProperty("fold.compact", "1");
+            textEditor.SetProperty("fold.python.comment", "1");
+            textEditor.Margins[1].Type = ScintillaNET.MarginType.Symbol;
+            textEditor.Margins[1].Width = 15;
+            textEditor.Margins[1].Sensitive = true;
+            textEditor.Margins[1].Mask = 0xFE000000u;
+            // Fold markers at standard Scintilla indices (25-31).
+            // SC_MARKNUM_* -> SC_MARK_* (Scintilla.h):
+            //   25=FOLDEREND      -> BoxPlusConnected   (mid-fold start)
+            //   26=FOLDEROPENMID  -> BoxMinusConnected  (mid-fold open)
+            //   27=FOLDERMIDTAIL  -> TCorner            (mid-fold tail)
+            //   28=FOLDERTAIL     -> LCorner            (fold tail)
+            //   29=FOLDERSUB      -> VLine              (vertical line)
+            //   30=FOLDER         -> BoxPlus            (HEAD: collapsed)
+            //   31=FOLDEROPEN     -> BoxMinus           (HEAD: expanded)
+            textEditor.Markers[25].Symbol = ScintillaNET.MarkerSymbol.BoxPlusConnected;
+            textEditor.Markers[26].Symbol = ScintillaNET.MarkerSymbol.BoxMinusConnected;
+            textEditor.Markers[27].Symbol = ScintillaNET.MarkerSymbol.TCorner;
+            textEditor.Markers[28].Symbol = ScintillaNET.MarkerSymbol.LCorner;
+            textEditor.Markers[29].Symbol = ScintillaNET.MarkerSymbol.VLine;
+            textEditor.Markers[30].Symbol = ScintillaNET.MarkerSymbol.BoxPlus;
+            textEditor.Markers[31].Symbol = ScintillaNET.MarkerSymbol.BoxMinus;
+
+            // Fold toggle on marker click (ScintillaNET requires this explicitly)
+            textEditor.MarginClick += (s, e) =>
+            {
+                if (e.Margin != 1) return;
+                int line = textEditor.LineFromPosition(e.Position);
+                if (line < 0 || line >= textEditor.Lines.Count) return;
+                textEditor.Lines[line].ToggleFold();
+            };
+
+            // Auto-indent + tab settings
+            textEditor.SetProperty("indent.automatic", "1");
+            textEditor.UseTabs = false;
+            textEditor.TabWidth = 4;
+            textEditor.IndentWidth = 4;
+
+            // Font + style
+            textEditor.StyleResetDefault();
+            textEditor.Styles[ScintillaNET.Style.Default].Font = "Consolas";
+            textEditor.Styles[ScintillaNET.Style.Default].Size = 10;
+            textEditor.StyleClearAll();
+
+            // Python syntax colors
+            textEditor.Styles[ScintillaNET.Style.Python.Default].ForeColor = System.Drawing.Color.Black;
+            textEditor.Styles[ScintillaNET.Style.Python.CommentLine].ForeColor = System.Drawing.Color.Green;
+            textEditor.Styles[ScintillaNET.Style.Python.CommentBlock].ForeColor = System.Drawing.Color.Green;
+            textEditor.Styles[ScintillaNET.Style.Python.Number].ForeColor = System.Drawing.Color.DarkBlue;
+            textEditor.Styles[ScintillaNET.Style.Python.String].ForeColor = System.Drawing.Color.Brown;
+            textEditor.Styles[ScintillaNET.Style.Python.Character].ForeColor = System.Drawing.Color.Brown;
+            textEditor.Styles[ScintillaNET.Style.Python.Word].ForeColor = System.Drawing.Color.Blue;
+            textEditor.Styles[ScintillaNET.Style.Python.Word2].ForeColor = System.Drawing.Color.DarkViolet;
+            textEditor.Styles[ScintillaNET.Style.Python.Operator].ForeColor = System.Drawing.Color.Red;
+            textEditor.Styles[ScintillaNET.Style.Python.Decorator].ForeColor = System.Drawing.Color.DarkMagenta;
+
+            // Python keywords (set 0) + builtins (set 1)
+            textEditor.SetKeywords(0, "and as assert break class continue def del elif else except False finally for from global if import in is lambda None nonlocal not or pass raise return True try while with yield");
+            textEditor.SetKeywords(1, "bool bytearray bytes complex dict float frozenset int list memoryview object set str tuple type");
+        }
+
+public void RefreshEditPanel()
         {
             try
             {
@@ -221,8 +314,8 @@ namespace PowerSimBuilder
             for (int i = 0; i < oneBasedLine - 1; i++)
                 offset += lines[i].Length + 1;
             textEditor.SelectionStart = offset;
-            textEditor.SelectionLength = 0;
-            textEditor.ScrollToCaret();
+            textEditor.SelectionEnd = textEditor.SelectionStart;
+            textEditor.ScrollCaret();
             textEditor.Focus();
         }
         
@@ -322,13 +415,23 @@ namespace PowerSimBuilder
         
         private void textEditor_TextChanged(object sender, EventArgs e)
         {
-            RefreshEditPanel();
-            // [PHYSICS_PATCH] 左パネルの物理モデルリストを更新 (決定的に欠けていた箇所)
-            editPanel.RefreshPhysicsModelsList(textEditor.Text);
-            
+            // Lightweight: update immediately
             IsModified = textEditor.Text != _originalCode;
             UpdateTitle();
             UpdateStatus();
+
+            // Heavy: debounce the panel refresh (300ms)
+            if (_debounceTimer != null)
+            {
+                _debounceTimer.Stop();
+                _debounceTimer.Start();
+            }
+            else
+            {
+                // Fallback if timer not initialized
+                RefreshEditPanel();
+                editPanel.RefreshPhysicsModelsList(textEditor.Text);
+            }
         }
         
         private void btnSave_Click(object sender, EventArgs e)
@@ -483,7 +586,7 @@ namespace PowerSimBuilder
                 return;
             }
             textEditor.SelectionStart = idx + needle.Length;
-            textEditor.SelectionLength = 0;
+            textEditor.SelectionEnd = textEditor.SelectionStart;
             ShowRegisterSnippetDialog();
         }
         internal void Test_UpdateRegisterSnippetAvailability() => UpdateRegisterSnippetAvailability();
@@ -560,7 +663,7 @@ namespace PowerSimBuilder
         {
             if (textEditor == null) return;
             var text = textEditor.Text ?? "";
-            int line = textEditor.GetLineFromCharIndex(textEditor.SelectionStart);
+            int line = textEditor.LineFromPosition(textEditor.SelectionStart);
             var fn = PowerSimBuilder.SimPartsManege.RoleSnippetRegistrar
                          .ExtractFunctionAtCursor(text, line);
             if (fn == null || string.IsNullOrEmpty(fn.LayerName))
@@ -674,8 +777,8 @@ namespace PowerSimBuilder
             try
             {
                 textEditor.SelectionStart = lineEnd;
-                textEditor.SelectionLength = Math.Min(sb.Length, Math.Max(0, textEditor.Text.Length - lineEnd));
-                textEditor.ScrollToCaret();
+                textEditor.SelectionEnd = textEditor.SelectionStart + Math.Min(sb.Length, Math.Max(0, textEditor.Text.Length - lineEnd));
+                textEditor.ScrollCaret();
                 textEditor.Focus();
             }
             catch { }
@@ -811,7 +914,7 @@ namespace PowerSimBuilder
         private void InsertTextAtCursor(string text)
         {
             int selectionStart = textEditor.SelectionStart;
-            textEditor.SelectedText = text;
+            textEditor.ReplaceSelection(text);
             textEditor.SelectionStart = selectionStart + text.Length;
             textEditor.Focus();
         }
