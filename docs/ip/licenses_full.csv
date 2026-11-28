@@ -1,5 +1,6 @@
 Name,Version,License,URL
 ncalc,1.3.8,MIT,https://github.com/sheetsync/NCalc
+Scintilla5.NET,7.1.1,CHECK,
 FMPy,0.3.32,BSD-2-Clause,https://github.com/CATIA-Systems/FMPy
 Jinja2,3.1.6,BSD License,https://github.com/pallets/jinja/
 MarkupSafe,3.0.4,BSD-3-Clause,https://github.com/pallets/markupsafe/
@@ -18,4 +19,3 @@ platformdirs,4.13.0,MIT,https://github.com/tox-dev/platformdirs
 referencing,0.37.0,MIT,https://github.com/python-jsonschema/referencing
 rpds-py,2026.9.1,MIT,https://github.com/crate-py/rpds
 traitlets,5.16.1,BSD License,https://github.com/ipython/traitlets
-Scintilla5.NET | 7.1.1 | MIT | https://github.com/desjarlais/Scintilla.NET

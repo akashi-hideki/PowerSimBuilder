@@ -1,14 +1,14 @@
 # Git コミット統計
 
 ## 総コミット数（全ブランチ・全タグ）
-565
+574
 
 ## 開発期間
 - 最初のコミット: 2025-08-07
 - 最新のコミット: 2026-11-28
 
 ## 開発者
-- HIdeki.Akashi: 423 commits
+- HIdeki.Akashi: 432 commits
 - akashi-hideki: 142 commits
 
 ## タグ数

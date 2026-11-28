@@ -12,6 +12,11 @@
               "id": "ncalc",
               "requestedVersion": "1.3.8",
               "resolvedVersion": "1.3.8"
+            },
+            {
+              "id": "Scintilla5.NET",
+              "requestedVersion": "7.1.1",
+              "resolvedVersion": "7.1.1"
             }
           ]
         }

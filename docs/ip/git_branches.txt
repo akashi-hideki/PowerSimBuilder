@@ -1,4 +1,4 @@
-main | 57918d0 | 2026-11-28 | docs(release): remove duplicated content in v1.11.0 release notes
-origin | 57918d0 | 2026-11-28 | docs(release): remove duplicated content in v1.11.0 release notes
-origin/main | 57918d0 | 2026-11-28 | docs(release): remove duplicated content in v1.11.0 release notes
+main | 56725b3 | 2026-11-28 | Release v1.11.1: fix ScintillaNET packaging
+origin | 56725b3 | 2026-11-28 | Release v1.11.1: fix ScintillaNET packaging
+origin/main | 56725b3 | 2026-11-28 | Release v1.11.1: fix ScintillaNET packaging
 origin/feat/dotnet10-migration | 1bfcde9 | 2026-10-18 | fix(gui): HasExited-based double-launch guard + remove redundant MessageBox
