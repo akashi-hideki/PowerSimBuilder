@@ -3405,3 +3405,185 @@ git --no-pager status -sb
 5. **既存ファイルの解決**: `ResolveExistingPath` で優先順位（`user_components/` → `generated/`）を守る
 
 **End of ## 97**
+
+---
+
+# 2026-11-28 ScintillaNET障害・リリースパッケージ構成の検討
+
+## 1. 発生していた問題
+
+リリースパッケージを展開して実行すると、PythonエディタまたはPythonシミュレーションファイル生成時に、次の例外が発生した。
+
+```text
+An error occurred during file generation:
+The type initializer for 'ScintillaNET.Scintilla' threw an exception.
+```
+
+開発環境では正常に動作するが、配布パッケージではScintillaNETの初期化に失敗する問題があった。
+
+過去に `PublishSingleFile=false` で発行した場合はPythonエディタが正常動作したという確認結果がある。
+
+障害が発生した旧パッケージは現在残っていない。現在確認している発行フォルダーは、正常動作する構成を基にしたものであり、旧パッケージと混同しないこと。
+
+## 2. 発行処理について分かったこと
+
+`tools/package_release.py` の `publish(stage)` には、以前、次の2種類の発行処理が存在していた。
+
+1. `PublishSingleFile=false`
+2. `PublishSingleFile=true`、`IncludeNativeLibrariesForSelfExtract=false`
+
+どちらも同じ `stage` に発行していたため、発行結果が上書き・混在する可能性がある。
+
+今後は発行処理を一本化し、異なる発行方式で同じフォルダーに連続発行しない。
+
+## 3. Scintilla関連DLL
+
+テスト用フォルダー `Tmp\scintilla-test` で次のファイルを確認した。
+
+- `Scintilla.NET.dll`
+- `Scintilla.dll`
+- `Lexilla.dll`
+- `runtimes\win-x64\native\Scintilla.dll`
+
+現在の発行フォルダーには、少なくとも次のファイルが存在する。
+
+- `Scintilla.NET.dll`
+- `Scintilla.dll`
+- `Lexilla.dll`
+
+Scintilla関連DLLを発行後に明示的に配置する案を検討した。ただし、配置だけで障害が解消したとはまだ確定していない。
+
+## 4. 現在のもう一つの課題：配布フォルダーの構成
+
+現在の `--self-contained` 発行では、.NETランタイム関連DLLも多数含まれる。
+
+ユーザーが問題としているのは、単にファイル数や容量が大きいことだけではない。
+
+**配布フォルダーを開いたときに、実行するEXEが分かりにくくなることを避けたい。**
+
+目標は次のとおり。
+
+- `PowerSimBuilder.exe` を見つけやすくする。
+- 可能な限り不要なDLLを配布しない。
+- ScintillaNETの動作に必要なファイルは維持する。
+- Resources、docs、examples、catalogなど、アプリケーションに必要なデータは維持する。
+
+## 5. 現在の結論と検討方針
+
+発行方式として、Framework-dependent + Single-file を検討する。
+
+この方式では.NETランタイムを同梱せず、アプリケーション本体を単一EXEにまとめられる可能性がある。
+
+ただし、利用者側に対応する.NET Desktop Runtimeが必要になる。また、ScintillaのネイティブDLLなどは別途配置が必要となる可能性がある。
+
+したがって、現時点では発行方式を確定せず、次の設定を確認してから判断する。
+
+- `PowerSimBuilder.csproj` のTargetFramework
+- RuntimeIdentifier
+- SelfContained
+- PublishSingleFile
+- PackageReference
+- `tools/package_release.py` のdotnet publish引数
+
+DLLを発行後に手当たり次第削除する方法は採用しない。発行方式と依存関係から配布対象を整理する。
+
+## 6. 今後の作業順序
+
+1. プロジェクト設定と発行スクリプトを確認する。
+2. Framework-dependent + Single-fileへの変更可否を判断する。
+3. ScintillaNETのネイティブDLLロード方法を確認する。
+4. `package_release.py` の発行処理を一本化する。
+5. リリースパッケージを生成する。
+6. 展開先から起動し、PythonエディタとPythonシミュレーションファイル生成を確認する。
+7. EXEが分かりやすく、不要なDLLが少ない配布構成になっていることを確認する。
+
+優先順位は次のとおり。
+
+1. 正常動作の確保
+2. EXEの分かりやすさ
+3. 不要DLLの削減
+
+## 7. 2026-11-28 時点のGit状態
+
+- ブランチ：`main`
+- リモート：`origin`
+- GitHub：`https://github.com/akashi-hideki/PowerSimBuilder.git`
+
+確認時点の `git status --short`：
+
+```text
+ M VERSION
+ M parts/CrashReportManager.cs
+?? ComponentEdit/PythonEditorForm.zip
+?? package_release_scintilla_fix.patch
+?? package_release_scintilla_hybrid.patch
+```
+
+これらの変更は、今回の引き継ぎ記録を追記した時点では、内容とコミット対象をまだ確認していない。
+
+一時ファイルやパッチファイルを含め、内容を確認してからコミット対象を決定すること。
+
+---
+
+# 2026-11-28 ScintillaNET DLL配置問題の解決
+
+## 1. 原因
+
+リリースパッケージでPythonエディタを起動すると、ScintillaNETの初期化に失敗していた。
+
+原因は、ScintillaNETが必要とするネイティブDLLの配置場所が正しくなかったこと。
+
+ScintillaNETは次の場所にネイティブDLLを必要とする。
+
+```text
+runtimes/win-x64/native/
+├── Scintilla.dll
+└── Lexilla.dll
+```
+
+単一ファイル発行時にDLLがアプリケーションのルートへ配置され、必要なディレクトリ構成になっていなかった。
+
+## 2. 対応内容
+
+`tools/package_release.py` の `publish(stage)` を修正した。
+
+- `PublishSingleFile=true` に統一
+- `Tmp/scintilla-test` からの手動コピーを廃止
+- `dotnet publish` 後にScintilla.dllとLexilla.dllを所定の場所へ移動
+- ネイティブDLLを `runtimes/win-x64/native/` に配置
+- アプリケーションのルートには同じDLLを残さない
+
+## 3. 最終的な配布構成
+
+```text
+PowerSimBuilder/
+├── PowerSimBuilder.exe
+├── runtimes/
+│   └── win-x64/
+│       └── native/
+│           ├── Scintilla.dll
+│           └── Lexilla.dll
+├── Resources/
+├── docs/
+├── examples/
+└── その他必要なファイル
+```
+
+## 4. 動作確認結果
+
+2026-11-28、v1.11.1の展開済みリリースパッケージで確認した。
+
+- Scintilla.dllが所定の場所に存在する
+- Lexilla.dllが所定の場所に存在する
+- アプリケーションルートに同名DLLが存在しない
+- 展開先からPowerSimBuilder.exeを起動できる
+- Pythonエディタの実動作を確認済み
+
+以上により、今回のScintillaNETネイティブDLL配置問題は解決と判断する。
+
+## 5. 今後の注意事項
+
+- リリース作成時は `tools/package_release.py` を使用する。
+- Scintilla.dllとLexilla.dllの配置を変更しない。
+- 異なる発行方式で同一ステージングフォルダーへ連続発行しない。
+- 今回の修正を再現できるよう、`tools/package_release.py` はGit管理対象とする。

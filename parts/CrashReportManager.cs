@@ -102,15 +102,35 @@ namespace PowerSimBuilder
         /// </summary>
         /// <param name="ex">This ex's Datatype is : System.Exception.</param>
         /// <returns>void.</returns>
+        
         public void LogException(Exception ex)
         {
-            using (StreamWriter writer = new StreamWriter(logFilePath, true))
+            try
             {
-                writer.WriteLine("=== Crash Report ===");
-                writer.WriteLine("Date: " + DateTime.Now.ToString());
-                writer.WriteLine("Error Message: " + ex.Message);
-                writer.WriteLine("Stack Trace: " + ex.StackTrace);
-                writer.WriteLine("====================================");
+                using (StreamWriter writer = new StreamWriter(logFilePath, true))
+                {
+                    writer.WriteLine("====================================");
+                    writer.WriteLine("=== Crash Report ===");
+                    writer.WriteLine("Date: " + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"));
+                    writer.WriteLine();
+
+                    // Exception.ToString() includes:
+                    // - Exception type
+                    // - Message
+                    // - StackTrace
+                    // - InnerException (recursive)
+                    writer.WriteLine("Exception Details:");
+                    writer.WriteLine(ex.ToString());
+
+                    writer.WriteLine("====================================");
+                    writer.WriteLine();
+                }
+            }
+            catch (Exception logEx)
+            {
+                // Do not allow logging failure to hide the original exception.
+                System.Diagnostics.Debug.WriteLine(
+                    "Crash report logging failed: " + logEx);
             }
         }
     }
