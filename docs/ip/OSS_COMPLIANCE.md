@@ -78,7 +78,7 @@ any OSS license restrictions on its own source code.
 `licenses_full.csv` contains **only PowerSimBuilder's runtime dependencies**:
 
 - **NuGet (5)**: Costura.Fody (MIT), CsvHelper (MS-PL OR Apache-2.0),
-  NCalc (MIT), Pythonnet (MIT), Fody (MIT)
+  NCalc (MIT), Scintilla5.NET (MIT — wraps Scintilla/Lexilla which is HPND permissive), Pythonnet (MIT), Fody (MIT)
 - **Python / fmpy (18)**: FMPy (BSD-2-Clause), attrs (MIT), cmake
   (Apache/BSD), Jinja2 (BSD), MarkupSafe (BSD), lark (MIT), lxml (BSD),
   msgpack (Apache-2.0), nbformat (BSD), fastjsonschema (BSD),
