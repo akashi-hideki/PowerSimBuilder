@@ -22,14 +22,14 @@ namespace PowerSimBuilder
 
             // Ctrl+C without selection -> copy current line
             if (ctrl && !shift && !alt && key == Keys.C
-                && textEditor.Focused && textEditor.SelectionLength == 0)
+                && textEditor.Focused && (textEditor.SelectionEnd - textEditor.SelectionStart) == 0)
             {
                 CopyCurrentLine();
                 return true;
             }
             // Ctrl+X without selection -> cut current line
             if (ctrl && !shift && !alt && key == Keys.X
-                && textEditor.Focused && textEditor.SelectionLength == 0)
+                && textEditor.Focused && (textEditor.SelectionEnd - textEditor.SelectionStart) == 0)
             {
                 CutCurrentLine();
                 return true;
@@ -94,18 +94,18 @@ namespace PowerSimBuilder
         private void GetCurrentLineRange(out int start, out int length)
         {
             int charIndex = textEditor.SelectionStart;
-            int line = textEditor.GetLineFromCharIndex(charIndex);
+            int line = textEditor.LineFromPosition(charIndex);
             if (line < 0) line = 0;
-            start = textEditor.GetFirstCharIndexFromLine(line);
+            start = textEditor.Lines[line].Position;
             if (start < 0) start = 0;
-            int next = textEditor.GetFirstCharIndexFromLine(line + 1);
+            int next = textEditor.Lines[line + 1].Position;
             if (next < 0) next = textEditor.TextLength;
             length = next - start;
         }
 
         private int GetLineEnd(int line)
         {
-            int next = textEditor.GetFirstCharIndexFromLine(line + 1);
+            int next = textEditor.Lines[line + 1].Position;
             return next < 0 ? textEditor.TextLength : next;
         }
 
@@ -117,13 +117,13 @@ namespace PowerSimBuilder
             GetCurrentLineRange(out int start, out int length);
             if (includeLineBreak)
             {
-                textEditor.Select(start, length);
+                textEditor.SetSelection(start, start + (length));
                 return;
             }
             int end = start + length;
             string text = textEditor.Text;
             while (end > start && (text[end - 1] == '\n' || text[end - 1] == '\r')) end--;
-            textEditor.Select(start, end - start);
+            textEditor.SetSelection(start, start + (end - start));
         }
 
         private void CopyCurrentLine()
@@ -148,61 +148,61 @@ namespace PowerSimBuilder
         {
             GetCurrentLineRange(out int start, out int length);
             if (length <= 0) return;
-            textEditor.Select(start, length);
-            textEditor.SelectedText = "";
+            textEditor.SetSelection(start, start + (length));
+            textEditor.ReplaceSelection("");
         }
 
         private void DeleteSelectedLines()
         {
-            if (textEditor.SelectionLength == 0)
+            if ((textEditor.SelectionEnd - textEditor.SelectionStart) == 0)
             {
                 DeleteCurrentLine();
                 return;
             }
             int selStart = textEditor.SelectionStart;
-            int selEnd = selStart + textEditor.SelectionLength;
-            int startLine = textEditor.GetLineFromCharIndex(selStart);
-            int endLine = textEditor.GetLineFromCharIndex(selEnd - 1);
+            int selEnd = selStart + (textEditor.SelectionEnd - textEditor.SelectionStart);
+            int startLine = textEditor.LineFromPosition(selStart);
+            int endLine = textEditor.LineFromPosition(selEnd - 1);
             if (startLine < 0) startLine = 0;
             if (endLine < startLine) endLine = startLine;
-            int delStart = textEditor.GetFirstCharIndexFromLine(startLine);
+            int delStart = textEditor.Lines[startLine].Position;
             if (delStart < 0) delStart = 0;
             int delEnd = GetLineEnd(endLine);
-            textEditor.Select(delStart, delEnd - delStart);
-            textEditor.SelectedText = "";
+            textEditor.SetSelection(delStart, delStart + (delEnd - delStart));
+            textEditor.ReplaceSelection("");
         }
 
         private void DuplicateCurrentLine()
         {
-            int cursorLine = textEditor.GetLineFromCharIndex(textEditor.SelectionStart);
+            int cursorLine = textEditor.LineFromPosition(textEditor.SelectionStart);
             if (cursorLine < 0) return;
-            int lineStart = textEditor.GetFirstCharIndexFromLine(cursorLine);
+            int lineStart = textEditor.Lines[cursorLine].Position;
             if (lineStart < 0) return;
             int lineEnd = GetLineEnd(cursorLine);
             int offsetInLine = textEditor.SelectionStart - lineStart;
             string lineText = textEditor.Text.Substring(lineStart, lineEnd - lineStart);
 
-            textEditor.Select(lineEnd, 0);
+            textEditor.SetSelection(lineEnd, lineEnd + (0));
             if (lineText.EndsWith("\n") || lineText.EndsWith("\r"))
             {
-                textEditor.SelectedText = lineText;
+                textEditor.ReplaceSelection(lineText);
                 textEditor.SelectionStart = lineEnd + offsetInLine;
             }
             else
             {
-                textEditor.SelectedText = "\n" + lineText;
+                textEditor.ReplaceSelection("\n" + lineText);
                 textEditor.SelectionStart = lineEnd + 1 + offsetInLine;
             }
-            textEditor.SelectionLength = 0;
+            textEditor.SelectionEnd = textEditor.SelectionStart;
         }
 
         private void MoveCurrentLineUp()
         {
-            int line = textEditor.GetLineFromCharIndex(textEditor.SelectionStart);
+            int line = textEditor.LineFromPosition(textEditor.SelectionStart);
             if (line <= 0) return;
-            int lineStart = textEditor.GetFirstCharIndexFromLine(line);
+            int lineStart = textEditor.Lines[line].Position;
             int lineEnd = GetLineEnd(line);
-            int prevStart = textEditor.GetFirstCharIndexFromLine(line - 1);
+            int prevStart = textEditor.Lines[line - 1].Position;
             if (prevStart < 0 || lineStart < 0) return;
             int offsetInLine = textEditor.SelectionStart - lineStart;
             string prevText = textEditor.Text.Substring(prevStart, lineStart - prevStart);
@@ -218,17 +218,17 @@ namespace PowerSimBuilder
                 combined = curText + "\n" + prevText.TrimEnd('\r', '\n');
             }
 
-            textEditor.Select(prevStart, lineEnd - prevStart);
-            textEditor.SelectedText = combined;
+            textEditor.SetSelection(prevStart, prevStart + (lineEnd - prevStart));
+            textEditor.ReplaceSelection(combined);
             textEditor.SelectionStart = prevStart + offsetInLine;
-            textEditor.SelectionLength = 0;
+            textEditor.SelectionEnd = textEditor.SelectionStart;
         }
 
         private void MoveCurrentLineDown()
         {
-            int line = textEditor.GetLineFromCharIndex(textEditor.SelectionStart);
-            if (line >= textEditor.Lines.Length - 1) return;
-            int lineStart = textEditor.GetFirstCharIndexFromLine(line);
+            int line = textEditor.LineFromPosition(textEditor.SelectionStart);
+            if (line >= textEditor.Lines.Count - 1) return;
+            int lineStart = textEditor.Lines[line].Position;
             int lineEnd = GetLineEnd(line);
             int nextEnd = GetLineEnd(line + 1);
             if (lineStart < 0) return;
@@ -249,19 +249,19 @@ namespace PowerSimBuilder
                 newCursor = lineStart + nextText.Length + 1 + offsetInLine;
             }
 
-            textEditor.Select(lineStart, nextEnd - lineStart);
-            textEditor.SelectedText = combined;
+            textEditor.SetSelection(lineStart, lineStart + (nextEnd - lineStart));
+            textEditor.ReplaceSelection(combined);
             textEditor.SelectionStart = newCursor;
-            textEditor.SelectionLength = 0;
+            textEditor.SelectionEnd = textEditor.SelectionStart;
         }
 
         private void ToggleLineComment()
         {
             int selStart = textEditor.SelectionStart;
-            int selEnd = selStart + textEditor.SelectionLength;
-            int startLine = textEditor.GetLineFromCharIndex(selStart);
+            int selEnd = selStart + (textEditor.SelectionEnd - textEditor.SelectionStart);
+            int startLine = textEditor.LineFromPosition(selStart);
             int endLine = selEnd > selStart
-                ? textEditor.GetLineFromCharIndex(selEnd - 1)
+                ? textEditor.LineFromPosition(selEnd - 1)
                 : startLine;
             if (startLine < 0) startLine = 0;
             if (endLine < startLine) endLine = startLine;
@@ -270,7 +270,7 @@ namespace PowerSimBuilder
             bool allCommented = true;
             for (int i = startLine; i <= endLine; i++)
             {
-                string l = (i >= 0 && i < lines.Length) ? lines[i] : "";
+                string l = (i >= 0 && i < lines.Count) ? lines[i].Text.TrimEnd('\r', '\n') : "";
                 if (l.Trim().Length == 0) continue;
                 if (!l.TrimStart().StartsWith("#")) { allCommented = false; break; }
             }
@@ -280,9 +280,9 @@ namespace PowerSimBuilder
             {
                 for (int i = endLine; i >= startLine; i--)
                 {
-                    int lineStart = textEditor.GetFirstCharIndexFromLine(i);
+                    int lineStart = textEditor.Lines[i].Position;
                     if (lineStart < 0) continue;
-                    string lineText = (i >= 0 && i < textEditor.Lines.Length) ? textEditor.Lines[i] : "";
+                    string lineText = (i >= 0 && i < textEditor.Lines.Count) ? textEditor.Lines[i].Text.TrimEnd('\r', '\n') : "";
                     if (lineText.Trim().Length == 0) continue;
 
                     if (allCommented)
@@ -292,16 +292,16 @@ namespace PowerSimBuilder
                         {
                             int removeLen = 1;
                             if (idx + 1 < lineText.Length && lineText[idx + 1] == ' ') removeLen = 2;
-                            textEditor.Select(lineStart + idx, removeLen);
-                            textEditor.SelectedText = "";
+                            textEditor.SetSelection(lineStart + idx, lineStart + idx + (removeLen));
+                            textEditor.ReplaceSelection("");
                         }
                     }
                     else
                     {
                         int indent = 0;
                         while (indent < lineText.Length && (lineText[indent] == ' ' || lineText[indent] == '\t')) indent++;
-                        textEditor.Select(lineStart + indent, 0);
-                        textEditor.SelectedText = "# ";
+                        textEditor.SetSelection(lineStart + indent, lineStart + indent + (0));
+                        textEditor.ReplaceSelection("# ");
                     }
                 }
             }
@@ -361,13 +361,13 @@ namespace PowerSimBuilder
         public void Test_SetCursor(int oneBasedLine, int zeroBasedCol)
         {
             int lineIdx = oneBasedLine - 1;
-            if (lineIdx < 0 || lineIdx >= textEditor.Lines.Length) return;
-            int lineStart = textEditor.GetFirstCharIndexFromLine(lineIdx);
+            if (lineIdx < 0 || lineIdx >= textEditor.Lines.Count) return;
+            int lineStart = textEditor.Lines[lineIdx].Position;
             if (lineStart < 0) return;
             int pos = lineStart + zeroBasedCol;
             if (pos > textEditor.TextLength) pos = textEditor.TextLength;
             textEditor.SelectionStart = pos;
-            textEditor.SelectionLength = 0;
+            textEditor.SelectionEnd = textEditor.SelectionStart;
         }
 
         public void Test_DuplicateCurrentLine() { DuplicateCurrentLine(); }

@@ -8,7 +8,7 @@ namespace PowerSimBuilder
 
         private System.Windows.Forms.SplitContainer splitMain;
         private PowerSimBuilder.ComponentEdit.EditPanel editPanel;
-        private System.Windows.Forms.RichTextBox textEditor;
+        private ScintillaNET.Scintilla textEditor;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Panel panel1;
@@ -38,7 +38,7 @@ namespace PowerSimBuilder
         {
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.editPanel = new PowerSimBuilder.ComponentEdit.EditPanel();
-            this.textEditor = new System.Windows.Forms.RichTextBox();
+            this.textEditor = new ScintillaNET.Scintilla();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
@@ -88,15 +88,12 @@ namespace PowerSimBuilder
             //
             // textEditor
             //
-            this.textEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textEditor.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textEditor.Location = new System.Drawing.Point(0, 0);
+            this.textEditor.Dock = System.Windows.Forms.DockStyle.Fill;            this.textEditor.Location = new System.Drawing.Point(0, 0);
             this.textEditor.Name = "TextBoxCode";
             this.textEditor.Size = new System.Drawing.Size(700, 476);
             this.textEditor.TabIndex = 0;
             this.textEditor.Text = "";
-            this.textEditor.WordWrap = false;
-            this.textEditor.TextChanged += new System.EventHandler(this.textEditor_TextChanged);
+                        this.textEditor.TextChanged += new System.EventHandler(this.textEditor_TextChanged);
             //
             // panel1
             //

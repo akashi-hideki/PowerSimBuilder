@@ -64,7 +64,7 @@ public partial class PythonEditorForm
         if (editPanel != null)
             editPanel.PhysicsRequested += OnPhysicsRequested;
         if (textEditor != null)
-            textEditor.SelectionChanged += OnEditorSelectionChanged;
+            textEditor.UpdateUI += OnEditorSelectionChanged;
 
         // Hide Add Physics button for StaTable-generated ControllerBox
         // (physics models cannot be attached; button would be a no-op)
@@ -190,8 +190,8 @@ public partial class PythonEditorForm
             if (initBounds is not null)
             {
                 textEditor.SelectionStart = initBounds.Start;
-                textEditor.SelectionLength = 0;
-                textEditor.ScrollToCaret();
+                textEditor.SelectionEnd = textEditor.SelectionStart;
+                textEditor.ScrollCaret();
             }
             textEditor.Focus();
         }
@@ -219,19 +219,19 @@ public partial class PythonEditorForm
         PhysicsBlockBounds? initBounds,
         PhysicsBlockBounds? updateBounds)
     {
-        if (textEditor is not RichTextBox rtb) return;
+        if (textEditor is not ScintillaNET.Scintilla rtb) return;
         rtb.SuspendLayout();
         try
         {
             if (initBounds is not null)
             {
-                rtb.Select(initBounds.Start, initBounds.Length);
-                rtb.SelectionBackColor = PhysicsHighlightColor;
+                rtb.SetSelection(initBounds.Start, initBounds.Start + (initBounds.Length));
+                // [Scintilla indicator replaces SelectionBackColor]
             }
             if (updateBounds is not null)
             {
-                rtb.Select(updateBounds.Start, updateBounds.Length);
-                rtb.SelectionBackColor = PhysicsHighlightColor;
+                rtb.SetSelection(updateBounds.Start, updateBounds.Start + (updateBounds.Length));
+                // [Scintilla indicator replaces SelectionBackColor]
             }
         }
         finally
@@ -242,7 +242,7 @@ public partial class PythonEditorForm
 
     // -------- Test hooks --------
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public RichTextBox Test_TextEditor => textEditor;
+    public ScintillaNET.Scintilla Test_TextEditor => textEditor;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Label Test_StatusLabel => lblStatus;
