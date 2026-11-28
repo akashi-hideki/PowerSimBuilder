@@ -221,6 +221,19 @@ StaTable alone answers **"does it compile?"**. PowerSimBuilder answers
 
 ---
 
+## What's New in v1.11.1
+
+- **Python editor fold markers fixed** (Trap #126): the ScintillaNET marker
+  symbols 25-31 were mis-mapped, preventing click-to-fold. Now correctly
+  mapped to Scintilla's canonical SC_MARKNUM_* constants, with a
+  `MarginClick` handler that toggles the fold.
+- **Line operations**: `Ctrl+D` duplicate, `Ctrl+Shift+K` delete, `Alt+Up/Down`
+  move, `Ctrl+/` toggle comment, `Ctrl+L` select line, `F1` shortcuts help.
+- **Physics model removal**: `Ctrl+Shift+P` opens a picker and removes the
+  selected model's init/update blocks from the source.
+- **12 regression tests** (`PythonEditorFormFoldTests`) guarding the fold
+  marker mapping.
+
 ## What's New in v1.11.0
 
 - **GitHub FMU catalog browsing**: browse FMI Cross Check-style GitHub repository layouts through the GitHub API.

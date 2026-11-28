@@ -186,6 +186,7 @@ dotnet build 2>&1 | Select-Object -Last 3
 | 123 | `ComponentControl.Parameters` は `Descriptor.Parameters` から初期化されるため、Descriptor に無いキー（`selected_*_ports`）はロード時の `ContainsKey` ガードで無視される | Descriptor=「型」、Instance=「実体」。Instance 独自キーは無条件復元に変更（P6） |
 | 124 | `Build` の戻り値 Descriptor に永続化対象パラメータを追加しないと、XML 取り込み直後の Save で消失（右クリック編集時のみ保存される罠） | `Build` で `ParameterDescriptor` として明示追加（P4.2） |
 | 125 | Python パッチの `OLD` 文字列でインデント（8 vs 12 スペース）を誤ると `anchor not found` で停止 | インデント非依存の `re` + 波括弧マッチング方式（v2）を標準化 |
+| 126 | `ScintillaNET` 折りたたみマーカー 25-31 のシンボル誤設定 + `MarginClick` ハンドラ欠落でクリックしても折りたためない。`Line` クラスに `IsFoldPoint`/`IsExpanded` は存在せず、`FoldLevelFlags.Header` と `SCI_GETFOLDEXPANDED` メッセージを使う。ヘッドレステストでは `Editor.Colorize(0,-1)` で lexer 強制実行が必要（`Colourise` ではなく `Colorize`） | 正しいマッピング: 25=BoxPlusConnected, 26=BoxMinusConnected, 27=TCorner, 28=LCorner, 29=VLine, 30=BoxPlus(HEAD), 31=BoxMinus(HEAD)。`PythonEditorFormFoldTests` 12 ケースで回帰防止（`a079052`） |
 ---
 
 ## 参考ファイル

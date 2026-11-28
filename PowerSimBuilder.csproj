@@ -6,7 +6,7 @@
     <RootNamespace>PowerSimBuilder</RootNamespace>
     <AssemblyName>PowerSimBuilder</AssemblyName>
     <PlatformTarget>x64</PlatformTarget>
-    <Version>1.11.0</Version>
+    <Version>1.11.1</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>

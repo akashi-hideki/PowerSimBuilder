@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.1] - 2026-11-28
+
+### Fixed
+
+- **Python editor fold markers** (Trap #126): ScintillaNET's `MarkerSymbol`
+  mapping for indices 25-31 was incorrect, preventing click-to-fold.
+  Fixed to the canonical SC_MARKNUM_* mapping
+  (25=BoxPlusConnected, 26=BoxMinusConnected, 27=TCorner, 28=LCorner,
+  29=VLine, 30=BoxPlus(HEAD), 31=BoxMinus(HEAD)).
+- **Fold toggle on click**: the `MarginClick` handler was missing; clicking
+  the fold marker did not toggle. Added explicit
+  `Lines[line].ToggleFold()` dispatch on margin 1.
+
+### Added
+
+- **Line operations** in the Python editor (`PythonEditorForm.LineOps.cs`):
+  - `Ctrl+D` duplicate current line
+  - `Ctrl+Shift+K` delete current line(s)
+  - `Alt+Up/Down` move current line up/down
+  - `Ctrl+/` toggle line comment
+  - `Ctrl+L` select current line
+  - `Ctrl+C`/`Ctrl+X` without selection copies/cuts the whole line
+  - `F1` opens the keyboard shortcuts reference
+- **Physics model removal UI** in the Python editor:
+  - `Ctrl+Shift+P` opens `PhysicsBlockPickerForm`
+  - Selected model's init/update blocks are removed (`PhysicsBlockRemover`)
+  - I18n keys under `PhysicsRemove.*`
+- **Regression tests**: `PythonEditorFormFoldTests` (12 cases) guarding
+  the ScintillaNET fold marker mapping (Trap #126).
+
 ## [1.11.0] - 2026-11-23
 
 ### Added
