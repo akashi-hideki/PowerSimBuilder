@@ -98,13 +98,14 @@ namespace PowerSimBuilder
             if (line < 0) line = 0;
             start = textEditor.Lines[line].Position;
             if (start < 0) start = 0;
-            int next = textEditor.Lines[line + 1].Position;
-            if (next < 0) next = textEditor.TextLength;
-            length = next - start;
+            length = GetLineEnd(line) - start;
         }
 
         private int GetLineEnd(int line)
         {
+            // ScintillaNET clamps Lines[Count] to the LAST line, so the end of the last line (= document end)
+            // has to be handled explicitly; otherwise its length would come out as 0.
+            if (line + 1 >= textEditor.Lines.Count) return textEditor.TextLength;
             int next = textEditor.Lines[line + 1].Position;
             return next < 0 ? textEditor.TextLength : next;
         }
